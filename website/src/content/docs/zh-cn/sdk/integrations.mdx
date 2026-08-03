@@ -1,0 +1,401 @@
+---
+title: 集成
+description: 在 React、Next.js、Node.js、FastAPI、asyncio、Django 和 Celery 中使用 Imbrace SDK。
+---
+
+import { Tabs, TabItem, Aside } from "@astrojs/starlight/components";
+
+两个 SDK 的框架级接线模式。选择适合你技术栈的部分 — TypeScript 涵盖 React、Next.js 和纯 Node.js；Python 涵盖 FastAPI、asyncio、Django 和 Celery。OTP 登录流程为两者都有文档。
+
+关于凭证策略（api key vs access token、环境变量），请参见[认证](/zh-cn/sdk/authentication/)和[设置指南](/zh-cn/getting-started/setup/#configure-credentials)。
+
+---
+
+## React (TypeScript)
+
+### 单例客户端
+
+在组件树外部创建一次客户端，并在所有组件中重复使用。`localStorage` 令牌来自 [OTP 登录流程](/zh-cn/sdk/authentication/#otp-login-flow)。
+
+```typescript
+// lib/imbrace.ts
+import { ImbraceClient } from "@imbrace/sdk";
+
+export const client = new ImbraceClient({
+  accessToken:
+    typeof window !== "undefined"
+      ? (localStorage.getItem("imbrace_token") ?? undefined)
+      : undefined,
+});
+```
+
+### 数据获取钩子
+
+```tsx
+// hooks/useContacts.ts
+import { useState, useEffect } from "react";
+import { client } from "@/lib/imbrace";
+import type { Contact } from "@imbrace/sdk";
+
+export function useContacts(search?: string) {
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    client.contacts
+      .list({ search })
+      .then((res) => setContacts(res.data))
+      .catch(setError)
+      .finally(() => setLoading(false));
+  }, [search]);
+
+  return { contacts, loading, error };
+}
+```
+
+```tsx
+// components/ContactList.tsx
+import { useContacts } from "@/hooks/useContacts";
+
+export function ContactList() {
+  const { contacts, loading, error } = useContacts();
+  if (loading) return <p>加载中...</p>;
+  if (error) return <p>错误：{error.message}</p>;
+  return (
+    <ul>
+      {contacts.map((c) => (
+        <li key={c._id}>{c.name}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+---
+
+## Next.js (TypeScript)
+
+### API 路由（App Router）
+
+```typescript
+// app/api/contacts/route.ts
+import { NextResponse } from "next/server";
+import { ImbraceClient } from "@imbrace/sdk";
+
+const client = new ImbraceClient({
+  apiKey: process.env.IMBRACE_API_KEY,
+});
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const search = searchParams.get("search") ?? undefined;
+  const { data } = await client.contacts.list({ search });
+  return NextResponse.json(data);
+}
+```
+
+`process.env.IMBRACE_API_KEY` 应按照你部署平台的要求设置（Vercel 环境变量、开发环境 `.env.local` 等）。参见[设置指南 → 配置凭证](/zh-cn/getting-started/setup/#configure-credentials)。
+
+### 服务端组件（App Router）
+
+```tsx
+// app/contacts/page.tsx
+import { ImbraceClient } from "@imbrace/sdk";
+
+const client = new ImbraceClient({
+  apiKey: process.env.IMBRACE_API_KEY,
+});
+
+export default async function ContactsPage() {
+  const { data: contacts } = await client.contacts.list({ limit: 20 });
+  return (
+    <main>
+      <h1>联系人列表</h1>
+      <ul>{contacts.map((c) => <li key={c._id}>{c.name}</li>)}</ul>
+    </main>
+  );
+}
+```
+
+---
+
+## Node.js CLI 脚本 (TypeScript)
+
+适用于一次性脚本（数据导出、数据回填、临时查询）：
+
+```typescript
+// scripts/export-contacts.ts
+import { ImbraceClient } from "@imbrace/sdk";
+import { writeFileSync } from "fs";
+
+const client = new ImbraceClient();
+
+async function exportContacts() {
+  const { data: contacts } = await client.contacts.list({ limit: 1000 });
+  writeFileSync("contacts.json", JSON.stringify(contacts, null, 2));
+  console.log(`导出了 ${contacts.length} 个联系人`);
+}
+
+exportContacts().catch(console.error);
+```
+
+```bash
+npx ts-node scripts/export-contacts.ts
+```
+
+---
+
+## FastAPI (Python)
+
+### 每请求依赖注入
+
+最简单的模式 — 每个请求一个异步客户端，生命周期由依赖管理：
+
+```python
+from fastapi import FastAPI, Depends
+from imbrace import AsyncImbraceClient
+from imbrace.types.ai import CompletionInput, CompletionMessage
+
+app = FastAPI()
+
+async def get_imbrace() -> AsyncImbraceClient:
+    async with AsyncImbraceClient() as client:
+        yield client
+
+@app.get("/contacts")
+async def list_contacts(client: AsyncImbraceClient = Depends(get_imbrace)):
+    result = await client.contacts.list({"limit": 20})
+    return result["data"]
+
+@app.get("/contacts/{contact_id}")
+async def get_contact(contact_id: str, client: AsyncImbraceClient = Depends(get_imbrace)):
+    return await client.contacts.get(contact_id)
+
+@app.post("/ai/chat")
+async def chat(message: str, client: AsyncImbraceClient = Depends(get_imbrace)):
+    return await client.ai.complete(CompletionInput(
+        model="gpt-4o",
+        messages=[CompletionMessage(role="user", content=message)],
+    ))
+```
+
+### 全局单例（更好的连接复用）
+
+为了更高吞吐量，在应用程序生命周期内共享一个客户端：
+
+```python
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from imbrace import AsyncImbraceClient
+
+imbrace: AsyncImbraceClient = None  # type: ignore
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global imbrace
+    imbrace = AsyncImbraceClient()
+    await imbrace.init()  # 启动时健康检查
+    yield
+    await imbrace.close()
+
+app = FastAPI(lifespan=lifespan)
+
+@app.get("/me")
+async def get_me():
+    return await imbrace.platform.get_me()
+```
+
+---
+
+## asyncio (Python)
+
+### 并发请求
+
+```python
+import asyncio
+from imbrace import AsyncImbraceClient
+
+async def fetch_dashboard_data():
+    async with AsyncImbraceClient() as client:
+        me, contacts, channels = await asyncio.gather(
+            client.platform.get_me(),
+            client.contacts.list({"limit": 5}),
+            client.channel.list(type="group"),
+        )
+        return {
+            "user": me,
+            "contacts": contacts["data"],
+            "channels": channels.data,
+        }
+
+data = asyncio.run(fetch_dashboard_data())
+```
+
+### 流式 AI
+
+```python
+import asyncio
+from imbrace import AsyncImbraceClient
+from imbrace.types.ai import CompletionInput, CompletionMessage
+
+async def stream_response():
+    async with AsyncImbraceClient() as client:
+        async for chunk in client.ai.stream(CompletionInput(
+            model="gpt-4o",
+            messages=[CompletionMessage(role="user", content="Explain async/await in Python.")],
+        )):
+            content = chunk.choices[0].delta.content or ""
+            print(content, end="", flush=True)
+
+asyncio.run(stream_response())
+```
+
+---
+
+## Django (Python)
+
+### 同步视图
+
+```python
+# views.py
+from django.http import JsonResponse
+from imbrace import ImbraceClient, ApiError
+
+def contact_list(request):
+    with ImbraceClient() as client:
+        try:
+            result = client.contacts.list({
+                "search": request.GET.get("search"),
+                "page": int(request.GET.get("page", 1)),
+            })
+            return JsonResponse(result)
+        except ApiError as e:
+            return JsonResponse({"error": str(e)}, status=e.status_code)
+```
+
+### 设置集成
+
+```python
+# settings.py
+IMBRACE_API_KEY = env("IMBRACE_API_KEY")
+IMBRACE_ENV = env("IMBRACE_ENV", default="stable")
+
+# utils/imbrace.py
+from django.conf import settings
+from imbrace import ImbraceClient
+
+def get_client() -> ImbraceClient:
+    return ImbraceClient(
+        api_key=settings.IMBRACE_API_KEY,
+        env=settings.IMBRACE_ENV,
+    )
+```
+
+---
+
+## Celery (Python)
+
+对于后台任务工作器，使用同步客户端并在每个任务中创建一个：
+
+```python
+# tasks.py
+from celery import Celery
+from imbrace import ImbraceClient, NetworkError
+
+app = Celery("tasks")
+
+@app.task(bind=True, max_retries=3)
+def sync_contacts(self):
+    try:
+        with ImbraceClient() as client:
+            result = client.contacts.list({"limit": 100})
+            for contact in result["data"]:
+                save_to_db(contact)
+    except NetworkError as exc:
+        raise self.retry(exc=exc, countdown=2 ** self.request.retries)
+```
+
+<Aside type="tip">`n不要跨 Celery 工作器共享单个 `ImbraceClient` 实例 — 使用上下文管理器在每个任务调用中创建一个。httpx 连接池不适合跨进程共享。`n</Aside>
+
+---
+
+## OTP 登录流程
+
+OTP 流程在两个 SDK 中概念相同：请求邮箱的 OTP，然后将其兑换为访问令牌。关于完整的凭证生命周期，请参见[认证 → OTP 登录流程](/zh-cn/sdk/authentication/#otp-login-flow)。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```tsx
+// components/LoginForm.tsx
+import { useState } from "react";
+import { ImbraceClient, AuthError } from "@imbrace/sdk";
+
+const client = new ImbraceClient();
+
+export function LoginForm() {
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [step, setStep] = useState<"email" | "otp">("email");
+
+  async function requestOtp() {
+    await client.requestOtp(email);
+    setStep("otp");
+  }
+
+  async function verifyOtp() {
+    try {
+      await client.loginWithOtp(email, otp);
+      window.location.href = "/dashboard";
+    } catch (e) {
+      if (e instanceof AuthError) alert("无效的 OTP");
+    }
+  }
+
+  return step === "email" ? (
+    <div>
+      <input value={email} onChange={(e) => setEmail(e.target.value)} />
+      <button onClick={requestOtp}>发送 OTP</button>
+    </div>
+  ) : (
+    <div>
+      <input value={otp} onChange={(e) => setOtp(e.target.value)} />
+      <button onClick={verifyOtp}>验证</button>
+    </div>
+  );
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from imbrace import AsyncImbraceClient, AuthError
+
+app = FastAPI()
+
+class OtpRequest(BaseModel):
+    email: str
+
+class OtpVerify(BaseModel):
+    email: str
+    otp: str
+
+@app.post("/auth/request-otp")
+async def request_otp(body: OtpRequest):
+    async with AsyncImbraceClient() as client:
+        await client.auth.request_otp(body.email)
+    return {"message": "OTP 已发送"}
+
+@app.post("/auth/verify-otp")
+async def verify_otp(body: OtpVerify):
+    async with AsyncImbraceClient() as client:
+        try:
+            result = await client.auth.login_with_otp(body.email, body.otp)
+            return {"access_token": result["token"]}
+        except AuthError:
+            raise HTTPException(status_code=401, detail="无效的 OTP")
+```
+</TabItem>
+</Tabs>

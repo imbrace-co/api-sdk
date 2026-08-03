@@ -1,0 +1,104 @@
+﻿---
+title: 获取 API Key
+description: 如何获取 Imbrace API 密钥 — 通过 Portal UI 或使用 SDK 以编程方式获取。
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+import { Image } from "astro:assets";
+import step1 from "../../../../assets/get_api_key_from_ui_step_1.png";
+import step2 from "../../../../assets/get_api_key_from_ui_step_2.png";
+import step3 from "../../../../assets/get_api_key_from_ui_step_3.png";
+
+API Key（`api_...`）让你的后端无需用户会话即可调用 Imbrace。关于何时使用 API Key 与访问令牌，请参见[认证](/zh-cn/sdk/authentication/)。
+
+---
+
+## 从 UI 获取 API Key
+
+**步骤 1** — 登录 Imbrace 门户，然后导航到 **GovernCore → Generate External Token**。
+
+<Image src={step1} alt="Imbrace 门户 — 侧边栏显示 GovernCore 菜单，含 Generate External Token 选项" />
+
+**步骤 2** — 点击 **Generate Token** 以签发新的 API Key。
+
+<Image src={step2} alt="GovernCore Generate External Token 页面 — Generate Token 按钮已高亮" />
+
+**步骤 3** — 复制生成的密钥。它以 `api_` 开头，且仅显示一次。
+
+<Image src={step3} alt="生成的 API Key 完整显示 — api_... 值旁边的复制图标" />
+
+---
+
+## 通过 SDK 生成（编程方式）
+
+当你需要从代码中生成密钥时使用，例如在自动化预配期间。你必须首先通过 [OTP](/zh-cn/sdk/authentication/#otp-login-flow) 或[密码](/zh-cn/sdk/authentication/#password-login)使用访问令牌进行认证。
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    // 需要使用访问令牌初始化的客户端
+    const res = await client.auth.getThirdPartyToken(30) // 30 天后过期
+    const apiKey = res.apiKey.apiKey  // "api_..."
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    # 需要使用访问令牌初始化的客户端
+    res = client.auth.get_third_party_token(expiration_days=30)
+    api_key = res["apiKey"]["apiKey"]  # "api_..."
+    ```
+  </TabItem>
+</Tabs>
+
+响应结构（完整字段如下 — 内部字段为简洁已省略）：
+
+```json
+{
+  "apiKey": {
+    "_id": "...",
+    "apiKey": "api_...",
+    "organization_id": "...",
+    "user_id": "...",
+    "is_active": true,
+    "expired_at": "2025-08-01T00:00:00.000Z",
+    "created_at": "2025-07-01T00:00:00.000Z",
+    "updated_at": "2025-07-01T00:00:00.000Z",
+    "is_temp": false
+  },
+  "expires_in": 2592000
+}
+```
+
+---
+
+## 使用密钥
+
+将密钥传递给客户端构造函数：
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    import { ImbraceClient } from "@imbrace/sdk";
+
+    const client = new ImbraceClient({
+      apiKey: process.env.IMBRACE_API_KEY!,
+      organizationId: process.env.IMBRACE_ORGANIZATION_ID,
+      env: "stable",
+    });
+    ```
+
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    import os
+    from imbrace import ImbraceClient
+
+    client = ImbraceClient(
+        api_key=os.environ["IMBRACE_API_KEY"],
+        organization_id=os.environ.get("IMBRACE_ORGANIZATION_ID"),
+        env="stable",
+    )
+    ```
+
+  </TabItem>
+</Tabs>

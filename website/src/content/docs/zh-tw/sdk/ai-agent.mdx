@@ -1,0 +1,1223 @@
+﻿---
+title: AI Agent
+description: chatAi / chat_ai（AI Agent 管理）、aiAgent / ai_agent（串流聊天、嵌入、parquet、追蹤）以及與 OpenAI 相容的 client.ai 服務的參考文件。
+---
+
+import { Tabs, TabItem, Aside } from "@astrojs/starlight/components";
+import AuthOnly from "../../../../components/AuthOnly.astro";
+
+此頁面涵蓋兩個相關的 AI 命名空間：
+
+- **`chatAi` / `chat_ai`** — 建立和管理 AI agent、文件/檔案處理，以及 Document AI。
+- **`aiAgent` / `ai_agent`** — 串流聊天（SSE）、嵌入管理、Parquet 資料、分散式追蹤，以及聊天客戶端子 API。
+
+AI Agent 資源連接到一個專用服務，該服務執行在與主 API 閘道不同的基礎 URL 上。
+
+如需將這些功能結合在一起的端到端範例，請參閱[完整流程指南 §1](/sdk/full-flow-guide/#1-create-an-ai-agent-and-start-chatting)。
+
+<AuthOnly mode="access-token">
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+import { ImbraceClient } from "@imbrace/sdk"
+
+const client = new ImbraceClient({
+  accessToken: process.env.IMBRACE_ACCESS_TOKEN,
+  env: "stable",
+})
+```
+</TabItem>
+<TabItem label="Python">
+```python
+import os
+from imbrace import ImbraceClient
+
+client = ImbraceClient(access_token=os.environ["IMBRACE_ACCESS_TOKEN"], env="stable")
+```
+</TabItem>
+</Tabs>
+</AuthOnly>
+
+<AuthOnly mode="api-key">
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+import { ImbraceClient } from "@imbrace/sdk"
+
+const client = new ImbraceClient({
+  apiKey: process.env.IMBRACE_API_KEY,
+  organizationId: process.env.IMBRACE_ORGANIZATION_ID,
+  env: "stable",
+})
+```
+</TabItem>
+<TabItem label="Python">
+```python
+import os
+from imbrace import ImbraceClient
+
+client = ImbraceClient(api_key=os.environ["IMBRACE_API_KEY"], organization_id=os.environ.get("IMBRACE_ORGANIZATION_ID"), env="stable")
+```
+</TabItem>
+</Tabs>
+</AuthOnly>
+
+同步（`ImbraceClient`）和非同步（`AsyncImbraceClient`）客戶端都公開相同的方法表面 — 非同步方法需要 await，客戶端在底層使用 `AsyncAiAgentResource`。
+
+---
+
+## AI Agents — `chatAi` / `chat_ai`
+
+管理 AI agent（CRUD）、執行相容 OpenAI 的補全，以及處理文件/檔案處理。同一個命名空間也涵蓋知識中心資料夾和知識庫。
+
+### AI Agent CRUD
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// 列出您帳戶中的所有 AI agent
+const agents = await client.chatAi.listAiAgents();
+// 每個 AI agent 都有一個 `id`（UUID）。
+// 所有後續呼叫請使用 `id` 欄位。
+
+// 列出子代理（可由 orchestrator 委派工作的 agent）
+const subAgents = await client.chatAi.listAiAgentSubAgents();
+
+// 取得單一 AI agent
+const agent = await client.chatAi.getAiAgent("9f77692f-33d0-436a-8138-2efb268838e6");
+
+// 建立 — provider_id 和 model_id 是必填的
+const created = await client.chatAi.createAiAgent({
+  name: "Support Bot",
+  workflow_name: "support_bot_v1",
+  provider_id: "system",
+  model_id: "Default",   // 跨組織通用；"gpt-4o" 只在該組織的 system 提供者公開該模型時才有效
+  streaming: true,       // 必須開啟才能讓聊天 UI 收到 text-delta SSE 事件
+  description: "Handles tier-1 support queries",
+});
+
+// 更新 — 所有欄位都是選填的（Partial）
+const updated = await client.chatAi.updateAiAgent(created.id, {
+  name: "Support Bot v2",
+  workflow_name: "support_bot_v1",
+});
+
+// 僅更新系統指示
+await client.chatAi.updateAiAgentInstructions(
+  created.id,
+  "You are a helpful support agent.",
+);
+
+await client.chatAi.deleteAiAgent(created.id);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# 列出所有 AI agent
+agents = client.chat_ai.list_ai_agents()
+
+# 列出子代理（可由 orchestrator 委派工作的 agent）
+sub_agents = client.chat_ai.list_ai_agent_sub_agents()
+
+# 取得單一 AI agent
+agent = client.chat_ai.get_ai_agent("9f77692f-33d0-436a-8138-2efb268838e6")
+
+# 建立 — provider_id 和 model_id 是必填的
+created = client.chat_ai.create_ai_agent({
+    "name":          "Support Bot",
+    "workflow_name": "support_bot_v1",
+    "provider_id":   "system",
+    "model_id":      "Default",   # 跨組織通用；"gpt-4o" 只在該組織的 system 提供者公開該模型時才有效
+    "streaming":     True,        # 必須開啟才能讓聊天 UI 收到 text-delta SSE 事件
+    "description":   "Handles tier-1 support queries",
+})
+
+# 更新
+updated = client.chat_ai.update_ai_agent(created["id"], {
+    "name":          "Support Bot v2",
+    "workflow_name": "support_bot_v1",
+})
+
+# 僅更新系統指示
+client.chat_ai.update_ai_agent_instructions(
+    created["id"],
+    "You are a helpful support agent.",
+)
+
+client.chat_ai.delete_ai_agent(created["id"])
+```
+</TabItem>
+</Tabs>
+
+### 補全（透過 `client.ai`）
+
+相容 OpenAI 的聊天補全可在 TypeScript 和 Python 的 `client.ai` 命名空間上使用。詳情請參閱下方的[相容 OpenAI 的 AI 服務](#openai-compatible-ai-service--clientai)章節。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const response = await client.ai.complete({
+  model: "gpt-4o",
+  messages: [
+    { role: "system", content: "You are a helpful CRM assistant." },
+    { role: "user", content: "Summarize this customer note: ..." },
+  ],
+});
+console.log(response.choices[0].message.content);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+from imbrace.types.ai import CompletionInput, CompletionMessage
+
+response = client.ai.complete(CompletionInput(
+    model="gpt-4o",
+    messages=[
+        CompletionMessage(role="system", content="You are a helpful CRM assistant."),
+        CompletionMessage(role="user", content="Summarize this customer note: ..."),
+    ],
+))
+print(response.choices[0].message.content)
+```
+</TabItem>
+</Tabs>
+
+### Document AI 模型
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const models = await client.chatAi.listDocumentModels();
+```
+</TabItem>
+<TabItem label="Python">
+```python
+models = client.chat_ai.list_document_models()
+```
+</TabItem>
+</Tabs>
+
+### Document AI
+
+使用視覺模型從 PDF 和圖片中提取結構化資料。請參閱 [Document AI 參考](/sdk/document-ai/)以了解完整的參數參考、PDF 表單填寫和非同步用法。
+
+### 檔案提取（agent 檔案上傳）
+
+上傳檔案並提取其原始內容。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// 上傳 agent 專用的檔案
+const formData = new FormData();
+formData.append("file", fileBuffer, "report.pdf");
+const uploaded = await client.chatAi.uploadAgentFile(formData);
+
+// 從上傳的檔案中提取內容
+const extracted = await client.chatAi.extractFile(formData);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# 上傳 agent 專用的檔案
+uploaded = client.chat_ai.upload_agent_file(files={"file": open("report.pdf", "rb")}, agent_id="asst_abc")
+
+# 從上傳的檔案中提取內容
+extracted = client.chat_ai.extract_file(files={"file": open("report.pdf", "rb")})
+```
+</TabItem>
+</Tabs>
+
+### Chat v1 連線
+
+用於持久化對話歷史記錄的舊版 REST 聊天端點。可在 TypeScript 和 Python 的 `client.ai_agent` 上使用。請參閱下方的[舊版 v1 聊天](#legacy-v1-chat)。
+
+### 知識中心 — 資料夾與知識庫
+
+資料夾和知識庫透過 `client.boards`（TypeScript）/ `client.folders` 和 `client.boards`（Python）管理。資料夾組織知識庫 — 知識庫是 AI agent 可以檢索的一組檔案。在建立 AI agent 時將資料夾 ID 作為 `folder_ids` 傳遞 — 請參閱[完整流程指南 §3](/sdk/full-flow-guide/#3-manage-knowledge-hubs-and-attach-to-an-ai-agent)。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+import { type CreateFolderInput } from "@imbrace/sdk";
+
+// 資料夾
+const folders = await client.boards.searchFolders({ organizationId: "org_xxx" });
+const folder  = await client.boards.createFolder({ name: "Q1 Reports" });
+await client.boards.updateFolder(folder._id, { name: "Q1 2025 Reports" });
+await client.boards.deleteFolders({ ids: [folder._id] });
+
+// 檔案（知識庫條目）
+const uploaded = await client.boards.uploadFile(formData);
+const files    = await client.boards.searchFiles({ folderId: folder._id });
+const file     = await client.boards.getFile("file_id");
+await client.boards.createFile({ name: "doc.txt", folder_id: folder._id });
+await client.boards.deleteFiles({ ids: ["file_id"] });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# 資料夾
+folder = client.boards.create_folder({"name": "Q1 Reports"})
+folders = client.boards.search_folders()
+client.boards.update_folder(folder["_id"], {"name": "Q1 2025 Reports"})
+client.boards.delete_folders([folder["_id"]])
+
+# 檔案（知識庫條目）
+file = client.boards.upload_file(files={"file": open("doc.pdf", "rb")})
+files = client.boards.search_files(folder_id=folder["_id"])
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 相容 OpenAI 的 AI 服務 — `client.ai`
+
+OpenAI 風格的補全、串流和嵌入。也公開 LLM 模型、提供者、護欄、RAG 檔案和 AI agent 的管理 API。TypeScript 和 Python 都可用。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// 單次補全
+const response = await client.ai.complete({
+  model: "gpt-4o",
+  messages: [
+    { role: "system", content: "You are a helpful CRM assistant." },
+    { role: "user",   content: "Summarize this customer note: ..." },
+  ],
+  temperature: 0.7,
+});
+console.log(response.choices[0].message.content);
+
+// 串流
+const stream = client.ai.stream({
+  model: "gpt-4o",
+  messages: [{ role: "user", content: "Draft a follow-up email for this lead." }],
+});
+for await (const chunk of stream) {
+  process.stdout.write(chunk.choices[0].delta.content ?? "");
+}
+
+// 嵌入
+const result = await client.ai.embed({
+  model: "text-embedding-ada-002",
+  input: ["customer complained about billing", "billing issue escalated"],
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+from imbrace.types.ai import CompletionInput, CompletionMessage, EmbeddingInput
+
+# 單次補全
+response = client.ai.complete(CompletionInput(
+    model="gpt-4o",
+    messages=[
+        CompletionMessage(role="system", content="You are a helpful CRM assistant."),
+        CompletionMessage(role="user", content="Summarize this customer note: ..."),
+    ],
+    temperature=0.7,
+))
+print(response.choices[0].message.content)
+
+# 串流
+for chunk in client.ai.stream(CompletionInput(
+    model="gpt-4o",
+    messages=[CompletionMessage(role="user", content="Draft a follow-up email for this lead.")],
+)):
+    print(chunk.choices[0].delta.content or "", end="", flush=True)
+
+# 嵌入
+result = client.ai.embed(EmbeddingInput(
+    model="text-embedding-ada-002",
+    input=["customer complained about billing", "billing issue escalated"],
+))
+```
+</TabItem>
+</Tabs>
+
+### LLM 模型
+
+列出 AI agent 和工作流程 agent 可用的模型。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const result = await client.ai.getLlmModels();
+// result.data → [{name, is_toolCall_available, is_vision_available, is_support_thinking}]
+for (const model of result.data) {
+  console.log(model.name, model.is_toolCall_available);
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.ai.get_llm_models()
+# result["data"] → [{name, is_toolCall_available, is_vision_available, is_support_thinking}]
+for model in result["data"]:
+    print(model["name"], model.get("is_toolCall_available"))
+```
+</TabItem>
+</Tabs>
+
+### 提供者
+
+管理自訂 LLM 提供者。`listProviders` 包含一個合成的 `"system"` 條目（`provider_id: "system"`），代表來自 `getLlmModels` 的內建模型。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// 列出所有提供者（包含系統預設作為第一個條目）
+const providers = await client.ai.listProviders();
+// 僅自訂提供者
+const custom = await client.ai.listProviders({ includeSystem: false });
+
+// 新增自訂提供者
+const provider = await client.ai.createProvider({
+  name: "My Azure OpenAI",
+  type: "azure",
+  api_key: "sk-...",
+  base_url: "https://my-instance.openai.azure.com/",
+});
+
+// 更新、重新整理模型、刪除
+await client.ai.updateProvider(provider._id, { name: "Azure OpenAI (prod)" });
+await client.ai.refreshProviderModels(provider._id);
+await client.ai.deleteProvider(provider._id);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# 列出所有提供者（包含系統預設作為第一個條目）
+providers = client.ai.list_providers()
+# 僅自訂提供者
+custom = client.ai.list_providers(include_system=False)
+
+# 新增自訂提供者
+provider = client.ai.create_provider({
+    "name": "My Azure OpenAI",
+    "type": "azure",
+    "api_key": "sk-...",
+    "base_url": "https://my-instance.openai.azure.com/",
+})
+
+# 更新、重新整理模型、刪除
+client.ai.update_provider(provider["_id"], {"name": "Azure OpenAI (prod)"})
+client.ai.refresh_provider_models(provider["_id"])
+client.ai.delete_provider(provider["_id"])
+```
+</TabItem>
+</Tabs>
+
+### 護欄
+
+過濾 AI agent 輸出以確保安全、合規或品牌指南。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// 列出和取得
+const guardrails = await client.ai.listGuardrails();
+const guardrail  = await client.ai.getGuardrail("guardrail_id");
+
+// 建立
+const created = await client.ai.createGuardrail({
+  name: "Brand Safety",
+  model: "gpt-4o",
+  instructions: "Block responses that mention competitor names.",
+  unsafe_categories: ["violence", "hate_speech"],
+  competitor_keywords: ["CompetitorA", "CompetitorB"],
+});
+
+// 更新和刪除
+await client.ai.updateGuardrail(created._id, {
+  name: "Brand Safety v2",
+  model: "gpt-4o",
+  instructions: "Updated instructions.",
+});
+await client.ai.deleteGuardrail(created._id);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# 列出和取得
+guardrails = client.ai.list_guardrails()
+guardrail  = client.ai.get_guardrail("guardrail_id")
+
+# 建立
+created = client.ai.create_guardrail({
+    "name": "Brand Safety",
+    "model": "gpt-4o",
+    "instructions": "Block responses that mention competitor names.",
+    "unsafe_categories": ["violence", "hate_speech"],
+    "competitor_keywords": ["CompetitorA", "CompetitorB"],
+})
+
+# 更新和刪除
+client.ai.update_guardrail(created["_id"], {
+    "name": "Brand Safety v2",
+    "model": "gpt-4o",
+    "instructions": "Updated instructions.",
+})
+client.ai.delete_guardrail(created["_id"])
+```
+</TabItem>
+</Tabs>
+
+### 護欄提供者
+
+管理驅動護欄評估的 LLM 提供者。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// 列出和取得
+const providers = await client.ai.listGuardrailProviders();
+const provider  = await client.ai.getGuardrailProvider("provider_id");
+
+// 建立
+const gp = await client.ai.createGuardrailProvider({
+  name: "OpenAI Moderation",
+  type: "openai",
+  config: { api_key: "sk-..." },
+});
+
+// 測試連線和列出可用模型
+const testResult = await client.ai.testGuardrailProvider(gp._id, { prompt: "test prompt" });
+const models     = await client.ai.getGuardrailProviderModels(gp._id);
+
+// 更新和刪除
+await client.ai.updateGuardrailProvider(gp._id, { name: "OpenAI Moderation v2" });
+await client.ai.deleteGuardrailProvider(gp._id);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# 列出和取得
+providers = client.ai.list_guardrail_providers()
+provider  = client.ai.get_guardrail_provider("provider_id")
+
+# 建立
+gp = client.ai.create_guardrail_provider({
+    "name": "OpenAI Moderation",
+    "type": "openai",
+    "config": {"api_key": "sk-..."},
+})
+
+# 測試連線和列出可用模型
+test_result = client.ai.test_guardrail_provider(gp["_id"], {"prompt": "test prompt"})
+models      = client.ai.get_guardrail_provider_models(gp["_id"])
+
+# 更新和刪除
+client.ai.update_guardrail_provider(gp["_id"], {"name": "OpenAI Moderation v2"})
+client.ai.delete_guardrail_provider(gp["_id"])
+```
+</TabItem>
+</Tabs>
+
+### RAG 檔案
+
+透過 AI 服務上傳和管理用於檢索增強生成的檔案。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const files = await client.ai.listRagFiles();
+const file  = await client.ai.getRagFile("file_id");
+
+// 上傳
+const formData = new FormData();
+formData.append("file", fileBuffer, "knowledge.pdf");
+const uploaded = await client.ai.uploadRagFile(formData);
+
+await client.ai.deleteRagFile(uploaded._id);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+files = client.ai.list_rag_files()
+file  = client.ai.get_rag_file("file_id")
+
+# 上傳
+uploaded = client.ai.upload_rag_file(files={"file": open("knowledge.pdf", "rb")})
+
+client.ai.delete_rag_file(uploaded["_id"])
+```
+</TabItem>
+</Tabs>
+
+### AI Agents（透過 `client.ai`）
+
+`client.ai` 命名空間上的其他 AI agent 讀取/更新端點。如需完整的建立/刪除 CRUD，請使用上方的 [`client.chatAi`](#ai-agents--chatai--chat_ai)。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// 從帳戶端點列出 agent
+const accountAgents = await client.ai.listAiAgents();
+// 列出 agent（agents 端點）
+const agents = await client.ai.listAgents();
+
+// 取得單一 agent
+const agent = await client.ai.getAiAgent("asst_abc");
+
+// 在建立前檢查名稱是否可用
+const check = await client.ai.checkAiAgentName("Support Bot");
+// check.available → true / false
+
+// 僅修補 instructions 欄位
+await client.ai.patchInstructions("asst_abc", {
+  instructions: "You are a concise, helpful assistant.",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# 從帳戶端點列出 agent
+account_agents = client.ai.list_ai_agents()
+# 列出 agent（agents 端點）
+agents = client.ai.list_agents()
+
+# 取得單一 agent
+agent = client.ai.get_ai_agent("asst_abc")
+
+# 在建立前檢查名稱是否可用
+check = client.ai.check_ai_agent_name("Support Bot")
+# check["available"] → True / False
+
+# 僅修補 instructions 欄位
+client.ai.patch_instructions("asst_abc", {
+    "instructions": "You are a concise, helpful assistant.",
+})
+```
+</TabItem>
+</Tabs>
+
+### AI Agent 應用程式（透過 `client.ai`）
+
+AI Agent 應用程式將 AI agent 連結到工作流程或應用程式設定。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// 建立
+const app = await client.ai.createAiAgentApp({
+  name: "Support App",
+  workflow_name: "support_workflow_v1",
+  assistant_id: "asst_abc",
+  model_id: "Default",   // 跨組織通用；"gpt-4o" 只在該組織的 system 提供者公開該模型時才有效
+  provider_id: "system",
+});
+
+// 更新和刪除
+await client.ai.updateAiAgentApp(app._id, { name: "Support App v2" });
+await client.ai.deleteAiAgentApp(app._id);
+
+// 僅更新工作流程定義
+await client.ai.updateAiAgentWorkflow(app._id, {
+  workflow: { steps: [{ id: "step1", type: "llm" }] },
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# 列出和取得（僅 Python）
+apps = client.ai.list_ai_agent_apps()
+app  = client.ai.get_ai_agent_app("app_id")
+
+# 建立
+app = client.ai.create_ai_agent_app({
+    "name": "Support App",
+    "workflow_name": "support_workflow_v1",
+    "assistant_id": "asst_abc",
+    "model_id": "Default",   # 跨組織通用；"gpt-4o" 只在該組織的 system 提供者公開該模型時才有效
+    "provider_id": "system",
+})
+
+# 更新和刪除
+client.ai.update_ai_agent_app(app["_id"], {"name": "Support App v2"})
+client.ai.delete_ai_agent_app(app["_id"])
+
+# 僅更新工作流程定義
+client.ai.update_ai_agent_workflow(app["_id"], {
+    "workflow": {"steps": [{"id": "step1", "type": "llm"}]},
+})
+```
+</TabItem>
+</Tabs>
+
+### 工具伺服器
+
+驗證自訂工具伺服器 URL 是否可達且回傳有效的工具結構定義。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const result = await client.ai.verifyToolServer({ url: "https://my-tools.example.com/mcp" });
+if (result.success) {
+  console.log("Available tools:", result.tools);
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.ai.verify_tool_server({"url": "https://my-tools.example.com/mcp"})
+if result["success"]:
+    print("Available tools:", result.get("tools"))
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Chat v2 — 串流（SSE）
+
+回傳原始回應。將主體作為 Server-Sent Events 串流消費。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const response = await client.aiAgent.streamChat({
+  id: "chat_id",
+  assistant_id: "asst_abc",
+  messages: [{ role: "user", content: "What can you do?" }],
+});
+
+const reader = response.body!.getReader();
+const decoder = new TextDecoder();
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  process.stdout.write(decoder.decode(value));
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+response = client.ai_agent.stream_chat({
+    "id": "chat_id",
+    "assistant_id": "asst_abc",
+    "messages": [{"role": "user", "content": "What can you do?"}],
+})
+
+for line in response.iter_lines():
+    if line:
+        print(line)
+```
+
+**非同步：**
+
+```python
+import asyncio
+from imbrace import AsyncImbraceClient
+
+async def main():
+    async with AsyncImbraceClient() as client:
+        response = await client.ai_agent.stream_chat({
+            "id": "chat_id",
+            "assistant_id": "asst_abc",
+            "messages": [{"role": "user", "content": "Hello"}],
+        })
+        async for line in response.aiter_lines():
+            if line:
+                print(line)
+
+asyncio.run(main())
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 子代理 Chat v2
+
+串流子代理的回應並檢索其對話歷史記錄。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const res = await client.aiAgent.streamSubAgentChat({
+  assistant_id: "asst_sub",
+  session_id: "sess_xyz",
+  chat_id: "chat_id",
+  messages: [{ role: "user", content: "Explain the data." }],
+});
+
+const history = await client.aiAgent.getSubAgentHistory({
+  session_id: "sess_xyz",
+  chat_id: "chat_id",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+res = client.ai_agent.stream_sub_agent_chat({
+    "assistant_id": "asst_sub",
+    "session_id": "sess_xyz",
+    "chat_id": "chat_id",
+    "messages": [{"role": "user", "content": "Explain the data."}],
+})
+
+history = client.ai_agent.get_sub_agent_history(
+    session_id="sess_xyz",
+    chat_id="chat_id",
+)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 提示建議
+
+擷取給定 AI agent 的預建提示建議。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const suggestions = await client.aiAgent.getAgentPromptSuggestion("asst_abc");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+suggestions = client.ai_agent.get_agent_prompt_suggestion("asst_abc")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 嵌入與知識庫
+
+管理用於檢索增強生成（RAG）的檔案。首先透過 [`client.boards.uploadFile`](/sdk/full-flow-guide/#3-manage-knowledge-hubs-and-attach-to-an-ai-agent)（TypeScript）/ `client.boards.upload_file`（Python）上傳檔案，然後觸發嵌入處理。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// 觸發上傳檔案的嵌入處理
+await client.aiAgent.processEmbedding({ fileId: "file_abc" });
+
+// 列出和檢查嵌入檔案
+const files   = await client.aiAgent.listEmbeddingFiles({ page: 1, limit: 20 });
+const file    = await client.aiAgent.getEmbeddingFile("file_abc");
+const preview = await client.aiAgent.previewEmbeddingFile({ file_id: "file_abc" });
+
+// 更新狀態和刪除
+await client.aiAgent.updateEmbeddingFileStatus("file_abc", "active");
+await client.aiAgent.deleteEmbeddingFile("file_abc");
+
+// 分類檔案以進行 RAG 分類
+const classification = await client.aiAgent.classifyFile({ file_id: "file_abc" });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# 觸發上傳檔案的嵌入處理
+client.ai_agent.process_embedding("file_abc")
+
+# 使用可選的處理選項
+client.ai_agent.process_embedding("file_abc", options={"chunk_size": 512})
+
+# 列出和檢查嵌入檔案
+files   = client.ai_agent.list_embedding_files(page=1, limit=20)
+file    = client.ai_agent.get_embedding_file("file_abc")
+preview = client.ai_agent.preview_embedding_file(file_id="file_abc")
+
+# 更新狀態和刪除
+client.ai_agent.update_embedding_file_status("file_abc", "active")
+client.ai_agent.delete_embedding_file("file_abc")
+
+# 分類檔案以進行 RAG 分類
+classification = client.ai_agent.classify_file(file_id="file_abc")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Data Board
+
+針對結構化資料集的 AI 輔助欄位類型建議。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const result = await client.aiAgent.suggestFieldTypes({
+  fields: [
+    { name: "created_at", samples: ["2024-01-01", "2024-02-15"] },
+    { name: "amount",     samples: [100, 200.5, 999] },
+    { name: "is_active",  samples: [true, false, true] },
+  ],
+});
+// result.fields[i].suggestedType → "datetime" | "number" | "boolean" | ...
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.ai_agent.suggest_field_types(fields=[
+    {"name": "created_at", "samples": ["2024-01-01", "2024-02-15"]},
+    {"name": "amount",     "samples": [100, 200.5, 999]},
+    {"name": "is_active",  "samples": [True, False, True]},
+])
+# result["fields"][i]["suggestedType"] → "datetime" | "number" | "boolean" | ...
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Parquet
+
+產生和管理用於分析管道的 Parquet 欄格式資料檔案。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// 從 JSON 資料產生 Parquet 檔案
+const result = await client.aiAgent.generateParquet({
+  data: [{ id: 1, name: "Alice" }, { id: 2, name: "Bob" }],
+  fileName: "users",
+  folderName: "exports",
+});
+
+const files = await client.aiAgent.listParquetFiles();
+await client.aiAgent.deleteParquetFile("exports/users.parquet");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.ai_agent.generate_parquet(
+    data=[{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}],
+    file_name="users",
+    folder_name="exports",
+)
+
+files = client.ai_agent.list_parquet_files()
+client.ai_agent.delete_parquet_file("exports/users.parquet")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 分散式追蹤（Tempo）
+
+查詢 AI Agent 服務發出的 Grafana Tempo 追蹤，以進行可觀察性和除錯。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// 列出最近的追蹤
+const traces = await client.aiAgent.getTraces({
+  service:   "ai-agent",
+  limit:     50,
+  timeRange: 3600,     // 秒
+  orgId:     "org_abc",
+  details:   true,
+});
+
+// 檢查單一追蹤
+const trace = await client.aiAgent.getTrace("trace_id_hex");
+
+// 列舉服務、標籤和標籤值
+const services = await client.aiAgent.getTraceServices();
+const tags     = await client.aiAgent.getTraceTags();
+const values   = await client.aiAgent.getTraceTagValues("http.status_code");
+
+// TraceQL 搜尋
+const results = await client.aiAgent.searchTraceQL(
+  `{ .service.name = "ai-agent" && .http.status = 500 }`
+);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# 列出最近的追蹤
+traces = client.ai_agent.get_traces(
+    service="ai-agent",
+    limit=50,
+    time_range=3600,     # 秒
+    org_id="org_abc",
+    details=True,
+)
+
+# 檢查單一追蹤
+trace = client.ai_agent.get_trace("trace_id_hex")
+
+# 列舉服務、標籤和標籤值
+services = client.ai_agent.get_trace_services()
+tags     = client.ai_agent.get_trace_tags()
+values   = client.ai_agent.get_trace_tag_values("http.status_code")
+
+# TraceQL 搜尋
+results = client.ai_agent.search_traceql(
+    '{ .service.name = "ai-agent" && .http.status = 500 }'
+)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 聊天客戶端
+
+聊天客戶端子 API 為前端應用程式（例如嵌入式聊天元件）提供支援。有關框架層級的整合（React singleton、Express 認證代理等），請參閱[整合](/sdk/integrations/)。
+
+### 認證
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+await client.aiAgent.verifyChatClientCredentials({ token: "tok_xxx" });
+await client.aiAgent.registerChatClient({ name: "web-app", secret: "s3cr3t" });
+const user = await client.aiAgent.getChatClientUser({ token: "tok_xxx" });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+client.ai_agent.verify_chat_client_credentials({"token": "tok_xxx"})
+client.ai_agent.register_chat_client({"name": "web-app", "secret": "s3cr3t"})
+user = client.ai_agent.get_chat_client_user({"token": "tok_xxx"})
+```
+</TabItem>
+</Tabs>
+
+### 聊天
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// 建立新的聊天連線
+await client.aiAgent.createClientChat({
+  id:                     "chat_uuid",
+  assistantId:            "asst_abc",
+  organizationId:         "org_abc",
+  userId:                 "user_xxx",
+  selectedVisibilityType: "private",
+  message: {
+    id:        "msg_uuid",
+    role:      "user",
+    content:   "Hello!",
+    createdAt: new Date().toISOString(),
+    parts:     [{ type: "text", text: "Hello!" }],
+  },
+});
+
+// 列出、讀取、更新、刪除聊天
+const chats = await client.aiAgent.listClientChats({
+  organization_id: "org_abc",
+  limit: 20,
+});
+const chat = await client.aiAgent.getClientChat("chat_id");
+await client.aiAgent.updateClientChat("chat_id", { visibility: "private" });
+await client.aiAgent.deleteClientChat("chat_id");
+await client.aiAgent.deleteAllClientChats({ organization_id: "org_abc" });
+
+// 自動為聊天產生標題
+await client.aiAgent.generateClientChatTitle("chat_id");
+
+// 以 SSE 串流即時聊天狀態 — 回傳原始 Response
+const statusStream = await client.aiAgent.streamClientChatStatus("chat_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# 建立新的聊天連線
+from datetime import datetime, timezone
+
+client.ai_agent.create_client_chat({
+    "id":                     "chat_uuid",
+    "assistantId":            "asst_abc",
+    "organizationId":         "org_abc",
+    "userId":                 "user_xxx",
+    "selectedVisibilityType": "private",
+    "message": {
+        "id":        "msg_uuid",
+        "role":      "user",
+        "content":   "Hello!",
+        "createdAt": datetime.now(timezone.utc).isoformat(),
+        "parts":     [{"type": "text", "text": "Hello!"}],
+    },
+})
+
+# 列出、讀取、更新、刪除
+chats = client.ai_agent.list_client_chats(organization_id="org_abc", limit=20)
+chat  = client.ai_agent.get_client_chat("chat_id")
+client.ai_agent.update_client_chat("chat_id", {"visibility": "private"})
+client.ai_agent.delete_client_chat("chat_id")
+client.ai_agent.delete_all_client_chats("org_abc")
+
+# 自動為聊天產生標題
+client.ai_agent.generate_client_chat_title("chat_id")
+
+# 以 SSE 串流即時聊天狀態 — 回傳原始 httpx.Response
+status_stream = client.ai_agent.stream_client_chat_status("chat_id")
+```
+</TabItem>
+</Tabs>
+
+### 訊息
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+await client.aiAgent.persistClientMessage({ chatId: "chat_id", content: "Hello" });
+const messages = await client.aiAgent.listClientMessages("chat_id");
+await client.aiAgent.deleteTrailingMessages("message_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+client.ai_agent.persist_client_message({"chatId": "chat_id", "content": "Hello"})
+messages = client.ai_agent.list_client_messages("chat_id")
+client.ai_agent.delete_trailing_messages("message_id")
+```
+</TabItem>
+</Tabs>
+
+### 投票
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const votes = await client.aiAgent.getVotes("chat_id");
+await client.aiAgent.updateVote({ messageId: "msg_id", vote: "up" });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+votes = client.ai_agent.get_votes("chat_id")
+client.ai_agent.update_vote({"messageId": "msg_id", "vote": "up"})
+```
+</TabItem>
+</Tabs>
+
+### 文件（AI 生成的成品）
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+await client.aiAgent.createDocument({ kind: "text", content: "Draft..." });
+
+const doc        = await client.aiAgent.getDocument("doc_id");
+const latest     = await client.aiAgent.getDocumentLatest("doc_id");
+const pub        = await client.aiAgent.getDocumentPublic("doc_id");
+const byKind     = await client.aiAgent.getDocumentLatestByKind({ kind: "text" });
+const suggestion = await client.aiAgent.getDocumentSuggestions("doc_id");
+
+await client.aiAgent.deleteDocument("doc_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+client.ai_agent.create_document({"kind": "text", "content": "Draft..."})
+
+doc        = client.ai_agent.get_document("doc_id")
+latest     = client.ai_agent.get_document_latest("doc_id")
+pub        = client.ai_agent.get_document_public("doc_id")
+by_kind    = client.ai_agent.get_document_latest_by_kind(kind="text")
+suggestion = client.ai_agent.get_document_suggestions("doc_id")
+
+client.ai_agent.delete_document("doc_id")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 服務資訊
+
+檢查 AI Agent 服務狀態和版本的工具端點。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const config  = await client.aiAgent.getConfig();
+const health  = await client.aiAgent.getHealth();          // 摘要
+const details = await client.aiAgent.getHealth(true);      // 詳細
+const version = await client.aiAgent.getVersion();
+```
+</TabItem>
+<TabItem label="Python">
+```python
+config  = client.ai_agent.get_config()
+health  = client.ai_agent.get_health()           # 摘要
+details = client.ai_agent.get_health(detailed=True)  # 詳細
+version = client.ai_agent.get_version()
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 管理指南
+
+存取 AI Agent 服務託管的管理文件。指南檔案以原始二進位串流回傳（通常為 PDF）。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const guides = await client.aiAgent.listAdminGuides();
+
+// 下載特定指南 — 回傳原始 Response（PDF 串流）
+const response = await client.aiAgent.getAdminGuide("onboarding.pdf");
+const blob = await response.blob();
+```
+</TabItem>
+<TabItem label="Python">
+```python
+guides = client.ai_agent.list_admin_guides()
+
+# 下載特定指南 — 回傳原始 httpx.Response
+response = client.ai_agent.get_admin_guide("onboarding.pdf")
+with open("onboarding.pdf", "wb") as f:
+    f.write(response.content)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 舊版 v1 聊天
+
+原始的 REST 聊天端點可持久化對話歷史記錄，但不支援串流。新程式碼應使用上方的 [Chat v2 串流](#chat-v2--streaming-sse)；v1 保留用於與現有聊天的向下相容。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// 列出組織的聊天
+const chats = await client.aiAgent.listChats({
+  organization_id: "org_abc",
+  user_id: "user_123",
+  limit: 20,
+});
+
+// 取得單一聊天（傳遞 true 以包含訊息）
+const chat = await client.aiAgent.getChat("chat_id", true);
+
+// 刪除聊天
+await client.aiAgent.deleteChat("chat_id", {
+  organization_id: "org_abc",
+  user_id: "user_123",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+chats = client.ai_agent.list_chats(
+    organization_id="org_abc",
+    user_id="user_123",
+    limit=20,
+)
+
+chat = client.ai_agent.get_chat("chat_id", include_messages=True)
+
+client.ai_agent.delete_chat(
+    "chat_id",
+    organization_id="org_abc",
+    user_id="user_123",
+)
+```
+</TabItem>
+</Tabs>

@@ -1,0 +1,312 @@
+---
+title: 工作流
+description: 工作流 — 可视化工作流构建器和渠道自动化 — 通过 SDK 创建、触发和管理流程。
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+`client.workflows` 同时暴露渠道自动化（v2/backend 路由）和流程引擎（增删改查流程、运行、文件夹、连接、组件、MCP 服务器、表格、邀请）。
+
+首先初始化客户端（参见[安装](/zh-cn/sdk/installation/)或[快速入门](/zh-cn/sdk/quick-start/)）。有关将工作流绑定到 AI 代理的端到端演练，请参见[完整流程指南 §2](/zh-cn/sdk/full-flow-guide/#2-create-a-workflow-and-bind-it-to-an-ai-agent)。
+
+---
+
+## 渠道自动化 — `client.workflows`
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { data: automations }    = await client.workflows.listChannelAutomation();
+const { data: whatsappFlows }  = await client.workflows.listChannelAutomation({ channelType: "whatsapp" });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+automations    = client.workflows.list_channel_automation().get("data", [])
+whatsapp_flows = client.workflows.list_channel_automation(channel_type="whatsapp").get("data", [])
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 流程
+
+### 增删改查
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { data: flows } = await client.workflows.listFlows();
+
+const flow = await client.workflows.getFlow("flow_id");
+
+const newFlow = await client.workflows.createFlow({
+  displayName: "New Lead Notification",
+  projectId: "project_id",
+});
+
+await client.workflows.deleteFlow("flow_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+flows = client.workflows.list_flows().get("data", [])
+
+flow = client.workflows.get_flow("flow_id")
+
+new_flow = client.workflows.create_flow(
+    display_name="New Lead Notification",
+    project_id="project_id",
+)
+
+client.workflows.delete_flow("flow_id")
+```
+</TabItem>
+</Tabs>
+
+### 应用操作
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+await client.workflows.applyFlowOperation("flow_id", {
+  type: "UPDATE_TRIGGER",
+  request: {
+    name: "trigger",
+    type: "PIECE_TRIGGER",
+    valid: true,
+    displayName: "Webhook",
+    settings: {
+      pieceName: "@activepieces/piece-webhook",
+      pieceVersion: "0.1.24",
+      triggerName: "catch_webhook",
+      input: {},
+      propertySettings: {},
+    },
+  },
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+client.workflows.apply_flow_operation("flow_id", {
+    "type": "UPDATE_TRIGGER",
+    "request": {
+        "name": "trigger",
+        "type": "PIECE_TRIGGER",
+        "valid": True,
+        "displayName": "Webhook",
+        "settings": {
+            "pieceName": "@activepieces/piece-webhook",
+            "pieceVersion": "0.1.24",
+            "triggerName": "catch_webhook",
+            "input": {},
+            "propertySettings": {},
+        },
+    },
+})
+```
+</TabItem>
+</Tabs>
+
+### 触发流程
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// 触发并忘记
+await client.workflows.triggerFlow("flow_id", {
+  contactId: "contact_xxx",
+  event: "lead_qualified",
+});
+
+// 等待结果
+const result = await client.workflows.triggerFlowSync("flow_id", {
+  contactId: "contact_xxx",
+  event: "lead_qualified",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# 触发并忘记
+client.workflows.trigger_flow("flow_id", {"contactId": "contact_xxx", "event": "lead_qualified"})
+
+# 等待结果
+result = client.workflows.trigger_flow_sync("flow_id", {"contactId": "contact_xxx", "event": "lead_qualified"})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 流程运行
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { data: runs } = await client.workflows.listRuns({ flowId: "flow_id", limit: 20 });
+const run            = await client.workflows.getRun("run_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+runs = client.workflows.list_runs(flow_id="flow_id", limit=20).get("data", [])
+run  = client.workflows.get_run("run_id")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 文件夹
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { data: folders }  = await client.workflows.listFolders();
+const folder             = await client.workflows.getFolder("folder_id");
+const newFolder          = await client.workflows.createFolder({ displayName: "CRM Automations", projectId: "project_id" });
+const updated            = await client.workflows.updateFolder("folder_id", { displayName: "Updated Name" });
+await client.workflows.deleteFolder("folder_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+folders    = client.workflows.list_folders().get("data", [])
+folder     = client.workflows.get_folder("folder_id")
+new_folder = client.workflows.create_folder(display_name="CRM Automations", project_id="project_id")
+updated    = client.workflows.update_folder(folder_id="folder_id", display_name="Updated Name")
+client.workflows.delete_folder("folder_id")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 应用连接
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { data: connections } = await client.workflows.listConnections();
+const connection            = await client.workflows.getConnection("connection_id");
+await client.workflows.upsertConnection({
+  name: "slack-integration",
+  type: "OAUTH2",
+  value: { access_token: "xoxb-xxx" },
+});
+await client.workflows.deleteConnection("connection_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+connections = client.workflows.list_connections().get("data", [])
+connection  = client.workflows.get_connection("connection_id")
+client.workflows.upsert_connection({"name": "slack-integration", "type": "OAUTH2", "value": {"access_token": "xoxb-xxx"}})
+client.workflows.delete_connection("connection_id")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 组件
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const pieces = await client.workflows.listPieces({ limit: 20 });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+pieces = client.workflows.list_pieces(limit=20)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 触发器
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const status = await client.workflows.getTriggerRunStatus();
+await client.workflows.testTrigger({ pieceName: "@activepieces/piece-webhook", flowId: "flow_id" });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+status = client.workflows.get_trigger_run_status()
+client.workflows.test_trigger({"pieceName": "@activepieces/piece-webhook", "flowId": "flow_id"})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 表格与记录
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { data: tables }  = await client.workflows.listTables();
+const table             = await client.workflows.getTable("table_id");
+const { data: records } = await client.workflows.listRecords({ tableId: "table_id" });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+tables  = client.workflows.list_tables().get("data", [])
+table   = client.workflows.get_table("table_id")
+records = client.workflows.list_records(table_id="table_id").get("data", [])
+```
+</TabItem>
+</Tabs>
+
+---
+
+## MCP 服务器
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { data: servers } = await client.workflows.listMcpServers("project_id");
+const server            = await client.workflows.getMcpServer("mcp_server_id");
+const newServer         = await client.workflows.createMcpServer({ projectId: "project_id", name: "My MCP" });
+await client.workflows.deleteMcpServer("mcp_server_id");
+await client.workflows.rotateMcpToken("mcp_server_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+servers    = client.workflows.list_mcp_servers(project_id="project_id").get("data", [])
+server     = client.workflows.get_mcp_server("mcp_server_id")
+new_server = client.workflows.create_mcp_server({"projectId": "project_id", "name": "My MCP"})
+client.workflows.delete_mcp_server("mcp_server_id")
+client.workflows.rotate_mcp_token("mcp_server_id")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 用户邀请
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { data: invitations } = await client.workflows.listInvitations({ type: "PROJECT" });
+await client.workflows.deleteInvitation("invitation_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+invitations = client.workflows.list_invitations(type="PROJECT").get("data", [])
+client.workflows.delete_invitation("invitation_id")
+```
+</TabItem>
+</Tabs>

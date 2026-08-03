@@ -1,0 +1,112 @@
+﻿---
+title: Bắt Đầu Nhanh
+description: Thực hiện lời gọi API Imbrace đầu tiên trong vòng một phút.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+import AuthOnly from "../../../../components/AuthOnly.astro";
+
+### 1. Khởi tạo client
+
+<AuthOnly mode="access-token">
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    import { ImbraceClient } from "@imbrace/sdk"
+
+    const client = new ImbraceClient({
+      accessToken: process.env.IMBRACE_ACCESS_TOKEN,
+      env: "stable",
+    })
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    import os
+    from dotenv import load_dotenv
+    from imbrace import ImbraceClient
+
+    load_dotenv()
+
+    client = ImbraceClient(
+        access_token=os.environ["IMBRACE_ACCESS_TOKEN"],
+        env="stable",
+    )
+    ```
+  </TabItem>
+</Tabs>
+</AuthOnly>
+
+<AuthOnly mode="api-key">
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    import { ImbraceClient } from "@imbrace/sdk"
+
+    const client = new ImbraceClient({
+      apiKey:         process.env.IMBRACE_API_KEY,
+      organizationId: process.env.IMBRACE_ORGANIZATION_ID,
+      env:            "stable",
+    })
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    import os
+    from dotenv import load_dotenv
+    from imbrace import ImbraceClient
+
+    load_dotenv()
+
+    client = ImbraceClient(
+        api_key=os.environ["IMBRACE_API_KEY"],
+        organization_id=os.environ.get("IMBRACE_ORGANIZATION_ID"),
+        env="stable",
+    )
+    ```
+  </TabItem>
+</Tabs>
+</AuthOnly>
+
+> Chuyển đổi dropdown **Auth** trong tiêu đề để chuyển đổi giữa các ví dụ API Key và Access Token trên toàn trang. Xem [Xác thực](/sdk/authentication/) để biết nên chọn loại nào.
+
+---
+
+### 2. Lấy danh sách boards của bạn
+
+Boards là các pipeline CRM — khách hàng tiềm năng, giao dịch, nhiệm vụ, hoặc bất kỳ dữ liệu có cấu trúc nào. Lời gọi này chỉ yêu cầu thông tin xác thực của bạn.
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    const { data: boards } = await client.boards.list()
+
+    for (const board of boards) {
+      console.log(board.id, board.name)
+    }
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    boards = client.boards.list()
+
+    for board in boards.get("data", []):
+        print(board["id"], board.get("name"))
+    ```
+  </TabItem>
+</Tabs>
+
+Nếu bạn thấy danh sách boards của mình, SDK đã được kết nối và xác thực.
+
+---
+
+### 3. Các bước tiếp theo
+
+[Hướng dẫn toàn diện](/sdk/full-flow-guide/) hướng dẫn bốn quy trình làm việc chính từ đầu đến cuối. Đi thẳng đến một phần:
+
+- **AI Agent + streamChat** → [Hướng dẫn toàn diện §1](/sdk/full-flow-guide/#1-create-an-ai-agent-and-start-chatting)
+- **Workflows** → [Hướng dẫn toàn diện §2](/sdk/full-flow-guide/#2-create-a-workflow-and-bind-it-to-an-ai-agent)
+- **Knowledge Hub (thư mục, RAG)** → [Hướng dẫn toàn diện §3](/sdk/full-flow-guide/#3-manage-knowledge-hubs-and-attach-to-an-ai-agent)
+- **Boards & Items (CRM)** → [Hướng dẫn toàn diện §4](/sdk/full-flow-guide/#4-manage-data-boards-and-items-crm-pipelines)
+
+Để xem tài liệu tham khảo API theo từng namespace, hãy xem [Resources](/sdk/resources/).

@@ -1,0 +1,414 @@
+---
+title: Document AI
+description: 使用视觉模型从 PDF 和图像中提取结构化数据。两个命名空间：client.chatAi 用于直接处理，client.documentAi 用于基于代理的工作流。
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+Document AI 使用视觉模型（如 GPT-4o）从 PDF 和图片中提取结构化数据 — 发票、表单、收据、合同或任何带有可见文本的文档。
+
+SDK 暴露两个命名空间：
+- **`client.chatAi` / `client.chat_ai`** — 直接文档处理和模型列表
+- **`client.documentAi` / `client.document_ai`** — 基于代理的文档处理，具有模式管理、代理增删改查和端到端编排
+
+首先初始化客户端（参见[安装](/zh-cn/sdk/installation/)或[快速入门](/zh-cn/sdk/quick-start/)）。
+
+---
+
+## `client.chatAi` — 处理文档
+
+### 列出可用模型
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const models = await client.chatAi.listDocumentModels();
+```
+</TabItem>
+<TabItem label="Python">
+```python
+models = client.chat_ai.list_document_models()
+```
+</TabItem>
+</Tabs>
+
+### 直接文档处理
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const result = await client.chatAi.processDocument({
+  modelName: "gpt-4o",
+  url: "https://example.com/invoice.pdf",
+  organizationId: "org_xxx",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.chat_ai.process_document(
+    model_name="gpt-4o",
+    url="https://example.com/invoice.pdf",
+    organization_id="org_xxx",
+)
+```
+</TabItem>
+</Tabs>
+
+#### 参数参考
+
+| 参数 | TS 字段 | Python 参数 | 类型 | 必填 |
+|---|---|---|---|---|
+| 模型名称 | `modelName` | `model_name` | `string` / `str` | 是 |
+| 文档 URL | `url` | `url` | `string` / `str` | 是 |
+| 组织 ID | `organizationId` | `organization_id` | `string` / `str` | 是 |
+| 面板 ID | `boardId` | `board_id` | `string` / `str` | 否 |
+| 语言 | `language` | `language` | `string` / `str` | 否 |
+| 附加指令 | `additionalInstructions` | `additional_instructions` | `string` / `str` | 否 |
+| 附加文档指令 | `additionalDocumentInstructions` | `additional_document_instructions` | `string` / `str` | 否 |
+| 处理模型名称 | `processModelName` | `process_model_name` | `string` / `str` | 否 |
+| 填充文件 URL | `fileUrlToFill` | `file_url_to_fill` | `string` / `str` | 否 |
+| 工具 | `tools` | `tools` | `Record<string, unknown>[]` / `List[Dict]` | 否 |
+| UTC 偏移 | `utc` | `utc` | `number` / `int` | 否 |
+| 块大小 | `chunkSize` | `chunk_size` | `number` / `int` | 否 |
+| 最大并发 | `maxConcurrent` | `max_concurrent` | `number` / `int` | 否 |
+| 最大重试 | `maxRetries` | `max_retries` | `number` / `int` | 否 |
+| 增强处理 | `useEnhancedProcessing` | `use_enhanced_processing` | `boolean` / `bool` | 否 |
+
+#### PDF 表单填写示例
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const result = await client.chatAi.processDocument({
+  modelName: "gpt-4o",
+  url: "https://example.com/blank-invoice.pdf",
+  organizationId: "org_xxx",
+  fileUrlToFill: "https://example.com/blank-invoice.pdf",
+  language: "en",
+});
+
+if (result.success && result.data.filledPdfUrl) {
+  console.log("Filled PDF:", result.data.filledPdfUrl);
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.chat_ai.process_document(
+    model_name="gpt-4o",
+    url="https://example.com/blank-invoice.pdf",
+    organization_id="org_xxx",
+    file_url_to_fill="https://example.com/blank-invoice.pdf",
+    language="en",
+)
+
+if result["success"] and result["data"].get("filledPdfUrl"):
+    print("Filled PDF:", result["data"]["filledPdfUrl"])
+```
+</TabItem>
+</Tabs>
+
+---
+
+## `client.documentAi` — 代理增删改查
+
+文档 AI 代理存储提取模式、指令和模型配置，供重复使用。
+
+### 列出代理
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// 所有代理
+const agents = await client.documentAi.listAgents();
+
+// 按名称过滤
+const filtered = await client.documentAi.listAgents({ nameContains: "Invoice" });
+
+// 仅文档 AI 代理（通过 createFull 或 webapp 创建）
+const docAiAgents = await client.documentAi.listAgents({ documentAiOnly: true });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# 所有代理
+agents = client.document_ai.list_agents()
+
+# 按名称过滤
+filtered = client.document_ai.list_agents(name_contains="Invoice")
+
+# 仅文档 AI 代理
+doc_ai_agents = client.document_ai.list_agents(document_ai_only=True)
+```
+</TabItem>
+</Tabs>
+
+### 获取代理
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const agent = await client.documentAi.getAgent("agent_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+agent = client.document_ai.get_agent("agent_id")
+```
+</TabItem>
+</Tabs>
+
+### 创建代理
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const agent = await client.documentAi.createAgent({
+  name: "Invoice Extractor",
+  instructions: "Extract invoice fields. Dates as YYYY-MM-DD.",
+  model_id: "gpt-4o",
+  schema: {
+    invoice_number: { type: "string", description: "Invoice ID" },
+    total:          { type: "number" },
+    date:           { type: "string", format: "date" },
+  },
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+agent = client.document_ai.create_agent(
+    name="Invoice Extractor",
+    instructions="Extract invoice fields. Dates as YYYY-MM-DD.",
+    model_id="gpt-4o",
+    schema={
+        "invoice_number": {"type": "string", "description": "Invoice ID"},
+        "total":          {"type": "number"},
+        "date":           {"type": "string", "format": "date"},
+    },
+)
+```
+</TabItem>
+</Tabs>
+
+### 更新代理
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+await client.documentAi.updateAgent("agent_id", {
+  name: "Invoice Extractor v2",
+  instructions: "Updated extraction logic.",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+client.document_ai.update_agent("agent_id", {
+    "name": "Invoice Extractor v2",
+    "instructions": "Updated extraction logic.",
+})
+```
+</TabItem>
+</Tabs>
+
+### 删除代理
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+await client.documentAi.deleteAgent("agent_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+client.document_ai.delete_agent("agent_id")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## `client.documentAi` — 使用代理处理文档
+
+使用配置好的代理处理文档（从代理查找模型 + 指令）。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const result = await client.documentAi.process({
+  agentId: "agent_id",
+  url: "https://example.com/invoice.pdf",
+  organizationId: "org_xxx",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.document_ai.process(
+    agent_id="agent_id",
+    url="https://example.com/invoice.pdf",
+    organization_id="org_xxx",
+)
+```
+</TabItem>
+</Tabs>
+
+你也可以覆盖代理的模型或指令：
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const result = await client.documentAi.process({
+  agentId: "agent_id",
+  url: "https://example.com/invoice.pdf",
+  organizationId: "org_xxx",
+  modelName: "gpt-4o",          // 覆盖代理的模型
+  instructions: "Custom prompt", // 覆盖代理的指令
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.document_ai.process(
+    agent_id="agent_id",
+    url="https://example.com/invoice.pdf",
+    organization_id="org_xxx",
+    model_name="gpt-4o",
+    instructions="Custom prompt",
+)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## `client.documentAi` — 建议模式
+
+通过分析示例文档自动提出 JSON 模式。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const schema = await client.documentAi.suggestSchema({
+  url: "https://example.com/invoice.pdf",
+  organizationId: "org_xxx",
+  modelName: "gpt-4o",  // 可选，默认为 "gpt-4o"
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+schema = client.document_ai.suggest_schema(
+    url="https://example.com/invoice.pdf",
+    organization_id="org_xxx",
+    model_name="gpt-4o",
+)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## `client.documentAi` — 完整创建（编排器）
+
+端到端 Document AI 代理创建（iMBRACE webapp 所做的）：创建一个带有提取模式的面板，然后创建一个链接到该面板的 UseCase + AI 代理。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const result = await client.documentAi.createFull({
+  name: "Invoice Extractor",
+  instructions: "Extract invoice fields. Dates as YYYY-MM-DD.",
+  schemaFields: [
+    { name: "invoice_number", type: "ShortText", description: "Invoice ID" },
+    { name: "total",          type: "Number",    description: "Total amount" },
+    { name: "date",           type: "Date",      description: "Invoice date" },
+  ],
+  modelId: "gpt-4o",
+  providerId: "system",
+});
+
+console.log(result.board_id);     // "brd_xxx"
+console.log(result.ai_agent_id);  // 所创建的 AI 代理的 UUID
+console.log(result.usecase_id);   // 所创建的 UseCase 的 UUID
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.document_ai.create_full(
+    name="Invoice Extractor",
+    instructions="Extract invoice fields. Dates as YYYY-MM-DD.",
+    schema_fields=[
+        {"name": "invoice_number", "type": "ShortText", "description": "Invoice ID"},
+        {"name": "total",          "type": "Number",    "description": "Total amount"},
+        {"name": "date",           "type": "Date",      "description": "Invoice date"},
+    ],
+    model_id="gpt-4o",
+    provider_id="system",
+)
+
+print(result["board_id"])      # "brd_xxx"
+print(result["ai_agent_id"])   # 所创建的 AI 代理的 UUID
+```
+</TabItem>
+</Tabs>
+
+#### 完整创建选项
+
+| 参数 | TS 字段 | Python 参数 | 类型 | 默认值 |
+|---|---|---|---|---|
+| 名称 | `name` | `name` | `string` / `str` | — |
+| 指令 | `instructions` | `instructions` | `string` / `str` | — |
+| 模式字段 | `schemaFields` | `schema_fields` | `CreateBoardFieldInput[]` / `List[Dict]` | — |
+| 模型 ID | `modelId` | `model_id` | `string` / `str` | — |
+| 提供商 ID | `providerId` | `provider_id` | `string` / `str` | — |
+| 描述 | `description` | `description` | `string` / `str` | `None` |
+| VLM 模型 | `vlmModel` | `vlm_model` | `string` / `str` | `modelId` |
+| VLM 提供商 | `vlmProviderId` | `vlm_provider_id` | `string` / `str` | `providerId` |
+| 源语言 | `sourceLanguages` | `source_languages` | `string[]` / `List[str]` | `["English"]` |
+| 手写支持 | `handwritingSupport` | `handwriting_support` | `boolean` / `bool` | `false` |
+| 时间偏移 | `timeOffset` | `time_offset` | `string` / `str` | `"UTC+00:00"` |
+| 失败时继续 | `continueOnFailure` | `continue_on_failure` | `boolean` / `bool` | `false` |
+| 重试次数 | `retryTime` | `retry_time` | `number` / `int` | `2` |
+| 温度 | `temperature` | `temperature` | `number` / `float` | `0.1` |
+| 演示 URL | `demoUrl` | `demo_url` | `string` / `str` | `None` |
+| 团队 ID | `teamIds` | `team_ids` | `string[]` / `List[str]` | `[]` |
+| 额外 AI 代理字段 | `extraAiAgent` | `extra_ai_agent` | `Record<string, unknown>` / `Dict` | `None` |
+
+---
+
+## 异步用法（Python）
+
+<Tabs syncKey="lang">
+<TabItem label="AsyncImbraceClient">
+```python
+from imbrace import AsyncImbraceClient
+
+async with AsyncImbraceClient() as client:
+    # 直接处理 (chat_ai)
+    models = await client.chat_ai.list_document_models()
+    result = await client.chat_ai.process_document(
+        model_name="gpt-4o",
+        url="https://example.com/invoice.pdf",
+        organization_id="org_xxx",
+    )
+
+    # 基于代理的处理 (document_ai)
+    agents = await client.document_ai.list_agents(document_ai_only=True)
+    result2 = await client.document_ai.process(
+        agent_id=agents[0]["_id"],
+        url="https://example.com/receipt.pdf",
+        organization_id="org_xxx",
+    )
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 参见
+
+- [完整流程指南 §3 — 知识中心](/zh-cn/sdk/full-flow-guide/#3-manage-knowledge-hubs-and-attach-to-an-ai-agent) — 上传用于 RAG 的文件
+- [AI 代理 — 嵌入与知识库](/zh-cn/sdk/ai-agent/#embeddings--knowledge-base) — 管理用于检索的嵌入文件

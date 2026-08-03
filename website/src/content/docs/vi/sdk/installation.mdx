@@ -1,0 +1,149 @@
+﻿---
+title: Cài đặt
+description: Cài đặt Imbrace SDK cho TypeScript hoặc Python.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+import AuthOnly from "../../../../components/AuthOnly.astro";
+import VersionOnly from "../../../../components/VersionOnly.astro";
+
+### Cài đặt
+
+<VersionOnly version="1.0.4">
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```bash
+    npm install @imbrace/sdk
+    # hoặc
+    yarn add @imbrace/sdk
+    # hoặc
+    pnpm add @imbrace/sdk
+    ```
+
+    Yêu cầu Node.js 18+ (hoặc bất kỳ trình duyệt nào có hỗ trợ `fetch` và `ReadableStream` gốc).
+  </TabItem>
+  <TabItem label="Python">
+    ```bash
+    pip install imbrace
+    # hoặc
+    uv add imbrace
+    ```
+
+    Yêu cầu Python 3.9+.
+  </TabItem>
+</Tabs>
+</VersionOnly>
+
+### Khởi tạo client
+
+<AuthOnly mode="access-token">
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    import { ImbraceClient } from "@imbrace/sdk"
+
+    // Build on Imbrace — Imbrace LÀ backend của bạn, người dùng cuối đăng nhập qua OTP
+    const client = new ImbraceClient({
+      accessToken: process.env.IMBRACE_ACCESS_TOKEN,
+      env: "stable",
+    })
+    ```
+
+    Client có trạng thái — hãy tạo nó một lần và tái sử dụng trong toàn bộ ứng dụng.
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    import os
+    from imbrace import ImbraceClient
+
+    # Build on Imbrace — Imbrace LÀ backend của bạn, người dùng cuối đăng nhập qua OTP
+    with ImbraceClient(
+        access_token=os.environ["IMBRACE_ACCESS_TOKEN"],
+        env="stable",
+    ) as client:
+        me = client.platform.get_me()
+    ```
+
+    Python cũng xuất `AsyncImbraceClient` (`async with ...`) cho các stack bất đồng bộ như FastAPI.
+
+    Context manager đóng pool kết nối HTTP bên dưới một cách tự động.
+  </TabItem>
+</Tabs>
+</AuthOnly>
+
+<AuthOnly mode="api-key">
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    import { ImbraceClient } from "@imbrace/sdk"
+
+    // Wrap Imbrace — Imbrace là một tính năng bên trong backend CỦA BẠN, người dùng của bạn
+    const client = new ImbraceClient({
+      apiKey:         process.env.IMBRACE_API_KEY,
+      organizationId: process.env.IMBRACE_ORGANIZATION_ID,
+      env:            "stable",
+    })
+    ```
+
+    Client có trạng thái — hãy tạo nó một lần và tái sử dụng trong toàn bộ ứng dụng.
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    import os
+    from imbrace import ImbraceClient
+
+    # Wrap Imbrace — Imbrace là một tính năng bên trong backend CỦA BẠN, người dùng của bạn
+    with ImbraceClient(
+        api_key=os.environ["IMBRACE_API_KEY"],
+        organization_id=os.environ.get("IMBRACE_ORGANIZATION_ID"),
+        env="stable",
+    ) as client:
+        me = client.platform.get_me()
+    ```
+
+    Python cũng xuất `AsyncImbraceClient` (`async with ...`) cho các stack bất đồng bộ như FastAPI.
+
+    Context manager đóng pool kết nối HTTP bên dưới một cách tự động.
+  </TabItem>
+</Tabs>
+</AuthOnly>
+
+Để biết khi nào nên sử dụng mỗi loại thông tin xác thực, hãy xem [Xác thực](/sdk/authentication/). Để biết hướng dẫn thiết lập thông tin xác thực từng bước (env vars, dotenv, secrets), hãy xem [Hướng dẫn thiết lập](/getting-started/setup/#configure-credentials).
+
+### Xác minh
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    import { ImbraceClient } from "@imbrace/sdk"
+    console.log("SDK loaded:", typeof ImbraceClient) // "function"
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    from imbrace import ImbraceClient
+    print("SDK ready:", ImbraceClient)
+    ```
+  </TabItem>
+</Tabs>
+
+### Biến môi trường
+
+SDK **không** tự động đọc biến môi trường. Truyền thông tin xác thực trực tiếp vào constructor và sử dụng trình tải (`dotenv` / trình xử lý env của framework của bạn) nếu bạn lưu chúng trong `.env`.
+
+| Biến | Mục đích |
+|---|---|
+| `IMBRACE_API_KEY` | API key của bạn (thông tin xác thực cấp tổ chức) |
+| `IMBRACE_ACCESS_TOKEN` | Access token của người dùng (thông tin xác thực theo phiên) |
+| `IMBRACE_ORGANIZATION_ID` | ID tổ chức — được truyền dưới dạng `x-organization-id` trong mỗi yêu cầu |
+| `IMBRACE_GATEWAY_URL` | Ghi đè URL gateway (mặc định: `https://app-gatewayv2.imbrace.co`) |
+
+Org id được mã hóa bên trong cả API keys và access tokens. Bạn có thể tùy chọn ghi đè bằng cách truyền `organizationId` (TypeScript) hoặc `organization_id` (Python) vào constructor. Xem [Xác thực](/sdk/authentication/) để biết chi tiết.
+
+---
+
+### Bước tiếp theo
+
+- [Bắt đầu nhanh →](/sdk/quick-start/) — thực hiện lời gọi API đầu tiên trong 60 giây
+- [Xác thực →](/sdk/authentication/) — loại thông tin xác thực, luồng đăng nhập OTP và khi nào sử dụng mỗi loại
+- [Hướng dẫn thiết lập →](/getting-started/setup/) — môi trường, biến môi trường và ghi đè URL dịch vụ

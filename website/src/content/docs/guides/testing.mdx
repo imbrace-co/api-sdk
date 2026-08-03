@@ -1,0 +1,157 @@
+---
+title: Testing Guide
+description: Comprehensive guide for running unit tests, integration tests, lint, and type checks for the Imbrace SDK.
+---
+
+## Environment Setup
+
+### Python SDK
+
+```bash
+cd py
+
+# Install dependencies + dev tools (pytest, pytest-asyncio, pytest-httpx, ruff, mypy)
+pip install -e ".[dev]"
+```
+
+Create `py/.env` (required only for integration tests):
+
+```env
+IMBRACE_API_KEY=api_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+IMBRACE_GATEWAY_URL=https://app-gatewayv2.imbrace.co
+IMBRACE_ORGANIZATION_ID=org_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+```
+
+### TypeScript SDK
+
+```bash
+cd ts
+npm install
+```
+
+---
+
+## Python — Running & Testing
+
+### Unit Tests (No API key needed)
+
+```bash
+cd py
+
+# Run all unit tests
+pytest tests/unit -v
+
+# Run a specific file
+pytest tests/unit/test_http.py -v
+pytest tests/unit/resources/test_channel.py -v
+
+# Run a specific test case
+pytest tests/unit/test_http.py::test_401_raises_auth_error -v
+
+# Run by keyword
+pytest tests/unit -k "channel" -v
+pytest tests/unit -k "boards" -v
+```
+
+### Integration Tests (Requires real API key)
+
+Integration tests perform real calls to the API Gateway.
+
+```bash
+cd py
+
+# Option 1: Set key directly in command
+IMBRACE_API_KEY=api_xxx pytest tests/integration -v -m integration
+
+# Option 2: Use .env (conftest.py auto-loads it via load_dotenv)
+pytest tests/integration -v -m integration
+```
+
+### Run All (Unit + Integration)
+
+```bash
+pytest tests/ -v
+```
+
+### Coverage Report
+
+> `pytest-cov` is not included by default. Install it separately: `pip install pytest-cov`
+
+```bash
+pytest tests/unit --cov=src/imbrace --cov-report=term-missing
+```
+
+---
+
+## TypeScript — Running & Testing
+
+### Build
+
+```bash
+cd ts
+
+# Single build
+npm run build
+
+# Build in watch mode (auto-rebuild on change)
+npm run dev
+
+# Clean dist/
+npm run clean
+```
+
+### Unit Tests (No API key needed)
+
+```bash
+cd ts
+
+# Run all unit tests
+npm test
+
+# Run a specific file
+npx vitest run tests/unit/http.test.ts
+npx vitest run tests/unit/resources/contacts.test.ts
+
+# Watch mode (auto-run on code changes)
+npm run test:watch
+```
+
+### Run All (Unit + Local Tests)
+
+```bash
+npm run test:all
+```
+
+> TypeScript integration tests aren't available yet — see [`py/tests/integration/`](https://github.com/imbraceltd/api-sdk/tree/main/py/tests/integration) for live API checks, or [`test/test-local-pkg/ts/`](https://github.com/imbraceltd/api-sdk/tree/main/test/test-local-pkg/ts) for manual live testing scripts.
+
+---
+
+## Lint & Type Check
+
+### Python
+
+```bash
+cd py
+
+# Check code style
+ruff check src/ tests/
+
+# Automatically fix fixable ruff errors
+ruff check src/ tests/ --fix
+
+# Check type annotations
+mypy src/imbrace
+```
+
+### TypeScript
+
+```bash
+cd ts
+
+# Type check
+npm run typecheck
+
+# Lint
+npm run lint
+```
+

@@ -1,0 +1,19 @@
+# Communication
+
+The Imbrace SDK organizes communication into three closely related resources:
+
+| Resource | Client namespace | Description |
+|----------|-----------------|-------------|
+| [Channel](/reference/channel.md) | `client.channel` | Messaging channels (Web, WhatsApp, Facebook, Instagram, Email, WeChat, LINE) |
+| [Conversation](/reference/conversation.md) | `client.conversations` | Individual conversation threads within a channel |
+| [Contact](/reference/contact.md) | `client.contacts` | Contacts (leads, customers) linked to conversations |
+
+---
+
+## Typical flow
+
+1. **Create a Channel** — set up the messaging channel your users will communicate through.
+2. **Conversations are created automatically** when a contact initiates a message on that channel, or you can create them programmatically.
+3. **Contacts** are associated with conversations and store identity information (name, email, phone).
+
+See each resource's reference page for full schema and method details.

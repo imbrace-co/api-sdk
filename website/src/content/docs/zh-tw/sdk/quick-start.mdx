@@ -1,0 +1,112 @@
+﻿---
+title: 快速入門
+description: 在一分鐘內完成你的第一個 Imbrace API 呼叫。
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+import AuthOnly from "../../../../components/AuthOnly.astro";
+
+### 1. 初始化客戶端
+
+<AuthOnly mode="access-token">
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    import { ImbraceClient } from "@imbrace/sdk"
+
+    const client = new ImbraceClient({
+      accessToken: process.env.IMBRACE_ACCESS_TOKEN,
+      env: "stable",
+    })
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    import os
+    from dotenv import load_dotenv
+    from imbrace import ImbraceClient
+
+    load_dotenv()
+
+    client = ImbraceClient(
+        access_token=os.environ["IMBRACE_ACCESS_TOKEN"],
+        env="stable",
+    )
+    ```
+  </TabItem>
+</Tabs>
+</AuthOnly>
+
+<AuthOnly mode="api-key">
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    import { ImbraceClient } from "@imbrace/sdk"
+
+    const client = new ImbraceClient({
+      apiKey:         process.env.IMBRACE_API_KEY,
+      organizationId: process.env.IMBRACE_ORGANIZATION_ID,
+      env:            "stable",
+    })
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    import os
+    from dotenv import load_dotenv
+    from imbrace import ImbraceClient
+
+    load_dotenv()
+
+    client = ImbraceClient(
+        api_key=os.environ["IMBRACE_API_KEY"],
+        organization_id=os.environ.get("IMBRACE_ORGANIZATION_ID"),
+        env="stable",
+    )
+    ```
+  </TabItem>
+</Tabs>
+</AuthOnly>
+
+> 切換頁首的**認證**下拉選單可以在整個網站範圍內切換 API 金鑰和存取令牌範例。請參閱[認證](/sdk/authentication/)以了解如何選擇。
+
+---
+
+### 2. 擷取您的 Boards
+
+Boards 是 CRM 管道 — 潛在客戶、交易、任務或任何結構化資料。此呼叫僅需要您的憑證。
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    const { data: boards } = await client.boards.list()
+
+    for (const board of boards) {
+      console.log(board.id, board.name)
+    }
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    boards = client.boards.list()
+
+    for board in boards.get("data", []):
+        print(board["id"], board.get("name"))
+    ```
+  </TabItem>
+</Tabs>
+
+如果您看到您的 boards 列出，表示 SDK 已連線並通過認證。
+
+---
+
+### 3. 下一步
+
+[完整流程指南](/sdk/full-flow-guide/)逐步說明四大主要工作流程。直接跳至某個章節：
+
+- **AI Agent + streamChat** → [完整流程指南 §1](/sdk/full-flow-guide/#1-create-an-ai-agent-and-start-chatting)
+- **工作流程** → [完整流程指南 §2](/sdk/full-flow-guide/#2-create-a-workflow-and-bind-it-to-an-ai-agent)
+- **知識中心（資料夾、RAG）** → [完整流程指南 §3](/sdk/full-flow-guide/#3-manage-knowledge-hubs-and-attach-to-an-ai-agent)
+- **Boards 與項目（CRM）** → [完整流程指南 §4](/sdk/full-flow-guide/#4-manage-data-boards-and-items-crm-pipelines)
+
+如需各命名空間的 API 參考，請參閱[資源](/sdk/resources/)。

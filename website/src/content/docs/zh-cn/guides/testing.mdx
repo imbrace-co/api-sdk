@@ -1,0 +1,159 @@
+---
+title: 测试指南
+description: 为 Imbrace SDK 运行单元测试、集成测试、lint 和类型检查的全面指南。
+---
+
+
+## 环境设置
+
+### Python SDK
+
+```bash
+cd py
+
+# 安装依赖 + 开发工具（pytest、pytest-asyncio、pytest-httpx、ruff、mypy）
+pip install -e ".[dev]"
+```
+
+创建 `py/.env`（仅集成测试需要）：
+
+```env
+IMBRACE_API_KEY=api_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+IMBRACE_GATEWAY_URL=https://app-gatewayv2.imbrace.co
+IMBRACE_ORGANIZATION_ID=org_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+```
+
+### TypeScript SDK
+
+```bash
+cd ts
+npm install
+```
+
+---
+
+## Python — 运行与测试
+
+### 单元测试（无需 API Key）
+
+```bash
+cd py
+
+# 运行所有单元测试
+pytest tests/unit -v
+
+# 运行特定文件
+pytest tests/unit/test_http.py -v
+pytest tests/unit/resources/test_channel.py -v
+
+# 运行特定测试用例
+pytest tests/unit/test_http.py::test_401_raises_auth_error -v
+
+# 按关键字运行
+pytest tests/unit -k "channel" -v
+pytest tests/unit -k "boards" -v
+```
+
+### 集成测试（需要真实 API Key）
+
+集成测试执行对 API 网关的真实调用。
+
+```bash
+cd py
+
+# 选项 1：直接在命令中设置密钥
+IMBRACE_API_KEY=api_xxx pytest tests/integration -v -m integration
+
+# 选项 2：使用 .env（conftest.py 通过 load_dotenv 自动加载）
+pytest tests/integration -v -m integration
+```
+
+### 运行全部（单元 + 集成）
+
+```bash
+pytest tests/ -v
+```
+
+### 覆盖率报告
+
+> `pytest-cov` 默认不包含。单独安装：`pip install pytest-cov`
+
+```bash
+pytest tests/unit --cov=src/imbrace --cov-report=term-missing
+```
+
+---
+
+## TypeScript — 运行与测试
+
+### 构建
+
+```bash
+cd ts
+
+# 单次构建
+npm run build
+
+# 监视模式构建（更改时自动重新构建）
+npm run dev
+
+# 清理 dist/
+npm run clean
+```
+
+### 单元测试（无需 API Key）
+
+```bash
+cd ts
+
+# 运行所有单元测试
+npm test
+
+# 运行特定文件
+npx vitest run tests/unit/http.test.ts
+npx vitest run tests/unit/resources/contacts.test.ts
+
+# 监视模式（代码更改时自动运行）
+npm run test:watch
+```
+
+### 运行全部（单元 + 本地测试）
+
+```bash
+npm run test:all
+```
+
+这会在整个项目中运行 vitest（单元 + 任何匹配测试模式的本地文件）。TypeScript 集成测试尚未可用 — 请参见 `py/tests/integration/` 获取实时 API 检查，或 `test/test-local-pkg/ts/` 获取手动实时测试脚本。
+
+---
+
+## 代码检查与类型检查
+
+### Python
+
+```bash
+cd py
+
+# 检查代码风格
+ruff check src/ tests/
+
+# 自动修复可修复的 ruff 错误
+ruff check src/ tests/ --fix
+
+# 检查类型注解
+mypy src/imbrace
+```
+
+### TypeScript
+
+```bash
+cd ts
+
+# 类型检查
+npm run typecheck
+
+# 代码检查
+npm run lint
+
+```
+

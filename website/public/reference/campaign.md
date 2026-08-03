@@ -1,0 +1,254 @@
+# Campaign Reference
+
+`client.campaign` manages marketing campaigns and their associated touchpoints — the individual interaction points (messages, actions) that make up a campaign sequence.
+
+---
+
+## Schema
+
+### Campaign
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `_id` | string | Unique campaign ID |
+| `name` | string | Campaign display name |
+| `status` | string? | Campaign status (e.g. `draft`, `active`, `completed`) |
+| `channel_type` | string? | Channel type this campaign runs on |
+| `created_at` | string? | ISO 8601 creation timestamp |
+| `updated_at` | string? | ISO 8601 last-updated timestamp |
+
+### Touchpoint
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `_id` | string | Unique touchpoint ID |
+| `name` | string? | Touchpoint display name |
+| `type` | string? | Touchpoint type |
+| `campaign_id` | string? | Parent campaign ID |
+| `created_at` | string? | ISO 8601 creation timestamp |
+
+### CreateCampaignInput
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | Campaign name |
+| `channel_type` | string | | Channel type (e.g. `whatsapp`, `email`) |
+
+### CreateTouchpointInput
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | | Touchpoint name |
+| `type` | string | | Touchpoint type |
+| `campaign_id` | string | | Parent campaign ID |
+| `message` | string or object | | Message payload |
+
+---
+
+## Methods
+
+### Campaign
+
+| Method | TypeScript | Python | Description |
+|--------|-----------|--------|-------------|
+| List campaigns | `list` | `list` | List all campaigns |
+| Get campaign | `get` | `get` | Get a campaign by ID |
+| Create campaign | `create` | `create` | Create a new campaign |
+| Delete campaign | `delete` | `delete` | Delete a campaign |
+
+### Touchpoint
+
+| Method | TypeScript | Python | Description |
+|--------|-----------|--------|-------------|
+| List touchpoints | `listTouchpoints` | `list_touchpoints` | List all touchpoints |
+| Get touchpoint | `getTouchpoint` | `get_touchpoint` | Get a touchpoint by ID |
+| Create touchpoint | `createTouchpoint` | `create_touchpoint` | Add a touchpoint to a campaign |
+| Update touchpoint | `updateTouchpoint` | `update_touchpoint` | Update a touchpoint |
+| Delete touchpoint | `deleteTouchpoint` | `delete_touchpoint` | Remove a touchpoint |
+| Validate touchpoint | `validateTouchpoint` | `validate_touchpoint` | Validate touchpoint configuration |
+
+---
+
+## list / list
+
+**TypeScript**
+
+```typescript
+const { data: campaigns } = await client.campaign.list();
+for (const c of campaigns) {
+  console.log(c._id, c.name, c.status);
+}
+```
+
+**Python**
+
+```python
+result = client.campaign.list()
+for c in result.get("data", []):
+    print(c["_id"], c["name"], c.get("status"))
+```
+
+---
+
+## create / create
+
+**TypeScript**
+
+```typescript
+const campaign = await client.campaign.create({
+  name: "Q3 Re-engagement",
+  channel_type: "whatsapp",
+});
+console.log(campaign._id);
+```
+
+**Python**
+
+```python
+campaign = client.campaign.create({
+    "name": "Q3 Re-engagement",
+    "channel_type": "whatsapp",
+})
+print(campaign["_id"])
+```
+
+---
+
+## get / get
+
+**TypeScript**
+
+```typescript
+const campaign = await client.campaign.get("campaign_id");
+console.log(campaign._id, campaign.name, campaign.status);
+```
+
+**Python**
+
+```python
+campaign = client.campaign.get("campaign_id")
+print(campaign["_id"], campaign.get("name"), campaign.get("status"))
+```
+
+---
+
+## delete / delete
+
+**TypeScript**
+
+```typescript
+await client.campaign.delete("campaign_id");
+```
+
+**Python**
+
+```python
+client.campaign.delete("campaign_id")
+```
+
+---
+
+## createTouchpoint / create_touchpoint
+
+**TypeScript**
+
+```typescript
+const touchpoint = await client.campaign.createTouchpoint({
+  name: "Welcome Message",
+  type: "message",
+  campaign_id: "campaign_id",
+  message: { text: "Hi! Welcome to our service." },
+});
+```
+
+**Python**
+
+```python
+touchpoint = client.campaign.create_touchpoint({
+    "name": "Welcome Message",
+    "type": "message",
+    "campaign_id": "campaign_id",
+    "message": {"text": "Hi! Welcome to our service."},
+})
+```
+
+---
+
+## updateTouchpoint / update_touchpoint
+
+**TypeScript**
+
+```typescript
+const updated = await client.campaign.updateTouchpoint("touchpoint_id", {
+  name: "Updated Welcome Message",
+  message: { text: "Hi! Great to have you here." },
+});
+```
+
+**Python**
+
+```python
+updated = client.campaign.update_touchpoint("touchpoint_id", {
+    "name": "Updated Welcome Message",
+    "message": {"text": "Hi! Great to have you here."},
+})
+```
+
+---
+
+## getTouchpoint / get_touchpoint
+
+**TypeScript**
+
+```typescript
+const touchpoint = await client.campaign.getTouchpoint("touchpoint_id");
+console.log(touchpoint._id, touchpoint.name);
+```
+
+**Python**
+
+```python
+touchpoint = client.campaign.get_touchpoint("touchpoint_id")
+print(touchpoint["_id"], touchpoint.get("name"))
+```
+
+---
+
+## deleteTouchpoint / delete_touchpoint
+
+**TypeScript**
+
+```typescript
+await client.campaign.deleteTouchpoint("touchpoint_id");
+```
+
+**Python**
+
+```python
+client.campaign.delete_touchpoint("touchpoint_id")
+```
+
+---
+
+## validateTouchpoint / validate_touchpoint
+
+Check whether a touchpoint is correctly configured before activating the campaign.
+
+**TypeScript**
+
+```typescript
+const result = await client.campaign.validateTouchpoint({
+  touchpoint_id: "touchpoint_id",
+});
+if (!result.valid) {
+  console.error("Validation errors:", result.errors);
+}
+```
+
+**Python**
+
+```python
+result = client.campaign.validate_touchpoint({"touchpoint_id": "touchpoint_id"})
+if not result.get("valid"):
+    print("Validation errors:", result.get("errors"))
+```

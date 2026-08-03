@@ -1,0 +1,22 @@
+---
+title: Communication
+description: Tổng quan về tài nguyên communication trong Imbrace SDK — Channel, Conversation, và Contact.
+---
+
+Imbrace SDK tổ chức communication thành ba tài nguyên có liên quan chặt chẽ:
+
+| Tài nguyên | Client namespace | Mô tả |
+|------------|-----------------|-------|
+| [Channel](/reference/channel/) | `client.channel` | Kênh nhắn tin (Web, WhatsApp, Facebook, Instagram, Email, WeChat, LINE) |
+| [Conversation](/reference/conversation/) | `client.conversations` | Luồng hội thoại cá nhân trong một kênh |
+| [Contact](/reference/contact/) | `client.contacts` | Contacts (khách hàng tiềm năng, khách hàng) liên kết với hội thoại |
+
+---
+
+## Luồng điển hình
+
+1. **Tạo Channel** — thiết lập kênh nhắn tin mà người dùng sẽ giao tiếp qua.
+2. **Hội thoại được tạo tự động** khi một contact gửi tin nhắn trên kênh đó, hoặc bạn có thể tạo chúng bằng lập trình.
+3. **Contacts** được liên kết với hội thoại và lưu trữ thông tin định danh (tên, email, điện thoại).
+
+Xem trang tham chiếu của từng tài nguyên để biết chi tiết schema và method đầy đủ.

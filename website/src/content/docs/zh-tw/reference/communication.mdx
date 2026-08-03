@@ -1,0 +1,22 @@
+---
+title: Communication
+description: Imbrace SDK 中通訊資源的總覽 — Channel、Conversation 和 Contact。
+---
+
+Imbrace SDK 將通訊組織為三個密切相關的資源：
+
+| 資源 | Client namespace | 說明 |
+|------|-----------------|------|
+| [Channel](/reference/channel/) | `client.channel` | 訊息頻道（Web、WhatsApp、Facebook、Instagram、Email、WeChat、LINE） |
+| [Conversation](/reference/conversation/) | `client.conversations` | 頻道內的個別對話執行緒 |
+| [Contact](/reference/contact/) | `client.contacts` | 連結到對話的聯絡人（潛在客戶、客戶） |
+
+---
+
+## 典型流程
+
+1. **建立 Channel** — 設定使用者將透過其通訊的訊息頻道。
+2. **對話會自動建立** — 當聯絡人在該頻道上發起訊息時，或者您也可以透過程式方式建立。
+3. **Contacts** 與對話關聯，並儲存身份資訊（姓名、電子郵件、電話）。
+
+請參閱每個資源的參考頁面以取得完整的結構和方法詳細資訊。

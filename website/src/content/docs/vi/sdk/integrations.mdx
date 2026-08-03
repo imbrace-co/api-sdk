@@ -1,0 +1,401 @@
+---
+title: Tích hợp
+description: Sử dụng Imbrace SDKs với React, Next.js, Node.js, FastAPI, asyncio, Django, và Celery.
+---
+
+import { Tabs, TabItem, Aside } from "@astrojs/starlight/components";
+
+Các mẫu kết nối ở cấp framework cho cả hai SDK. Chọn phần phù hợp với stack của bạn — TypeScript bao gồm React, Next.js và Node.js thông thường; Python bao gồm FastAPI, asyncio, Django và Celery. Luồng đăng nhập OTP được ghi lại cho cả hai.
+
+Để biết chiến lược thông tin xác thực (api key so với access token, env vars), xem [Xác thực](/sdk/authentication/) và [Hướng dẫn thiết lập](/getting-started/setup/#configure-credentials).
+
+---
+
+## React (TypeScript)
+
+### Client singleton
+
+Tạo client một lần bên ngoài cây component và tái sử dụng trên tất cả các component. Token `localStorage` đến từ [luồng đăng nhập OTP](/sdk/authentication/#otp-login-flow).
+
+```typescript
+// lib/imbrace.ts
+import { ImbraceClient } from "@imbrace/sdk";
+
+export const client = new ImbraceClient({
+  accessToken:
+    typeof window !== "undefined"
+      ? (localStorage.getItem("imbrace_token") ?? undefined)
+      : undefined,
+});
+```
+
+### Hook lấy dữ liệu
+
+```tsx
+// hooks/useContacts.ts
+import { useState, useEffect } from "react";
+import { client } from "@/lib/imbrace";
+import type { Contact } from "@imbrace/sdk";
+
+export function useContacts(search?: string) {
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    client.contacts
+      .list({ search })
+      .then((res) => setContacts(res.data))
+      .catch(setError)
+      .finally(() => setLoading(false));
+  }, [search]);
+
+  return { contacts, loading, error };
+}
+```
+
+```tsx
+// components/ContactList.tsx
+import { useContacts } from "@/hooks/useContacts";
+
+export function ContactList() {
+  const { contacts, loading, error } = useContacts();
+  if (loading) return <p>Đang tải...</p>;
+  if (error) return <p>Lỗi: {error.message}</p>;
+  return (
+    <ul>
+      {contacts.map((c) => (
+        <li key={c._id}>{c.name}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+---
+
+## Next.js (TypeScript)
+
+### API route (App Router)
+
+```typescript
+// app/api/contacts/route.ts
+import { NextResponse } from "next/server";
+import { ImbraceClient } from "@imbrace/sdk";
+
+const client = new ImbraceClient({
+  apiKey: process.env.IMBRACE_API_KEY,
+});
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const search = searchParams.get("search") ?? undefined;
+  const { data } = await client.contacts.list({ search });
+  return NextResponse.json(data);
+}
+```
+
+`process.env.IMBRACE_API_KEY` nên được đặt theo cách mà nền tảng triển khai của bạn yêu cầu (Vercel env var, `.env.local` cho dev, v.v.). Xem [Hướng dẫn thiết lập → Cấu hình thông tin xác thực](/getting-started/setup/#configure-credentials).
+
+### Server component (App Router)
+
+```tsx
+// app/contacts/page.tsx
+import { ImbraceClient } from "@imbrace/sdk";
+
+const client = new ImbraceClient({
+  apiKey: process.env.IMBRACE_API_KEY,
+});
+
+export default async function ContactsPage() {
+  const { data: contacts } = await client.contacts.list({ limit: 20 });
+  return (
+    <main>
+      <h1>Liên hệ</h1>
+      <ul>{contacts.map((c) => <li key={c._id}>{c.name}</li>)}</ul>
+    </main>
+  );
+}
+```
+
+---
+
+## Node.js CLI script (TypeScript)
+
+Cho các script chạy một lần (xuất dữ liệu, backfill, truy vấn đặc biệt):
+
+```typescript
+// scripts/export-contacts.ts
+import { ImbraceClient } from "@imbrace/sdk";
+import { writeFileSync } from "fs";
+
+const client = new ImbraceClient();
+
+async function exportContacts() {
+  const { data: contacts } = await client.contacts.list({ limit: 1000 });
+  writeFileSync("contacts.json", JSON.stringify(contacts, null, 2));
+  console.log(`Đã xuất ${contacts.length} contacts`);
+}
+
+exportContacts().catch(console.error);
+```
+
+```bash
+npx ts-node scripts/export-contacts.ts
+```
+
+---
+
+## FastAPI (Python)
+
+### Tiêm phụ thuộc theo yêu cầu
+
+Mẫu đơn giản nhất — một client bất đồng bộ cho mỗi yêu cầu, vòng đời được quản lý bởi dependency:
+
+```python
+from fastapi import FastAPI, Depends
+from imbrace import AsyncImbraceClient
+from imbrace.types.ai import CompletionInput, CompletionMessage
+
+app = FastAPI()
+
+async def get_imbrace() -> AsyncImbraceClient:
+    async with AsyncImbraceClient() as client:
+        yield client
+
+@app.get("/contacts")
+async def list_contacts(client: AsyncImbraceClient = Depends(get_imbrace)):
+    result = await client.contacts.list({"limit": 20})
+    return result["data"]
+
+@app.get("/contacts/{contact_id}")
+async def get_contact(contact_id: str, client: AsyncImbraceClient = Depends(get_imbrace)):
+    return await client.contacts.get(contact_id)
+
+@app.post("/ai/chat")
+async def chat(message: str, client: AsyncImbraceClient = Depends(get_imbrace)):
+    return await client.ai.complete(CompletionInput(
+        model="gpt-4o",
+        messages=[CompletionMessage(role="user", content=message)],
+    ))
+```
+
+### Global singleton (tái sử dụng kết nối tốt hơn)
+
+Để có thông lượng cao hơn, chia sẻ một client cho toàn bộ vòng đời ứng dụng:
+
+```python
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from imbrace import AsyncImbraceClient
+
+imbrace: AsyncImbraceClient = None  # type: ignore
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global imbrace
+    imbrace = AsyncImbraceClient()
+    await imbrace.init()  # kiểm tra health khi khởi động
+    yield
+    await imbrace.close()
+
+app = FastAPI(lifespan=lifespan)
+
+@app.get("/me")
+async def get_me():
+    return await imbrace.platform.get_me()
+```
+
+---
+
+## asyncio (Python)
+
+### Yêu cầu đồng thời
+
+```python
+import asyncio
+from imbrace import AsyncImbraceClient
+
+async def fetch_dashboard_data():
+    async with AsyncImbraceClient() as client:
+        me, contacts, channels = await asyncio.gather(
+            client.platform.get_me(),
+            client.contacts.list({"limit": 5}),
+            client.channel.list(type="group"),
+        )
+        return {
+            "user": me,
+            "contacts": contacts["data"],
+            "channels": channels.data,
+        }
+
+data = asyncio.run(fetch_dashboard_data())
+```
+
+### Streaming AI
+
+```python
+import asyncio
+from imbrace import AsyncImbraceClient
+from imbrace.types.ai import CompletionInput, CompletionMessage
+
+async def stream_response():
+    async with AsyncImbraceClient() as client:
+        async for chunk in client.ai.stream(CompletionInput(
+            model="gpt-4o",
+            messages=[CompletionMessage(role="user", content="Explain async/await in Python.")],
+        )):
+            content = chunk.choices[0].delta.content or ""
+            print(content, end="", flush=True)
+
+asyncio.run(stream_response())
+```
+
+---
+
+## Django (Python)
+
+### View đồng bộ
+
+```python
+# views.py
+from django.http import JsonResponse
+from imbrace import ImbraceClient, ApiError
+
+def contact_list(request):
+    with ImbraceClient() as client:
+        try:
+            result = client.contacts.list({
+                "search": request.GET.get("search"),
+                "page": int(request.GET.get("page", 1)),
+            })
+            return JsonResponse(result)
+        except ApiError as e:
+            return JsonResponse({"error": str(e)}, status=e.status_code)
+```
+
+### Tích hợp Settings
+
+```python
+# settings.py
+IMBRACE_API_KEY = env("IMBRACE_API_KEY")
+IMBRACE_ENV = env("IMBRACE_ENV", default="stable")
+
+# utils/imbrace.py
+from django.conf import settings
+from imbrace import ImbraceClient
+
+def get_client() -> ImbraceClient:
+    return ImbraceClient(
+        api_key=settings.IMBRACE_API_KEY,
+        env=settings.IMBRACE_ENV,
+    )
+```
+
+---
+
+## Celery (Python)
+
+Cho worker tác vụ nền, sử dụng client đồng bộ và tạo một client mới bên trong mỗi tác vụ:
+
+```python
+# tasks.py
+from celery import Celery
+from imbrace import ImbraceClient, NetworkError
+
+app = Celery("tasks")
+
+@app.task(bind=True, max_retries=3)
+def sync_contacts(self):
+    try:
+        with ImbraceClient() as client:
+            result = client.contacts.list({"limit": 100})
+            for contact in result["data"]:
+                save_to_db(contact)
+    except NetworkError as exc:
+        raise self.retry(exc=exc, countdown=2 ** self.request.retries)
+```
+
+<Aside type="tip">`nĐừng chia sẻ một instance `ImbraceClient` duy nhất giữa các Celery worker — hãy tạo một client mới cho mỗi lần gọi tác vụ bằng context manager. Pool kết nối httpx không an toàn để chia sẻ giữa các tiến trình.`n</Aside>
+
+---
+
+## Luồng đăng nhập OTP
+
+Luồng OTP giống nhau về mặt khái niệm trong cả hai SDK: yêu cầu OTP cho một email, sau đó đổi lấy access token. Xem [Xác thực → luồng đăng nhập OTP](/sdk/authentication/#otp-login-flow) để biết vòng đời thông tin xác thực đầy đủ.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```tsx
+// components/LoginForm.tsx
+import { useState } from "react";
+import { ImbraceClient, AuthError } from "@imbrace/sdk";
+
+const client = new ImbraceClient();
+
+export function LoginForm() {
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [step, setStep] = useState<"email" | "otp">("email");
+
+  async function requestOtp() {
+    await client.requestOtp(email);
+    setStep("otp");
+  }
+
+  async function verifyOtp() {
+    try {
+      await client.loginWithOtp(email, otp);
+      window.location.href = "/dashboard";
+    } catch (e) {
+      if (e instanceof AuthError) alert("OTP không hợp lệ");
+    }
+  }
+
+  return step === "email" ? (
+    <div>
+      <input value={email} onChange={(e) => setEmail(e.target.value)} />
+      <button onClick={requestOtp}>Gửi OTP</button>
+    </div>
+  ) : (
+    <div>
+      <input value={otp} onChange={(e) => setOtp(e.target.value)} />
+      <button onClick={verifyOtp}>Xác thực</button>
+    </div>
+  );
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from imbrace import AsyncImbraceClient, AuthError
+
+app = FastAPI()
+
+class OtpRequest(BaseModel):
+    email: str
+
+class OtpVerify(BaseModel):
+    email: str
+    otp: str
+
+@app.post("/auth/request-otp")
+async def request_otp(body: OtpRequest):
+    async with AsyncImbraceClient() as client:
+        await client.auth.request_otp(body.email)
+    return {"message": "OTP đã được gửi"}
+
+@app.post("/auth/verify-otp")
+async def verify_otp(body: OtpVerify):
+    async with AsyncImbraceClient() as client:
+        try:
+            result = await client.auth.login_with_otp(body.email, body.otp)
+            return {"access_token": result["token"]}
+        except AuthError:
+            raise HTTPException(status_code=401, detail="OTP không hợp lệ")
+```
+</TabItem>
+</Tabs>

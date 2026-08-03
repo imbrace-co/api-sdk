@@ -1,0 +1,84 @@
+---
+title: CLI 概覽
+description: Imbrace CLI 的架構和驗證流程。
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+Imbrace CLI（`@imbrace/cli`）是一個用於與 Imbrace 平台互動的終端工具。指令透過 `@imbrace/sdk` 套件直接呼叫 Imbrace 平台。原始碼：[imbraceltd/imbrace-cli](https://github.com/imbraceltd/imbrace-cli)。
+
+```
+imbrace (CLI) → https://app-gatewayv2.imbrace.co (Imbrace Platform)
+```
+
+## 認證流程
+
+CLI 支援兩種認證方式：
+
+**1. API 金鑰**（憑證以 `sk-` 或 `api_` 開頭）：
+- 直接傳遞給 SDK：`new ImbraceClient({ apiKey: credential })`
+- 以原始形式儲存在本機設定中
+
+**2. 電子郵件 + 密碼**（回傳 JWT 令牌）：
+- SDK：`client.login(email, password)` 回傳使用者所屬的組織；CLI 隨後呼叫 `client.selectOrganization(orgId)` 取得綁定組織的權杖
+- 多組織帳戶：傳入 `--org-id`（單組織自動選擇，多組織在 TTY 中提示）
+- 綁定組織的 JWT 作為憑證儲存
+
+### 憑證儲存
+
+憑證透過 `conf` npm 套件以 `projectName: "imbrace"` 儲存。
+
+| 作業系統 | 設定檔路徑 |
+|---|---|
+| macOS | `~/Library/Preferences/imbrace-nodejs/config.json` |
+| Linux | `~/.config/imbrace-nodejs/config.json` |
+| Windows | `%APPDATA%\imbrace-nodejs\Config\config.json` |
+
+儲存的欄位：`credential`、`method`（`"api-key"` | `"password"`）、`email`。
+
+### 自動登入
+
+每個 CLI 指令（除了 `login`）都繼承 `BaseCommand`，其在初始化時會呼叫 `ensureLoggedIn()`。如果找不到憑證，它會以互動方式提示使用者選擇登入方式（API 金鑰或電子郵件 + 密碼）。
+
+<Aside type="tip">
+  所有指令都接受 `--json` 以輸出機器可讀的結果，以及 `-h` / `--help` 檢視使用說明。
+</Aside>
+
+## 專案結構
+
+```
+imbrace-cli/
+└── cli/                     ← oclif CLI
+    └── src/
+        ├── base-command.ts       ← 自動登入
+        ├── config.ts             ← 憑證儲存 (conf)
+        └── commands/
+            ├── login.ts / logout.ts / whoami.ts / docs.ts
+            ├── data-board/    (8 個指令)
+            ├── ai-agent/      (9 個指令)
+            ├── document-ai/   (7 個指令)
+            ├── orchestrator/  (4 個指令)
+            ├── guardrail/     (5 個指令)
+            └── workflow/      (32 個指令)
+```
+
+## 工作流程節點架構
+
+工作流程使用透過 `nextAction` 指標的**鏈結串列**結構：
+
+```typescript
+{
+  version: {
+    trigger: {
+      name: "trigger",
+      type: "PIECE_TRIGGER" | "EMPTY" | "PIECE" | "ROUTER" | "LOOP_ON_ITEMS" | "CODE",
+      settings: { pieceName, pieceVersion, input, ... },
+      nextAction: { ... },
+      children?: any[],          // ROUTER 分支
+      firstLoopAction?: any,     // LOOP_ON_ITEMS 主體
+    }
+  }
+}
+```
+
+所有節點操作都使用 `applyFlowOperation()`，類型包括：`UPDATE_TRIGGER`、`ADD_ACTION`、`UPDATE_ACTION`、`DELETE_ACTION`、`LOCK_AND_PUBLISH`、`CHANGE_STATUS`、`CHANGE_FOLDER`。

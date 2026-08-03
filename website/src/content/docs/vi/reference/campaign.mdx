@@ -1,0 +1,268 @@
+---
+title: Campaign
+description: Tham chiếu schema và method cho client.campaign — campaigns và touchpoints.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+`client.campaign` quản lý các chiến dịch marketing và các touchpoints liên quan — các điểm tương tác riêng lẻ (tin nhắn, hành động) tạo nên một chuỗi chiến dịch.
+
+---
+
+## Schema
+
+### Campaign
+
+| Field | Type | Mô tả |
+|-------|------|-------|
+| `_id` | string | ID duy nhất của chiến dịch |
+| `name` | string | Tên hiển thị của chiến dịch |
+| `status` | string? | Trạng thái chiến dịch (vd: `draft`, `active`, `completed`) |
+| `channel_type` | string? | Loại kênh chiến dịch chạy trên |
+| `created_at` | string? | ISO 8601 thời gian tạo |
+| `updated_at` | string? | ISO 8601 thời gian cập nhật |
+
+### Touchpoint
+
+| Field | Type | Mô tả |
+|-------|------|-------|
+| `_id` | string | ID duy nhất của touchpoint |
+| `name` | string? | Tên hiển thị của touchpoint |
+| `type` | string? | Loại touchpoint |
+| `campaign_id` | string? | ID chiến dịch cha |
+| `created_at` | string? | ISO 8601 thời gian tạo |
+
+### CreateCampaignInput
+
+| Field | Type | Required | Mô tả |
+|-------|------|----------|-------|
+| `name` | string | ✓ | Tên chiến dịch |
+| `channel_type` | string | | Loại kênh (vd: `whatsapp`, `email`) |
+
+### CreateTouchpointInput
+
+| Field | Type | Required | Mô tả |
+|-------|------|----------|-------|
+| `name` | string | | Tên touchpoint |
+| `type` | string | | Loại touchpoint |
+| `campaign_id` | string | | ID chiến dịch cha |
+| `message` | string \| object | | Payload tin nhắn |
+
+---
+
+## Methods
+
+### Campaign
+
+| Method | TypeScript | Python | Mô tả |
+|--------|-----------|--------|-------|
+| List campaigns | `list` | `list` | Danh sách tất cả chiến dịch |
+| Get campaign | `get` | `get` | Lấy chiến dịch theo ID |
+| Create campaign | `create` | `create` | Tạo chiến dịch mới |
+| Delete campaign | `delete` | `delete` | Xóa chiến dịch |
+
+### Touchpoint
+
+| Method | TypeScript | Python | Mô tả |
+|--------|-----------|--------|-------|
+| List touchpoints | `listTouchpoints` | `list_touchpoints` | Danh sách tất cả touchpoints |
+| Get touchpoint | `getTouchpoint` | `get_touchpoint` | Lấy touchpoint theo ID |
+| Create touchpoint | `createTouchpoint` | `create_touchpoint` | Thêm touchpoint vào chiến dịch |
+| Update touchpoint | `updateTouchpoint` | `update_touchpoint` | Cập nhật touchpoint |
+| Delete touchpoint | `deleteTouchpoint` | `delete_touchpoint` | Xóa touchpoint |
+| Validate touchpoint | `validateTouchpoint` | `validate_touchpoint` | Xác thực cấu hình touchpoint |
+
+---
+
+## list / list
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { data: campaigns } = await client.campaign.list();
+for (const c of campaigns) {
+  console.log(c._id, c.name, c.status);
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.campaign.list()
+for c in result.get("data", []):
+    print(c["_id"], c["name"], c.get("status"))
+```
+</TabItem>
+</Tabs>
+
+---
+
+## create / create
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const campaign = await client.campaign.create({
+  name: "Q3 Re-engagement",
+  channel_type: "whatsapp",
+});
+console.log(campaign._id);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+campaign = client.campaign.create({
+    "name": "Q3 Re-engagement",
+    "channel_type": "whatsapp",
+})
+print(campaign["_id"])
+```
+</TabItem>
+</Tabs>
+
+---
+
+## get / get
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const campaign = await client.campaign.get("campaign_id");
+console.log(campaign._id, campaign.name, campaign.status);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+campaign = client.campaign.get("campaign_id")
+print(campaign["_id"], campaign.get("name"), campaign.get("status"))
+```
+</TabItem>
+</Tabs>
+
+---
+
+## delete / delete
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+await client.campaign.delete("campaign_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+client.campaign.delete("campaign_id")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## createTouchpoint / create_touchpoint
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const touchpoint = await client.campaign.createTouchpoint({
+  name: "Welcome Message",
+  type: "message",
+  campaign_id: "campaign_id",
+  message: { text: "Hi! Welcome to our service." },
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+touchpoint = client.campaign.create_touchpoint({
+    "name": "Welcome Message",
+    "type": "message",
+    "campaign_id": "campaign_id",
+    "message": {"text": "Hi! Welcome to our service."},
+})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## updateTouchpoint / update_touchpoint
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const updated = await client.campaign.updateTouchpoint("touchpoint_id", {
+  name: "Updated Welcome Message",
+  message: { text: "Hi! Great to have you here." },
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+updated = client.campaign.update_touchpoint("touchpoint_id", {
+    "name": "Updated Welcome Message",
+    "message": {"text": "Hi! Great to have you here."},
+})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## getTouchpoint / get_touchpoint
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const touchpoint = await client.campaign.getTouchpoint("touchpoint_id");
+console.log(touchpoint._id, touchpoint.name);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+touchpoint = client.campaign.get_touchpoint("touchpoint_id")
+print(touchpoint["_id"], touchpoint.get("name"))
+```
+</TabItem>
+</Tabs>
+
+---
+
+## deleteTouchpoint / delete_touchpoint
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+await client.campaign.deleteTouchpoint("touchpoint_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+client.campaign.delete_touchpoint("touchpoint_id")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## validateTouchpoint / validate_touchpoint
+
+Kiểm tra xem touchpoint đã được cấu hình đúng chưa trước khi kích hoạt chiến dịch.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const result = await client.campaign.validateTouchpoint({
+  touchpoint_id: "touchpoint_id",
+});
+if (!result.valid) {
+  console.error("Validation errors:", result.errors);
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.campaign.validate_touchpoint({"touchpoint_id": "touchpoint_id"})
+if not result.get("valid"):
+    print("Validation errors:", result.get("errors"))
+```
+</TabItem>
+</Tabs>

@@ -1,0 +1,119 @@
+---
+title: SDK Methods Reference
+description: SDK methods used by each CLI command group.
+---
+
+The CLI communicates with the Imbrace platform directly via `@imbrace/sdk`. This page maps each command group to the underlying SDK methods.
+
+For the full SDK reference see [SDK Overview](/sdk/overview/).
+
+---
+
+## Data Board — `client.boards`
+
+| CLI Command | SDK Method |
+|---|---|
+| `data-board list` | `client.boards.list()` |
+| `data-board create` | `client.boards.create(body)` |
+| `data-board create-field <boardId>` | `client.boards.createField(boardId, body)` |
+| `data-board create-item <boardId>` | `client.boards.createItem(boardId, body)` |
+| `data-board list-items` | `client.boards.listItems(boardId, params)` or `client.boards.search(boardId, { q })` |
+| `data-board update-item <boardId> <itemId>` | `client.boards.updateItem(boardId, itemId, body)` |
+| `data-board delete-item <boardId> <itemId>` | `client.boards.deleteItem(boardId, itemId)` |
+| `data-board export-csv` | `client.boards.exportCsv(boardId)` |
+
+---
+
+## AI Agent — `client.agent`, `client.chatAi`, `client.ai`, `client.boards`
+
+Most AI Agent commands use the `client.agent` resource (use-case management). Updates additionally use `client.chatAi`.
+
+| CLI Command | SDK Method |
+|---|---|
+| `ai-agent list` | `client.agent.list()` |
+| `ai-agent get <id>` | `client.agent.get(id)` |
+| `ai-agent create` | `client.agent.createUseCase(body)` |
+| `ai-agent update <id>` | `client.agent.updateUseCase(id, body)` + `client.chatAi.updateAiAgent(assistantId, body)` |
+| `ai-agent delete <id>` | `client.agent.delete(id)` |
+| `ai-agent list-providers` | `client.ai.listProviders()` |
+| `ai-agent list-models --provider-id <id>` | `client.ai.listProviders()` (filtered in-memory) |
+| `ai-agent list-folders` | `client.boards.searchFolders(query)` |
+| `ai-agent list-files --folder-id <id>` | `client.boards.searchFiles({ folderId })` |
+
+---
+
+## Document AI — `client.documentAi`
+
+| CLI Command | SDK Method |
+|---|---|
+| `document-ai list` | `client.documentAi.listAgents(params)` |
+| `document-ai get <id>` | `client.documentAi.getAgent(id)` |
+| `document-ai create` | `client.documentAi.createAgent(body)` |
+| `document-ai update <id>` | `client.documentAi.updateAgent(id, body)` |
+| `document-ai delete <id>` | `client.documentAi.deleteAgent(id)` |
+| `document-ai process` | `client.documentAi.process(body)` |
+| `document-ai suggest-schema` | `client.documentAi.suggestSchema(body)` |
+
+---
+
+## Orchestrator — `client.agent`, `client.chatAi`
+
+Orchestrator is a special AI Agent with `agent_type: "team_lead"`. Uses the same `client.agent` resource plus `client.chatAi` for patching sub-agent fields.
+
+| CLI Command | SDK Method |
+|---|---|
+| `orchestrator list` | `client.agent.list()` |
+| `orchestrator get <id>` | `client.agent.get(id)` |
+| `orchestrator create` | `client.agent.createUseCase(body)` + `client.chatAi.updateAiAgent(assistantId, body)` |
+| `orchestrator delete <id>` | `client.agent.delete(id)` |
+
+---
+
+## Guard Rail — `client.ai`, `client.account`
+
+| CLI Command | SDK Method |
+|---|---|
+| `guardrail list` | `client.ai.listGuardrails()` |
+| `guardrail get <id>` | `client.ai.getGuardrail(id)` |
+| `guardrail create` | `client.ai.createGuardrail(body)` (+ `client.account.getAccount()` to resolve org ID) |
+| `guardrail update <id>` | `client.ai.updateGuardrail(id, body)` |
+| `guardrail delete <id>` | `client.ai.deleteGuardrail(id)` |
+
+---
+
+## Workflow — `client.workflows`
+
+| CLI Command | SDK Method |
+|---|---|
+| `workflow list` | `client.workflows.listFlows(params)` |
+| `workflow get <id>` | `client.workflows.getFlow(id)` |
+| `workflow create` | `client.workflows.createFlow(body)` |
+| `workflow delete <id>` | `client.workflows.deleteFlow(id)` |
+| `workflow move <id>` | `client.workflows.applyFlowOperation(id, CHANGE_FOLDER)` |
+| `workflow publish <id>` | `client.workflows.applyFlowOperation(id, LOCK_AND_PUBLISH)` |
+| `workflow enable <id>` | `client.workflows.applyFlowOperation(id, CHANGE_STATUS enabled)` |
+| `workflow disable <id>` | `client.workflows.applyFlowOperation(id, CHANGE_STATUS disabled)` |
+| `workflow run <id>` | `client.workflows.triggerFlow(id, payload)` (or `triggerFlowSync` with `--sync`) |
+| `workflow runs` | `client.workflows.listRuns()` |
+| `workflow run-detail <runId>` | `client.workflows.getRun(runId)` |
+| `workflow node list <id>` | `client.workflows.getFlow(id)` (parsed) |
+| `workflow node add <id>` | `client.workflows.applyFlowOperation(id, ADD_ACTION / UPDATE_TRIGGER)` |
+| `workflow node update <id> <node>` | `client.workflows.applyFlowOperation(id, UPDATE_ACTION)` |
+| `workflow node delete <id> <node>` | `client.workflows.applyFlowOperation(id, DELETE_ACTION)` |
+| `workflow node add-raw <id>` | `client.workflows.applyFlowOperation(id, body)` |
+| `workflow piece list` | `client.workflows.listPieces()` |
+| `workflow piece detail <pieceName>` | Direct HTTP: `GET /activepieces/v1/pieces/{pieceName}` via `gatewayFetch()` |
+| `workflow conn list` | `client.workflows.listConnections()` |
+| `workflow conn get <connId>` | `client.workflows.getConnection(connId)` |
+| `workflow conn create` | `client.workflows.upsertConnection(body)` |
+| `workflow conn delete <id>` | `client.workflows.deleteConnection(id)` |
+| `workflow folder list` | `client.workflows.listFolders()` |
+| `workflow folder get <id>` | `client.workflows.getFolder(id)` |
+| `workflow folder create` | `client.workflows.createFolder(body)` |
+| `workflow folder update <id>` | `client.workflows.updateFolder(id, body)` |
+| `workflow folder delete <id>` | `client.workflows.deleteFolder(id)` |
+| `workflow mcp list` | `client.workflows.listMcpServers()` |
+| `workflow mcp get <id>` | `client.workflows.getMcpServer(id)` |
+| `workflow mcp create` | `client.workflows.createMcpServer(body)` |
+| `workflow mcp delete <id>` | `client.workflows.deleteMcpServer(id)` |
+| `workflow mcp rotate-token <id>` | `client.workflows.rotateMcpToken(id)` |

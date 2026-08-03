@@ -1,0 +1,173 @@
+---
+title: 本機測試
+description: 針對真實或模擬閘道在本機測試建置的 Imbrace SDK 套件。
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+本指南讓您測試**已建置的套件**，完全按照使用者安裝的方式進行 — 而非原始原始碼。在發佈新版本之前，或在重現使用者回報的錯誤時使用。
+
+## 先決條件
+
+- TypeScript：Node 18+
+- Python：Python 3.10+ 和 `pip`
+
+## 環境 URL
+
+同一組閘道基礎 URL 適用於兩個 SDK。在您的測試環境中設定一次：
+
+| 環境 | `IMBRACE_GATEWAY_URL` |
+| ----------- | ------------------------------------------ |
+| develop     | `https://app-gateway.dev.imbrace.co`       |
+| sandbox     | `https://app-gateway.sandbox.imbrace.co`   |
+| stable      | `https://app-gatewayv2.imbrace.co`         |
+
+## 憑證
+
+從倉儲根目錄的範本建立 `.env`，然後貼上由 Imbrace 入口網站核發的憑證：
+
+```bash
+# 從 SDK 倉儲根目錄
+cp .env.example .env
+```
+
+即時呼叫所需的最低要求：
+
+| 變數 | 取得位置 |
+| ----------------- | --------------------------------------------------------------------------------------------- |
+| `IMBRACE_API_KEY`     | Imbrace 入口網站，或使用現有存取令牌 `POST /private/backend/v1/third_party_token` |
+| `IMBRACE_GATEWAY_URL` | 上方表格中的 URL 之一（未設定時預設為 dev）              |
+
+組織上下文已編碼在 API 金鑰內部 — 您不需要傳遞組織 ID。
+
+---
+
+## TypeScript — 連結已建置的 dist
+
+### 一次性設定
+
+```bash
+cd ts
+npm install
+npm run build
+npm pack        # 產生 ts/imbrace-sdk-<version>.tgz
+```
+
+然後在測試資料夾中：
+
+```bash
+cd test/test-local-pkg/ts
+npm install     # 從本機 .tgz 安裝 @imbrace/sdk
+cp ../../../.env.example .env
+# 填入 .env
+```
+
+### 執行測試
+
+```bash
+cd test/test-local-pkg/ts
+npm run test:all
+```
+
+也可以單獨執行各個套件 — `npm run test:full-flow`、`npm run test:ai`、
+`npm run test:crm` 等。完整清單請見該資料夾中的 `package.json`。
+憑證會從您上面建立的 `.env` 讀取。
+
+### 疊代 SDK 變更
+
+每次編輯都需要重新建置，連結才能取得更新：
+
+```bash
+# 終端機 1 — ts/
+npm run build && npm pack
+
+# 終端機 2 — test/test-local-pkg/ts
+npm install && npm run test:all
+```
+
+---
+
+## Python — 從 wheel 或 editable 安裝
+
+### Editable 安裝（最快的疊代）
+
+從 `py/` 資料夾：
+
+```bash
+cd py
+pip install -e .
+```
+
+程式碼編輯後無需重新安裝即可生效。
+
+### Wheel 安裝（驗證發佈的形狀）
+
+```bash
+cd py
+python -m build               # 產生 dist/imbrace-*.whl
+pip install dist/imbrace-*.whl --force-reinstall
+```
+
+這可以捕捉到缺失的檔案、打包錯誤和匯入路徑問題，這些是 editable 安裝無法發現的。
+
+### 執行測試
+
+```bash
+cd py
+pip install -e ".[dev]"
+python -m pytest tests/
+```
+
+如需鏡像[完整流程指南](/sdk/full-flow-guide/)的完整流程回歸測試（從儲存庫根目錄執行）：
+
+```bash
+cd test-pip-pkg/py
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python -m pytest tests/test_guide_flow.py -v
+```
+
+同一個測試會以 `IMBRACE_API_KEY` 和 `IMBRACE_ACCESS_TOKEN` 執行，以涵蓋兩種認證模式。
+
+---
+
+## 切換環境
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```bash
+IMBRACE_GATEWAY_URL=https://app-gateway.sandbox.imbrace.co node test-local.mjs
+```
+</TabItem>
+<TabItem label="Python">
+```bash
+IMBRACE_GATEWAY_URL=https://app-gateway.sandbox.imbrace.co python -m pytest tests/
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 疑難排解
+
+**`Cannot find package '@imbrace/sdk'`**（TypeScript）
+在 `test/test-local-pkg/ts` 中再次執行 `npm install`。它會從 `ts/` 建置出的 `.tgz` 解析 `@imbrace/sdk` — 若該檔案遺失或過期，請在 `ts/` 重新執行 `npm pack`。
+
+**`ERR_MODULE_NOT_FOUND` 指向 dist 檔案**（TypeScript）
+尚未執行建置，或新增了原始檔但未重新建置。在 `ts/` 中執行 `npm run build`。
+
+**`ModuleNotFoundError: No module named 'imbrace'`**（Python）
+套件未安裝在啟用的虛擬環境中。重新執行 `pip install -e .`（editable）或 `pip install dist/imbrace-*.whl`。
+
+**即時呼叫時出現 401 / 403**
+您的憑證已過期、被撤銷或錯誤。對於 API 金鑰，產生一個新的：
+
+```bash
+curl -X POST https://app-gateway.dev.imbrace.co/private/backend/v1/third_party_token \
+  -H "x-access-token: <your_existing_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"expirationDays": 30}'
+```
+
+有關其他執行時期錯誤，請參閱[錯誤處理](/sdk/error-handling/)和[疑難排解](/guides/troubleshooting/)。

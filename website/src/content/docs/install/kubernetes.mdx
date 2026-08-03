@@ -1,0 +1,207 @@
+---
+title: Install IMBRACE on Kubernetes (single node)
+description: Bootstrap the imbrace-installer CLI, prepare the host (k3s + Rancher + Traefik on :6868), and install the IMBRACE platform in three commands.
+---
+
+import { Steps, Aside, Tabs, TabItem } from "@astrojs/starlight/components"
+
+## Goal
+
+Get a working IMBRACE deployment on a single Ubuntu / Debian box — installer
+CLI on disk, k3s + Rancher running, and the IMBRACE chart applied — in roughly
+15–30 minutes.
+
+## What are we doing (simple terms)?
+
+`imbrace-installer` is one CLI that does two jobs: it sets up the host
+(k3s + Rancher with Traefik bound to port `:6868`) and then installs the
+IMBRACE platform on top of it. You install the CLI once, prepare the host
+once, and every future upgrade is the same single `upgrade --install` call.
+
+## What you need
+
+- Ubuntu 22.04+ or Debian 12+ host with **root / sudo**
+- A public IP **or** a DNS name that resolves to the host
+- Outbound internet to reach S3 and ECR (or a private mirror you've populated)
+- ~10 GB free disk, 8+ GB RAM
+- ~20 minutes
+- Ports `6868`, `30030`, `30700`, plus an auto-assigned Rancher NodePort
+  (30000–32767 range) reachable on the host
+- Optional: NVIDIA GPU if you plan to run GPU workloads
+
+## Steps
+
+<Steps>
+
+1. **Install the CLI**
+
+    The bootstrap script downloads `imbrace-installer`, pre-stages the chart
+    tarball under `/opt/imbrace-installer/chart/`, and symlinks the binary
+    into `/usr/bin/`. After this step every subsequent command is just
+    `imbrace-installer …` — no `./`, no path.
+
+    Pick the one-liner for your OS. It auto-detects your CPU architecture
+    (Intel `amd64` / ARM `arm64`) and downloads the matching binary — you
+    don't choose.
+
+    <Tabs syncKey="os">
+      <TabItem label="Linux (Ubuntu/Debian)">
+        ```bash
+        curl -fsSL https://imbrace-install-tool.s3.ap-east-1.amazonaws.com/install.sh \
+            | sudo bash
+        ```
+      </TabItem>
+      <TabItem label="macOS">
+        ```bash
+        curl -fsSL https://imbrace-install-tool.s3.ap-east-1.amazonaws.com/install-mac \
+            | bash
+        ```
+      </TabItem>
+      <TabItem label="Windows (PowerShell)">
+        ```powershell
+        powershell -c "irm https://imbrace-install-tool.s3.ap-east-1.amazonaws.com/install-win.ps1 | iex"
+        ```
+      </TabItem>
+    </Tabs>
+
+    <Aside type="note">
+    Behind a private mirror? Set `IMBRACE_S3_BASE` and `IMBRACE_CLI_BASE`
+    before the curl, e.g.
+    `sudo IMBRACE_S3_BASE=https://artifacts.example.com/imbrace ...`.
+    </Aside>
+
+    <Aside type="caution">
+    The host-bootstrap steps below (`prepare`, `gpu`) run **only** on an
+    Ubuntu / Debian target — they need `apt`, `systemctl`, and the k3s
+    installer. From macOS or Windows the CLI installs fine but is limited to
+    managing a **remote** cluster (`version`, `rancher`, `upgrade --install`);
+    run `prepare` / `gpu` on the Linux box itself (SSH in first).
+    </Aside>
+
+2. **Prepare the host**
+
+    `prepare` is idempotent — safe to re-run. It runs five phases in order:
+    apt deps → k3s → Traefik bound to host port `:6868` → Rancher →
+    auto-import of the cluster into Rancher.
+
+    Confirm the CLI is reachable, then run prepare:
+
+    ```bash
+    imbrace-installer --help
+    sudo imbrace-installer prepare
+    ```
+
+    When it finishes the script prints the Rancher NodePort URL, the admin
+    password, and the kubeconfig path (`/etc/rancher/k3s/k3s.yaml`) — copy
+    these somewhere safe. The Rancher HTTPS NodePort is auto-assigned by
+    the kube-apiserver from the 30000–32767 range; it is **not** a fixed
+    value, so always use the URL printed at the end of `prepare`.
+
+    <Aside type="caution">
+    GPU is **not** configured here. If the host has an NVIDIA card, run
+    `sudo imbrace-installer gpu <DRIVER_VERSION>` after this step
+    (a host reboot may be required on first install).
+    </Aside>
+
+3. **Install the IMBRACE app**
+
+    Replace `<IP_PUBLIC/DOMAIN_PUBLIC>` with the host's public IP **or** the
+    DNS name you want IMBRACE to be reachable at. The installer creates the
+    `imbrace-services` namespace, applies the chart, and waits up to 30
+    minutes for the post-install DB-init jobs (apworkflow / ips / platform)
+    to complete.
+
+    ```bash
+    sudo imbrace-installer upgrade --install imbrace \
+        --set global.publicHost=<IP_PUBLIC/DOMAIN_PUBLIC>
+    ```
+
+    If TLS is terminated upstream (HAProxy / Traefik / cert-manager), also
+    pass `--set global.publicScheme=https`.
+
+</Steps>
+
+## Service ports
+
+The chart exposes IMBRACE through a **single unified entry point** on port
+`6868` plus a small set of dedicated NodePorts for surfaces that don't sit
+behind the unified ingress. Everything binds to `global.publicHost`, so
+the URLs below are the ones the browser actually hits — the
+in-cluster `ClusterIP` ports (Postgres, Kafka, Mongo, Garage S3) stay
+private.
+
+### Unified Traefik ingress (always on)
+
+One IngressRoute serves the whole app via path-based routing. Set on the
+host by `prepare` (Phase C — `traefik-config.yaml` patches Traefik to
+`hostNetwork: true`).
+
+| Port  | Scheme | What it serves                                                         |
+| ----- | ------ | ---------------------------------------------------------------------- |
+| 6868  | HTTP   | `/` → dashboard SPA, `/api` → api-gateway (prefix stripped), WebSocket |
+| 8443  | HTTPS  | Same routes, TLS-terminated (when `unifiedIngress.tls` is configured)  |
+
+### Dedicated app NodePorts (always reserved)
+
+Two surfaces bypass the unified ingress because they ship their own SPA +
+proxy.
+
+| NodePort | Service                  | Helm key                             | What it serves                                       |
+| -------- | ------------------------ | ------------------------------------ | ---------------------------------------------------- |
+| 30030    | insightIQ chatbot SPA    | `global.insightiqNodePort`           | `aisdk-chatbot` UI                                   |
+| 30700    | apworkflow combined proxy| `global.apworkflowProxyNodePort`     | `/` → apworkflow-app SPA, `/api` → apworkflow REST   |
+
+### Rancher admin UI
+
+The CLI patches the Rancher Service to `type: NodePort` and lets the
+apiserver auto-assign ports from the 30000–32767 range. The HTTPS NodePort
+is printed at the end of `prepare`.
+
+| Port             | Where to read it                                | URL form                                      |
+| ---------------- | ----------------------------------------------- | --------------------------------------------- |
+| auto-assigned    | end-of-`prepare` summary, or                    | `https://<NODE_IP>:<RANCHER_HTTPS_NODEPORT>`  |
+|                  | `kubectl -n cattle-system get svc rancher`      |                                               |
+
+Admin password is stored at `/etc/imbrace/rancher-admin-password`.
+
+### Browser URLs after install
+
+With `--set global.publicHost=10.121.15.199` (example):
+
+- **Dashboard:** `http://10.121.15.199:6868`
+- **API gateway:** `http://10.121.15.199:6868/api`
+- **WebSocket:** `ws://10.121.15.199:6868`
+- **apworkflow:** `http://10.121.15.199:30700` (SPA) · `…:30700/api` (REST)
+- **insightIQ chat:** `http://10.121.15.199:30030`
+- **Rancher:** `https://10.121.15.199:<auto-assigned>` (printed by `prepare`)
+
+<Aside type="note">
+On HTTPS deployments, also pass `--set global.publicScheme=https`. Browsers
+reject `ws://` from an `https://` page (mixed content), so the chart
+automatically rewrites WebSocket URLs to `wss://` when the scheme is `https`.
+</Aside>
+
+## Verify
+
+```bash
+sudo kubectl get pods -n imbrace-services
+```
+
+Every pod should be `Running` or `Completed`. If anything is stuck in
+`ImagePullBackOff`, the ECR pull-secret has likely expired — re-run step 3
+with a fresh registry password in the env:
+
+```bash
+export IMBRACE_REGISTRY_PASSWORD=<ECR_TOKEN>
+sudo -E imbrace-installer upgrade --install imbrace \
+    --set global.publicHost=<IP_PUBLIC/DOMAIN_PUBLIC>
+```
+
+## Next steps
+
+- **GPU workloads:** `sudo imbrace-installer gpu 590.48.01`
+- **Upgrade an existing install:** re-run step 3 — `upgrade --install` is
+  the update path
+- **Check the published chart version:** `imbrace-installer version`
+- **Air-gapped / private mirror:** set `IMBRACE_S3_BASE` and
+  `IMBRACE_CLI_BASE` before step 1

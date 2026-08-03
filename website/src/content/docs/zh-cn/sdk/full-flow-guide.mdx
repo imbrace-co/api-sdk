@@ -1,0 +1,721 @@
+﻿---
+title: 完整流程指南
+description: 端到端演练 — 从客户端设置到 AI 代理、工作流、知识中心和数据面板。TypeScript 和 Python。
+---
+
+import { Steps, Tabs, TabItem, Aside } from "@astrojs/starlight/components";
+import AuthOnly from "../../../../components/AuthOnly.astro";
+
+本指南从头到尾介绍了 Imbrace SDK 中的四大工作流。每个部分都是独立的 — 可以按顺序阅读，也可以直接跳转到你需要的内容。
+
+---
+
+## 1. 创建 AI 代理并开始聊天
+
+<Steps>
+
+1. **初始化客户端**
+
+   <AuthOnly mode="access-token">
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       import { ImbraceClient } from "@imbrace/sdk"
+
+        const client = new ImbraceClient({
+          accessToken: process.env.IMBRACE_ACCESS_TOKEN,
+          env: "stable",
+        })
+       ```
+     </TabItem>
+     <TabItem label="Python">
+        ```python
+        import os
+        from imbrace import ImbraceClient
+
+        client = ImbraceClient(
+            access_token=os.environ["IMBRACE_ACCESS_TOKEN"],
+            env="stable",
+        )
+       ```
+     </TabItem>
+   </Tabs>
+   </AuthOnly>
+
+   <AuthOnly mode="api-key">
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       import { ImbraceClient } from "@imbrace/sdk"
+
+        const client = new ImbraceClient({
+          apiKey:         process.env.IMBRACE_API_KEY,
+          organizationId: process.env.IMBRACE_ORGANIZATION_ID,
+          env:            "stable",
+        })
+       ```
+     </TabItem>
+     <TabItem label="Python">
+        ```python
+        import os
+        from imbrace import ImbraceClient
+
+        client = ImbraceClient(
+            api_key=os.environ["IMBRACE_API_KEY"],
+            organization_id=os.environ.get("IMBRACE_ORGANIZATION_ID"),
+            env="stable",
+        )
+       ```
+     </TabItem>
+   </Tabs>
+   </AuthOnly>
+
+   <Aside type="tip">
+     不确定使用哪种凭证？请参见[认证 →](/zh-cn/sdk/authentication/#which-credential-should-i-use)
+   </Aside>
+
+2. **创建 AI 代理**
+
+   `workflow_name` 在你的组织内必须是唯一的。
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       const agent = await client.chatAi.createAiAgent({
+         name: "Support Bot",
+         workflow_name: "support_bot_v1",
+         description: "Handles tier-1 customer support queries",
+         instructions: "You are a helpful support agent. Be concise and friendly.",
+         provider_id: "system",   // 使用组织的默认 LLM 提供商
+         model_id: "Default",     // 路由到组织配置的默认模型（跨组织通用）
+       })
+
+       const aiAgentId = agent.id  // UUID — 用于所有后续调用
+       console.log("AI agent created:", aiAgentId)
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       agent = client.chat_ai.create_ai_agent({
+           "name": "Support Bot",
+           "workflow_name": "support_bot_v1",
+           "description": "Handles tier-1 customer support queries",
+           "instructions": "You are a helpful support agent. Be concise and friendly.",
+           "provider_id": "system",   # 使用组织的默认 LLM 提供商
+           "model_id": "Default",     # 路由到组织配置的默认模型（跨组织通用）
+       })
+
+       ai_agent_id = agent["id"]
+        print("AI agent created:", ai_agent_id)
+       ```
+     </TabItem>
+   </Tabs>
+
+   `provider_id` 和 `model_id` 是可选项 — 省略时 SDK 自动填充 `{ provider_id: "system", model_id: "Default" }`。`"Default"` 路由到组织配置的系统默认模型,是跨组织通用的选择。需要覆盖时显式传入:`provider_id: "<uuid>"` 用于指定自定义 LLM 提供商,或 `model_id: "gpt-4o"` 等 — 但具体模型名称只在该组织的 `system` 提供商实际公开它时才有效。在硬编码前,使用 `client.ai.listModels()` (TypeScript) / `client.ai.list_models()` (Python) 列出组织的可用模型。
+
+3. **使用 AI 代理流式聊天**
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       const response = await client.aiAgent.streamChat({
+         assistant_id: aiAgentId,
+         messages: [{ role: "user", content: "How do I reset my password?" }],
+         // id 是会话 UUID — 重复使用以保持对话历史
+         // 如果省略，每次调用会自动生成新的 UUID
+       })
+
+       const reader = response.body!.getReader()
+       const decoder = new TextDecoder()
+
+       while (true) {
+         const { done, value } = await reader.read()
+         if (done) break
+         const text = decoder.decode(value)
+         for (const line of text.split("\n")) {
+           if (line.startsWith("data: ")) {
+             const data = line.slice(6).trim()
+             if (data && data !== "[DONE]") {
+               try {
+                 const chunk = JSON.parse(data)
+                 process.stdout.write(chunk.delta ?? chunk.content ?? "")
+               } catch {}
+             }
+           }
+         }
+       }
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       response = client.ai_agent.stream_chat({
+           "assistant_id": ai_agent_id,
+           "messages": [{"role": "user", "content": "How do I reset my password?"}],
+           # id 是会话 UUID — 重复使用以保持对话历史。
+           # 如果省略，每次调用会自动生成新的 UUID。
+       })
+
+       import json
+       for line in response.iter_lines():
+           if isinstance(line, bytes):
+               line = line.decode()
+           if not line.startswith("data: "):
+               continue
+           data = line[6:].strip()
+           if data and data != "[DONE]":
+               try:
+                   chunk = json.loads(data)
+                   print(chunk.get("delta") or chunk.get("content") or "", end="")
+               except Exception:
+                   pass
+       ```
+     </TabItem>
+   </Tabs>
+
+4. **维护对话历史（会话 ID）**
+
+   在多次调用中传入相同的 `id`（必须是 UUID）以保持上下文：
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       import { randomUUID } from "crypto"
+
+       const sessionId = randomUUID()
+
+       // 第一条消息
+       await client.aiAgent.streamChat({
+         assistant_id: aiAgentId,
+         id: sessionId,
+         messages: [{ role: "user", content: "What's your refund policy?" }],
+       })
+
+        // 后续 — 相同会话，AI 代理记得上下文
+        await client.aiAgent.streamChat({
+          assistant_id: aiAgentId,
+          id: sessionId,
+          messages: [{ role: "user", content: "How long does it take?" }],
+        })
+        ```
+      </TabItem>
+      <TabItem label="Python">
+        ```python
+        import uuid
+
+        session_id = str(uuid.uuid4())
+
+        # 第一条消息
+        client.ai_agent.stream_chat({
+            "assistant_id": ai_agent_id,
+            "id": session_id,
+            "messages": [{"role": "user", "content": "What's your refund policy?"}],
+        })
+
+        # 后续 — 相同会话，AI 代理记得上下文
+       client.ai_agent.stream_chat({
+           "assistant_id": ai_agent_id,
+           "id": session_id,
+           "messages": [{"role": "user", "content": "How long does it take?"}],
+       })
+       ```
+     </TabItem>
+   </Tabs>
+
+</Steps>
+
+---
+
+## 2. 创建工作流并将其绑定到 AI 代理
+
+<Steps>
+
+1. **列出已有流程以找到你的项目 ID**
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       const { data: flows } = await client.workflows.listFlows({ limit: 5 })
+       const projectId = flows[0]?.projectId
+       console.log("Project ID:", projectId)
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       res = client.workflows.list_flows(limit=5)
+       flows = res.get("data", [])
+       project_id = flows[0]["projectId"] if flows else None
+       print("Project ID:", project_id)
+       ```
+     </TabItem>
+   </Tabs>
+
+2. **创建新流程**
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       const flow = await client.workflows.createFlow({
+         displayName: "CRM Update on New Lead",
+         projectId,
+       })
+       console.log("Flow created:", flow.id)
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       flow = client.workflows.create_flow(
+           display_name="CRM Update on New Lead",
+           project_id=project_id,
+       )
+       print("Flow created:", flow["id"])
+       ```
+     </TabItem>
+   </Tabs>
+
+3. **添加 Webhook 触发器并发布流程**
+
+   新创建的流程处于 **DRAFT** 状态，没有触发器 — Webhook URL 还不存在，所以 `triggerFlow` 会返回 404。先添加 Webhook 组件作为触发器，然后发布：
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       // 设置 Webhook 组件作为流程的触发器
+       await client.workflows.applyFlowOperation(flow.id, {
+         type: "UPDATE_TRIGGER",
+         request: {
+           name: "trigger",
+           type: "PIECE_TRIGGER",
+           valid: true,
+           displayName: "Webhook",
+           settings: {
+             pieceName: "@activepieces/piece-webhook",
+             pieceVersion: "0.1.24",
+             triggerName: "catch_webhook",
+             input: { authType: "none" },
+             propertySettings: {},
+           },
+         },
+       })
+
+       // 发布 — 流程状态变为 DISABLED → ENABLED，Webhook URL 变为可用
+       await client.workflows.applyFlowOperation(flow.id, {
+         type: "LOCK_AND_PUBLISH",
+         request: {},
+       })
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       # 设置 Webhook 组件作为流程的触发器
+       client.workflows.apply_flow_operation(flow["id"], {
+           "type": "UPDATE_TRIGGER",
+           "request": {
+               "name": "trigger",
+               "type": "PIECE_TRIGGER",
+               "valid": True,
+               "displayName": "Webhook",
+               "settings": {
+                   "pieceName": "@activepieces/piece-webhook",
+                   "pieceVersion": "0.1.24",
+                   "triggerName": "catch_webhook",
+                   "input": {"authType": "none"},
+                   "propertySettings": {},
+               },
+           },
+       })
+
+       # 发布 — DISABLED → ENABLED，Webhook URL 变为可用
+       client.workflows.apply_flow_operation(flow["id"], {
+           "type": "LOCK_AND_PUBLISH",
+           "request": {},
+       })
+       ```
+     </TabItem>
+   </Tabs>
+
+4. **手动触发流程并传入负载**
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       // 触发并忘记（异步）
+       await client.workflows.triggerFlow(flow.id, {
+         contact_name: "Jane Smith",
+         email: "jane@example.com",
+       })
+
+       // 同步触发 — 要让它实际返回数据而不超时，
+       // 流程需要通过 ADD_ACTION 使用 applyFlowOperation 添加 "Return Response" 动作
+       // （否则网关会等待 30 秒然后放弃）。
+       const result = await client.workflows.triggerFlowSync(flow.id, {
+         contact_name: "Jane Smith",
+         email: "jane@example.com",
+       })
+       console.log("Flow result:", result)
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       # 触发并忘记（异步）
+       client.workflows.trigger_flow(flow["id"], {
+           "contact_name": "Jane Smith",
+           "email": "jane@example.com",
+       })
+
+       # 同步触发 — 要让它实际返回数据而不超时，
+       # 流程需要通过 ADD_ACTION 使用 apply_flow_operation 添加 "Return Response" 动作
+       # （否则网关会等待 30 秒然后放弃）。
+       result = client.workflows.trigger_flow_sync(flow["id"], {
+           "contact_name": "Jane Smith",
+           "email": "jane@example.com",
+       })
+       print("Flow result:", result)
+       ```
+     </TabItem>
+   </Tabs>
+
+5. **将流程绑定到你的 AI 代理**
+
+   在 Imbrace 仪表盘中打开你的 AI 代理，转到 **工具 → 工作流**，然后附加该流程。AI 代理将能够在对话中适当时触发它。
+
+   或者，更新 AI 代理以按名称引用工作流：
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       await client.chatAi.updateAiAgent(aiAgentId, {
+         name: "Support Bot",
+         workflow_name: "support_bot_v1",
+         workflow_function_call: [{ flow_id: flow.id, description: "Update CRM on new lead" }],
+       })
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       client.chat_ai.update_ai_agent(ai_agent_id, {
+           "name": "Support Bot",
+           "workflow_name": "support_bot_v1",
+           "workflow_function_call": [
+               {"flow_id": flow["id"], "description": "Update CRM on new lead"}
+           ],
+       })
+       ```
+     </TabItem>
+   </Tabs>
+
+6. **查看运行历史**
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       const { data: runs } = await client.workflows.listRuns({
+         flowId: flow.id,
+         limit: 10,
+       })
+       for (const run of runs) {
+         console.log(run.id, run.status, run.startTime)
+       }
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       res = client.workflows.list_runs(flow_id=flow["id"], limit=10)
+       for run in res.get("data", []):
+           print(run["id"], run.get("status"), run.get("startTime"))
+       ```
+     </TabItem>
+   </Tabs>
+
+</Steps>
+
+---
+
+## 3. 管理知识中心并附加到 AI 代理
+
+知识中心文件和文件夹位于 **data-board** 服务中（`client.boards`）。文件夹的 `_id` 就是你作为知识源传递给 AI 代理的值。
+
+<Steps>
+
+1. **创建文件夹**
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       const folder = await client.boards.createFolder({
+         name: "Product Documentation",
+          organization_id: process.env.IMBRACE_ORGANIZATION_ID,
+         parent_id: "root",
+       })
+       console.log("Folder ID:", folder._id)
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       folder = client.boards.create_folder({
+           "name": "Product Documentation",
+            "organization_id": os.environ.get("IMBRACE_ORGANIZATION_ID"),
+           "parent_id": "root",
+       })
+       print("Folder ID:", folder["_id"])
+       ```
+     </TabItem>
+   </Tabs>
+
+2. **上传文件到文件夹**
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       import { readFileSync } from "fs"
+
+       const fileBuffer = readFileSync("./docs/faq.pdf")
+       const formData = new FormData()
+       formData.append("file", new Blob([fileBuffer], { type: "application/pdf" }), "faq.pdf")
+       formData.append("folder_id", folder._id)
+        formData.append("organization_id", process.env.IMBRACE_ORGANIZATION_ID ?? "")
+
+       const uploaded = await client.boards.uploadFile(formData)
+       console.log("File uploaded:", uploaded.file_id)
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       from pathlib import Path
+
+       path = Path("./docs/faq.pdf")
+       files = {
+           "file": (path.name, path.read_bytes(), "application/pdf"),
+           "folder_id": (None, folder["_id"]),
+            "organization_id": (None, os.environ.get("IMBRACE_ORGANIZATION_ID")),
+       }
+       uploaded = client.boards.upload_file(files)
+       print("File uploaded:", uploaded.get("file_id") or uploaded.get("_id"))
+       ```
+     </TabItem>
+   </Tabs>
+
+3. **将文件夹附加到 AI 代理**
+
+   在 `folder_ids` 中传入文件夹 `_id` — AI 代理会从该文件夹中的每个文件检索信息。使用 `board_ids` 附加一个 CRM 数据面板（其条目成为知识源 — 参见[资源 → 面板与条目](/zh-cn/sdk/resources/#boards--items--clientboards)）。旧版 `knowledge_hubs` 字段已弃用。
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       await client.chatAi.updateAiAgent(aiAgentId, {
+         name: "Support Bot",
+         workflow_name: "support_bot_v1",
+         folder_ids: [folder._id],
+         // board_ids: [boardId],  // 可选：附加 CRM 数据面板
+       })
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       client.chat_ai.update_ai_agent(ai_agent_id, {
+           "name": "Support Bot",
+           "workflow_name": "support_bot_v1",
+           "folder_ids": [folder["_id"]],
+           # "board_ids": [board_id],  # 可选：附加 CRM 数据面板
+       })
+       ```
+     </TabItem>
+   </Tabs>
+
+4. **检查和管理文件夹与文件**
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       // 搜索文件夹
+       const folders = await client.boards.searchFolders({ q: "Product" })
+
+       // 获取文件夹及其内容
+       const contents = await client.boards.getFolderContents(folder._id)
+       console.log("Files:", contents.files?.length)
+
+       // 重命名文件夹
+       await client.boards.updateFolder(folder._id, { name: "Product Docs v2" })
+
+       // 搜索文件夹中的文件
+       const files = await client.boards.searchFiles({ folderId: folder._id })
+
+       // 删除文件夹
+       await client.boards.deleteFolders({ ids: [folder._id] })
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       # 搜索文件夹
+       folders = client.boards.search_folders(q="Product")
+
+       # 获取文件夹及其内容
+       contents = client.boards.get_folder_contents(folder["_id"])
+       print("Files:", len(contents.get("files") or []))
+
+       # 重命名文件夹
+       client.boards.update_folder(folder["_id"], {"name": "Product Docs v2"})
+
+       # 搜索文件夹中的文件
+       files = client.boards.search_files(folder_id=folder["_id"])
+
+       # 删除文件夹
+       client.boards.delete_folders([folder["_id"]])
+       ```
+     </TabItem>
+   </Tabs>
+
+</Steps>
+
+---
+
+## 4. 管理数据面板与条目（CRM 管道）
+
+<Steps>
+
+1. **创建面板**
+
+   面板是一个 CRM 管道 — 线索、交易、任务或任何结构化数据。
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       const board = await client.boards.create({
+         name: "Sales Pipeline",
+         description: "Track all active deals",
+       })
+       console.log("Board ID:", board._id)
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       board = client.boards.create(
+           name="Sales Pipeline",
+           description="Track all active deals",
+       )
+       print("Board ID:", board["_id"])
+       ```
+     </TabItem>
+   </Tabs>
+
+2. **添加自定义字段**
+
+   字段类型包括 `ShortText`、`LongText`、`Number`、`Dropdown`、`Date`、`Checkbox` 等。`createField` 返回更新后的面板 — 在 `board.fields` 中找到你的新字段。
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       const updated = await client.boards.createField(board._id, {
+         name: "Company",
+         type: "ShortText",
+       })
+       // 找到标识符字段（每个面板自动创建）
+       const identifierField = updated.fields.find(f => f.is_identifier)
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       updated = client.boards.create_field(board["_id"], {
+           "name": "Company",
+           "type": "ShortText",
+       })
+       identifier_field = next(f for f in updated["fields"] if f.get("is_identifier"))
+       ```
+     </TabItem>
+   </Tabs>
+
+3. **创建面板条目（记录）**
+
+   条目使用 `{ fields: [{ board_field_id, value }] }` 格式：
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       const item = await client.boards.createItem(board._id, {
+         fields: [
+           { board_field_id: identifierField._id, value: "Acme Corp" },
+         ],
+       })
+       console.log("Item ID:", item._id)
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       item = client.boards.create_item(board["_id"], {
+           "fields": [
+               {"board_field_id": identifier_field["_id"], "value": "Acme Corp"},
+           ],
+       })
+       print("Item ID:", item["_id"])
+       ```
+     </TabItem>
+   </Tabs>
+
+4. **列出和搜索条目**
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       // 分页遍历条目
+       const { data: items } = await client.boards.listItems(board._id, { limit: 20, skip: 0 })
+
+       // 全文搜索
+       const { data: results } = await client.boards.search(board._id, {
+         q: "Acme",
+         limit: 10,
+       })
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       # 分页遍历条目
+       items = client.boards.list_items(board["_id"], limit=20, skip=0)
+
+       # 全文搜索
+       results = client.boards.search(board["_id"], q="Acme", limit=10)
+       ```
+     </TabItem>
+   </Tabs>
+
+5. **更新和删除条目**
+
+   更新使用 `{ data: [{ key, value }] }`（注意：是 `key`，不是 `board_field_id`）：
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       await client.boards.updateItem(board._id, item._id, {
+         data: [{ key: identifierField._id, value: "Acme Corp — Closed Won" }],
+       })
+
+       await client.boards.deleteItem(board._id, item._id)
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       client.boards.update_item(board["_id"], item["_id"], {
+           "data": [{"key": identifier_field["_id"], "value": "Acme Corp — Closed Won"}],
+       })
+
+       client.boards.delete_item(board["_id"], item["_id"])
+       ```
+     </TabItem>
+   </Tabs>
+
+6. **导出为 CSV**
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       const csv = await client.boards.exportCsv(board._id)
+       // csv 是一个字符串 — 写入文件或作为下载发送
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       csv = client.boards.export_csv(board["_id"])
+       # csv 是一个字符串 — 写入文件或作为下载发送
+       ```
+     </TabItem>
+   </Tabs>
+
+</Steps>

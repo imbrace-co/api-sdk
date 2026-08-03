@@ -1,0 +1,94 @@
+---
+title: 概览
+description: Imbrace SDK 是什么、如何工作以及何时使用。
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+Imbrace SDK 是 Imbrace Gateway 的官方客户端，提供 **TypeScript** 和 **Python** 两种版本。两个 SDK 封装了相同的 Gateway API，具有相同的资源命名空间、相同的认证模型以及相同的重试/错误语义 — 选择适合你技术栈的语言即可。
+
+
+### 主要特性
+
+| 特性 | 详情 |
+|---|---|
+| **类型安全** | 每个资源都有 TypeScript 类型和 Python 类型提示 |
+| **两种凭证类型** | `apiKey` 或 `accessToken` — 参见[认证](/zh-cn/sdk/authentication/) |
+| **自动重试** | 429 和 5xx 重试带指数退避，无需配置 |
+| **AI 流式传输** | SSE / 异步迭代器，用于 `streamChat` 和 AI 补全 |
+| **异步与同步（Python）** | `ImbraceClient`（同步）和 `AsyncImbraceClient`（异步） |
+| **取消（TS）** | 通过 `AbortSignal` 传播实现进行中的请求取消 |
+
+### 安装
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```bash
+    npm install @imbrace/sdk
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```bash
+    pip install imbrace
+    ```
+  </TabItem>
+</Tabs>
+
+### Hello, world
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    import { ImbraceClient } from "@imbrace/sdk"
+
+    const client = new ImbraceClient({ accessToken: process.env.IMBRACE_ACCESS_TOKEN })
+    const me = await client.platform.getMe()
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    from imbrace import ImbraceClient
+
+    with ImbraceClient(access_token=os.environ["IMBRACE_ACCESS_TOKEN"]) as client:
+        me = client.platform.get_me()
+    ```
+  </TabItem>
+</Tabs>
+
+### 可用资源
+
+每个命名空间在两个 SDK 中都有。方法遵循语言惯例 — TypeScript 中为 `client.aiAgent.streamChat()`，Python 中为 `client.ai_agent.stream_chat()`。
+
+| 命名空间 | 微服务 | 用途 |
+|---|---|---|
+| `client.aiAgent` / `client.ai_agent` | ai-agent | 流式 AI 聊天、嵌入、parquet、聊天客户端子 API |
+| `client.chatAi` / `client.chat_ai` | ai-service-v2 | AI 代理增删改查（创建/更新/删除/列出） |
+| `client.documentAi` / `client.document_ai` | ai-service-v2 | 文档解析、提取、文件 AI |
+| `client.agent` | marketplace | AI 代理模板 + 用例（通过 `createUseCase` 原子创建 assistant + workflow + channel） |
+| `client.workflows` | workflow-engine | 工作流自动化 — 流程、触发器、运行 |
+| `client.boards` | data-board | CRM 面板 — 增删改查、条目、字段、搜索、分段、CSV；知识中心文件夹和文件 |
+| `client.platform`, `client.organizations`, `client.teams` | platform | 用户、组织、团队、业务单元 |
+| `client.contacts`, `client.conversations`, `client.messages`, `client.channel`, `client.categories`, `client.campaign`, `client.outbound` | channel-service | 联系人、对话、消息、频道/活动管理 |
+| `client.marketplace` | marketplace | 市场文件、邮件模板、频道工作流 |
+| `client.fileService` | file-service | 上下文感知文件上传（面板附件、联系人文件、财务文件、预签名 URL） |
+| `client.ips`, `client.schedule` | ips | 进程间调度 / 自动化规则 |
+| `client.ai` | ai-service-v2 | 兼容 OpenAI 的补全/嵌入、providers、guardrails |
+| `client.auth` | platform / 旧后端 | 登录（OTP、密码、SSO）、token 交换 |
+
+完整列表和方法参考请参见[资源](/zh-cn/sdk/resources/)。
+
+### 如何选择凭证
+
+| | API Key | Access Token |
+|---|---|---|
+| **Imbrace 是谁的后端？** | Imbrace 是*你*后端中的一个功能 | *Imbrace 就是*你的后端 |
+| **用户是谁的？** | 你的 | Imbrace 的 |
+| **最适合** | 服务器间通信、内部脚本、CRM 集成 | 面向用户的应用，每个终端用户登录使用 |
+
+完整决策树：[认证 →](/zh-cn/sdk/authentication/)。
+
+### 下一步
+
+- [安装 →](/zh-cn/sdk/installation/) — 设置包和凭证
+- [快速入门 →](/zh-cn/sdk/quick-start/) — 60 秒内发起第一个调用
+- [完整流程指南 →](/zh-cn/sdk/full-flow-guide/) — 四大工作流的端到端演练（AI 代理、工作流、知识中心、数据面板）

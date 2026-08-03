@@ -1,0 +1,456 @@
+---
+title: Lệnh CLI
+description: Tham chiếu đầy đủ cho tất cả lệnh Imbrace CLI.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+## Data Board
+
+Board là một pipeline CRM — khách hàng tiềm năng, giao dịch, nhiệm vụ, hoặc bất kỳ dữ liệu có cấu trúc nào.
+
+### Danh sách Board
+
+```bash
+imbrace data-board list [--json]
+```
+
+### Tạo Board
+
+```bash
+imbrace data-board create [--name <name>] [--json]
+```
+
+Nếu không có `--json`, lệnh sẽ tương tác yêu cầu nhập các cặp key-value tự do sau khi nhập tên.
+
+### Tạo Trường
+
+```bash
+imbrace data-board create-field <boardId> --name <fieldName> --type <fieldType> [--json]
+```
+
+Các loại trường hợp lệ (16): `ShortText`, `LongText`, `Number`, `Date`, `Email`, `Phone`, `Currency`, `SingleSelection`, `MultipleSelection`, `Checkbox`, `Assignee`, `MultipleAssignee`, `Link`, `Notes`, `Origin`, `Priority`.
+
+<Aside type="caution">
+  KHÔNG sử dụng `Dropdown` — hệ thống sẽ từ chối. Hãy dùng `SingleSelection` để thay thế.
+</Aside>
+
+### Tạo Mục
+
+```bash
+imbrace data-board create-item <boardId> --fields '<json>' [--json]
+```
+
+`--fields` là một mảng JSON các đối tượng `{ board_field_id, value }`:
+
+```bash
+imbrace data-board create-item <boardId> --fields '[
+  {"board_field_id": "<fieldId>", "value": "Acme Corp"},
+  {"board_field_id": "<fieldId>", "value": "50000"}
+]' --json
+```
+
+### Danh sách Mục
+
+```bash
+imbrace data-board list-items --board-id <boardId> [--limit 20] [--skip 0] [--q <search>] [--json]
+```
+
+### Cập nhật Mục
+
+```bash
+imbrace data-board update-item <boardId> <itemId> --data '<json>' [--json]
+```
+
+`--data` là một mảng JSON các đối tượng `{ key, value }`.
+
+### Xóa Mục
+
+```bash
+imbrace data-board delete-item <boardId> <itemId> [--yes] [--json]
+```
+
+### Xuất ra CSV
+
+```bash
+imbrace data-board export-csv --board-id <boardId> [--out ./board.csv]
+```
+
+Nếu không có `--out`, xuất CSV ra stdout.
+
+---
+
+## AI Agent
+
+AI agent là một trợ lý đã được cấu hình (LLM + prompt + hành vi). Việc tạo một agent sẽ đồng thời cấp phát trợ lý, kênh web và mẫu use-case.
+
+<Aside type="caution">
+  Tất cả nội dung agent (tên, mô tả, hướng dẫn, trường hành vi) phải bằng tiếng Anh. Dấu tiếng Việt tạo ra slug không đọc được.
+</Aside>
+
+### Khám phá
+
+```bash
+imbrace ai-agent list [--json]
+imbrace ai-agent list-providers [--json]
+imbrace ai-agent list-models --provider-id <providerId> [--json]
+imbrace ai-agent list-folders [--search <query>] [--json]
+imbrace ai-agent list-files --folder-id <folderId> [--json]
+```
+
+### Lấy / Xóa
+
+```bash
+imbrace ai-agent get <agentId> [--json]
+imbrace ai-agent delete <agentId> [--yes] [--json]
+```
+
+### Cờ Tạo / Cập nhật
+
+`create` và `update` chấp nhận cùng các cờ. `update` giữ nguyên các trường không thay đổi thông qua PUT-merge.
+
+| Cờ | Ánh xạ tới | Ghi chú |
+|---|---|---|
+| **Danh tính** | | |
+| `--name` / `-n` | `name` + `title` | Bắt buộc khi tạo |
+| `--description` / `-d` | `description` + `short_description` | Hiển thị dưới tiêu đề trong UI |
+| `--instructions` / `-i` | `instructions` | System prompt |
+| **Mô hình** | | |
+| `--model` | `model_id` | Mặc định `Default` (nhà cung cấp hệ thống) |
+| `--provider-id` | `provider_id` | UUID, mặc định `system` |
+| `--mode` | `mode` | `standard` / `advanced` |
+| `--temperature` | `temperature` | 0.0–2.0, mặc định 0.1 |
+| **Cài đặt Hành vi** | | |
+| `--personality` | `personality_role` | |
+| `--core-task` | `core_task` | |
+| `--tone` | `tone_and_style` | |
+| `--response-length` | `response_length` | `short` / `medium` / `long` |
+| `--banned-words` | `banned_words` | Bộ lọc đầu ra phân cách bằng dấu phẩy |
+| `--category` | `category` | `Support` / `Sales` / `Marketing` / `Team` / `Other` |
+| `--guardrail-id` | `guardrail_id` | Đính kèm một guardrail |
+| `--preload-information` | `preload_information` | Thông tin tĩnh trong ngữ cảnh |
+| **Hỗ trợ Kiến thức** | | |
+| `--folder-ids` | `folder_ids` | ID thư mục KH phân cách bằng dấu phẩy |
+| `--default-folder-id` | `default_folder_id` | |
+| `--knowledge-hubs` | `knowledge_hubs` | ID KH phân cách bằng dấu phẩy |
+| `--board-ids` | `board_ids` | ID data board phân cách bằng dấu phẩy |
+| `--file-ids` | `file_ids` | ID tệp phân cách bằng dấu phẩy |
+| **Công tắc thời gian chạy** (hỗ trợ `--no-X`) | | |
+| `--show-thinking` | `show_thinking_process` | Mặc định false |
+| `--streaming` | `streaming` | Mặc định true |
+| `--use-memory` | `use_memory` | Mặc định true |
+| **Đầu ra** | | |
+| `--yes` / `-y` | — | Bỏ qua xác nhận khi xóa |
+| `--json` | — | Đầu ra máy có thể đọc được |
+| `--id-only` | — | Chỉ in ID agent mới |
+
+### Ví dụ tạo đầy đủ
+
+```bash
+imbrace ai-agent create \
+  --name "Customer Support Specialist" \
+  --description "Senior AI customer support agent" \
+  --instructions "You are a senior customer support specialist..." \
+  --personality "Friendly and professional" \
+  --core-task "Answer product inquiries, help track orders" \
+  --tone "Polite, professional, warm" \
+  --response-length "medium" \
+  --banned-words "stupid, idiot" \
+  --category "Support" \
+  --provider-id "e2629292-7e9f-4d55-ba18-6827747eab33" \
+  --model "gpt-4o-mini" \
+  --temperature 0.3 \
+  --folder-ids "69bb82faa2cc764639bc6bdb" \
+  --board-ids "brd_e5450d76-84d4-4c34-8b13-3d0f1873b53b" \
+  --json
+```
+
+### Loại Agent
+
+Nền tảng lưu trữ 4 loại agent riêng biệt dưới `agent_type`. CLI hiển thị chúng thông qua các chủ đề chuyên biệt hoặc cờ `--agent-type`:
+
+| Lựa chọn tạo trong UI | Lệnh CLI | `agent_type` của backend |
+|---|---|---|
+| AI AGENT | `imbrace ai-agent create` | `agent` (mặc định) |
+| ORCHESTRATOR | `imbrace orchestrator create` | `team_lead` |
+| DOCUMENT AI | `imbrace document-ai create` | `document_ai` |
+| GUARD RAIL | `imbrace guardrail create` | (không phải agent — tài nguyên riêng) |
+
+Cờ `--agent-type` trên `ai-agent create` chấp nhận `agent`, `assistant`, `conversational`, hoặc `workflow`. Đối với Document AI, sử dụng chủ đề `document-ai` chuyên biệt. Đối với Orchestrator, sử dụng chủ đề `orchestrator`.
+
+---
+
+## Document AI
+
+Document AI agent trích xuất JSON có cấu trúc từ các tài liệu phi cấu trúc (PDF, hình ảnh, biểu mẫu được quét). Mỗi agent có một **schema** xác định các trường cần trích xuất, **instructions** hướng dẫn LLM, và một **model + provider**. Được lưu dưới dạng AI Agents với `agent_type: "document_ai"`.
+
+### CRUD
+
+```bash
+imbrace document-ai list [--search <q>] [--all] [--json]
+imbrace document-ai get <agentId> [--json]
+imbrace document-ai create -n "<name>" -i "<instructions>" --model <id> \
+  (--schema '<json>' | --schema-file <path>) \
+  [--provider-id <uuid>] [--description <text>] [--workflow-name <name>] \
+  [--json] [--id-only]
+imbrace document-ai update <agentId> [--name | --instructions | --model | --provider-id | --schema | --schema-file | --description | --workflow-name] [--json]
+imbrace document-ai delete <agentId> [--yes] [--json]
+```
+
+`list` mặc định lọc với `documentAiOnly: true`. Thêm `--all` để bao gồm cả agent thông thường.
+
+### Xử lý tài liệu
+
+```bash
+imbrace document-ai process \
+  --url <pdf-or-image-url> \
+  --org-id <orgId> \
+  [--agent-id <id>] [--model <id>] [--instructions <text>] \
+  [--board-id <boardId>] [--language <lang>] \
+  [--additional-instructions <text>] \
+  [--chunk-size <n>] [--max-concurrent <n>] [--max-retries <n>] \
+  [--no-enhanced-processing] [--json]
+```
+
+Bắt buộc một trong hai: `--agent-id` (sử dụng model + instructions đã lưu của agent) hoặc `--model` (ghi đè).
+
+### Đề xuất schema
+
+```bash
+imbrace document-ai suggest-schema --url <url> --org-id <orgId> [--model <id>] [--json]
+```
+
+Yêu cầu LLM kiểm tra một tài liệu mẫu và đề xuất schema trích xuất.
+
+### Ví dụ Schema
+
+```json
+{
+  "invoice_number": { "type": "string", "description": "Mã hóa đơn" },
+  "total_amount":   { "type": "number" },
+  "due_date":       { "type": "string", "format": "date" }
+}
+```
+
+---
+
+## Orchestrator
+
+Orchestrator là một AI Agent được lưu với `agent_type: "team_lead"` có nhiệm vụ phân công công việc cho `sub_agents` / `team_leads`. Phản ánh lựa chọn **ORCHESTRATOR** trong hộp thoại Tạo của UI.
+
+```bash
+imbrace orchestrator list [--json]
+imbrace orchestrator get <id> [--json]
+imbrace orchestrator create -n "<name>" -i "<routing instructions>" \
+  --sub-agents <id1>,<id2> [--team-leads <id3>,<id4>] \
+  [--description <text>] [--model <id>] [--provider-id <uuid>] [--temperature <0-2>] \
+  [--json] [--id-only]
+imbrace orchestrator delete <id> [--yes] [--json]
+```
+
+### Đặc thù backend (được xử lý tự động)
+
+CLI xử lý ba hành vi đặc thù của nền tảng để người gọi không cần biết đến — nhưng hữu ích khi gỡ lỗi phản hồi SDK thô:
+
+1. **`agent_type: "team_lead"` là dấu hiệu của orchestrator** — không có boolean `is_orchestrator` riêng. Ứng dụng web cũng thực hiện chuyển đổi tương tự.
+2. **`sub_agents` / `team_leads` phải là ID trợ lý (UUID), không phải ID use-case (`uc_*`).** CLI tự động phân giải mọi `uc_*` bạn truyền qua tra cứu `client.agent.get()`.
+3. **`createUseCase` âm thầm loại bỏ cả hai trường trên** khi được đặt trên payload trợ lý. CLI thực hiện 2 bước: tạo → `chatAi.updateAiAgent` PUT để áp dụng chúng.
+
+`get` lấy trợ lý cơ bản để `sub_agents` / `team_leads` hiển thị chính xác (chúng nằm trên trợ lý, không phải use case).
+
+---
+
+## Guard Rail
+
+Guard Rail là một lớp an toàn nội dung / tuân thủ được đính kèm vào AI Agents thông qua `--guardrail-id` trên `ai-agent create`. Phản ánh lựa chọn **GUARD RAIL** trong hộp thoại Tạo của UI.
+
+```bash
+imbrace guardrail list [--json]
+imbrace guardrail get <id> [--json]
+imbrace guardrail create -n "<name>" -i "<rules>" \
+  [--model nim-nemo|model-armor] \
+  [--guardrail-provider-id <uuid>] [--org-id <orgId>] \
+  [--description <text>] \
+  [--unsafe-categories "violence,hate,sexual"] \
+  [--custom-unsafe-patterns "regex1,regex2"] \
+  [--competitor-keywords "X,Y"] \
+  [--json] [--id-only]
+imbrace guardrail update <id> -n -i --model [partial flags] [--json]
+imbrace guardrail delete <id> [--yes] [--json]
+```
+
+### Đặc thù backend (được xử lý tự động)
+
+1. **`org_id` là bắt buộc** nhưng kiểu SDK đánh dấu nó là tùy chọn. CLI tự động lấy nó qua `client.account.getAccount()` nếu bạn không truyền `--org-id`.
+2. **`model` không phải tên LLM thông thường** — nó là model guardrail:
+   - `nim-nemo` (NVIDIA NIM Nemo) — mặc định của CLI
+   - `model-armor` (Google)
+   - hoặc bất kỳ model guardrail-provider tùy chỉnh nào khi kết hợp với `--guardrail-provider-id`
+3. **`model-armor` bỏ qua `instructions`, `custom_unsafe_patterns`, và `competitor_keywords`.** CLI tự động loại bỏ chúng.
+4. **Backend trả về `guardrails_config_id`, không phải `_id`.** CLI chuẩn hóa điều này để `--id-only` và `get <id>` hoạt động như mong đợi.
+
+---
+
+## Workflow
+
+Workflow là một chuỗi các node: một trigger kích hoạt, sau đó các hành động chạy tuần tự.
+
+### Các loại Node
+
+| Loại | Vai trò | Hỗ trợ CLI |
+|---|---|---|
+| `PIECE_TRIGGER` | Khi nào flow chạy | `node add --type trigger` |
+| `PIECE` | Cái gì chạy sau đó | `node add --type action` |
+| `EMPTY` | Giữ chỗ trước khi trigger được đặt | Chỉ đọc |
+| `ROUTER` | Công tắc đa điều kiện | `node add-raw` |
+| `LOOP_ON_ITEMS` | Lặp qua một mảng | `node add-raw` |
+| `CODE` | JavaScript nội tuyến | `node add-raw` |
+
+### CRUD Flow
+
+```bash
+imbrace workflow list [--folder-id <id|NULL>] [--json]
+imbrace workflow get <id> [--json]
+imbrace workflow create --name "<name>" [--folder-id <id>] [--json] [--id-only]
+imbrace workflow move <flowId> --folder-id <id|NULL> [--json]
+imbrace workflow delete <id> [--yes] [--json]
+```
+
+### Quản lý Node
+
+```bash
+imbrace workflow node list <flowId> [--json]
+imbrace workflow node add <flowId> \
+  --type trigger --piece <pieceName> \
+  --trigger-name <triggerId> [--input '<json>'] [--json]
+imbrace workflow node add <flowId> \
+  --type action --piece <pieceName> \
+  --action-name <actionId> \
+  [--after <parentStep>] [--input '<json>'] [--json]
+imbrace workflow node update <flowId> <nodeName> \
+  [--input '<json>'] [--display-name <name>] [--json]
+imbrace workflow node delete <flowId> <nodeName> [--yes] [--json]
+imbrace workflow node add-raw <flowId> (--op-file <path> | --op '<json>' | --stdin) [--json]
+```
+
+### Khám phá Piece
+
+```bash
+imbrace workflow piece list [--search <query>] [--json]
+imbrace workflow piece detail <pieceName> [--only actions|triggers] [--json]
+```
+
+### Kết nối
+
+```bash
+imbrace workflow conn list [--json]
+imbrace workflow conn get <connId> [--json]
+imbrace workflow conn create \
+  --piece <pieceName> \
+  --type SECRET_TEXT|OAUTH2|CLOUD_OAUTH2|BASIC_AUTH|CUSTOM_AUTH \
+  --value "<token-or-json>" \
+  [--display-name <name>] [--external-id <id>] [--json] [--id-only]
+imbrace workflow conn delete <connId> [--yes] [--json]
+```
+
+### Thư mục (Danh mục)
+
+```bash
+imbrace workflow folder list [--json]
+imbrace workflow folder get <folderId> [--json]
+imbrace workflow folder create --name "<name>" [--json] [--id-only]
+imbrace workflow folder update <folderId> --name "<newName>" [--json]
+imbrace workflow folder delete <folderId> [--yes] [--json]
+```
+
+Nền tảng tự động tạo 4 thư mục hệ thống:
+
+| Danh mục UI | Tên Thư mục API |
+|---|---|
+| Channel Workflow | `Channel Workflow` |
+| Board Automation | `Board Automation` |
+| AI Agent Skills | `AI Agent Capabilities` |
+| Others | `Others` |
+
+### MCP Servers
+
+```bash
+imbrace workflow mcp list [--json]
+imbrace workflow mcp get <mcpId> [--json]
+imbrace workflow mcp create --name "<name>" [--json] [--id-only]
+imbrace workflow mcp delete <mcpId> [--yes] [--json]
+imbrace workflow mcp rotate-token <mcpId> [--yes] [--json]
+```
+
+### Vòng đời & Lượt chạy
+
+```bash
+imbrace workflow publish <flowId> [--json]
+imbrace workflow enable <flowId> [--json]
+imbrace workflow disable <flowId> [--json]
+imbrace workflow run <flowId> [--payload '<json>'] [--sync] [--json]
+imbrace workflow runs [--limit 10] [--json]
+imbrace workflow run-detail <runId> [--json]
+```
+
+### Cú pháp Biến
+
+| Biểu thức | Ý nghĩa |
+|---|---|
+| `{{trigger.body.X}}` | Trường X từ payload webhook |
+| `{{trigger.X}}` | Trường trigger cấp cao nhất |
+| `{{step_1.output.Y}}` | Trường đầu ra Y từ step_1 |
+| `{{connections.<id>.access_token}}` | Trường kết nối |
+
+---
+
+## Tiện ích
+
+### In Tài liệu Tham khảo LLM
+
+```bash
+imbrace docs [--path] [--json]
+```
+
+In tệp `llms.txt` đã được đóng gói — một tài liệu tham khảo lệnh hoàn chỉnh được thiết kế để đưa vào ngữ cảnh của tác nhân lập trình (Claude, Cursor, v.v.).
+
+| Cờ | Hành vi |
+|---|---|
+| _(không có)_ | In toàn bộ tài liệu tham khảo ra stdout |
+| `--path` | Chỉ in đường dẫn tuyệt đối đến `llms.txt` |
+| `--json` | Xuất `{ path, content }` dưới dạng JSON |
+
+```bash
+imbrace docs > /tmp/imbrace-llms.txt   # lưu cho tác nhân AI
+```
+
+---
+
+## Cập nhật
+
+Tự cập nhật CLI lên phiên bản mới nhất trên npm.
+
+```bash
+imbrace update              # cập nhật lên phiên bản mới nhất
+imbrace update --check      # kiểm tra cập nhật mà không cài đặt
+imbrace update --version 0.6.5  # cài đặt phiên bản cụ thể
+imbrace update --json       # đầu ra dạng JSON
+```
+
+<Aside type="note">
+  `imbrace update` khả dụng từ **v0.6.8** trở đi. Khách hàng dùng phiên bản cũ hơn cần chạy `npm install -g @imbrace/cli@latest` một lần để có lệnh này.
+</Aside>
+
+---
+
+## Các vấn đề đã biết
+
+1. **Loại trường `Dropdown`** — Backend từ chối. Sử dụng `SingleSelection` để thay thế.
+2. **Provider ID so với `_id`** — Sử dụng UUID `provider_id`, không phải MongoDB `_id`.
+3. **Nội dung chỉ bằng tiếng Anh** — Nội dung AI agent phải bằng tiếng Anh.
+4. **`workflow run --sync` hết thời gian** — Có thể hết thời gian ở ~60s. Sử dụng `workflow runs` + `run-detail` để thay thế.
+5. **Bật trước khi xuất bản** — `workflow enable` yêu cầu `workflow publish` trước.
+6. **Trường `prompt` của AI Connector** — Phải là `{ prompt: { prompt: "text" } }`.
+7. **Khóa flow** — Nếu một flow đang mở trong trình duyệt, các cập nhật CLI có thể bị từ chối.
+8. **`--no-use-memory` khi tạo** — Có thể không giữ được. Cập nhật sau khi tạo.
+9. **Model nhà cung cấp hệ thống** — Chỉ có `Default`. Các tên khác làm dropdown UI trống.

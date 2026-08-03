@@ -1,0 +1,159 @@
+---
+title: 測試指南
+description: 為 Imbrace SDK 執行單元測試、整合測試、lint 和型別檢查的完整指南。
+---
+
+
+## 環境設定
+
+### Python SDK
+
+```bash
+cd py
+
+# 安裝相依套件 + 開發工具（pytest、pytest-asyncio、pytest-httpx、ruff、mypy）
+pip install -e ".[dev]"
+```
+
+建立 `py/.env`（僅整合測試需要）：
+
+```env
+IMBRACE_API_KEY=api_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+IMBRACE_GATEWAY_URL=https://app-gatewayv2.imbrace.co
+IMBRACE_ORGANIZATION_ID=org_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+```
+
+### TypeScript SDK
+
+```bash
+cd ts
+npm install
+```
+
+---
+
+## Python — 執行與測試
+
+### 單元測試（不需要 API 金鑰）
+
+```bash
+cd py
+
+# 執行所有單元測試
+pytest tests/unit -v
+
+# 執行特定檔案
+pytest tests/unit/test_http.py -v
+pytest tests/unit/resources/test_channel.py -v
+
+# 執行特定測試案例
+pytest tests/unit/test_http.py::test_401_raises_auth_error -v
+
+# 依關鍵字執行
+pytest tests/unit -k "channel" -v
+pytest tests/unit -k "boards" -v
+```
+
+### 整合測試（需要真實 API 金鑰）
+
+整合測試會對 API 閘道執行真實呼叫。
+
+```bash
+cd py
+
+# 選項 1：直接在指令中設定金鑰
+IMBRACE_API_KEY=api_xxx pytest tests/integration -v -m integration
+
+# 選項 2：使用 .env（conftest.py 會透過 load_dotenv 自動載入）
+pytest tests/integration -v -m integration
+```
+
+### 執行全部（單元 + 整合）
+
+```bash
+pytest tests/ -v
+```
+
+### 涵蓋率報告
+
+> `pytest-cov` 預設不包含。請單獨安裝：`pip install pytest-cov`
+
+```bash
+pytest tests/unit --cov=src/imbrace --cov-report=term-missing
+```
+
+---
+
+## TypeScript — 執行與測試
+
+### 建置
+
+```bash
+cd ts
+
+# 單次建置
+npm run build
+
+# 監控模式建置（變更時自動重新建置）
+npm run dev
+
+# 清理 dist/
+npm run clean
+```
+
+### 單元測試（不需要 API 金鑰）
+
+```bash
+cd ts
+
+# 執行所有單元測試
+npm test
+
+# 執行特定檔案
+npx vitest run tests/unit/http.test.ts
+npx vitest run tests/unit/resources/contacts.test.ts
+
+# 監控模式（程式碼變更時自動執行）
+npm run test:watch
+```
+
+### 執行全部（單元 + 本機測試）
+
+```bash
+npm run test:all
+```
+
+這會在整個專案中執行 vitest（單元 + 符合測試模式的任何本機檔案）。TypeScript 整合測試尚不可用 — 請參閱 `py/tests/integration/` 以進行即時 API 檢查，或 `test/test-local-pkg/ts/` 以進行手動即時測試腳本。
+
+---
+
+## Lint 與型別檢查
+
+### Python
+
+```bash
+cd py
+
+# 檢查程式碼風格
+ruff check src/ tests/
+
+# 自動修復可修復的 ruff 錯誤
+ruff check src/ tests/ --fix
+
+# 檢查型別註釋
+mypy src/imbrace
+```
+
+### TypeScript
+
+```bash
+cd ts
+
+# 型別檢查
+npm run typecheck
+
+# Lint
+npm run lint
+
+```
+

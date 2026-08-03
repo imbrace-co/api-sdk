@@ -1,0 +1,310 @@
+---
+title: 錯誤處理
+description: 錯誤類型、自動重試行為以及使用 Imbrace SDK 處理故障的最佳做法。
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+所有 SDK 拋出的錯誤都繼承自單一基礎類型，因此您可以在一個地方捕獲任何 SDK 錯誤，或者在需要不同反應時分支到特定的子類別。TypeScript 和 Python SDK 的階層完全相同。
+
+## 錯誤階層
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```
+Error
+└── ImbraceError          (基礎 — SDK 錯誤的全面捕獲)
+    ├── AuthError          (401, 403 — 無效或過期的憑證)
+    ├── ApiError           (4xx/5xx — 請求被伺服器拒絕)
+    └── NetworkError       (逾時、連線拒絕、DNS 失敗)
+```
+</TabItem>
+<TabItem label="Python">
+```
+Exception
+└── ImbraceError          (基礎 — SDK 錯誤的全面捕獲)
+    ├── AuthError          (401, 403 — 無效或過期的憑證)
+    ├── ApiError           (4xx/5xx — 請求被伺服器拒絕)
+    └── NetworkError       (逾時、連線拒絕、DNS 失敗)
+```
+</TabItem>
+</Tabs>
+
+有關特定錯誤訊息和已知修復，請參閱[疑難排解](/guides/troubleshooting/)。
+
+---
+
+## AuthError
+
+當伺服器回傳 **401** 或 **403** 時拋出 — 憑證無效、過期或已被撤銷。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+import { AuthError } from "@imbrace/sdk";
+
+try {
+  const me = await client.platform.getMe();
+} catch (e) {
+  if (e instanceof AuthError) {
+    console.error("Re-authenticate:", e.message);
+  }
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+from imbrace import AuthError
+
+try:
+    me = client.platform.get_me()
+except AuthError as e:
+    print(f"Auth failed: {e}")
+    # 在重試前重新認證
+```
+</TabItem>
+</Tabs>
+
+:::caution
+`AuthError` **絕不會被重試**。SDK 在收到 401/403 時會立即拋出/引發 — 請在重試前修正憑證。有關憑證策略，請參閱[認證](/sdk/authentication/)。
+:::
+
+---
+
+## ApiError
+
+在所有其他 **4xx 和 5xx** 回應（在 429/5xx 的重試耗盡後）時拋出。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+import { ApiError } from "@imbrace/sdk";
+
+try {
+  await client.contacts.get("nonexistent_id");
+} catch (e) {
+  if (e instanceof ApiError) {
+    console.error(`HTTP ${e.statusCode}: ${e.message}`);
+    // e.g. "HTTP 404: Contact not found"
+  }
+}
+```
+
+| 屬性 | 類型 | 說明 |
+| ------------ | -------- | ---------------------------------- |
+| `statusCode` | `number` | HTTP 狀態碼 |
+| `message` | `string` | 來自伺服器回應的錯誤訊息 |
+</TabItem>
+<TabItem label="Python">
+```python
+from imbrace import ApiError
+
+try:
+    client.contacts.get("nonexistent_id")
+except ApiError as e:
+    print(f"HTTP {e.status_code}: {e}")
+    # e.g. "HTTP 404: Contact not found"
+```
+
+| 屬性 | 類型 | 說明 |
+| ------------- | ----- | ---------------------------------- |
+| `status_code` | `int` | HTTP 狀態碼 |
+</TabItem>
+</Tabs>
+
+---
+
+## NetworkError
+
+當請求從未到達伺服器時拋出 — 逾時、DNS 失敗或連線重置。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+import { NetworkError } from "@imbrace/sdk";
+
+try {
+  await client.platform.getMe();
+} catch (e) {
+  if (e instanceof NetworkError) {
+    console.error("Cannot reach baseUrl:", e.message);
+    // e.g. "Request timed out after 30000ms"
+  }
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+from imbrace import NetworkError
+
+try:
+    client.platform.get_me()
+except NetworkError as e:
+    print(f"Network error: {e}")
+    # e.g. "Network error or timeout: ConnectTimeout(...)"
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 捕獲所有 SDK 錯誤
+
+匯入基礎類型以在單一區塊中處理任何 SDK 產生的錯誤：
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+import {
+  ImbraceClient,
+  ImbraceError,
+  AuthError,
+  ApiError,
+  NetworkError,
+} from "@imbrace/sdk";
+
+try {
+  await client.platform.getMe();
+} catch (e) {
+  if (e instanceof AuthError) return handleAuthError(e);
+  if (e instanceof ApiError) return handleApiError(e);
+  if (e instanceof NetworkError) return handleNetworkError(e);
+  if (e instanceof ImbraceError) return handleUnknown(e);
+  throw e; // 重新拋出非 SDK 錯誤
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+from imbrace import ImbraceError, AuthError, ApiError, NetworkError
+
+try:
+    result = client.platform.get_me()
+except AuthError as e:
+    handle_auth_error(e)
+except ApiError as e:
+    handle_api_error(e)
+except NetworkError as e:
+    handle_network_error(e)
+except ImbraceError as e:
+    handle_unknown_sdk_error(e)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 自動重試行為
+
+兩個 SDK 中的 HTTP 傳輸層都會以指數退避重試暫時性失敗。重試次數在語言之間略有不同，但條件完全相同。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+| 條件 | 動作 |
+| --------------------------- | ---------------------------------------- |
+| HTTP **429**（速率限制） | 最多重試 2 次 |
+| HTTP **5xx**（伺服器錯誤） | 最多重試 2 次 |
+| 網路錯誤 / 逾時 | 最多重試 2 次 |
+| HTTP **401 / 403** | 不重試 — 立即拋出 `AuthError` |
+| HTTP **4xx**（其他） | 不重試 — 立即拋出 `ApiError` |
+
+**退避：** 嘗試之間間隔 `2^retryCount` 秒（2 秒 → 4 秒）。最壞情況總計：3 次嘗試。
+</TabItem>
+<TabItem label="Python">
+| 條件 | 動作 |
+| --------------------------- | ---------------------------------------- |
+| HTTP **429**（速率限制） | 最多重試 3 次 |
+| HTTP **5xx**（伺服器錯誤） | 最多重試 3 次 |
+| 網路錯誤 / 逾時 | 最多重試 3 次 |
+| HTTP **401 / 403** | 不重試 — 立即拋出 `AuthError` |
+| HTTP **4xx**（其他） | 不重試 — 立即拋出 `ApiError` |
+
+**退避：** 嘗試之間間隔 `2^retryCount` 秒（1 秒 → 2 秒 → 4 秒）。最壞情況總計：4 次嘗試。
+</TabItem>
+</Tabs>
+
+---
+
+## 請求逾時
+
+在建立客戶端時設定逾時（預設：**30 秒**）。當逾時觸發時，進行中的請求將被中止並拋出/引發 `NetworkError`。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const client = new ImbraceClient({ timeout: 15_000 }); // 毫秒
+```
+</TabItem>
+<TabItem label="Python">
+```python
+client = ImbraceClient(timeout=15)  # 秒
+```
+</TabItem>
+</Tabs>
+
+## 非同步錯誤處理（Python）
+
+非同步客戶端會拋出相同的例外類型：
+
+```python
+from imbrace import AsyncImbraceClient, AuthError, ApiError
+
+async with AsyncImbraceClient() as client:
+    try:
+        me = await client.platform.get_me()
+    except AuthError:
+        print("Re-authenticate")
+    except ApiError as e:
+        print(f"[{e.status_code}] {e}")
+```
+
+---
+
+## 最佳實踐
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// 1. 始終單獨處理 AuthError — 憑證需要重新整理
+// 2. 記錄 ApiError.statusCode — 400 = 參數錯誤，404 = 找不到，409 = 衝突
+// 3. 將頂層入口點包裝在 try/catch 中
+// 4. 不要在 AuthError 上重試 — 在憑證修正前沒有幫助
+
+async function safeGetMe(client: ImbraceClient) {
+  try {
+    return await client.platform.getMe();
+  } catch (e) {
+    if (e instanceof AuthError) {
+      await refreshCredentials();
+      return await client.platform.getMe();
+    }
+    throw e;
+  }
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# 1. 使用 context manager 確保連線被確定性地關閉
+with ImbraceClient() as client:
+    ...
+
+# 2. 單獨處理 AuthError — 憑證需要重新整理才能重試
+def safe_get_me(client):
+    try:
+        return client.platform.get_me()
+    except AuthError:
+        refresh_credentials(client)
+        return client.platform.get_me()
+
+# 3. 針對 ApiError 的 status_code 進行分支
+try:
+    client.contacts.update(contact_id, data)
+except ApiError as e:
+    if e.status_code == 409:
+        print("Conflict — contact has been modified")
+    elif e.status_code == 400:
+        print(f"Invalid data: {e}")
+```
+</TabItem>
+</Tabs>

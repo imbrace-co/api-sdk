@@ -1,0 +1,19 @@
+---
+// Wrap version-specific markdown so it only renders when the matching SDK
+// version is selected in the header dropdown.
+//
+// Usage in MDX:
+//   <VersionOnly version="1.0.2">
+//     pip install imbrace==1.0.2
+//   </VersionOnly>
+
+interface Props {
+  version: string
+}
+
+const { version } = Astro.props
+---
+
+<div class="version-only" data-version-only={version}>
+  <slot />
+</div>

@@ -1,0 +1,102 @@
+name: Publish NPM (TypeScript SDK)
+
+on:
+  push:
+    tags:
+      - 'ts-v*'  # e.g. ts-v1.0.2 — only triggers this workflow
+
+concurrency:
+  group: publish-npm
+  cancel-in-progress: false
+
+jobs:
+  # ---------------------------------------------------------
+  # JOB 1: Quality Assurance (Lint, Typecheck, Test)
+  # ---------------------------------------------------------
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ts
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ts/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Run unit tests
+        run: npm run test
+
+  # ---------------------------------------------------------
+  # JOB 2: Sync version and Publish to npm
+  # ---------------------------------------------------------
+  publish:
+    needs: test # Only runs if the Test job passes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required to read repo content
+      id-token: write # REQUIRED for OIDC authentication and --provenance
+    
+    defaults:
+      run:
+        working-directory: ts
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build SDK
+        run: npm run build
+
+      - name: Check if version is already published
+        id: check
+        run: |
+          PKG_NAME=$(node -p "require('./package.json').name")
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          echo "version=$PKG_VERSION" >> $GITHUB_OUTPUT
+          if npm view "$PKG_NAME@$PKG_VERSION" version > /dev/null 2>&1; then
+            echo "published=true" >> $GITHUB_OUTPUT
+            echo "::notice ::Version $PKG_VERSION already exists on npm. Skipping publish."
+          else
+            echo "published=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Publish to npm
+        if: steps.check.outputs.published == 'false'
+        run: |
+          # Pre-release versions (contain a hyphen per semver: 1.2.3-rc.0, 1.2.3-beta.1, etc.)
+          # publish under the `next` dist-tag so `npm install @imbrace/sdk` stays on `latest`.
+          # Stable releases (no hyphen) publish under `latest`.
+          if echo "${{ steps.check.outputs.version }}" | grep -q -- '-'; then
+            echo "Pre-release detected — publishing under @next dist-tag"
+            npm publish --access public --tag next
+          else
+            echo "Stable release — publishing under @latest dist-tag"
+            npm publish --access public
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

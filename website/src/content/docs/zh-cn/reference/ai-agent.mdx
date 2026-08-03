@@ -1,0 +1,348 @@
+---
+title: AI Agent
+description: client.aiAgent / client.ai_agent 的 schema 和方法参考 — 聊天、嵌入、parquet 和分布式追踪。
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+`client.aiAgent` (TypeScript) / `client.ai_agent` (Python) 提供聊天流式传输、嵌入管理、parquet 生成和 AI 代理的分布式追踪。
+
+如需逐步指南，请参阅 [SDK 指南中的 AI Agent](/sdk/ai-agent/)。
+
+---
+
+## Schema
+
+### StreamChatBody
+
+初始化流式聊天会话的参数。
+
+| Field | Type | Required | 说明 |
+|-------|------|----------|------|
+| `assistant_id` | string | ✓ | 要聊天的 AI 代理 ID |
+| `messages` | array | ✓ | 对话历史记录（role + content 配对） |
+| `id` | string | | 要继续的现有聊天会话 ID |
+| `model_id` | string | | 覆盖代理的默认 LLM 模型 |
+| `provider_id` | string | | 覆盖代理的默认 LLM 提供商 |
+| `user_id` | string | | 外部用户标识符 |
+
+### StreamSubAgentChatBody
+
+| Field | Type | Required | 说明 |
+|-------|------|----------|------|
+| `assistant_id` | string | ✓ | AI 代理 ID |
+| `session_id` | string | ✓ | 父会话 ID |
+| `chat_id` | string | ✓ | 会话中的聊天 ID |
+| `messages` | array | ✓ | 对话消息 |
+
+---
+
+## Methods
+
+| Method | TypeScript | Python | 说明 |
+|--------|-----------|--------|------|
+| Stream chat | `streamChat` | `stream_chat` | 与 AI 代理开始流式聊天会话 |
+| Stream sub-agent chat | `streamSubAgentChat` | `stream_sub_agent_chat` | 在子代理会话范围内进行流式聊天 |
+| Get sub-agent history | `getSubAgentHistory` | `get_sub_agent_history` | 检索子代理聊天的消息历史 |
+| List chats | `listChats` | `list_chats` | 列出组织的聊天会话 |
+| Get chat | `getChat` | `get_chat` | 获取单个聊天会话 |
+| Delete chat | `deleteChat` | `delete_chat` | 删除聊天会话 |
+| Prompt suggestions | `getAgentPromptSuggestion` | `get_agent_prompt_suggestion` | 获取代理的提示建议 |
+| Classify file | `classifyFile` | `classify_file` | 将文件分类到类别 |
+| Suggest field types | `suggestFieldTypes` | `suggest_field_types` | 从样本文档建议 JSON schema |
+| Process embedding | `processEmbedding` | `process_embedding` | 将文件嵌入知识库 |
+| List embedding files | `listEmbeddingFiles` | `list_embedding_files` | 列出所有已嵌入的文件 |
+| Get embedding file | `getEmbeddingFile` | `get_embedding_file` | 获取单个已嵌入的文件 |
+| Preview embedding file | `previewEmbeddingFile` | `preview_embedding_file` | 预览已嵌入的内容 |
+| Update embedding status | `updateEmbeddingFileStatus` | `update_embedding_file_status` | 更新文件嵌入状态 |
+| Delete embedding file | `deleteEmbeddingFile` | `delete_embedding_file` | 从知识库移除文件 |
+| Generate parquet | `generateParquet` | `generate_parquet` | 将数据数组转换为 parquet 文件 |
+| List parquet files | `listParquetFiles` | `list_parquet_files` | 列出已生成的 parquet 文件 |
+| Delete parquet file | `deleteParquetFile` | `delete_parquet_file` | 按名称删除 parquet 文件 |
+| Get traces | `getTraces` | `get_traces` | 查询分布式追踪 |
+| Get trace | `getTrace` | `get_trace` | 按 ID 获取单个追踪 |
+| Get trace services | `getTraceServices` | `get_trace_services` | 列出发出追踪的服务 |
+
+---
+
+## streamChat / stream_chat
+
+与 AI 代理开始流式聊天。返回原始 HTTP 响应 — 迭代流以读取 SSE chunks。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const response = await client.aiAgent.streamChat({
+  assistant_id: "agent_id",
+  messages: [{ role: "user", content: "Hello" }],
+  user_id: "user_123",
+});
+
+const reader = response.body?.getReader();
+const decoder = new TextDecoder();
+while (reader) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  console.log(decoder.decode(value));
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+response = client.ai_agent.stream_chat({
+    "assistant_id": "agent_id",
+    "messages": [{"role": "user", "content": "Hello"}],
+    "user_id": "user_123",
+})
+for chunk in response.iter_lines():
+    print(chunk)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## streamSubAgentChat / stream_sub_agent_chat
+
+在父会话内对子代理进行范围限定的流式聊天。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const response = await client.aiAgent.streamSubAgentChat({
+  assistant_id: "agent_id",
+  session_id: "session_id",
+  chat_id: "chat_id",
+  messages: [{ role: "user", content: "Follow-up question" }],
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+response = client.ai_agent.stream_sub_agent_chat({
+    "assistant_id": "agent_id",
+    "session_id": "session_id",
+    "chat_id": "chat_id",
+    "messages": [{"role": "user", "content": "Follow-up question"}],
+})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## listChats / list_chats
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { data: chats } = await client.aiAgent.listChats({
+  organization_id: "org_id",
+  user_id: "user_123",
+  limit: 20,
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.ai_agent.list_chats(
+    organization_id="org_id",
+    user_id="user_123",
+    limit=20,
+)
+chats = result.get("data", [])
+```
+</TabItem>
+</Tabs>
+
+---
+
+## getSubAgentHistory / get_sub_agent_history
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const history = await client.aiAgent.getSubAgentHistory({
+  session_id: "session_id",
+  chat_id: "chat_id",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+history = client.ai_agent.get_sub_agent_history(
+    session_id="session_id",
+    chat_id="chat_id",
+)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## processEmbedding / process_embedding
+
+将文件嵌入代理的知识库。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const result = await client.aiAgent.processEmbedding({
+  fileId: "file_id",
+  options: { chunk_size: 512 },
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.ai_agent.process_embedding(
+    file_id="file_id",
+    options={"chunk_size": 512},
+)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## classifyFile / classify_file
+
+根据文件内容将其分类到预定义类别。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const result = await client.aiAgent.classifyFile({ fileId: "file_id" });
+console.log(result.category);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.ai_agent.classify_file(file_id="file_id")
+print(result.get("category"))
+```
+</TabItem>
+</Tabs>
+
+---
+
+## suggestFieldTypes / suggest_field_types
+
+分析样本文档并建议用于文档提取的 JSON schema 和字段类型。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const schema = await client.aiAgent.suggestFieldTypes({
+  fileUrls: ["https://example.com/invoice.pdf"],
+});
+console.log(schema);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+schema = client.ai_agent.suggest_field_types(
+    file_urls=["https://example.com/invoice.pdf"],
+)
+print(schema)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## previewEmbeddingFile / preview_embedding_file
+
+在处理前预览已嵌入文件的内容。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const preview = await client.aiAgent.previewEmbeddingFile({ fileId: "file_id" });
+console.log(preview);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+preview = client.ai_agent.preview_embedding_file(file_id="file_id")
+print(preview)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## updateEmbeddingFileStatus / update_embedding_file_status
+
+更新嵌入文件的处理状态。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const result = await client.aiAgent.updateEmbeddingFileStatus("file_id", "completed");
+console.log(result);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.ai_agent.update_embedding_file_status("file_id", "completed")
+print(result)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## generateParquet / generate_parquet
+
+将记录数组转换为 parquet 文件以进行结构化数据导入。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const result = await client.aiAgent.generateParquet({
+  data: [{ name: "Alice", score: 95 }, { name: "Bob", score: 87 }],
+  fileName: "scores",
+  folderName: "results",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.ai_agent.generate_parquet(
+    data=[{"name": "Alice", "score": 95}, {"name": "Bob", "score": 87}],
+    file_name="scores",
+    folder_name="results",
+)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## getTraces / get_traces
+
+查询分布式追踪以进行调试和可观测性。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const traces = await client.aiAgent.getTraces({
+  service: "ai-agent",
+  limit: 50,
+  timeRange: 3600,
+  orgId: "org_id",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+traces = client.ai_agent.get_traces(
+    service="ai-agent",
+    limit=50,
+    time_range=3600,
+    org_id="org_id",
+)
+```
+</TabItem>
+</Tabs>

@@ -1,0 +1,310 @@
+---
+title: Xử lý Lỗi
+description: Các loại lỗi, hành vi thử lại tự động, và các phương pháp tốt nhất để xử lý lỗi với Imbrace SDKs.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+Tất cả các lỗi do SDK đưa ra đều mở rộng từ một kiểu cơ sở duy nhất, vì vậy bạn có thể bắt bất kỳ lỗi SDK nào ở một nơi hoặc phân nhánh theo lớp con cụ thể khi bạn cần phản ứng khác nhau. Hệ thống phân cấp giống hệt nhau trong SDK TypeScript và Python.
+
+## Hệ thống phân cấp lỗi
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```
+Error
+└── ImbraceError          (cơ sở — bắt tất cả lỗi SDK)
+    ├── AuthError          (401, 403 — thông tin xác thực không hợp lệ hoặc hết hạn)
+    ├── ApiError           (4xx/5xx — yêu cầu bị máy chủ từ chối)
+    └── NetworkError       (hết thời gian, từ chối kết nối, lỗi DNS)
+```
+</TabItem>
+<TabItem label="Python">
+```
+Exception
+└── ImbraceError          (cơ sở — bắt tất cả lỗi SDK)
+    ├── AuthError          (401, 403 — thông tin xác thực không hợp lệ hoặc hết hạn)
+    ├── ApiError           (4xx/5xx — yêu cầu bị máy chủ từ chối)
+    └── NetworkError       (hết thời gian, từ chối kết nối, lỗi DNS)
+```
+</TabItem>
+</Tabs>
+
+Để biết các thông báo lỗi cụ thể và cách khắc phục đã biết, xem [Khắc phục sự cố](/guides/troubleshooting/).
+
+---
+
+## AuthError
+
+Được đưa ra khi máy chủ trả về **401** hoặc **403** — thông tin xác thực không hợp lệ, hết hạn hoặc bị thu hồi.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+import { AuthError } from "@imbrace/sdk";
+
+try {
+  const me = await client.platform.getMe();
+} catch (e) {
+  if (e instanceof AuthError) {
+    console.error("Cần xác thực lại:", e.message);
+  }
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+from imbrace import AuthError
+
+try:
+    me = client.platform.get_me()
+except AuthError as e:
+    print(f"Xác thực thất bại: {e}")
+    # Xác thực lại trước khi thử lại
+```
+</TabItem>
+</Tabs>
+
+:::caution
+`AuthError` **không bao giờ được thử lại**. SDK ném/đưa ra ngay lập tức khi gặp 401/403 — hãy sửa thông tin xác thực trước khi thử lại. Để biết chiến lược thông tin xác thực, xem [Xác thực](/sdk/authentication/).
+:::
+
+---
+
+## ApiError
+
+Được đưa ra cho tất cả các phản hồi **4xx và 5xx** khác (sau khi đã thử lại hết cho 429/5xx).
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+import { ApiError } from "@imbrace/sdk";
+
+try {
+  await client.contacts.get("nonexistent_id");
+} catch (e) {
+  if (e instanceof ApiError) {
+    console.error(`HTTP ${e.statusCode}: ${e.message}`);
+    // ví dụ: "HTTP 404: Không tìm thấy liên hệ"
+  }
+}
+```
+
+| Thuộc tính   | Loại     | Mô tả                              |
+| ------------ | -------- | ---------------------------------- |
+| `statusCode` | `number` | Mã trạng thái HTTP                 |
+| `message`    | `string` | Thông báo lỗi từ phản hồi máy chủ |
+</TabItem>
+<TabItem label="Python">
+```python
+from imbrace import ApiError
+
+try:
+    client.contacts.get("nonexistent_id")
+except ApiError as e:
+    print(f"HTTP {e.status_code}: {e}")
+    # ví dụ: "HTTP 404: Không tìm thấy liên hệ"
+```
+
+| Thuộc tính    | Loại  | Mô tả                |
+| ------------- | ----- | -------------------- |
+| `status_code` | `int` | Mã trạng thái HTTP   |
+</TabItem>
+</Tabs>
+
+---
+
+## NetworkError
+
+Được đưa ra khi yêu cầu không bao giờ đến được máy chủ — hết thời gian, lỗi DNS hoặc kết nối bị reset.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+import { NetworkError } from "@imbrace/sdk";
+
+try {
+  await client.platform.getMe();
+} catch (e) {
+  if (e instanceof NetworkError) {
+    console.error("Không thể kết nối baseUrl:", e.message);
+    // ví dụ: "Yêu cầu đã hết thời gian sau 30000ms"
+  }
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+from imbrace import NetworkError
+
+try:
+    client.platform.get_me()
+except NetworkError as e:
+    print(f"Lỗi mạng: {e}")
+    # ví dụ: "Lỗi mạng hoặc hết thời gian: ConnectTimeout(...)"
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Bắt tất cả lỗi SDK
+
+Import kiểu cơ sở để xử lý bất kỳ lỗi nào từ SDK trong một khối duy nhất:
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+import {
+  ImbraceClient,
+  ImbraceError,
+  AuthError,
+  ApiError,
+  NetworkError,
+} from "@imbrace/sdk";
+
+try {
+  await client.platform.getMe();
+} catch (e) {
+  if (e instanceof AuthError) return handleAuthError(e);
+  if (e instanceof ApiError) return handleApiError(e);
+  if (e instanceof NetworkError) return handleNetworkError(e);
+  if (e instanceof ImbraceError) return handleUnknown(e);
+  throw e; // ném lại lỗi không phải SDK
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+from imbrace import ImbraceError, AuthError, ApiError, NetworkError
+
+try:
+    result = client.platform.get_me()
+except AuthError as e:
+    handle_auth_error(e)
+except ApiError as e:
+    handle_api_error(e)
+except NetworkError as e:
+    handle_network_error(e)
+except ImbraceError as e:
+    handle_unknown_sdk_error(e)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Hành vi thử lại tự động
+
+Tầng vận chuyển HTTP trong cả hai SDK đều thử lại các lỗi tạm thời với exponential backoff. Số lần thử lại khác nhau đôi chút giữa các ngôn ngữ nhưng các điều kiện thì giống hệt nhau.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+| Điều kiện                      | Hành động                                |
+| ------------------------------ | ---------------------------------------- |
+| HTTP **429** (giới hạn tốc độ) | Thử lại tối đa 2 lần                     |
+| HTTP **5xx** (lỗi máy chủ)     | Thử lại tối đa 2 lần                     |
+| Lỗi mạng / hết thời gian       | Thử lại tối đa 2 lần                     |
+| HTTP **401 / 403**             | Không thử lại — ném `AuthError` ngay lập tức |
+| HTTP **4xx** (khác)            | Không thử lại — ném `ApiError` ngay lập tức |
+
+**Backoff:** `2^sốLầnThửLại` giây giữa các lần thử (2s → 4s). Tổng tệ nhất: 3 lần thử.
+</TabItem>
+<TabItem label="Python">
+| Điều kiện                      | Hành động                                |
+| ------------------------------ | ---------------------------------------- |
+| HTTP **429** (giới hạn tốc độ) | Thử lại tối đa 3 lần                     |
+| HTTP **5xx** (lỗi máy chủ)     | Thử lại tối đa 3 lần                     |
+| Lỗi mạng / hết thời gian       | Thử lại tối đa 3 lần                     |
+| HTTP **401 / 403**             | Không thử lại — đưa ra `AuthError` ngay lập tức |
+| HTTP **4xx** (khác)            | Không thử lại — đưa ra `ApiError` ngay lập tức |
+
+**Backoff:** `2^sốLầnThửLại` giây giữa các lần thử (1s → 2s → 4s). Tổng tệ nhất: 4 lần thử.
+</TabItem>
+</Tabs>
+
+---
+
+## Thời gian chờ yêu cầu
+
+Cấu hình thời gian chờ khi tạo client (mặc định: **30 s**). Khi hết thời gian chờ, yêu cầu đang thực hiện sẽ bị hủy và `NetworkError` được ném/đưa ra.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const client = new ImbraceClient({ timeout: 15_000 }); // mili giây
+```
+</TabItem>
+<TabItem label="Python">
+```python
+client = ImbraceClient(timeout=15)  # giây
+```
+</TabItem>
+</Tabs>
+
+## Xử lý lỗi bất đồng bộ (Python)
+
+Client bất đồng bộ đưa ra các loại ngoại lệ giống hệt nhau:
+
+```python
+from imbrace import AsyncImbraceClient, AuthError, ApiError
+
+async with AsyncImbraceClient() as client:
+    try:
+        me = await client.platform.get_me()
+    except AuthError:
+        print("Cần xác thực lại")
+    except ApiError as e:
+        print(f"[{e.status_code}] {e}")
+```
+
+---
+
+## Phương pháp tốt nhất
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// 1. Luôn xử lý AuthError riêng — cần làm mới thông tin xác thực
+// 2. Ghi log ApiError.statusCode — 400 = tham số sai, 404 = không tìm thấy, 409 = xung đột
+// 3. Bọc các điểm vào cấp cao nhất trong try/catch
+// 4. Không thử lại AuthError — sẽ không giúp ích cho đến khi thông tin xác thực được sửa
+
+async function safeGetMe(client: ImbraceClient) {
+  try {
+    return await client.platform.getMe();
+  } catch (e) {
+    if (e instanceof AuthError) {
+      await refreshCredentials();
+      return await client.platform.getMe();
+    }
+    throw e;
+  }
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# 1. Sử dụng context manager để kết nối được đóng một cách xác định
+with ImbraceClient() as client:
+    ...
+
+# 2. Xử lý AuthError riêng — cần làm mới thông tin xác thực trước khi thử lại
+def safe_get_me(client):
+    try:
+        return client.platform.get_me()
+    except AuthError:
+        refresh_credentials(client)
+        return client.platform.get_me()
+
+# 3. Phân nhánh theo status_code cho ApiError
+try:
+    client.contacts.update(contact_id, data)
+except ApiError as e:
+    if e.status_code == 409:
+        print("Xung đột — liên hệ đã được sửa đổi")
+    elif e.status_code == 400:
+        print(f"Dữ liệu không hợp lệ: {e}")
+```
+</TabItem>
+</Tabs>

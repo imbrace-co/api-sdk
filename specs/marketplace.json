@@ -1,0 +1,1190 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "marketplace",
+    "version": "1.0.0",
+    "description": "imbrace marketplace APIs (forms, apps, files, email templates) exported for AI-agent tool use. Import a subset with ?tags=… — available tags: forms, apps, files, email-senders, email-templates, use-cases."
+  },
+  "servers": [
+    {
+      "url": "http://marketplace.dev.imbrace.lan:9982/v3"
+    }
+  ],
+  "tags": [
+    {
+      "name": "forms"
+    },
+    {
+      "name": "apps"
+    },
+    {
+      "name": "files"
+    },
+    {
+      "name": "email-senders"
+    },
+    {
+      "name": "email-templates"
+    },
+    {
+      "name": "use-cases"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Agent API key (AGENT_API_KEYS, org-scoped) or the dashboard bearer token via the gateway."
+      }
+    }
+  },
+  "paths": {
+    "/apps/forms": {
+      "get": {
+        "operationId": "listForms",
+        "summary": "List forms in the organization",
+        "tags": [
+          "forms"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createForm",
+        "summary": "Create a form",
+        "tags": [
+          "forms"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "fields": {
+                    "type": "array",
+                    "items": {}
+                  },
+                  "app_id": {
+                    "type": "string"
+                  },
+                  "teams": {
+                    "type": "array",
+                    "items": {}
+                  }
+                },
+                "required": [
+                  "name",
+                  "fields"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/apps/forms/{id}": {
+      "get": {
+        "operationId": "getFormById",
+        "summary": "Get one form by id",
+        "tags": [
+          "forms"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateForm",
+        "summary": "Update a form",
+        "tags": [
+          "forms"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "fields": {
+                    "type": "array",
+                    "items": {}
+                  },
+                  "teams": {
+                    "type": "array",
+                    "items": {}
+                  }
+                },
+                "required": []
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteForm",
+        "summary": "⚠️ DESTRUCTIVE — Delete a form",
+        "tags": [
+          "forms"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-destructive": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/apps/forms/board/{boardId}": {
+      "get": {
+        "operationId": "listFormsByBoard",
+        "summary": "List forms tied to a data board",
+        "tags": [
+          "forms"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "boardId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "boardId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/apps/forms/template": {
+      "get": {
+        "operationId": "getDefaultFormTemplate",
+        "summary": "Get the default form template schema",
+        "tags": [
+          "forms"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/apps/forms/team/{teamId}": {
+      "delete": {
+        "operationId": "detachTeamForms",
+        "summary": "⚠️ DESTRUCTIVE — Detach a team from all its forms (reassigns to General)",
+        "tags": [
+          "forms"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-destructive": true,
+        "parameters": [
+          {
+            "name": "teamId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "teamId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/apps": {
+      "get": {
+        "operationId": "listApps",
+        "summary": "List app instances for the organization",
+        "tags": [
+          "apps"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/apps/{id}": {
+      "get": {
+        "operationId": "getAppById",
+        "summary": "Get one app instance by id",
+        "tags": [
+          "apps"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/apps/status": {
+      "get": {
+        "operationId": "getAppStatusCounts",
+        "summary": "Aggregate app counts by status",
+        "tags": [
+          "apps"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/apps/used-channels": {
+      "get": {
+        "operationId": "listUsedChannels",
+        "summary": "List channels already in use by the organization",
+        "tags": [
+          "apps"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ids",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {},
+              "description": "One or more channel ids to look up, sent as repeated ids query params (e.g. ?ids=<id1>&ids=<id2>); a single id may be a plain string. Values are NOT comma-split — required, or the endpoint returns 400 \"Ids are required\"."
+            },
+            "description": "One or more channel ids to look up, sent as repeated ids query params (e.g. ?ids=<id1>&ids=<id2>); a single id may be a plain string. Values are NOT comma-split — required, or the endpoint returns 400 \"Ids are required\"."
+          },
+          {
+            "name": "product_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/apps/used-channels-v2": {
+      "get": {
+        "operationId": "listUsedChannelsV2",
+        "summary": "List channels in use (v2 shape)",
+        "tags": [
+          "apps"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ids",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {},
+              "description": "One or more channel ids as repeated ids query params (?ids=a&ids=b); required."
+            },
+            "description": "One or more channel ids as repeated ids query params (?ids=a&ids=b); required."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/apps/utils/board-template/{boardId}": {
+      "get": {
+        "operationId": "getBoardTemplate",
+        "summary": "Get the board template for a board",
+        "tags": [
+          "apps"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "boardId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "boardId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/apps/org-members-email": {
+      "get": {
+        "operationId": "listOrgMemberEmails",
+        "summary": "List organization members' emails",
+        "tags": [
+          "apps"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/files": {
+      "get": {
+        "operationId": "listOrganizationFiles",
+        "summary": "List the organization's files",
+        "tags": [
+          "files"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/file-details/{id}": {
+      "get": {
+        "operationId": "getFileDetails",
+        "summary": "Get file metadata by id",
+        "tags": [
+          "files"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/files/{id}": {
+      "put": {
+        "operationId": "updateFile",
+        "summary": "Update file metadata",
+        "tags": [
+          "files"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "is_public": {
+                    "type": "boolean"
+                  }
+                },
+                "required": []
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteFile",
+        "summary": "⚠️ DESTRUCTIVE — Delete a file",
+        "tags": [
+          "files"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-destructive": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/apps/email-senders": {
+      "get": {
+        "operationId": "listEmailSenders",
+        "summary": "List email senders",
+        "tags": [
+          "email-senders"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createEmailSender",
+        "summary": "Create an email sender",
+        "tags": [
+          "email-senders"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "email"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/apps/email-senders/{id}": {
+      "get": {
+        "operationId": "getEmailSenderById",
+        "summary": "Get an email sender by id",
+        "tags": [
+          "email-senders"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateEmailSender",
+        "summary": "Update an email sender",
+        "tags": [
+          "email-senders"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  }
+                },
+                "required": []
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteEmailSender",
+        "summary": "⚠️ DESTRUCTIVE — Delete an email sender",
+        "tags": [
+          "email-senders"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-destructive": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/apps/email-templates": {
+      "get": {
+        "operationId": "listEmailTemplates",
+        "summary": "List/search email templates",
+        "tags": [
+          "email-templates"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createEmailTemplate",
+        "summary": "Create an email template",
+        "tags": [
+          "email-templates"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "subject": {
+                    "type": "string"
+                  },
+                  "body": {
+                    "type": "string",
+                    "description": "HTML body"
+                  },
+                  "board_id": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/apps/email-templates/search": {
+      "get": {
+        "operationId": "searchEmailTemplates",
+        "summary": "Advanced content search of email templates",
+        "tags": [
+          "email-templates"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "field",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/apps/email-templates/{id}": {
+      "get": {
+        "operationId": "getEmailTemplateById",
+        "summary": "Get an email template by id",
+        "tags": [
+          "email-templates"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateEmailTemplate",
+        "summary": "Update an email template",
+        "tags": [
+          "email-templates"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "subject": {
+                    "type": "string"
+                  },
+                  "body": {
+                    "type": "string"
+                  }
+                },
+                "required": []
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteEmailTemplate",
+        "summary": "⚠️ DESTRUCTIVE — Delete an email template",
+        "tags": [
+          "email-templates"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-destructive": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/use-cases/{id}": {
+      "get": {
+        "operationId": "getUseCase",
+        "summary": "Get a use-case by id",
+        "tags": [
+          "use-cases"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/use-cases/by-assistant/{assistant_id}": {
+      "get": {
+        "operationId": "getUseCaseByAssistant",
+        "summary": "Get the use-case backing an AI assistant",
+        "tags": [
+          "use-cases"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "assistant_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "assistant id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/use-cases/builtin-assistants/{assistant_id}": {
+      "get": {
+        "operationId": "getBuiltinAssistant",
+        "summary": "Get a built-in assistant catalog entry",
+        "tags": [
+          "use-cases"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "assistant_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "assistant id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  }
+}

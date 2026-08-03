@@ -1,0 +1,146 @@
+---
+title: Vibe Coding
+description: 將 llms.txt 放入你的 AI 程式設計助手（Claude、Cursor、Copilot 或任何 LLM 驅動的 IDE）中，更快地使用 Imbrace SDK。
+---
+
+import { Aside, Tabs, TabItem } from "@astrojs/starlight/components";
+
+**Vibe Coding** 是指透過與 AI 助手協作來編寫程式碼 — 用平白的語言描述您想要的內容，然後讓 AI 為您產生、解釋或重構程式碼。Imbrace SDK 隨附一個 [`llms.txt`](https://developer.imbrace.co/llms.txt) 檔案，讓任何 AI 工具都能立即理解 SDK，而不會憑空想像方法名稱或參數形狀。
+
+## 設定
+
+在開始 vibe coding 之前，請確保 SDK 已安裝且您的憑證已設定。
+
+**1. 安裝 SDK**
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```bash
+npm install @imbrace/sdk
+```
+</TabItem>
+<TabItem label="Python">
+```bash
+pip install imbrace
+```
+</TabItem>
+</Tabs>
+
+**2. 儲存您的憑證**
+
+在您的專案根目錄中建立 `.env` 檔案。SDK **不會**自動讀取環境變數 — 您在步驟 3 中將它們傳遞給建構函式。
+
+```env
+IMBRACE_API_KEY=your_api_key_here
+IMBRACE_ORGANIZATION_ID=your_org_id_here
+```
+
+請參閱[認證](/sdk/authentication/)以了解何時使用 API 金鑰與存取令牌，以及[設定指南](/getting-started/setup/#get-an-api-key)以了解如何取得 API 金鑰。
+
+**3. 初始化客戶端**
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+import { ImbraceClient } from "@imbrace/sdk";
+
+const client = new ImbraceClient({
+  apiKey:         process.env.IMBRACE_API_KEY,
+  organizationId: process.env.IMBRACE_ORGANIZATION_ID,
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+import os
+from imbrace import ImbraceClient
+
+client = ImbraceClient(
+    api_key=os.environ["IMBRACE_API_KEY"],
+    organization_id=os.environ.get("IMBRACE_ORGANIZATION_ID"),
+)
+```
+</TabItem>
+</Tabs>
+
+**4. 取得 `llms.txt`**
+
+從 [`https://developer.imbrace.co/llms.txt`](https://developer.imbrace.co/llms.txt) 下載或複製檔案，然後將其放入您的 AI 工具中（請參閱下方的[如何使用](#how-to-use-it)）。
+
+---
+
+## 什麼是 `llms.txt`？
+
+`llms.txt` 是一個純文字檔案（類似 `robots.txt`），為 AI 模型提供一個簡潔、準確的函式庫摘要 — 包括其客戶端、資源、認證和常見模式。當您將其貼入 AI 上下文視窗時，模型已經了解 SDK，可以在第一次嘗試時就寫出正確的程式碼。
+
+**檔案 URL：** [`https://developer.imbrace.co/llms.txt`](https://developer.imbrace.co/llms.txt)
+
+## 如何使用
+
+### Claude（claude.ai 或 Claude Code）
+
+1. 開啟新的對話。
+2. 將 `llms.txt` 的內容貼在您的訊息頂部，然後描述您的任務：
+
+```
+<context>
+[在此貼上 llms.txt]
+</context>
+
+Write a TypeScript snippet that streams a chat response from assistant "asst_abc"
+and prints each text delta to the console.
+```
+
+### Cursor / VS Code Copilot
+
+透過 **@ docs** 或 IDE 中等效的「新增上下文」功能，將 URL 加入您的 AI 上下文。Cursor 直接支援 `@URL`：
+
+```
+@https://developer.imbrace.co/llms.txt
+
+How do I upload a file and trigger embedding processing?
+```
+
+### 任何其他 LLM
+
+複製原始檔案內容，並在提問前將其貼到提示詞的開頭。大多數具有 32k+ 上下文視窗的 LLM 都能完整攝取整個檔案而不會損失摘要資訊。
+
+## 範例提示詞
+
+一旦 AI 有了 `llms.txt` 上下文，請嘗試以下提示詞：
+
+- *"Show me how to create an AI agent and stream a chat response in Python."*
+- *"Generate TypeScript code to list all embedding files and delete ones with status `error`."*
+- *"What's the difference between `streamChat` and `streamSubAgentChat`?"*
+- *"Write an Express.js auth proxy for the Chat Client, following the Integrations guide pattern."*
+
+<Aside type="tip">
+對於長連線，請將 `llms.txt` 固定為**系統提示詞**或**專案指示**，這樣它會自動套用於每一則訊息。
+</Aside>
+
+### 適用於程式碼代理工具的 CLI
+
+Imbrace CLI（`@imbrace/cli`）也專為程式碼代理工具設計。安裝 CLI 後，AI 助手可以直接透過終端機執行指令，而無需編寫任何 SDK 程式碼：
+
+```bash
+# 列出 boards
+imbrace data-board list --json
+
+# 建立項目
+imbrace data-board create-item <boardId> --fields '<json>' --json
+
+# 列出 AI agent
+imbrace ai-agent list --json
+
+# 管理工作流程
+imbrace workflow list --json
+
+# Document AI 提取 agent
+imbrace document-ai list --json
+```
+
+資源指令（`data-board`、`ai-agent`、`workflow`、`document-ai`、`orchestrator`、`guardrail`）支援 `--json` 以輸出機器可讀的結果。每個指令都支援 `-h` / `--help` 檢視使用說明。請參閱 [CLI 指令](/cli/commands/)以取得完整參考。
+
+## 保持更新
+
+該檔案在每次發佈時都會重新產生。如果您升級 SDK，請重新擷取 URL 以取得新的方法或變更的簽名。

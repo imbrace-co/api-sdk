@@ -1,0 +1,423 @@
+---
+title: Data Boards
+description: client.boards 的 SDK 參考文件 — CRM 管道、項目、欄位、區段、Knowledge Hub、匯入/匯出和外部磁碟整合。
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+Boards 是 CRM 管道的核心資料儲存 — 潛在客戶、交易、任務或任何結構化資料。在建立 AI agent 時將 board ID 傳入 `board_ids` 以讓它存取該資料 — 請參閱[完整流程指南 §4](/sdk/full-flow-guide/#4-manage-data-boards-and-items-crm-pipelines)。
+
+請先初始化客戶端（請參閱[安裝](/sdk/installation/)或[快速入門](/sdk/quick-start/)）。
+
+---
+
+## Board CRUD
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { data: boards } = await client.boards.list();
+const board = await client.boards.get("board_id");
+
+const newBoard = await client.boards.create({ name: "Enterprise Leads" });
+await client.boards.update("board_id", { name: "Enterprise Leads 2025" });
+await client.boards.delete("board_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+boards = client.boards.list().get("data", [])
+board = client.boards.get("board_id")
+
+new_board = client.boards.create("Enterprise Leads")
+client.boards.update("board_id", {"name": "Enterprise Leads 2025"})
+client.boards.delete("board_id")
+```
+</TabItem>
+</Tabs>
+
+### 重新排序
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+await client.boards.reorder({ order: ["board_id_1", "board_id_2", "board_id_3"] });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+client.boards.reorder({"order": ["board_id_1", "board_id_2", "board_id_3"]})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 匯入 / 匯出
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// CSV 匯入（multipart/form-data）
+const formData = new FormData();
+formData.append("file", csvFile);
+const result = await client.boards.importCsv("board_id", formData);
+
+// Excel 匯入
+const excelForm = new FormData();
+excelForm.append("file", excelFile);
+await client.boards.importExcel("board_id", excelForm);
+
+// 匯入進度
+const progress = await client.boards.getImportProgress("board_id");
+
+// CSV 匯出
+const csv = await client.boards.exportCsv("board_id");
+
+// 透過電子郵件 CSV 匯出
+await client.boards.exportCsvViaMail("board_id", { email: "user@example.com" });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# CSV 匯入（multipart/form-data）
+result = client.boards.import_csv("board_id", files={"file": open("data.csv", "rb")})
+
+# Excel 匯入
+client.boards.import_excel("board_id", files={"file": open("data.xlsx", "rb")})
+
+# 匯入進度
+progress = client.boards.get_import_progress("board_id")
+
+# CSV 匯出
+csv = client.boards.export_csv("board_id")
+```
+</TabItem>
+</Tabs>
+
+注意：`exportCsvViaMail` 僅限 TypeScript。
+
+---
+
+## 項目
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { data: items } = await client.boards.listItems("board_id", { limit: 100 });
+const item = await client.boards.getItem("board_id", "item_id");
+
+// createItem 使用 { fields: [{ board_field_id, value }] }
+const lead = await client.boards.createItem("board_id", {
+  fields: [
+    { board_field_id: "name_field_id",   value: "Acme Corp" },
+    { board_field_id: "status_field_id", value: "new" },
+    { board_field_id: "value_field_id",  value: 50000 },
+  ],
+});
+
+// updateItem 使用 { data: [{ key, value }] } — 注意是 `key`，不是 `board_field_id`
+await client.boards.updateItem("board_id", lead._id, {
+  data: [{ key: "status_field_id", value: "qualified" }],
+});
+
+await client.boards.deleteItem("board_id", "item_id");
+await client.boards.bulkDeleteItems("board_id", { ids: ["item_1", "item_2", "item_3"] });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+leads = client.boards.list_items("board_id", limit=100).get("data", [])
+
+# create_item 使用 {"fields": [{"board_field_id", "value"}]}
+lead = client.boards.create_item("board_id", {
+    "fields": [
+        {"board_field_id": "name_field_id",   "value": "Acme Corp"},
+        {"board_field_id": "status_field_id", "value": "new"},
+        {"board_field_id": "value_field_id",  "value": 50000},
+    ],
+})
+
+# update_item 使用 {"data": [{"key", "value"}]} — 注意是 "key"，不是 "board_field_id"
+client.boards.update_item("board_id", lead["_id"], {
+    "data": [{"key": "status_field_id", "value": "qualified"}],
+})
+
+client.boards.delete_item("board_id", "item_id")
+client.boards.bulk_delete_items("board_id", {"ids": ["item_1", "item_2", "item_3"]})
+```
+</TabItem>
+</Tabs>
+
+### 衝突偵測
+
+衝突現在內聯回報：`updateItem` 在記錄自上次讀取後被修改時回傳 HTTP `409 Conflict` — 改成捕捉 `ApiError`（`statusCode === 409`），不需要另呼叫專用端點。
+
+### 連結項目（相關 boards）
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// 從另一個 board 取得相關項目
+const related = await client.boards.getRelatedItems("board_id", "item_id", "related_board_id");
+
+// 連結與解除連結（data-board 服務 — POST/DELETE /boards/:id/items/:itemId/related）
+await client.boards.linkItems("board_id", "item_id", "related_board_id", { relatedItemIds: ["other_item_id"] });
+await client.boards.unlinkItems("board_id", "item_id", "related_board_id", { relatedItemIds: ["other_item_id"] });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# 從另一個 board 取得相關項目
+related = client.boards.get_related_items("board_id", "item_id", "related_board_id")
+
+# 連結與解除連結
+client.boards.link_items("board_id", "item_id", "related_board_id", {"relatedItemIds": ["other_item_id"]})
+client.boards.unlink_items("board_id", "item_id", "related_board_id", {"relatedItemIds": ["other_item_id"]})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 搜尋
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const results = await client.boards.search("board_id", { q: "enterprise" });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+results = client.boards.search("board_id", q="enterprise")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 欄位
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const field = await client.boards.createField("board_id", {
+  name: "Deal Value",
+  type: "Number",
+});
+await client.boards.updateField("board_id", field._id, { name: "Contract Value" });
+await client.boards.deleteField("board_id", field._id);
+
+// 重新排序與批次更新
+await client.boards.reorderFields("board_id", { fields: ["field_id_1", "field_id_2"] });
+await client.boards.bulkUpdateFields("board_id", { fields: [{ _id: "field_1", name: "Updated" }] });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+field = client.boards.create_field("board_id", {"name": "Deal Value", "type": "Number"})
+client.boards.update_field("board_id", field["_id"], {"name": "Contract Value"})
+client.boards.delete_field("board_id", field["_id"])
+
+# 重新排序與批次更新
+client.boards.reorder_fields("board_id", {"fields": ["field_id_1", "field_id_2"]})
+client.boards.bulk_update_fields("board_id", {"fields": [{"_id": "field_1", "name": "Updated"}]})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 區段
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// listSegments 直接回傳 BoardSegment[]（無 { data } 包裝）
+const segments = await client.boards.listSegments("board_id");
+const segment = await client.boards.createSegment("board_id", {
+  name: "High Value Leads",
+  filter: {},
+});
+await client.boards.updateSegment("board_id", segment._id, { name: "VIP Leads" });
+await client.boards.deleteSegment("board_id", segment._id);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+segments = client.boards.list_segments("board_id")
+segment = client.boards.create_segment("board_id", {
+    "name": "High Value Leads",
+    "filter": {},
+})
+client.boards.update_segment("board_id", segment["_id"], {"name": "VIP Leads"})
+client.boards.delete_segment("board_id", segment["_id"])
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 知識中心 — 資料夾
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// 搜尋
+const folders = await client.boards.searchFolders({ q: "contracts" });
+
+// CRUD
+const folder = await client.boards.getFolder("folder_id", { recursive: true });
+const newFolder = await client.boards.createFolder({ name: "Contracts", parent_id: "parent_id" });
+await client.boards.updateFolder("folder_id", { name: "Renamed" });
+await client.boards.deleteFolders({ ids: ["folder_id_1", "folder_id_2"] });
+
+// 內容（資料夾中繼資料 + 子資料夾 + 檔案）
+const contents = await client.boards.getFolderContents("folder_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# 搜尋
+folders = client.boards.search_folders(q="contracts")
+
+# CRUD
+folder = client.boards.get_folder("folder_id", recursive=True)
+new_folder = client.boards.create_folder({"name": "Contracts", "parent_id": "parent_id"})
+client.boards.update_folder("folder_id", {"name": "Renamed"})
+client.boards.delete_folders(["folder_id_1", "folder_id_2"])
+
+# 內容（資料夾中繼資料 + 子資料夾 + 檔案）
+contents = client.boards.get_folder_contents("folder_id")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 知識中心 — 檔案
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// 搜尋與 CRUD
+const files = await client.boards.searchFiles({ folderId: "folder_id" });
+const file = await client.boards.getFile("file_id");
+const newFile = await client.boards.createFile({ name: "report.pdf", folder_id: "folder_id" });
+await client.boards.updateFile("file_id", { name: "renamed.pdf" });
+await client.boards.deleteFiles({ ids: ["file_id_1", "file_id_2"] });
+
+// 上傳與下載
+const uploaded = await client.boards.uploadFile(formData);
+const response = await client.boards.downloadFile("file_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# 搜尋與 CRUD
+files = client.boards.search_files(folder_id="folder_id")
+file = client.boards.get_file("file_id")
+new_file = client.boards.create_file({"name": "report.pdf", "folder_id": "folder_id"})
+client.boards.update_file("file_id", {"name": "renamed.pdf"})
+client.boards.delete_files(["file_id_1", "file_id_2"])
+
+# 上傳與下載
+uploaded = client.boards.upload_file(files={"file": open("report.pdf", "rb")})
+response = client.boards.download_file("file_id")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Board 檔案
+
+上傳附加到 board 記錄的檔案（非知識中心）。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const formData = new FormData();
+formData.append("file", file);
+const { url } = await client.boards.uploadBoardFile(formData);
+
+// 替代端點
+const { url: url2 } = await client.boards.uploadBoardFileV2(formData);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.boards.upload_board_file(files={"file": open("photo.jpg", "rb")})
+
+# 替代端點
+result = client.boards.upload_board_file_v2(files={"file": open("photo.jpg", "rb")})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## AI 功能
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// AI 產生的標籤
+const { tags } = await client.boards.generateAiTags({ text: "Enterprise deal with Acme Corp" });
+
+// 連結預覽
+const preview = await client.boards.getLinkPreview("https://example.com");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# AI 產生的標籤
+tags = client.boards.generate_ai_tags({"text": "Enterprise deal with Acme Corp"})
+
+# 連結預覽
+preview = client.boards.get_link_preview("https://example.com")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 外部磁碟
+
+知識中心的 OneDrive / Google Drive 整合。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// 啟動 OAuth 流程
+const { auth_url } = await client.boards.initiateDriveAuth("onedrive");
+
+// 列出遠端資料夾和檔案
+const folders = await client.boards.listDriveFolders("onedrive");
+const files = await client.boards.listDriveFiles("onedrive", { folder_id: "remote_folder_id" });
+
+// 下載遠端檔案
+const response = await client.boards.downloadDriveFile("onedrive", { file_id: "remote_file_id" });
+
+// 連線狀態（僅 OneDrive）
+const { status } = await client.boards.getOneDriveSessionStatus();
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# 啟動 OAuth 流程
+auth = client.boards.initiate_drive_auth("onedrive")
+
+# 列出遠端資料夾和檔案
+folders = client.boards.list_drive_folders("onedrive")
+files = client.boards.list_drive_files("onedrive", {"folder_id": "remote_folder_id"})
+
+# 下載遠端檔案
+response = client.boards.download_drive_file("onedrive", {"file_id": "remote_file_id"})
+
+# 連線狀態（僅 OneDrive）
+status = client.boards.get_onedrive_session_status()
+```
+</TabItem>
+</Tabs>

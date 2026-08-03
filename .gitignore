@@ -1,0 +1,91 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Secrets
+.env
+*.env.local
+
+# TypeScript / Node
+node_modules/
+dist/
+*.js.map
+*.d.ts.map
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Claude local settings
+.claude/settings.local.json
+
+#document
+app-gateway
+new-frontend
+opencode
+!website/src/content/docs/
+file-service
+chat-ai
+# test-local-pkg
+# test-npm-pkg
+docsv2 
+docsv1
+docsv3
+docsv4
+docsv5
+docsv6
+#
+API-document
+#Claude
+.claude/
+.claude/commands/
+.claude/referances/
+.claude/skill/
+.claude/skill/skill.md
+.claude/skill/skill.yaml
+.obsidian
+
+sdk-tester
+test-logs
+test-npm-pip-pkg
+# Root-level scratch dir only — anchored, or it would also swallow ts/scripts/,
+# which holds the committed codegen.
+/scripts
+
+# SDK build artifacts
+ts/imbrace-sdk-*.tgz
+
+# Ad-hoc scratch scripts (may contain literal API keys)
+test-local-pkg/*/scratch/
+
+# Local probe reports
+test-local-pkg/ts/report-full-flow-guide.md
+test-local-pkg/py/
+
+documment
+# cli-docs

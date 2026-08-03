@@ -1,0 +1,521 @@
+---
+title: CLI Commands
+description: Complete reference for all Imbrace CLI commands.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+## Data Board
+
+A board is a CRM pipeline — leads, deals, tasks, or any structured data.
+
+### List Boards
+
+```bash
+imbrace data-board list [--json]
+```
+
+### Create Board
+
+```bash
+imbrace data-board create [--name <name>] [--json]
+```
+
+Without `--json`, the command interactively prompts for freestyle key-value pairs after entering the name.
+
+### Create Field
+
+```bash
+imbrace data-board create-field <boardId> --name <fieldName> --type <fieldType> [--json]
+```
+
+Valid field types (16): `ShortText`, `LongText`, `Number`, `Date`, `Email`, `Phone`, `Currency`, `SingleSelection`, `MultipleSelection`, `Checkbox`, `Assignee`, `MultipleAssignee`, `Link`, `Notes`, `Origin`, `Priority`.
+
+<Aside type="caution">
+  Do NOT use `Dropdown` — the backend rejects it. Use `SingleSelection` instead.
+</Aside>
+
+### Create Item
+
+```bash
+imbrace data-board create-item <boardId> --fields '<json>' [--json]
+```
+
+`--fields` is a JSON array of `{ board_field_id, value }` objects:
+
+```bash
+imbrace data-board create-item <boardId> --fields '[
+  {"board_field_id": "<fieldId>", "value": "Acme Corp"},
+  {"board_field_id": "<fieldId>", "value": "50000"}
+]' --json
+```
+
+### List Items
+
+```bash
+imbrace data-board list-items --board-id <boardId> [--limit 20] [--skip 0] [--q <search>] [--json]
+```
+
+### Update Item
+
+```bash
+imbrace data-board update-item <boardId> <itemId> --data '<json>' [--json]
+```
+
+`--data` is a JSON array of `{ key, value }` objects.
+
+### Delete Item
+
+```bash
+imbrace data-board delete-item <boardId> <itemId> [--yes] [--json]
+```
+
+### Export to CSV
+
+```bash
+imbrace data-board export-csv --board-id <boardId> [--out ./board.csv]
+```
+
+Without `--out`, prints CSV to stdout.
+
+---
+
+## AI Agent
+
+An AI agent is a configured assistant (LLM + prompt + behavior). Creating one atomically provisions the assistant, a web channel, and the use-case template.
+
+<Aside type="caution">
+  All agent content (name, description, instructions, behavior fields) must be in English. Vietnamese diacritics produce unreadable slugs.
+</Aside>
+
+### Discovery
+
+```bash
+imbrace ai-agent list [--json]
+imbrace ai-agent list-providers [--json]
+imbrace ai-agent list-models --provider-id <providerId> [--json]
+imbrace ai-agent list-folders [--search <query>] [--json]
+imbrace ai-agent list-files --folder-id <folderId> [--json]
+```
+
+### Get / Delete
+
+```bash
+imbrace ai-agent get <agentId> [--json]
+imbrace ai-agent delete <agentId> [--yes] [--json]
+```
+
+### Create / Update Flags
+
+`create` and `update` accept the same behavioral flags. `update` preserves unchanged fields via PUT-merge. `--id-only` is available on `create` only.
+
+| Flag | Maps to | Notes |
+|---|---|---|
+| **Identity** | | |
+| `--name` / `-n` | `name` + `title` | Required for create |
+| `--description` / `-d` | `description` + `short_description` | Shown under title in UI |
+| `--instructions` / `-i` | `instructions` | System prompt |
+| **Model** | | |
+| `--model` | `model_id` | Default `Default` (system provider) |
+| `--provider-id` | `provider_id` | UUID, default `system` |
+| `--mode` | `mode` | `standard` / `advanced` |
+| `--temperature` | `temperature` | 0.0–2.0, default 0.1 |
+| **Behavior Settings** | | |
+| `--personality` | `personality_role` | |
+| `--core-task` | `core_task` | |
+| `--tone` | `tone_and_style` | |
+| `--response-length` | `response_length` | `short` / `medium` / `long` |
+| `--banned-words` | `banned_words` | Comma-separated output filter |
+| `--category` | `category` | `Support` / `Sales` / `Marketing` / `Team` / `Other` |
+| `--guardrail-id` | `guardrail_id` | Attach a guardrail |
+| `--preload-information` | `preload_information` | Static info in context |
+| **Knowledge Support** | | |
+| `--folder-ids` | `folder_ids` | Comma-separated KH folder IDs |
+| `--default-folder-id` | `default_folder_id` | |
+| `--knowledge-hubs` | `knowledge_hubs` | Comma-separated KH IDs |
+| `--board-ids` | `board_ids` | Comma-separated data board IDs |
+| `--file-ids` | `file_ids` | Comma-separated file IDs |
+| **Runtime toggles** (support `--no-X`) | | |
+| `--show-thinking` | `show_thinking_process` | Default false |
+| `--streaming` | `streaming` | Default true |
+| `--use-memory` | `use_memory` | Default true |
+| **Output** | | |
+| `--json` | — | Machine-readable output |
+| `--id-only` | — | Print only the new agent ID (create only) |
+
+### Full Create Example
+
+```bash
+imbrace ai-agent create \
+  --name "Customer Support Specialist" \
+  --description "Senior AI customer support agent" \
+  --instructions "You are a senior customer support specialist..." \
+  --personality "Friendly and professional" \
+  --core-task "Answer product inquiries, help track orders" \
+  --tone "Polite, professional, warm" \
+  --response-length "medium" \
+  --banned-words "stupid, idiot" \
+  --category "Support" \
+  --provider-id "e2629292-7e9f-4d55-ba18-6827747eab33" \
+  --model "gpt-4o-mini" \
+  --temperature 0.3 \
+  --folder-ids "69bb82faa2cc764639bc6bdb" \
+  --board-ids "brd_e5450d76-84d4-4c34-8b13-3d0f1873b53b" \
+  --json
+```
+
+### Agent Type
+
+The platform stores 4 distinct agent types under `agent_type`. The CLI exposes them via dedicated topics or the `--agent-type` flag:
+
+| UI Create choice | CLI command | Backend `agent_type` |
+|---|---|---|
+| AI AGENT | `imbrace ai-agent create` | `agent` (default) |
+| ORCHESTRATOR | `imbrace orchestrator create` | `team_lead` |
+| DOCUMENT AI | `imbrace document-ai create` | `document_ai` |
+| GUARD RAIL | `imbrace guardrail create` | (not an agent — separate resource) |
+
+The `--agent-type` flag on `ai-agent create` accepts `agent`, `assistant`, `conversational`, or `workflow`. For Document AI, use the dedicated `document-ai` topic. For Orchestrator, use the `orchestrator` topic.
+
+---
+
+## Document AI
+
+A Document AI agent extracts structured JSON from unstructured documents (PDFs, images, scanned forms). Each agent has a **schema** defining fields to extract, **instructions** guiding the LLM, and a **model + provider**. Stored as AI Agents with `agent_type: "document_ai"`.
+
+### CRUD
+
+```bash
+imbrace document-ai list [--search <q>] [--all] [--json]
+imbrace document-ai get <agentId> [--json]
+imbrace document-ai create -n "<name>" -i "<instructions>" --model <id> \
+  (--schema '<json>' | --schema-file <path>) \
+  [--provider-id <uuid>] [--description <text>] [--workflow-name <name>] \
+  [--json] [--id-only]
+imbrace document-ai update <agentId> [--name | --instructions | --model | --provider-id | --schema | --schema-file | --description | --workflow-name] [--json]
+imbrace document-ai delete <agentId> [--yes] [--json]
+```
+
+`list` defaults to filtering for `documentAiOnly: true`. Pass `--all` to include regular agents.
+
+### Process a document
+
+```bash
+imbrace document-ai process \
+  --url <pdf-or-image-url> \
+  --org-id <orgId> \
+  [--agent-id <id>] [--model <id>] [--instructions <text>] \
+  [--board-id <boardId>] [--language <lang>] \
+  [--additional-instructions <text>] \
+  [--chunk-size <n>] [--max-concurrent <n>] [--max-retries <n>] \
+  [--no-enhanced-processing] [--json]
+```
+
+Either `--agent-id` (uses agent's stored model + instructions) or `--model` (override) is required.
+
+### Suggest a schema
+
+```bash
+imbrace document-ai suggest-schema --url <url> --org-id <orgId> [--model <id>] [--json]
+```
+
+Asks the LLM to inspect a sample document and propose an extraction schema.
+
+### Schema example
+
+```json
+{
+  "invoice_number": { "type": "string", "description": "Invoice ID" },
+  "total_amount":   { "type": "number" },
+  "due_date":       { "type": "string", "format": "date" }
+}
+```
+
+---
+
+## Orchestrator
+
+An Orchestrator is an AI Agent stored with `agent_type: "team_lead"` that delegates work to `sub_agents` / `team_leads`. Mirrors the **ORCHESTRATOR** choice in the UI's Create dialog.
+
+```bash
+imbrace orchestrator list [--json]
+imbrace orchestrator get <id> [--json]
+imbrace orchestrator create -n "<name>" -i "<routing instructions>" \
+  --sub-agents <id1>,<id2> [--team-leads <id3>,<id4>] \
+  [--description <text>] [--model <id>] [--provider-id <uuid>] [--temperature <0-2>] \
+  [--json] [--id-only]
+imbrace orchestrator delete <id> [--yes] [--json]
+```
+
+### Backend quirks (handled automatically)
+
+The CLI works around three platform behaviors so callers don't need to know them — but useful when debugging raw SDK responses:
+
+1. **`agent_type: "team_lead"` is the orchestrator marker** — there is no separate `is_orchestrator` boolean. The webapp does the same conversion.
+2. **`sub_agents` / `team_leads` must be assistant IDs (UUIDs), not use-case IDs (`uc_*`).** CLI auto-resolves any `uc_*` you pass via `client.agent.get()` lookup.
+3. **`createUseCase` silently drops both fields above** when set on the assistant payload. CLI does a 2-step: create → `chatAi.updateAiAgent` PUT to apply them.
+
+`get` fetches the underlying assistant so `sub_agents` / `team_leads` display correctly (they live on the assistant, not the use case).
+
+---
+
+## Guard Rail
+
+A Guard Rail is a content-safety / compliance layer attached to AI Agents via `--guardrail-id` on `ai-agent create`. Mirrors the **GUARD RAIL** choice in the UI's Create dialog.
+
+```bash
+imbrace guardrail list [--json]
+imbrace guardrail get <id> [--json]
+imbrace guardrail create -n "<name>" -i "<rules>" \
+  [--model nim-nemo|model-armor] \
+  [--guardrail-provider-id <uuid>] [--org-id <orgId>] \
+  [--description <text>] \
+  [--unsafe-categories "violence,hate,sexual"] \
+  [--custom-unsafe-patterns "regex1,regex2"] \
+  [--competitor-keywords "X,Y"] \
+  [--json] [--id-only]
+imbrace guardrail update <id> -n -i --model [partial flags] [--json]
+imbrace guardrail delete <id> [--yes] [--json]
+```
+
+### Backend quirks (handled automatically)
+
+1. **`org_id` is required** but the SDK type marks it optional. CLI auto-fetches it via `client.account.getAccount()` if you don't pass `--org-id`.
+2. **`model` is not a regular LLM name** — it's the guardrail model:
+   - `nim-nemo` (NVIDIA NIM Nemo) — the CLI default
+   - `model-armor` (Google)
+   - or any custom guardrail-provider model when paired with `--guardrail-provider-id`
+3. **`model-armor` ignores `instructions`, `custom_unsafe_patterns`, and `competitor_keywords`.** CLI strips them automatically.
+4. **Backend returns `guardrails_config_id`, not `_id`.** CLI normalizes this so `--id-only` and `get <id>` work as expected.
+
+---
+
+## Workflow
+
+A workflow is a chain of nodes: a trigger fires, then actions run in sequence.
+
+### Node Types
+
+| Type | Role | CLI support |
+|---|---|---|
+| `PIECE_TRIGGER` | When does the flow run | `node add --type trigger` |
+| `PIECE` | What runs after | `node add --type action` |
+| `EMPTY` | Placeholder before trigger is set | Read-only |
+| `ROUTER` | Multi-condition switch | `node add-raw` |
+| `LOOP_ON_ITEMS` | Loop over an array | `node add-raw` |
+| `CODE` | Inline JavaScript | `node add-raw` |
+
+### Flow CRUD
+
+```bash
+imbrace workflow list [--folder-id <id|NULL>] [--json]
+imbrace workflow get <id> [--json]
+imbrace workflow create --name "<name>" [--folder-id <id>] [--json] [--id-only]
+imbrace workflow move <flowId> --folder-id <id|NULL> [--json]
+imbrace workflow delete <id> [--yes] [--json]
+```
+
+### Node Management
+
+```bash
+imbrace workflow node list <flowId> [--json]
+imbrace workflow node add <flowId> \
+  --type trigger --piece <pieceName> \
+  --trigger-name <triggerId> [--input '<json>'] [--json]
+imbrace workflow node add <flowId> \
+  --type action --piece <pieceName> \
+  --action-name <actionId> \
+  [--after <parentStep>] [--input '<json>'] [--json]
+imbrace workflow node update <flowId> <nodeName> \
+  [--input '<json>'] [--display-name <name>] [--json]
+imbrace workflow node delete <flowId> <nodeName> [--yes] [--json]
+imbrace workflow node add-raw <flowId> (--op-file <path> | --op '<json>' | --stdin) [--json]
+```
+
+### Piece Discovery
+
+```bash
+imbrace workflow piece list [--search <query>] [--json]
+imbrace workflow piece detail <pieceName> [--only actions|triggers] [--json]
+```
+
+### Connections
+
+```bash
+imbrace workflow conn list [--json]
+imbrace workflow conn get <connId> [--json]
+imbrace workflow conn create \
+  --piece <pieceName> \
+  --type SECRET_TEXT|OAUTH2|CLOUD_OAUTH2|BASIC_AUTH|CUSTOM_AUTH \
+  --value "<token-or-json>" \
+  [--display-name <name>] [--external-id <id>] [--json] [--id-only]
+imbrace workflow conn delete <connId> [--yes] [--json]
+```
+
+### Folders (Categories)
+
+```bash
+imbrace workflow folder list [--json]
+imbrace workflow folder get <folderId> [--json]
+imbrace workflow folder create --name "<name>" [--json] [--id-only]
+imbrace workflow folder update <folderId> --name "<newName>" [--json]
+imbrace workflow folder delete <folderId> [--yes] [--json]
+```
+
+The platform auto-creates 4 system folders:
+
+| UI Category | API Folder Name |
+|---|---|
+| Channel Workflow | `Channel Workflow` |
+| Board Automation | `Board Automation` |
+| AI Agent Skills | `AI Agent Capabilities` |
+| Others | `Others` |
+
+### MCP Servers
+
+```bash
+imbrace workflow mcp list [--json]
+imbrace workflow mcp get <mcpId> [--json]
+imbrace workflow mcp create --name "<name>" [--json] [--id-only]
+imbrace workflow mcp delete <mcpId> [--yes] [--json]
+imbrace workflow mcp rotate-token <mcpId> [--yes] [--json]
+```
+
+### Lifecycle & Runs
+
+```bash
+imbrace workflow publish <flowId> [--json]
+imbrace workflow enable <flowId> [--json]
+imbrace workflow disable <flowId> [--json]
+imbrace workflow run <flowId> [--payload '<json>'] [--sync] [--json]
+imbrace workflow runs [--limit 10] [--json]
+imbrace workflow run-detail <runId> [--json]
+```
+
+### Variable Syntax
+
+| Expression | Meaning |
+|---|---|
+| `{{trigger.body.X}}` | Field X from webhook payload |
+| `{{trigger.X}}` | Top-level trigger field |
+| `{{step_1.output.Y}}` | Output field Y from step_1 |
+| `{{connections.<id>.access_token}}` | Connection field |
+
+---
+
+## Profile
+
+Manage multiple credential profiles (AWS-style). Each profile stores credentials, environment preset, organization ID, and other SDK settings. Resolution order: `--profile` flag > `IMBRACE_PROFILE` env var > `active_profile` config > `"default"`.
+
+### Create
+
+Create a new profile and verify the credential against the platform:
+
+```bash
+imbrace profile create <name> --api-key api_xxx... [--env stable|sandbox|develop|prodv2] [--org-id <orgId>] [--base-url <url>] [--timeout <ms>] [--check-health] [--services '<json>'] [--json] [--force]
+```
+
+`--force` skips credential verification. If the profile already exists, the command errors.
+
+### List
+
+```bash
+imbrace profile list [--json]
+```
+
+Shows all profiles with active marker, environment, and status.
+
+### Show
+
+```bash
+imbrace profile show [<name>] [--json]
+```
+
+Defaults to the active profile. Shows all stored fields (credential preview, method, email, env, base URL, org ID, timeout, services, health check).
+
+### Use
+
+Switch the active profile for all subsequent commands:
+
+```bash
+imbrace profile use <name> [--json]
+```
+
+### Rename
+
+```bash
+imbrace profile rename <from> <to> [--json]
+```
+
+Preserves credentials and active state.
+
+### Delete
+
+```bash
+imbrace profile delete <name> [--yes] [--json]
+```
+
+Does not affect data on the platform — only removes the local credential set.
+
+---
+
+## Utility
+
+### Print LLM Reference
+
+```bash
+imbrace docs [--path] [--json]
+```
+
+Prints the bundled `llms.txt` — a complete command reference designed to be fed into a coding agent's context (Claude, Cursor, etc.).
+
+| Flag | Behaviour |
+|---|---|
+| _(none)_ | Print full reference to stdout |
+| `--path` | Print only the absolute path to `llms.txt` |
+| `--json` | Output `{ path, content }` as JSON |
+
+```bash
+imbrace docs > /tmp/imbrace-llms.txt   # save for an AI agent
+```
+
+---
+
+## Update
+
+Self-update the CLI to the latest published version on npm.
+
+```bash
+imbrace update              # update to latest
+imbrace update --check      # check for updates without installing
+imbrace update --version 0.6.5  # install a specific version
+imbrace update --json       # machine-readable output
+```
+
+`--check` output:
+
+```json
+{
+  "current": "0.6.9",
+  "latest": "0.6.9",
+  "up_to_date": true
+}
+```
+
+<Aside type="note">
+  `imbrace update` is available from **v0.6.8** onwards. Customers on older versions must run `npm install -g @imbrace/cli@latest` once to get this command.
+</Aside>
+
+---
+
+## Known Issues
+
+1. **Field type `Dropdown`** — Backend rejects it. Use `SingleSelection` instead.
+2. **Provider ID vs `_id`** — Use UUID `provider_id`, not MongoDB `_id`.
+3. **English-only content** — AI agent content must be in English.
+4. **`workflow run --sync` timeout** — May time out at ~60s. Use `workflow runs` + `run-detail` instead.
+5. **Enable before publish** — `workflow enable` requires `workflow publish` first.
+6. **AI Connector `prompt` field** — Must be `{ prompt: { prompt: "text" } }`.
+7. **Flow lock** — If a flow is open in the browser, CLI updates may be rejected.
+8. **`--no-use-memory` at create** — May not stick. Update after create.
+9. **System provider models** — Only has `Default`. Other names make the UI dropdown empty.

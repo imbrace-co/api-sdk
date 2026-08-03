@@ -1,0 +1,282 @@
+---
+title: Authentication
+description: API Key vs Access Token — when to use each, and how to pass them to the SDK.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+The SDK supports two credential types. Pass either `apiKey` / `api_key` or `accessToken` / `access_token` to the client constructor — the transport handles headers automatically.
+
+### Which credential should I use?
+
+The choice depends on **what role Imbrace plays in your product**:
+
+#### Build on Imbrace → use Access Token
+
+Imbrace is your backend. Your end-users log into Imbrace (via OTP or password); their `acc_...` access token is the credential the SDK uses for every request. Imbrace's auth, database, and business logic (AI agents, knowledge hubs, workflows) all run on behalf of the actual logged-in user.
+
+Typical product: a chat widget, dashboard, or mobile app where each user's identity is an Imbrace user. Imbrace records per-user history, permissions, and audit trail.
+
+#### Wrap Imbrace → use API Key
+
+You have your own backend, your own users, your own database. Imbrace is one capability your service calls into — "use Imbrace's AI to answer this" — alongside everything else you do. Your end-users never see Imbrace; your service calls Imbrace using a single org-level `api_...` key (issued by an Imbrace org admin). Imbrace sees one identity (the API key's service user) and you handle per-user attribution on your side.
+
+Typical product: an existing CRM, ticketing system, or internal tool that embeds Imbrace as a feature. One credential lives in your env file and serves every request.
+
+| | Build on Imbrace (Access Token) | Wrap Imbrace (API Key) |
+| --- | --- | --- |
+| **Who runs auth?** | Imbrace (OTP / password login) | You (your own auth) |
+| **Whose users?** | Imbrace users | Your users |
+| **Whose DB is canonical?** | Imbrace's | Yours |
+| **Identity Imbrace sees** | The actual end-user | One service account |
+| **Per-user attribution upstream** | Built-in | Up to you |
+| **Credential lifetime** | Session-scoped; refresh as needed | Long-lived; doesn't expire on its own |
+| **Header sent** | `x-access-token: acc_...` | `x-api-key: api_...` |
+
+> Both credential types are first-class. Most resources accept either. A few features that depend on user context (document artifacts, per-user chat history) are only meaningful under an access token.
+
+### Header reference
+
+| Credential | Header sent |
+| --- | --- |
+| `apiKey` / `api_key` | `x-api-key: api_xxx...` |
+| `accessToken` / `access_token` | `x-access-token: acc_xxx...` |
+
+The org context is **encoded inside the credential itself** — every API key and every access token is bound to exactly one org. The gateway resolves the org on every request from whichever credential you sent. You can optionally override it by passing `organizationId` (TypeScript) or `organization_id` (Python) to the constructor.
+
+For step-by-step credential setup (env vars, dotenv, secrets), see [Setup Guide](/getting-started/setup/#configure-credentials).
+
+---
+
+### API Key
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    import { ImbraceClient } from "@imbrace/sdk";
+
+    const client = new ImbraceClient({
+      apiKey:         process.env.IMBRACE_API_KEY,
+      organizationId: process.env.IMBRACE_ORGANIZATION_ID,
+      env:            "stable",
+    });
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    import os
+    from imbrace import ImbraceClient
+
+    client = ImbraceClient(
+        api_key=os.environ["IMBRACE_API_KEY"],
+        organization_id=os.environ.get("IMBRACE_ORGANIZATION_ID"),
+        env="stable",
+    )
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+### Access Token
+
+If you already have an `acc_...` token, pass it directly:
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    import { ImbraceClient } from "@imbrace/sdk";
+
+    const client = new ImbraceClient({
+      accessToken: process.env.IMBRACE_ACCESS_TOKEN,
+      env:         "stable",
+    });
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    import os
+    from imbrace import ImbraceClient
+
+    client = ImbraceClient(
+        access_token=os.environ["IMBRACE_ACCESS_TOKEN"],
+        env="stable",
+    )
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+### OTP Login Flow
+
+Use this flow to authenticate a user via email OTP and obtain a session token. The SDK stores the token automatically after login.
+
+Login is a **two-phase** token exchange:
+
+1. **`requestOtp` → `loginWithOtp`** issues a short-lived `login_acc_...` token (3h TTL). This token can only do one thing: list the organizations the user belongs to.
+2. **`selectOrganization(orgId)`** swaps that for an `acc_...` token bound to the chosen org (30d TTL). Every other resource call uses this token.
+
+If the user belongs to exactly one org you can skip the picker and pass that org's id straight to `selectOrganization`. If they belong to several, list them and let the user choose first.
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    import { ImbraceClient } from "@imbrace/sdk"
+
+    const client = new ImbraceClient({
+      env: "stable",
+    })
+
+    // Step 1: Send OTP to the user's email
+    await client.requestOtp("user@example.com")
+
+    // Step 2: User submits the OTP they received.
+    //         The SDK stores the short-lived login_acc_... token AND fetches
+    //         the user's organizations in the same call.
+    const { organizations } = await client.loginWithOtp("user@example.com", "ABC123")
+    const chosen = organizations[0]  // ← replace with your UI's selection
+
+    // Step 3: Swap the login_acc_ token for an org-scoped acc_ token.
+    //         The SDK updates its internal token + x-organization-id automatically.
+    await client.selectOrganization(chosen.id)
+
+    // Now use any resource
+    const { data: boards } = await client.boards.list()
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    from imbrace import ImbraceClient
+
+    client = ImbraceClient()
+
+    # Step 1: Send OTP to the user's email
+    client.request_otp("user@example.com")
+
+    # Step 2: User submits the OTP. login_with_otp stores the short-lived
+    #         login_acc_ token AND returns the user's organizations.
+    res = client.login_with_otp("user@example.com", "123456")
+    chosen = res["organizations"][0]  # ← replace with your UI's selection
+
+    # Step 3: Swap the login_acc_ for an org-scoped acc_ token.
+    #         The SDK updates its token + x-organization-id automatically.
+    client.select_organization(chosen["organization_id"])
+
+    # Step 4: Now use any resource
+    me = client.platform.get_me()
+    ```
+
+    Async variant:
+
+    ```python
+    from imbrace import AsyncImbraceClient
+
+    async with AsyncImbraceClient() as client:
+        await client.request_otp("user@example.com")
+        res = await client.login_with_otp("user@example.com", "123456")
+        chosen = res["organizations"][0]  # ← replace with your UI's selection
+
+        await client.select_organization(chosen["organization_id"])
+
+        me = await client.platform.get_me()
+    ```
+  </TabItem>
+</Tabs>
+
+> **Single-org shortcut.** If the org id is known up-front (e.g. stored in `IMBRACE_ORGANIZATION_ID`), you can skip the picker and pass it directly to `selectOrganization`. The picker step only matters when users belong to more than one org.
+
+---
+
+### Password Login
+
+`login()` returns both the login token and the user's organizations in a single call. Pick one with `selectOrganization()` and the SDK swaps the token + org header for you.
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    import { ImbraceClient } from "@imbrace/sdk"
+
+    const client = new ImbraceClient({ env: "stable" })
+
+    // Step 1: Sign in. Returns { token: "login_acc_...", organizations: [...] }.
+    const { organizations } = await client.login("user@example.com", "password")
+    const chosen = organizations[0]  // ← replace with your UI's selection
+
+    // Step 2: Swap the login_acc_ for an org-scoped acc_ token.
+    await client.selectOrganization(chosen.id)
+
+    // Now use any resource
+    const { data: boards } = await client.boards.list()
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    from imbrace import ImbraceClient
+
+    client = ImbraceClient()
+
+    # Step 1: Sign in. Returns { token: "login_acc_...", organizations: [...] }.
+    res = client.login("user@example.com", "password123")
+    chosen = res["organizations"][0]  # ← replace with your UI's selection
+
+    # Step 2: Swap the login_acc_ for an org-scoped acc_ token.
+    client.select_organization(chosen["organization_id"])
+
+    # Now use any resource
+    boards = client.boards.list()
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+### Token management
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    // Replace token (e.g., after a refresh)
+    client.setAccessToken("acc_new_token...")
+
+    // Clear token (e.g., on logout)
+    client.clearAccessToken()
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    # Replace token (e.g., after refresh)
+    client.set_access_token("acc_new_token...")
+
+    # Clear token (e.g., on logout)
+    client.clear_access_token()
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+### Context manager (Python only)
+
+Always wrap the Python client in a context manager so the underlying `httpx` connection pool is closed cleanly:
+
+```python
+import os
+from imbrace import ImbraceClient, AsyncImbraceClient
+
+# Synchronous
+with ImbraceClient(api_key=os.environ["IMBRACE_API_KEY"]) as client:
+    me = client.platform.get_me()
+
+# Asynchronous
+async with AsyncImbraceClient(api_key=os.environ["IMBRACE_API_KEY"]) as client:
+    me = await client.platform.get_me()
+```
+
+---
+
+### Next steps
+
+- [Setup Guide →](/getting-started/setup/#configure-credentials) — env vars, dotenv, and secrets management
+- [Quick Start →](/sdk/quick-start/) — first API call using your credential
+- [Integrations →](/sdk/integrations/) — framework wiring patterns (React, Next.js, FastAPI, Django)

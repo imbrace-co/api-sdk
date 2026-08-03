@@ -1,0 +1,99 @@
+---
+title: Cài đặt
+description: Cài đặt và xác thực với Imbrace CLI.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+## Cài đặt CLI
+
+### Gói npm công khai
+
+```bash
+npm install -g @imbrace/cli
+```
+
+### Từ mã nguồn
+
+Clone kho lưu trữ và chạy script cài đặt:
+
+```bash
+git clone https://github.com/imbraceltd/imbrace-cli.git
+cd imbrace-cli
+./install.sh
+```
+
+`install.sh` chạy `npm install`, `npm run build`, `npm link`, sau đó tạo symlink `imbrace` vào `/opt/homebrew/bin` (Apple Silicon) hoặc `/usr/local/bin` (Intel).
+
+### Biên dịch thủ công
+
+```bash
+cd cli
+npm install
+npm run build
+npm link
+```
+
+## Xác thực
+
+Tất cả các lệnh (ngoại trừ `login`) sẽ tự động yêu cầu đăng nhập nếu chưa được xác thực.
+
+### Đăng nhập với API Key
+
+Khuyến nghị cho CI/CD và các tác nhân lập trình:
+
+```bash
+imbrace login --api-key api_xxx...
+```
+
+### Đăng nhập với Email + Mật khẩu
+
+```bash
+imbrace login --email user@example.com --password mypass
+imbrace login --email user@example.com --password mypass --org-id org_xxx
+```
+
+Đăng nhập bằng mật khẩu sẽ xác định tổ chức trước khi lưu credential: nếu tài
+khoản chỉ thuộc **một** tổ chức thì tự chọn; nếu thuộc **nhiều** tổ chức, hãy
+truyền `--org-id <id>` (hoặc chọn tương tác khi chạy trong terminal). CLI lưu
+token gắn theo tổ chức đó, nên các lệnh sau chạy trên đúng tổ chức.
+
+### Kiểm tra đăng nhập hiện tại
+
+```bash
+imbrace whoami [--json]
+```
+
+### Đăng xuất
+
+```bash
+imbrace logout
+```
+
+<Aside type="tip">
+  Nếu một lệnh trả về 401, hãy chạy `imbrace login --api-key api_xxx...` lại.
+</Aside>
+
+## Cập nhật CLI
+
+Từ **v0.6.8** trở đi, CLI có lệnh tự cập nhật tích hợp:
+
+```bash
+imbrace update              # cập nhật lên phiên bản mới nhất
+imbrace update --check      # kiểm tra cập nhật mà không cài đặt
+imbrace update --version 0.6.7  # cài đặt phiên bản cụ thể
+```
+
+Với các phiên bản cũ hơn v0.6.8, cập nhật thủ công:
+
+```bash
+npm install -g @imbrace/cli@latest
+```
+
+## Lưu trữ thông tin xác thực
+
+| Hệ điều hành | Đường dẫn |
+|---|---|
+| macOS | `~/Library/Preferences/imbrace-nodejs/config.json` |
+| Linux | `~/.config/imbrace-nodejs/config.json` |
+| Windows | `%APPDATA%\imbrace-nodejs\Config\config.json` |

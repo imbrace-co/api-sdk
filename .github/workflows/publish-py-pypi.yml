@@ -1,0 +1,89 @@
+name: Publish PyPI (Python SDK)
+
+on:
+  push:
+    tags:
+      - 'py-v*'  # e.g. py-v1.0.2 — only triggers this workflow
+
+concurrency:
+  group: publish-pypi
+  cancel-in-progress: false
+
+jobs:
+  # ---------------------------------------------------------
+  # JOB 1: Quality Assurance (Lint & Test)
+  # ---------------------------------------------------------
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: py
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build
+          # If you have a test suite, install it here:
+          # pip install -e .[test] 
+
+      # - name: Run tests
+      #   run: pytest # Uncomment this when you have tests ready
+
+  # ---------------------------------------------------------
+  # JOB 2: Sync version, Build, and Publish to PyPI
+  # ---------------------------------------------------------
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # REQUIRED for PyPI Trusted Publishing (OIDC)
+      contents: read
+    
+    defaults:
+      run:
+        working-directory: py
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # AUTOMATION: Extract '1.2.3' from 'v1.2.3' and update pyproject.toml
+      - name: Sync version from Tag
+        run: |
+          RAW_TAG=${{ github.ref_name }}
+          # Strip the 'py-v' prefix; the rest is the PEP-440 version
+          # (supports stable like 1.2.3 and pre-releases like 1.2.3rc0, 1.2.3a1,
+          # 1.2.3b2, 1.2.3.dev0, 1.2.3.post1).
+          VERSION="${RAW_TAG#py-v}"
+          if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+((a|b|rc)[0-9]+|\.(dev|post)[0-9]+)?$'; then
+            echo "::error ::Tag '$RAW_TAG' does not contain a valid PEP-440 version. Got '$VERSION'."
+            exit 1
+          fi
+          echo "Syncing pyproject.toml to version: $VERSION"
+          sed -i "s/^version = \".*\"/version = \"$VERSION\"/" pyproject.toml
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install build tools
+        run: pip install build
+
+      - name: Build package (sdist and wheel)
+        run: python -m build
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          # No token needed! Handled via OIDC
+          packages-dir: py/dist/

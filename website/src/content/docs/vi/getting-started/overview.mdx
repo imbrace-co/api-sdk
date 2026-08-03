@@ -1,0 +1,61 @@
+---
+title: Tổng quan
+description: Imbrace là gì và bạn có thể xây dựng những gì với SDK.
+---
+
+Imbrace là một nền tảng tương tác khách hàng — nó xử lý các kênh chat, pipeline CRM, AI agents, workflow tự động hóa và xử lý tài liệu trong một nơi. SDK cho phép bạn nhúng các tính năng đó trực tiếp vào ứng dụng của riêng bạn mà không cần xây dựng cơ sở hạ tầng.
+
+### Những gì bạn có thể xây dựng
+
+- **AI Agents** — stream phản hồi trực tiếp từ AI agent được huấn luyện trên kiến thức của bạn
+- **Workflow tự động hóa** — kích hoạt và quản lý các tự động hóa đa bước qua công cụ workflow
+- **Pipeline CRM** — tạo board, quản lý khách hàng tiềm năng, tìm kiếm và xuất dữ liệu giao dịch
+- **Xử lý tài liệu** — trích xuất dữ liệu có cấu trúc từ PDF và hóa đơn, tạo embeddings
+
+### Công cụ CLI
+
+Imbrace cũng cung cấp giao diện dòng lệnh (`@imbrace/cli`) để tương tác với nền tảng từ terminal. Nó được thiết kế cho nhà phát triển và tác nhân lập trình — cài đặt nó cùng với SDK để tạo mẫu nhanh, gỡ lỗi và tự động hóa.
+
+Xem [Tổng quan CLI](/cli/overview/) để biết chi tiết.
+
+### SDK có sẵn
+
+| SDK | Gói | Môi trường chạy |
+|---|---|---|
+| TypeScript / JavaScript | `@imbrace/sdk` | Node.js 18+, trình duyệt |
+| Python | `imbrace` | Python 3.9+ |
+
+### Xác thực
+
+Có hai cách để xác thực:
+
+- **Access token** — cho ứng dụng hướng đến người dùng. Lấy được sau khi người dùng đăng nhập qua OTP hoặc OAuth. Truyền nó dưới dạng `accessToken` khi khởi tạo client.
+- **API key** — cho tích hợp máy chủ-máy chủ. Tạo một key từ bảng điều khiển quản trị Imbrace. Truyền nó dưới dạng `apiKey`.
+
+### Gateway
+
+Tất cả các yêu cầu SDK đều đi qua:
+
+```
+https://app-gatewayv2.imbrace.co
+```
+
+Gateway được đặt mặc định — bạn không cần cấu hình trừ khi bạn đang nhắm đến một môi trường khác.
+
+### Ví dụ nhanh
+
+```typescript
+import { ImbraceClient } from "@imbrace/sdk"
+
+const client = new ImbraceClient({
+  accessToken: process.env.IMBRACE_ACCESS_TOKEN,
+  env: "stable",
+})
+
+const stream = await client.aiAgent.streamChat({
+  assistant_id: "asst_xxx",
+  messages: [{ role: "user", content: "Những giao dịch nào đã chốt trong quý này?" }],
+})
+```
+
+---

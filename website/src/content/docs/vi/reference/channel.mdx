@@ -1,0 +1,214 @@
+---
+title: Channel
+description: Tham chiếu schema và method cho client.channel — tạo và quản lý kênh nhắn tin (Web, WhatsApp, Facebook, Instagram, Email, WeChat, LINE).
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+`client.channel` quản lý các kênh nhắn tin — điểm đầu vào mà qua đó contacts tiếp cận AI agents của bạn. Các loại kênh được hỗ trợ: **Web, WhatsApp, Facebook Messenger, Instagram, Email, WeChat, LINE**.
+
+---
+
+## Schema
+
+### Channel
+
+| Field | Type | Mô tả |
+|-------|------|-------|
+| `object_name` | string? | Định danh loại đối tượng |
+| `id` | string | ID duy nhất của kênh |
+| `name` | string | Tên hiển thị của kênh |
+| `type` | `"web"` \| `"facebook"` \| `"whatsapp"` \| `"instagram"` \| `"wechat"` \| `"line"` \| `"email"` \| `"wecom"` | Loại nền tảng kênh |
+| `organization_id` | string | Tổ chức sở hữu kênh này |
+| `business_unit_id` | string? | ID đơn vị kinh doanh |
+| `is_active` | boolean | Kênh có được bật không |
+| `config` | object? | Cấu hình theo kênh |
+| `created_at` | string | ISO 8601 thời gian tạo |
+| `updated_at` | string | ISO 8601 thời gian cập nhật |
+
+### ChannelCredential
+
+| Field | Type | Mô tả |
+|-------|------|-------|
+| `_id` | string | ID duy nhất của credential |
+| `type` | string? | Loại credential (vd: `facebook`, `whatsapp`) |
+| `name` | string? | Tên hiển thị |
+
+---
+
+## Methods
+
+### Core CRUD
+
+| Method | TypeScript | Python | Mô tả |
+|--------|-----------|--------|-------|
+| List channels | `list` | `list` | Danh sách tất cả kênh, có thể lọc theo loại |
+| Get channel | `get` | `get` | Lấy kênh theo ID |
+| Create channel | `create` | `create` | Tạo kênh tổng quát |
+| Update channel | `update` | `update` | Bật/tắt trạng thái hoặc cập nhật cấu hình |
+| Delete channel | `delete` / `deleteV3` | `delete` / `delete_v3` | Xóa kênh |
+| Get count | `getCount` | `get_count` | Tổng số kênh |
+
+### Per-type Creation
+
+| Method | TypeScript | Python | Mô tả |
+|--------|-----------|--------|-------|
+| Create Web | `createWeb` | `create_web` | Kênh chat Web |
+| Create Facebook | `createFacebook` | `create_facebook` | Kênh Facebook Messenger |
+| Update Facebook | `updateFacebook` | `update_facebook` | Cập nhật cấu hình Facebook |
+| Create Instagram | `createInstagram` | `create_instagram` | Kênh Instagram |
+| Create Email | `createEmail` | `create_email` | Kênh Email |
+| Create WeChat | `createWechat` | `create_wechat` | Kênh WeChat |
+| Create LINE | `createLine` | `create_line` | Kênh LINE |
+| Create WhatsApp | `createWhatsApp` | `create_whatsapp` | Kênh WhatsApp |
+| Update WhatsApp | `updateWhatsApp` | `update_whatsapp` | Cập nhật cấu hình WhatsApp |
+
+### Credentials
+
+| Method | TypeScript | Python | Mô tả |
+|--------|-----------|--------|-------|
+| Get Facebook pages | `getFacebookPages` | `get_facebook_pages` | Danh sách Facebook pages cho credential |
+| Get credential | `getCredential` | `get_credential` | Lấy credential đã lưu |
+| Update credential | `updateCredential` | `update_credential` | Cập nhật credential |
+| Delete credential | `deleteCredential` | `delete_credential` | Xóa credential |
+
+### Workflow & Teams
+
+| Method | TypeScript | Python | Mô tả |
+|--------|-----------|--------|-------|
+| Update channel workflow | `updateChannelWorkflow` | `update_channel_workflow` | Gắn workflow vào kênh |
+| Delete channel workflow | `deleteChannelWorkflow` | `delete_channel_workflow` | Gỡ workflow |
+| List assignable teams | `listAssignableTeams` | `list_assignable_teams` | Nhóm có thể được gán vào kênh này |
+| List team observers | `listTeamObservers` | `list_team_observers` | Người quan sát của một nhóm |
+
+---
+
+## list / list
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const channels = await client.channel.list({ type: "whatsapp" });
+for (const ch of channels) {
+  console.log(ch.id, ch.name, ch.is_active);
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+channels = client.channel.list(type="whatsapp")
+for ch in channels.data:
+    print(ch.id, ch.name, ch.is_active)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## createWeb / create_web
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const channel = await client.channel.createWeb({ name: "Website Chat" });
+console.log(channel.id);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+channel = client.channel.create_web("Website Chat")
+print(channel.id)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## createWhatsApp / create_whatsapp
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const channel = await client.channel.createWhatsApp({
+  phone_number_id: "phone_number_id",
+  access_token: "whatsapp_access_token",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+channel = client.channel.create_whatsapp({
+    "phone_number_id": "phone_number_id",
+    "access_token": "whatsapp_access_token",
+})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## createFacebook / create_facebook
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// Đầu tiên lấy các pages có sẵn cho một credential
+const pages = await client.channel.getFacebookPages("credential_id");
+
+// Sau đó tạo kênh với một page
+const channel = await client.channel.createFacebook({
+  page_id: pages[0]._id,
+  credential_id: "credential_id",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+pages = client.channel.get_facebook_pages("credential_id")
+channel = client.channel.create_facebook({
+    "page_id": pages[0]["_id"],
+    "credential_id": "credential_id",
+})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## createEmail / create_email
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const channel = await client.channel.createEmail({
+  name: "Support Inbox",
+  email: "support@example.com",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+channel = client.channel.create_email({
+    "name": "Support Inbox",
+    "email": "support@example.com",
+})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## update / update
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+await client.channel.update("channel_id", { active: false });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+client.channel.update("channel_id", {"active": False})
+```
+</TabItem>
+</Tabs>

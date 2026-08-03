@@ -1,0 +1,259 @@
+---
+title: Contact
+description: client.contacts 的 schema 和方法参考 — CRUD、搜索、对话、评论、文件、活动和通知。
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+`client.contacts` 管理联系人 — 通过您的渠道进行通信的潜在客户、客户或用户。每个联系人可以有关联的对话、评论、文件和活动历史。
+
+---
+
+## Schema
+
+### Contact
+
+| Field | Type | 说明 |
+|-------|------|------|
+| `object_name` | string? | 对象类型标识符 |
+| `id` | string | 唯一联系人 ID |
+| `organization_id` | string | 所属组织 |
+| `display_name` | string? | 联系人显示名称 |
+| `email` | string? | 电子邮件地址 |
+| `phone_number` | string? | 电话号码 |
+| `avatar_url` | string? | 头像 URL |
+| `created_at` | string | ISO 8601 创建时间戳 |
+| `updated_at` | string | ISO 8601 更新时间戳 |
+
+### UpdateContactInput
+
+| Field | Type | Required | 说明 |
+|-------|------|----------|------|
+| `name` | string | | 更新显示名称 |
+| `email` | string | | 更新电子邮件地址 |
+| `phone` | string | | 更新电话号码 |
+
+### ContactComment
+
+| Field | Type | 说明 |
+|-------|------|------|
+| `_id` | string | 唯一评论 ID |
+| `text` | string? | 评论内容 |
+| `created_at` | string? | ISO 8601 创建时间戳 |
+
+### ContactFile
+
+| Field | Type | 说明 |
+|-------|------|------|
+| `_id` | string | 唯一文件 ID |
+| `name` | string? | 文件名 |
+| `url` | string? | 下载 URL |
+| `size` | number? | 文件大小（字节） |
+
+---
+
+## Methods
+
+| Method | TypeScript | Python | 说明 |
+|--------|-----------|--------|------|
+| List | `list` | `list` | 分页的联系人列表 |
+| Get | `get` | `get` | 按 ID 获取联系人 |
+| Update | `update` | `update` | 更新联系人字段 |
+| Search | `search` | `search` | 跨联系人全文搜索 |
+| Export CSV | `exportCsv` | `export_csv` | 以 CSV 下载所有联系人 |
+| Get conversations | `getConversations` | `get_conversations` | 列出联系人的对话 |
+| Get comments | `getComments` | `get_comments` | 列出联系人的内部评论 |
+| Get files | `getFiles` | `get_files` | 列出附加到联系人的文件 |
+| Get activities | `getActivities` | `get_activities` | 对话活动日志 |
+| Upload avatar | `uploadAvatar` | `upload_contacts` | 上传文件到联系人（头像 / 文件导入） |
+| List notifications | `listNotifications` | `list_notifications` | 列出当前用户的通知 |
+| Mark notifications read | `markNotificationsRead` | `mark_notifications_read` | 将通知标记为已读 |
+| Dismiss notification | `dismissNotification` | `dismiss_notification` | 关闭单个通知 |
+| Dismiss all notifications | `dismissAllNotifications` | `dismiss_all_notifications` | 清除所有通知 |
+
+---
+
+## list / list
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const page = await client.contacts.list({ limit: 50, skip: 0 });
+for (const contact of page.data) {
+  console.log(contact.id, contact.display_name, contact.email);
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+page = client.contacts.list(limit=50, skip=0)
+for contact in page.get("data", []):
+    print(contact["id"], contact.get("display_name"), contact.get("email"))
+```
+</TabItem>
+</Tabs>
+
+---
+
+## search / search
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const results = await client.contacts.search({
+  q: "alice@example.com",
+  limit: 10,
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+results = client.contacts.search("alice@example.com")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## update / update
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const contact = await client.contacts.update("contact_id", {
+  name: "Alice Smith",
+  email: "alice@example.com",
+  phone: "+84912345678",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+contact = client.contacts.update("contact_id", {
+    "name": "Alice Smith",
+    "email": "alice@example.com",
+    "phone": "+84912345678",
+})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## getConversations / get_conversations
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const conversations = await client.contacts.getConversations("contact_id", {
+  channelTypes: "whatsapp,web",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+conversations = client.contacts.get_conversations(
+    "contact_id",
+    channel_types="whatsapp,web",
+)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## getComments / get_comments
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const comments = await client.contacts.getComments("contact_id", {
+  limit: 20,
+  skip: 0,
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+comments = client.contacts.get_comments("contact_id", limit=20, skip=0)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## getActivities / get_activities
+
+返回与此联系人关联的对话活动日志。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const activities = await client.contacts.getActivities("conversation_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+activities = client.contacts.get_activities("conversation_id")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## listNotifications / list_notifications
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const page = await client.contacts.listNotifications({ limit: 20, skip: 0 });
+for (const n of page.data) {
+  console.log(n);
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+page = client.contacts.list_notifications(limit=20, skip=0)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## markNotificationsRead / mark_notifications_read
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+await client.contacts.markNotificationsRead(["notif_id_1", "notif_id_2"]);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+client.contacts.mark_notifications_read()
+```
+</TabItem>
+</Tabs>
+
+---
+
+## uploadAvatar / upload_contacts
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const formData = new FormData();
+formData.append("file", avatarBlob, "avatar.png");
+const result = await client.contacts.uploadAvatar(formData);
+console.log(result.url);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+with open("avatar.png", "rb") as f:
+    result = client.contacts.upload_contacts(files={"file": f})
+print(result)
+```
+</TabItem>
+</Tabs>

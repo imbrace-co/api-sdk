@@ -1,0 +1,61 @@
+---
+title: 概览
+description: Imbrace 是什么以及你可以用 SDK 构建什么。
+---
+
+Imbrace 是一个客户互动平台 — 它在一个地方处理聊天频道、CRM 管道、AI 代理、自动化工作流和文档处理。SDK 让你直接将这些功能嵌入到你自己的应用程序中，而无需自行构建基础设施。
+
+### 你可以构建什么
+
+- **AI 代理** — 从基于你的知识库训练的 AI 代理流式传输实时响应
+- **自动化工作流** — 通过工作流引擎触发和管理多步骤自动化
+- **CRM 管道** — 创建面板、管理线索、搜索和导出交易数据
+- **文档处理** — 从 PDF 和发票中提取结构化数据，生成嵌入
+
+### CLI 工具
+
+Imbrace 还提供了一个命令行界面（`@imbrace/cli`），用于在终端中与平台交互。它是为开发者和编码代理设计的 — 与 SDK 一起安装，用于快速原型开发、调试和自动化。
+
+详情请参见[CLI 概览](/zh-cn/cli/overview/)。
+
+### 可用 SDK
+
+| SDK | 包 | 运行环境 |
+|---|---|---|
+| TypeScript / JavaScript | `@imbrace/sdk` | Node.js 18+, 浏览器 |
+| Python | `imbrace` | Python 3.9+ |
+
+### 认证
+
+有两种认证方式：
+
+- **访问令牌** — 用于面向用户的应用。用户在通过 OTP 或 OAuth 登录后获取。初始化客户端时作为 `accessToken` 传入。
+- **API Key** — 用于服务器间集成。从 Imbrace 管理仪表盘生成。作为 `apiKey` 传入。
+
+### 网关
+
+所有 SDK 请求都通过：
+
+```
+https://app-gatewayv2.imbrace.co
+```
+
+网关是默认设置的 — 除非你针对不同环境，否则不需要配置。
+
+### 快速示例
+
+```typescript
+import { ImbraceClient } from "@imbrace/sdk"
+
+const client = new ImbraceClient({
+  accessToken: process.env.IMBRACE_ACCESS_TOKEN,
+  env: "stable",
+})
+
+const stream = await client.aiAgent.streamChat({
+  assistant_id: "asst_xxx",
+  messages: [{ role: "user", content: "What deals closed this quarter?" }],
+})
+```
+
+---

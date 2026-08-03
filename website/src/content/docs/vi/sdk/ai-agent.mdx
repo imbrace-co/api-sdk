@@ -1,0 +1,1223 @@
+﻿---
+title: AI Agent
+description: Tài liệu tham khảo cho chatAi / chat_ai (quản lý AI agent), aiAgent / ai_agent (streaming chat, embeddings, parquet, tracing), và dịch vụ client.ai tương thích OpenAI.
+---
+
+import { Tabs, TabItem, Aside } from "@astrojs/starlight/components";
+import AuthOnly from "../../../../components/AuthOnly.astro";
+
+Trang này bao gồm hai không gian tên AI liên quan:
+
+- **`chatAi` / `chat_ai`** — tạo và quản lý AI agents, xử lý tài liệu/tệp, và document AI.
+- **`aiAgent` / `ai_agent`** — streaming chat (SSE), quản lý embedding, dữ liệu Parquet, distributed tracing, và Chat Client sub-API.
+
+Tài nguyên AI Agent kết nối đến một dịch vụ chuyên biệt chạy trên một base URL riêng biệt với cổng API chính.
+
+Để biết ví dụ từ đầu đến cuối kết nối các tính năng này, xem [Hướng dẫn toàn diện §1](/sdk/full-flow-guide/#1-create-an-ai-agent-and-start-chatting).
+
+<AuthOnly mode="access-token">
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+import { ImbraceClient } from "@imbrace/sdk"
+
+const client = new ImbraceClient({
+  accessToken: process.env.IMBRACE_ACCESS_TOKEN,
+  env: "stable",
+})
+```
+</TabItem>
+<TabItem label="Python">
+```python
+import os
+from imbrace import ImbraceClient
+
+client = ImbraceClient(access_token=os.environ["IMBRACE_ACCESS_TOKEN"], env="stable")
+```
+</TabItem>
+</Tabs>
+</AuthOnly>
+
+<AuthOnly mode="api-key">
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+import { ImbraceClient } from "@imbrace/sdk"
+
+const client = new ImbraceClient({
+  apiKey: process.env.IMBRACE_API_KEY,
+  organizationId: process.env.IMBRACE_ORGANIZATION_ID,
+  env: "stable",
+})
+```
+</TabItem>
+<TabItem label="Python">
+```python
+import os
+from imbrace import ImbraceClient
+
+client = ImbraceClient(api_key=os.environ["IMBRACE_API_KEY"], organization_id=os.environ.get("IMBRACE_ORGANIZATION_ID"), env="stable")
+```
+</TabItem>
+</Tabs>
+</AuthOnly>
+
+Cả client đồng bộ (`ImbraceClient`) và bất đồng bộ (`AsyncImbraceClient`) đều hiển thị cùng bề mặt — các phương thức bất đồng bộ được await và client sử dụng `AsyncAiAgentResource` bên dưới.
+
+---
+
+## AI Agents — `chatAi` / `chat_ai`
+
+Quản lý AI agents (CRUD), chạy completions tương thích OpenAI, và xử lý tài liệu/tệp. Cùng không gian tên này cũng bao gồm Knowledge Hub folders và knowledge bases.
+
+### CRUD AI Agent
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// Liệt kê tất cả AI agents trong tài khoản của bạn
+const agents = await client.chatAi.listAiAgents();
+// Mỗi AI agent có một `id` (UUID).
+// Sử dụng trường `id` cho tất cả các lời gọi tiếp theo.
+
+// Liệt kê sub-agents (các agent có thể được ủy quyền bởi orchestrator)
+const subAgents = await client.chatAi.listAiAgentSubAgents();
+
+// Lấy một AI agent
+const agent = await client.chatAi.getAiAgent("9f77692f-33d0-436a-8138-2efb268838e6");
+
+// Tạo — provider_id và model_id là bắt buộc
+const created = await client.chatAi.createAiAgent({
+  name: "Support Bot",
+  workflow_name: "support_bot_v1",
+  provider_id: "system",
+  model_id: "Default",   // tên model cụ thể như "gpt-4o" chỉ hoạt động nếu nhà cung cấp system của tổ chức có model đó
+  streaming: true,       // phải bật để chat UI nhận text-delta SSE events
+  description: "Handles tier-1 support queries",
+});
+
+// Cập nhật — tất cả các trường đều tùy chọn (Partial)
+const updated = await client.chatAi.updateAiAgent(created.id, {
+  name: "Support Bot v2",
+  workflow_name: "support_bot_v1",
+});
+
+// Chỉ cập nhật system instructions
+await client.chatAi.updateAiAgentInstructions(
+  created.id,
+  "You are a helpful support agent.",
+);
+
+await client.chatAi.deleteAiAgent(created.id);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# Liệt kê tất cả AI agents
+agents = client.chat_ai.list_ai_agents()
+
+# Liệt kê sub-agents (các agent có thể được ủy quyền bởi orchestrator)
+sub_agents = client.chat_ai.list_ai_agent_sub_agents()
+
+# Lấy một AI agent
+agent = client.chat_ai.get_ai_agent("9f77692f-33d0-436a-8138-2efb268838e6")
+
+# Tạo — provider_id và model_id là bắt buộc
+created = client.chat_ai.create_ai_agent({
+    "name":          "Support Bot",
+    "workflow_name": "support_bot_v1",
+    "provider_id":   "system",
+    "model_id":      "Default",   # tên model cụ thể như "gpt-4o" chỉ hoạt động nếu nhà cung cấp system của tổ chức có model đó
+    "streaming":     True,        # phải bật để chat UI nhận text-delta SSE events
+    "description":   "Handles tier-1 support queries",
+})
+
+# Cập nhật
+updated = client.chat_ai.update_ai_agent(created["id"], {
+    "name":          "Support Bot v2",
+    "workflow_name": "support_bot_v1",
+})
+
+# Chỉ cập nhật system instructions
+client.chat_ai.update_ai_agent_instructions(
+    created["id"],
+    "You are a helpful support agent.",
+)
+
+client.chat_ai.delete_ai_agent(created["id"])
+```
+</TabItem>
+</Tabs>
+
+### Completions (qua `client.ai`)
+
+Chat completions tương thích OpenAI có sẵn trên namespace `client.ai` cho cả TypeScript và Python. Xem phần [Dịch vụ AI tương thích OpenAI](#openai-compatible-ai-service--clientai) bên dưới để biết chi tiết.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const response = await client.ai.complete({
+  model: "gpt-4o",
+  messages: [
+    { role: "system", content: "You are a helpful CRM assistant." },
+    { role: "user", content: "Summarize this customer note: ..." },
+  ],
+});
+console.log(response.choices[0].message.content);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+from imbrace.types.ai import CompletionInput, CompletionMessage
+
+response = client.ai.complete(CompletionInput(
+    model="gpt-4o",
+    messages=[
+        CompletionMessage(role="system", content="You are a helpful CRM assistant."),
+        CompletionMessage(role="user", content="Summarize this customer note: ..."),
+    ],
+))
+print(response.choices[0].message.content)
+```
+</TabItem>
+</Tabs>
+
+### Document AI models
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const models = await client.chatAi.listDocumentModels();
+```
+</TabItem>
+<TabItem label="Python">
+```python
+models = client.chat_ai.list_document_models()
+```
+</TabItem>
+</Tabs>
+
+### Document AI
+
+Trích xuất dữ liệu có cấu trúc từ PDF và hình ảnh bằng vision model. Xem [tài liệu tham khảo Document AI](/sdk/document-ai/) để biết tham số đầy đủ, điền form PDF và cách sử dụng bất đồng bộ.
+
+### Trích xuất tệp (tải tệp lên agent)
+
+Tải tệp lên và trích xuất nội dung thô.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// Tải tệp lên agent cụ thể
+const formData = new FormData();
+formData.append("file", fileBuffer, "report.pdf");
+const uploaded = await client.chatAi.uploadAgentFile(formData);
+
+// Trích xuất nội dung từ tệp đã tải lên
+const extracted = await client.chatAi.extractFile(formData);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# Tải tệp lên agent cụ thể
+uploaded = client.chat_ai.upload_agent_file(files={"file": open("report.pdf", "rb")}, agent_id="asst_abc")
+
+# Trích xuất nội dung từ tệp đã tải lên
+extracted = client.chat_ai.extract_file(files={"file": open("report.pdf", "rb")})
+```
+</TabItem>
+</Tabs>
+
+### Phiên Chat v1
+
+Các endpoint REST chat cũ để duy trì lịch sử hội thoại. Có sẵn trên `client.ai_agent` cho cả TypeScript và Python. Xem [Legacy v1 chat](#legacy-v1-chat) bên dưới.
+
+### Knowledge Hub — thư mục & knowledge bases
+
+Thư mục và knowledge bases được quản lý qua `client.boards` (TypeScript) / `client.folders` và `client.boards` (Python). Thư mục tổ chức knowledge bases — một knowledge base là tập hợp các tệp mà AI agent có thể truy xuất. Truyền ID thư mục dưới dạng `folder_ids` khi tạo AI agent — xem [Hướng dẫn toàn diện §3](/sdk/full-flow-guide/#3-manage-knowledge-hubs-and-attach-to-an-ai-agent).
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+import { type CreateFolderInput } from "@imbrace/sdk";
+
+// Thư mục
+const folders = await client.boards.searchFolders({ organizationId: "org_xxx" });
+const folder  = await client.boards.createFolder({ name: "Q1 Reports" });
+await client.boards.updateFolder(folder._id, { name: "Q1 2025 Reports" });
+await client.boards.deleteFolders({ ids: [folder._id] });
+
+// Tệp (mục knowledge base)
+const uploaded = await client.boards.uploadFile(formData);
+const files    = await client.boards.searchFiles({ folderId: folder._id });
+const file     = await client.boards.getFile("file_id");
+await client.boards.createFile({ name: "doc.txt", folder_id: folder._id });
+await client.boards.deleteFiles({ ids: ["file_id"] });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# Thư mục
+folder = client.boards.create_folder({"name": "Q1 Reports"})
+folders = client.boards.search_folders()
+client.boards.update_folder(folder["_id"], {"name": "Q1 2025 Reports"})
+client.boards.delete_folders([folder["_id"]])
+
+# Tệp (mục knowledge base)
+file = client.boards.upload_file(files={"file": open("doc.pdf", "rb")})
+files = client.boards.search_files(folder_id=folder["_id"])
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Dịch vụ AI tương thích OpenAI — `client.ai`
+
+Completions, streaming và embeddings theo phong cách OpenAI. Cũng hiển thị API quản lý cho LLM models, providers, guardrails, RAG files, và AI agents. Có sẵn cho cả TypeScript và Python.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// Completion đơn lẻ
+const response = await client.ai.complete({
+  model: "gpt-4o",
+  messages: [
+    { role: "system", content: "You are a helpful CRM assistant." },
+    { role: "user",   content: "Summarize this customer note: ..." },
+  ],
+  temperature: 0.7,
+});
+console.log(response.choices[0].message.content);
+
+// Streaming
+const stream = client.ai.stream({
+  model: "gpt-4o",
+  messages: [{ role: "user", content: "Draft a follow-up email for this lead." }],
+});
+for await (const chunk of stream) {
+  process.stdout.write(chunk.choices[0].delta.content ?? "");
+}
+
+// Embeddings
+const result = await client.ai.embed({
+  model: "text-embedding-ada-002",
+  input: ["customer complained about billing", "billing issue escalated"],
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+from imbrace.types.ai import CompletionInput, CompletionMessage, EmbeddingInput
+
+# Completion đơn lẻ
+response = client.ai.complete(CompletionInput(
+    model="gpt-4o",
+    messages=[
+        CompletionMessage(role="system", content="You are a helpful CRM assistant."),
+        CompletionMessage(role="user", content="Summarize this customer note: ..."),
+    ],
+    temperature=0.7,
+))
+print(response.choices[0].message.content)
+
+# Streaming
+for chunk in client.ai.stream(CompletionInput(
+    model="gpt-4o",
+    messages=[CompletionMessage(role="user", content="Draft a follow-up email for this lead.")],
+)):
+    print(chunk.choices[0].delta.content or "", end="", flush=True)
+
+# Embeddings
+result = client.ai.embed(EmbeddingInput(
+    model="text-embedding-ada-002",
+    input=["customer complained about billing", "billing issue escalated"],
+))
+```
+</TabItem>
+</Tabs>
+
+### LLM Models
+
+Liệt kê các model có sẵn cho AI agents và workflow agents.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const result = await client.ai.getLlmModels();
+// result.data → [{name, is_toolCall_available, is_vision_available, is_support_thinking}]
+for (const model of result.data) {
+  console.log(model.name, model.is_toolCall_available);
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.ai.get_llm_models()
+# result["data"] → [{name, is_toolCall_available, is_vision_available, is_support_thinking}]
+for model in result["data"]:
+    print(model["name"], model.get("is_toolCall_available"))
+```
+</TabItem>
+</Tabs>
+
+### Providers
+
+Quản lý các nhà cung cấp LLM tùy chỉnh. `listProviders` bao gồm một mục `"system"` tổng hợp (`provider_id: "system"`) đại diện cho các model tích hợp sẵn từ `getLlmModels`.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// Liệt kê tất cả providers (bao gồm mặc định hệ thống là mục đầu tiên)
+const providers = await client.ai.listProviders();
+// Chỉ providers tùy chỉnh
+const custom = await client.ai.listProviders({ includeSystem: false });
+
+// Thêm provider tùy chỉnh
+const provider = await client.ai.createProvider({
+  name: "My Azure OpenAI",
+  type: "azure",
+  api_key: "sk-...",
+  base_url: "https://my-instance.openai.azure.com/",
+});
+
+// Cập nhật, làm mới model, xóa
+await client.ai.updateProvider(provider._id, { name: "Azure OpenAI (prod)" });
+await client.ai.refreshProviderModels(provider._id);
+await client.ai.deleteProvider(provider._id);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# Liệt kê tất cả providers (bao gồm mặc định hệ thống là mục đầu tiên)
+providers = client.ai.list_providers()
+# Chỉ providers tùy chỉnh
+custom = client.ai.list_providers(include_system=False)
+
+# Thêm provider tùy chỉnh
+provider = client.ai.create_provider({
+    "name": "My Azure OpenAI",
+    "type": "azure",
+    "api_key": "sk-...",
+    "base_url": "https://my-instance.openai.azure.com/",
+})
+
+# Cập nhật, làm mới model, xóa
+client.ai.update_provider(provider["_id"], {"name": "Azure OpenAI (prod)"})
+client.ai.refresh_provider_models(provider["_id"])
+client.ai.delete_provider(provider["_id"])
+```
+</TabItem>
+</Tabs>
+
+### Guardrails
+
+Lọc đầu ra AI agent vì lý do an toàn, tuân thủ chính sách, hoặc hướng dẫn thương hiệu.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// Liệt kê và lấy
+const guardrails = await client.ai.listGuardrails();
+const guardrail  = await client.ai.getGuardrail("guardrail_id");
+
+// Tạo
+const created = await client.ai.createGuardrail({
+  name: "Brand Safety",
+  model: "gpt-4o",
+  instructions: "Block responses that mention competitor names.",
+  unsafe_categories: ["violence", "hate_speech"],
+  competitor_keywords: ["CompetitorA", "CompetitorB"],
+});
+
+// Cập nhật và xóa
+await client.ai.updateGuardrail(created._id, {
+  name: "Brand Safety v2",
+  model: "gpt-4o",
+  instructions: "Updated instructions.",
+});
+await client.ai.deleteGuardrail(created._id);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# Liệt kê và lấy
+guardrails = client.ai.list_guardrails()
+guardrail  = client.ai.get_guardrail("guardrail_id")
+
+# Tạo
+created = client.ai.create_guardrail({
+    "name": "Brand Safety",
+    "model": "gpt-4o",
+    "instructions": "Block responses that mention competitor names.",
+    "unsafe_categories": ["violence", "hate_speech"],
+    "competitor_keywords": ["CompetitorA", "CompetitorB"],
+})
+
+# Cập nhật và xóa
+client.ai.update_guardrail(created["_id"], {
+    "name": "Brand Safety v2",
+    "model": "gpt-4o",
+    "instructions": "Updated instructions.",
+})
+client.ai.delete_guardrail(created["_id"])
+```
+</TabItem>
+</Tabs>
+
+### Guardrail Providers
+
+Quản lý các nhà cung cấp LLM hỗ trợ đánh giá guardrail.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// Liệt kê và lấy
+const providers = await client.ai.listGuardrailProviders();
+const provider  = await client.ai.getGuardrailProvider("provider_id");
+
+// Tạo
+const gp = await client.ai.createGuardrailProvider({
+  name: "OpenAI Moderation",
+  type: "openai",
+  config: { api_key: "sk-..." },
+});
+
+// Kiểm tra kết nối và liệt kê model có sẵn
+const testResult = await client.ai.testGuardrailProvider(gp._id, { prompt: "test prompt" });
+const models     = await client.ai.getGuardrailProviderModels(gp._id);
+
+// Cập nhật và xóa
+await client.ai.updateGuardrailProvider(gp._id, { name: "OpenAI Moderation v2" });
+await client.ai.deleteGuardrailProvider(gp._id);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# Liệt kê và lấy
+providers = client.ai.list_guardrail_providers()
+provider  = client.ai.get_guardrail_provider("provider_id")
+
+# Tạo
+gp = client.ai.create_guardrail_provider({
+    "name": "OpenAI Moderation",
+    "type": "openai",
+    "config": {"api_key": "sk-..."},
+})
+
+# Kiểm tra kết nối và liệt kê model có sẵn
+test_result = client.ai.test_guardrail_provider(gp["_id"], {"prompt": "test prompt"})
+models      = client.ai.get_guardrail_provider_models(gp["_id"])
+
+# Cập nhật và xóa
+client.ai.update_guardrail_provider(gp["_id"], {"name": "OpenAI Moderation v2"})
+client.ai.delete_guardrail_provider(gp["_id"])
+```
+</TabItem>
+</Tabs>
+
+### RAG Files
+
+Tải lên và quản lý tệp cho Retrieval-Augmented Generation qua dịch vụ AI.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const files = await client.ai.listRagFiles();
+const file  = await client.ai.getRagFile("file_id");
+
+// Tải lên
+const formData = new FormData();
+formData.append("file", fileBuffer, "knowledge.pdf");
+const uploaded = await client.ai.uploadRagFile(formData);
+
+await client.ai.deleteRagFile(uploaded._id);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+files = client.ai.list_rag_files()
+file  = client.ai.get_rag_file("file_id")
+
+# Tải lên
+uploaded = client.ai.upload_rag_file(files={"file": open("knowledge.pdf", "rb")})
+
+client.ai.delete_rag_file(uploaded["_id"])
+```
+</TabItem>
+</Tabs>
+
+### AI Agents (qua `client.ai`)
+
+Các endpoint đọc/cập nhật AI agent bổ sung trên namespace `client.ai`. Để CRUD tạo/xóa đầy đủ, sử dụng [`client.chatAi`](#ai-agents--chatai--chat_ai) ở trên.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// Liệt kê agent từ endpoint accounts
+const accountAgents = await client.ai.listAiAgents();
+// Liệt kê agent (endpoint agents)
+const agents = await client.ai.listAgents();
+
+// Lấy một agent
+const agent = await client.ai.getAiAgent("asst_abc");
+
+// Kiểm tra tên có sẵn trước khi tạo
+const check = await client.ai.checkAiAgentName("Support Bot");
+// check.available → true / false
+
+// Patch chỉ trường instructions
+await client.ai.patchInstructions("asst_abc", {
+  instructions: "You are a concise, helpful assistant.",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# Liệt kê agent từ endpoint accounts
+account_agents = client.ai.list_ai_agents()
+# Liệt kê agent (endpoint agents)
+agents = client.ai.list_agents()
+
+# Lấy một agent
+agent = client.ai.get_ai_agent("asst_abc")
+
+# Kiểm tra tên có sẵn trước khi tạo
+check = client.ai.check_ai_agent_name("Support Bot")
+# check["available"] → True / False
+
+# Patch chỉ trường instructions
+client.ai.patch_instructions("asst_abc", {
+    "instructions": "You are a concise, helpful assistant.",
+})
+```
+</TabItem>
+</Tabs>
+
+### AI Agent Apps (qua `client.ai`)
+
+AI Agent Apps liên kết AI agent với cấu hình workflow hoặc ứng dụng.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// Tạo
+const app = await client.ai.createAiAgentApp({
+  name: "Support App",
+  workflow_name: "support_workflow_v1",
+  assistant_id: "asst_abc",
+  model_id: "Default",   // an toàn cho mọi tổ chức; "gpt-4o" chỉ hoạt động nếu nhà cung cấp system của tổ chức có model đó
+  provider_id: "system",
+});
+
+// Cập nhật và xóa
+await client.ai.updateAiAgentApp(app._id, { name: "Support App v2" });
+await client.ai.deleteAiAgentApp(app._id);
+
+// Chỉ cập nhật định nghĩa workflow
+await client.ai.updateAiAgentWorkflow(app._id, {
+  workflow: { steps: [{ id: "step1", type: "llm" }] },
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# Liệt kê và lấy (chỉ Python)
+apps = client.ai.list_ai_agent_apps()
+app  = client.ai.get_ai_agent_app("app_id")
+
+# Tạo
+app = client.ai.create_ai_agent_app({
+    "name": "Support App",
+    "workflow_name": "support_workflow_v1",
+    "assistant_id": "asst_abc",
+    "model_id": "Default",   # an toàn cho mọi tổ chức; "gpt-4o" chỉ hoạt động nếu nhà cung cấp system của tổ chức có model đó
+    "provider_id": "system",
+})
+
+# Cập nhật và xóa
+client.ai.update_ai_agent_app(app["_id"], {"name": "Support App v2"})
+client.ai.delete_ai_agent_app(app["_id"])
+
+# Chỉ cập nhật định nghĩa workflow
+client.ai.update_ai_agent_workflow(app["_id"], {
+    "workflow": {"steps": [{"id": "step1", "type": "llm"}]},
+})
+```
+</TabItem>
+</Tabs>
+
+### Tool Server
+
+Xác minh rằng URL máy chủ công cụ tùy chỉnh có thể truy cập được và trả về schema công cụ hợp lệ.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const result = await client.ai.verifyToolServer({ url: "https://my-tools.example.com/mcp" });
+if (result.success) {
+  console.log("Available tools:", result.tools);
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.ai.verify_tool_server({"url": "https://my-tools.example.com/mcp"})
+if result["success"]:
+    print("Available tools:", result.get("tools"))
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Chat v2 — Streaming (SSE)
+
+Trả về phản hồi thô. Tiêu thụ body dưới dạng luồng Server-Sent Events.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const response = await client.aiAgent.streamChat({
+  id: "chat_id",
+  assistant_id: "asst_abc",
+  messages: [{ role: "user", content: "What can you do?" }],
+});
+
+const reader = response.body!.getReader();
+const decoder = new TextDecoder();
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  process.stdout.write(decoder.decode(value));
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+response = client.ai_agent.stream_chat({
+    "id": "chat_id",
+    "assistant_id": "asst_abc",
+    "messages": [{"role": "user", "content": "What can you do?"}],
+})
+
+for line in response.iter_lines():
+    if line:
+        print(line)
+```
+
+**Bất đồng bộ:**
+
+```python
+import asyncio
+from imbrace import AsyncImbraceClient
+
+async def main():
+    async with AsyncImbraceClient() as client:
+        response = await client.ai_agent.stream_chat({
+            "id": "chat_id",
+            "assistant_id": "asst_abc",
+            "messages": [{"role": "user", "content": "Hello"}],
+        })
+        async for line in response.aiter_lines():
+            if line:
+                print(line)
+
+asyncio.run(main())
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Sub-agent Chat v2
+
+Stream phản hồi từ sub-agent và truy xuất lịch sử hội thoại của nó.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const res = await client.aiAgent.streamSubAgentChat({
+  assistant_id: "asst_sub",
+  session_id: "sess_xyz",
+  chat_id: "chat_id",
+  messages: [{ role: "user", content: "Explain the data." }],
+});
+
+const history = await client.aiAgent.getSubAgentHistory({
+  session_id: "sess_xyz",
+  chat_id: "chat_id",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+res = client.ai_agent.stream_sub_agent_chat({
+    "assistant_id": "asst_sub",
+    "session_id": "sess_xyz",
+    "chat_id": "chat_id",
+    "messages": [{"role": "user", "content": "Explain the data."}],
+})
+
+history = client.ai_agent.get_sub_agent_history(
+    session_id="sess_xyz",
+    chat_id="chat_id",
+)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Đề xuất Prompt
+
+Lấy các đề xuất prompt được xây dựng sẵn cho một AI agent cụ thể.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const suggestions = await client.aiAgent.getAgentPromptSuggestion("asst_abc");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+suggestions = client.ai_agent.get_agent_prompt_suggestion("asst_abc")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Embeddings & Knowledge Base
+
+Quản lý tệp được sử dụng cho Retrieval-Augmented Generation (RAG). Tải tệp lên trước qua [`client.boards.uploadFile`](/sdk/full-flow-guide/#3-manage-knowledge-hubs-and-attach-to-an-ai-agent) (TypeScript) / `client.boards.upload_file` (Python), sau đó kích hoạt xử lý embedding.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// Kích hoạt xử lý embedding cho tệp đã tải lên
+await client.aiAgent.processEmbedding({ fileId: "file_abc" });
+
+// Liệt kê và kiểm tra tệp embedding
+const files   = await client.aiAgent.listEmbeddingFiles({ page: 1, limit: 20 });
+const file    = await client.aiAgent.getEmbeddingFile("file_abc");
+const preview = await client.aiAgent.previewEmbeddingFile({ file_id: "file_abc" });
+
+// Cập nhật trạng thái và xóa
+await client.aiAgent.updateEmbeddingFileStatus("file_abc", "active");
+await client.aiAgent.deleteEmbeddingFile("file_abc");
+
+// Phân loại tệp cho RAG
+const classification = await client.aiAgent.classifyFile({ file_id: "file_abc" });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# Kích hoạt xử lý embedding cho tệp đã tải lên
+client.ai_agent.process_embedding("file_abc")
+
+# Với các tùy chọn xử lý
+client.ai_agent.process_embedding("file_abc", options={"chunk_size": 512})
+
+# Liệt kê và kiểm tra tệp embedding
+files   = client.ai_agent.list_embedding_files(page=1, limit=20)
+file    = client.ai_agent.get_embedding_file("file_abc")
+preview = client.ai_agent.preview_embedding_file(file_id="file_abc")
+
+# Cập nhật trạng thái và xóa
+client.ai_agent.update_embedding_file_status("file_abc", "active")
+client.ai_agent.delete_embedding_file("file_abc")
+
+# Phân loại tệp cho RAG
+classification = client.ai_agent.classify_file(file_id="file_abc")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Data Board
+
+Đề xuất loại trường có hỗ trợ AI cho các tập dữ liệu có cấu trúc.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const result = await client.aiAgent.suggestFieldTypes({
+  fields: [
+    { name: "created_at", samples: ["2024-01-01", "2024-02-15"] },
+    { name: "amount",     samples: [100, 200.5, 999] },
+    { name: "is_active",  samples: [true, false, true] },
+  ],
+});
+// result.fields[i].suggestedType → "datetime" | "number" | "boolean" | ...
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.ai_agent.suggest_field_types(fields=[
+    {"name": "created_at", "samples": ["2024-01-01", "2024-02-15"]},
+    {"name": "amount",     "samples": [100, 200.5, 999]},
+    {"name": "is_active",  "samples": [True, False, True]},
+])
+# result["fields"][i]["suggestedType"] → "datetime" | "number" | "boolean" | ...
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Parquet
+
+Tạo và quản lý tệp dữ liệu cột Parquet cho các pipeline phân tích.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// Tạo tệp Parquet từ dữ liệu JSON
+const result = await client.aiAgent.generateParquet({
+  data: [{ id: 1, name: "Alice" }, { id: 2, name: "Bob" }],
+  fileName: "users",
+  folderName: "exports",
+});
+
+const files = await client.aiAgent.listParquetFiles();
+await client.aiAgent.deleteParquetFile("exports/users.parquet");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.ai_agent.generate_parquet(
+    data=[{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}],
+    file_name="users",
+    folder_name="exports",
+)
+
+files = client.ai_agent.list_parquet_files()
+client.ai_agent.delete_parquet_file("exports/users.parquet")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Distributed Tracing (Tempo)
+
+Truy vấn các trace Grafana Tempo do dịch vụ AI Agent phát ra để quan sát và gỡ lỗi.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// Liệt kê trace gần đây
+const traces = await client.aiAgent.getTraces({
+  service:   "ai-agent",
+  limit:     50,
+  timeRange: 3600,     // giây
+  orgId:     "org_abc",
+  details:   true,
+});
+
+// Kiểm tra một trace
+const trace = await client.aiAgent.getTrace("trace_id_hex");
+
+// Liệt kê services, tags, và tag values
+const services = await client.aiAgent.getTraceServices();
+const tags     = await client.aiAgent.getTraceTags();
+const values   = await client.aiAgent.getTraceTagValues("http.status_code");
+
+// Tìm kiếm TraceQL
+const results = await client.aiAgent.searchTraceQL(
+  `{ .service.name = "ai-agent" && .http.status = 500 }`
+);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# Liệt kê trace gần đây
+traces = client.ai_agent.get_traces(
+    service="ai-agent",
+    limit=50,
+    time_range=3600,     # giây
+    org_id="org_abc",
+    details=True,
+)
+
+# Kiểm tra một trace
+trace = client.ai_agent.get_trace("trace_id_hex")
+
+# Liệt kê services, tags, và tag values
+services = client.ai_agent.get_trace_services()
+tags     = client.ai_agent.get_trace_tags()
+values   = client.ai_agent.get_trace_tag_values("http.status_code")
+
+# Tìm kiếm TraceQL
+results = client.ai_agent.search_traceql(
+    '{ .service.name = "ai-agent" && .http.status = 500 }'
+)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Chat Client
+
+Chat Client sub-API hỗ trợ các ứng dụng frontend (ví dụ: widget chat nhúng). Để biết cách kết nối ở cấp framework (React singleton, Express auth proxy, v.v.), xem [Tích hợp](/sdk/integrations/).
+
+### Xác thực
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+await client.aiAgent.verifyChatClientCredentials({ token: "tok_xxx" });
+await client.aiAgent.registerChatClient({ name: "web-app", secret: "s3cr3t" });
+const user = await client.aiAgent.getChatClientUser({ token: "tok_xxx" });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+client.ai_agent.verify_chat_client_credentials({"token": "tok_xxx"})
+client.ai_agent.register_chat_client({"name": "web-app", "secret": "s3cr3t"})
+user = client.ai_agent.get_chat_client_user({"token": "tok_xxx"})
+```
+</TabItem>
+</Tabs>
+
+### Chats
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// Tạo phiên chat mới
+await client.aiAgent.createClientChat({
+  id:                     "chat_uuid",
+  assistantId:            "asst_abc",
+  organizationId:         "org_abc",
+  userId:                 "user_xxx",
+  selectedVisibilityType: "private",
+  message: {
+    id:        "msg_uuid",
+    role:      "user",
+    content:   "Hello!",
+    createdAt: new Date().toISOString(),
+    parts:     [{ type: "text", text: "Hello!" }],
+  },
+});
+
+// Liệt kê, đọc, cập nhật, xóa chats
+const chats = await client.aiAgent.listClientChats({
+  organization_id: "org_abc",
+  limit: 20,
+});
+const chat = await client.aiAgent.getClientChat("chat_id");
+await client.aiAgent.updateClientChat("chat_id", { visibility: "private" });
+await client.aiAgent.deleteClientChat("chat_id");
+await client.aiAgent.deleteAllClientChats({ organization_id: "org_abc" });
+
+// Tự động tạo tiêu đề cho chat
+await client.aiAgent.generateClientChatTitle("chat_id");
+
+// Stream trạng thái chat thời gian thực dưới dạng SSE — trả về Response thô
+const statusStream = await client.aiAgent.streamClientChatStatus("chat_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# Tạo phiên chat mới
+from datetime import datetime, timezone
+
+client.ai_agent.create_client_chat({
+    "id":                     "chat_uuid",
+    "assistantId":            "asst_abc",
+    "organizationId":         "org_abc",
+    "userId":                 "user_xxx",
+    "selectedVisibilityType": "private",
+    "message": {
+        "id":        "msg_uuid",
+        "role":      "user",
+        "content":   "Hello!",
+        "createdAt": datetime.now(timezone.utc).isoformat(),
+        "parts":     [{"type": "text", "text": "Hello!"}],
+    },
+})
+
+# Liệt kê, đọc, cập nhật, xóa
+chats = client.ai_agent.list_client_chats(organization_id="org_abc", limit=20)
+chat  = client.ai_agent.get_client_chat("chat_id")
+client.ai_agent.update_client_chat("chat_id", {"visibility": "private"})
+client.ai_agent.delete_client_chat("chat_id")
+client.ai_agent.delete_all_client_chats("org_abc")
+
+# Tự động tạo tiêu đề cho chat
+client.ai_agent.generate_client_chat_title("chat_id")
+
+# Stream trạng thái chat thời gian thực dưới dạng SSE — trả về httpx.Response thô
+status_stream = client.ai_agent.stream_client_chat_status("chat_id")
+```
+</TabItem>
+</Tabs>
+
+### Tin nhắn
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+await client.aiAgent.persistClientMessage({ chatId: "chat_id", content: "Hello" });
+const messages = await client.aiAgent.listClientMessages("chat_id");
+await client.aiAgent.deleteTrailingMessages("message_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+client.ai_agent.persist_client_message({"chatId": "chat_id", "content": "Hello"})
+messages = client.ai_agent.list_client_messages("chat_id")
+client.ai_agent.delete_trailing_messages("message_id")
+```
+</TabItem>
+</Tabs>
+
+### Bình chọn
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const votes = await client.aiAgent.getVotes("chat_id");
+await client.aiAgent.updateVote({ messageId: "msg_id", vote: "up" });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+votes = client.ai_agent.get_votes("chat_id")
+client.ai_agent.update_vote({"messageId": "msg_id", "vote": "up"})
+```
+</TabItem>
+</Tabs>
+
+### Documents (các tạo phẩm do AI tạo ra)
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+await client.aiAgent.createDocument({ kind: "text", content: "Draft..." });
+
+const doc        = await client.aiAgent.getDocument("doc_id");
+const latest     = await client.aiAgent.getDocumentLatest("doc_id");
+const pub        = await client.aiAgent.getDocumentPublic("doc_id");
+const byKind     = await client.aiAgent.getDocumentLatestByKind({ kind: "text" });
+const suggestion = await client.aiAgent.getDocumentSuggestions("doc_id");
+
+await client.aiAgent.deleteDocument("doc_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+client.ai_agent.create_document({"kind": "text", "content": "Draft..."})
+
+doc        = client.ai_agent.get_document("doc_id")
+latest     = client.ai_agent.get_document_latest("doc_id")
+pub        = client.ai_agent.get_document_public("doc_id")
+by_kind    = client.ai_agent.get_document_latest_by_kind(kind="text")
+suggestion = client.ai_agent.get_document_suggestions("doc_id")
+
+client.ai_agent.delete_document("doc_id")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Thông tin dịch vụ
+
+Các endpoint tiện ích để kiểm tra trạng thái và phiên bản của dịch vụ AI Agent.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const config  = await client.aiAgent.getConfig();
+const health  = await client.aiAgent.getHealth();          // tóm tắt
+const details = await client.aiAgent.getHealth(true);      // chi tiết
+const version = await client.aiAgent.getVersion();
+```
+</TabItem>
+<TabItem label="Python">
+```python
+config  = client.ai_agent.get_config()
+health  = client.ai_agent.get_health()           # tóm tắt
+details = client.ai_agent.get_health(detailed=True)  # chi tiết
+version = client.ai_agent.get_version()
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Hướng dẫn Quản trị
+
+Truy cập tài liệu quản trị được lưu trữ bởi dịch vụ AI Agent. Các tệp hướng dẫn được trả về dưới dạng luồng nhị phân thô (thường là PDF).
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const guides = await client.aiAgent.listAdminGuides();
+
+// Tải xuống một hướng dẫn cụ thể — trả về Response thô (luồng PDF)
+const response = await client.aiAgent.getAdminGuide("onboarding.pdf");
+const blob = await response.blob();
+```
+</TabItem>
+<TabItem label="Python">
+```python
+guides = client.ai_agent.list_admin_guides()
+
+# Tải xuống một hướng dẫn cụ thể — trả về httpx.Response thô
+response = client.ai_agent.get_admin_guide("onboarding.pdf")
+with open("onboarding.pdf", "wb") as f:
+    f.write(response.content)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Chat v1 cũ
+
+Các endpoint REST chat gốc duy trì lịch sử hội thoại mà không có streaming. Mã mới nên sử dụng [Chat v2 streaming](#chat-v2--streaming-sse) ở trên; v1 tồn tại để tương thích ngược với các chat hiện có.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// Liệt kê chats cho một tổ chức
+const chats = await client.aiAgent.listChats({
+  organization_id: "org_abc",
+  user_id: "user_123",
+  limit: 20,
+});
+
+// Lấy một chat (truyền true để bao gồm tin nhắn)
+const chat = await client.aiAgent.getChat("chat_id", true);
+
+// Xóa một chat
+await client.aiAgent.deleteChat("chat_id", {
+  organization_id: "org_abc",
+  user_id: "user_123",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+chats = client.ai_agent.list_chats(
+    organization_id="org_abc",
+    user_id="user_123",
+    limit=20,
+)
+
+chat = client.ai_agent.get_chat("chat_id", include_messages=True)
+
+client.ai_agent.delete_chat(
+    "chat_id",
+    organization_id="org_abc",
+    user_id="user_123",
+)
+```
+</TabItem>
+</Tabs>

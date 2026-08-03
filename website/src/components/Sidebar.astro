@@ -1,0 +1,16 @@
+---
+// Override of Starlight's Sidebar that prepends our DocsControls preference
+// panel above the standard sidebar nav. Mirrors the Next.js docs layout
+// where "Using App Router / Pages Router" + "Pick a version" sit at the top.
+import SidebarSublist from '@astrojs/starlight/components/SidebarSublist.astro'
+import MobileMenuFooter from 'virtual:starlight/components/MobileMenuFooter'
+import DocsControls from './DocsControls.astro'
+
+const { sidebar } = Astro.props
+---
+
+<DocsControls />
+<SidebarSublist sublist={sidebar} />
+<div class="md:sl-hidden">
+  <MobileMenuFooter {...Astro.props} />
+</div>

@@ -1,0 +1,246 @@
+---
+title: Tài liệu Tham khảo Resource
+description: Tài liệu tham khảo theo từng namespace cho Imbrace SDKs — contacts, conversations, messaging, campaigns, và hơn thế nữa.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+Trang này bao gồm các namespace CRM và nhắn tin được hiển thị bởi SDK. Khởi tạo client trước (xem [Cài đặt](/sdk/installation/) hoặc [Quick Start](/sdk/quick-start/)). Tất cả các đoạn mã bên dưới đều giả định `client` là instance đã được khởi tạo.
+
+Để biết các resource liên quan đến AI và workflow, xem:
+- [AI Agent](/sdk/ai-agent/) — AI agents (`chatAi`), AI agent streaming, embeddings, parquet
+- [Workflows](/sdk/workflows/) — Workflow flows và tự động hóa kênh
+- [Data Boards](/sdk/databoard/) — Board và mục pipeline CRM
+
+Để biết hướng dẫn từ đầu đến cuối sử dụng các resource này cùng nhau, xem [Hướng dẫn toàn diện](/sdk/full-flow-guide/).
+
+---
+
+## Contacts — `client.contacts`
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { data: contacts } = await client.contacts.list({ limit: 50 });
+const contact = await client.contacts.get("contact_id");
+
+await client.contacts.update("contact_id", {
+  name: "Alice B.",
+  email: "alice@example.com",
+  phone: "+84901234567",
+});
+
+const comments = await client.contacts.getComments("contact_id");
+const files    = await client.contacts.getFiles("contact_id");
+const activity = await client.contacts.getActivities("conversation_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result   = client.contacts.list(limit=50)
+contacts = result.get("data", [])
+
+contact = client.contacts.get("contact_id")
+
+client.contacts.update("contact_id", {
+    "name":  "Alice B.",
+    "email": "alice@example.com",
+    "phone": "+84901234567",
+})
+
+comments  = client.contacts.get_comments("contact_id")
+files     = client.contacts.get_files("contact_id")
+activity  = client.contacts.get_activities("conversation_id")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Conversations — `client.conversations`
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// Tìm kiếm
+const { data: convs } = await client.conversations.search({
+  businessUnitId: "bu_xxx",
+  q: "support",
+  limit: 20,
+});
+
+// Chưa giải quyết
+const { data: open } = await client.conversations.getOutstanding({
+  businessUnitId: "bu_xxx",
+  limit: 50,
+});
+
+// Gán
+await client.conversations.assignTeamMember({
+  conversation_id: "conv_xxx",
+  user_id: "user_xxx",
+});
+
+// Cập nhật trạng thái
+await client.conversations.updateStatus({
+  conversation_id: "conv_xxx",
+  status: "resolved",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.conversations.search(
+    business_unit_id="bu_xxx",
+    q="support",
+    limit=20,
+)
+convs = result.get("data", [])
+
+all_convs = client.conversations.list(limit=50).get("data", [])
+
+client.conversations.update_status({
+    "conversation_id": "conv_xxx",
+    "status": "resolved",
+})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Nhắn tin — `client.channel`, `client.messages`
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const channels = await client.channel.list();
+
+await client.messages.send({
+  type: "text",
+  text: "Hello, how can I help you today?",
+});
+
+const msgs = await client.messages.list({ limit: 20 });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+channels = client.channel.list()
+
+client.messages.send(
+    type="text",
+    text="Hello, how can I help you today?",
+)
+
+msgs = client.messages.list(limit=20)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Chiến dịch & điểm tiếp xúc — `client.campaign`
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { data: campaigns } = await client.campaign.list();
+const campaign  = await client.campaign.get("campaign_id");
+const newCamp   = await client.campaign.create({ name: "Q2 Outreach", channel_type: "email" });
+await client.campaign.delete("campaign_id");
+
+// Điểm tiếp xúc
+const { data: touchpoints } = await client.campaign.listTouchpoints();
+const tp = await client.campaign.getTouchpoint("touchpoint_id");
+
+await client.campaign.createTouchpoint({
+  campaign_id: "campaign_id",
+  type:        "email",
+  delay_days:  3,
+});
+await client.campaign.updateTouchpoint("touchpoint_id", { delay_days: 5 });
+await client.campaign.deleteTouchpoint("touchpoint_id");
+
+// Xác thực cấu hình điểm tiếp xúc trước khi lưu
+const result = await client.campaign.validateTouchpoint({ type: "email", template_id: "tpl_xxx" });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+campaigns = client.campaign.list().get("data", [])
+campaign  = client.campaign.get("campaign_id")
+new_camp  = client.campaign.create({"name": "Q2 Outreach", "channel_type": "email"})
+client.campaign.delete("campaign_id")
+
+# Điểm tiếp xúc
+touchpoints = client.campaign.list_touchpoints().get("data", [])
+tp = client.campaign.get_touchpoint("touchpoint_id")
+
+client.campaign.create_touchpoint({
+    "campaign_id": "campaign_id",
+    "type":        "email",
+    "delay_days":  3,
+})
+client.campaign.update_touchpoint("touchpoint_id", {"delay_days": 5})
+client.campaign.delete_touchpoint("touchpoint_id")
+
+# Xác thực cấu hình điểm tiếp xúc trước khi lưu
+result = client.campaign.validate_touchpoint({"type": "email", "template_id": "tpl_xxx"})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Đề xuất tin nhắn — `client.messageSuggestion` / `client.message_suggestion`
+
+Có sẵn cho cả TypeScript và Python.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const suggestions = await client.messageSuggestion.getSuggestions({
+  message: "Can you help me with my order?",
+  conversation_id: "conv_xxx",
+  limit: 3,
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+suggestions = client.message_suggestion.get_suggestions({
+    "message": "Can you help me with my order?",
+    "conversation_id": "conv_xxx",
+    "limit": 3,
+})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Dự đoán — `client.predict`
+
+Có sẵn cho cả TypeScript và Python.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const result = await client.predict.predict({
+  model: "lead_score_v1",
+  input: { company_size: 200, industry: "saas", mrr: 5000 },
+});
+console.log(result.score);   // 0.87
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.predict.predict({
+    "model": "lead_score_v1",
+    "input": {"company_size": 200, "industry": "saas", "mrr": 5000},
+})
+print(result["score"])   # 0.87
+```
+</TabItem>
+</Tabs>

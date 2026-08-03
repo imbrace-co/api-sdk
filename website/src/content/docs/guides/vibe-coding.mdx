@@ -1,0 +1,146 @@
+---
+title: Vibe Coding
+description: Use the Imbrace SDK faster by dropping llms.txt into your AI coding assistant — Claude, Cursor, Copilot, or any LLM-powered IDE.
+---
+
+import { Aside, Tabs, TabItem } from "@astrojs/starlight/components";
+
+**Vibe Coding** means writing code by collaborating with an AI assistant — describing what you want in plain language and letting the AI generate, explain, or refactor the code for you. The Imbrace SDK ships an [`llms.txt`](https://developer.imbrace.co/llms.txt) file so any AI tool can instantly understand the SDK without hallucinating method names or argument shapes.
+
+## Setup
+
+Before vibe coding, make sure the SDK is installed and your credentials are configured.
+
+**1. Install the SDK**
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```bash
+npm install @imbrace/sdk
+```
+</TabItem>
+<TabItem label="Python">
+```bash
+pip install imbrace
+```
+</TabItem>
+</Tabs>
+
+**2. Store your credentials**
+
+Create a `.env` file in your project root. The SDK does **not** auto-read environment variables — you pass them to the constructor in step 3.
+
+```env
+IMBRACE_API_KEY=your_api_key_here
+IMBRACE_ORGANIZATION_ID=your_org_id_here
+```
+
+See [Authentication](/sdk/authentication/) to learn when to use API Key vs Access Token, and [Setup Guide](/getting-started/setup/#get-an-api-key) for how to obtain an API key.
+
+**3. Initialize the client**
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+import { ImbraceClient } from "@imbrace/sdk";
+
+const client = new ImbraceClient({
+  apiKey:         process.env.IMBRACE_API_KEY,
+  organizationId: process.env.IMBRACE_ORGANIZATION_ID,
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+import os
+from imbrace import ImbraceClient
+
+client = ImbraceClient(
+    api_key=os.environ["IMBRACE_API_KEY"],
+    organization_id=os.environ.get("IMBRACE_ORGANIZATION_ID"),
+)
+```
+</TabItem>
+</Tabs>
+
+**4. Grab `llms.txt`**
+
+Download or copy the file at [`https://developer.imbrace.co/llms.txt`](https://developer.imbrace.co/llms.txt) and drop it into your AI tool (see [How to use it](#how-to-use-it) below).
+
+---
+
+## What is `llms.txt`?
+
+`llms.txt` is a plain-text file (similar to `robots.txt`) that gives AI models a compact, accurate summary of a library — its clients, resources, authentication, and common patterns. When you paste it into an AI context window, the model already knows the SDK and can write correct code on the first try.
+
+**File URL:** [`https://developer.imbrace.co/llms.txt`](https://developer.imbrace.co/llms.txt)
+
+## How to use it
+
+### Claude (claude.ai or Claude Code)
+
+1. Open a new conversation.
+2. Paste the contents of `llms.txt` at the top of your message, then describe your task:
+
+```
+<context>
+[paste llms.txt here]
+</context>
+
+Write a TypeScript snippet that streams a chat response from assistant "asst_abc"
+and prints each text delta to the console.
+```
+
+### Cursor / VS Code Copilot
+
+Add the URL to your AI context via **@ docs** or the equivalent "add context" feature in your IDE. Cursor supports `@URL` directly:
+
+```
+@https://developer.imbrace.co/llms.txt
+
+How do I upload a file and trigger embedding processing?
+```
+
+### Any other LLM
+
+Copy the raw file content and paste it at the start of your prompt before asking your question. Most LLMs with a 32k+ context window can ingest the full file without summarisation loss.
+
+## Example prompts
+
+Once the AI has the `llms.txt` context, try prompts like:
+
+- *"Show me how to create an AI agent and stream a chat response in Python."*
+- *"Generate TypeScript code to list all embedding files and delete ones with status `error`."*
+- *"What's the difference between `streamChat` and `streamSubAgentChat`?"*
+- *"Write an Express.js auth proxy for the Chat Client, following the Integrations guide pattern."*
+
+<Aside type="tip">
+For long sessions keep `llms.txt` pinned as a **system prompt** or **project instruction** so it applies to every message automatically.
+</Aside>
+
+### CLI for Coding Agents
+
+The Imbrace CLI (`@imbrace/cli`) is also designed for coding agents. After installing the CLI, an AI assistant can run commands directly via the terminal without writing any SDK code:
+
+```bash
+# List boards
+imbrace data-board list --json
+
+# Create items
+imbrace data-board create-item <boardId> --fields '<json>' --json
+
+# List AI agents
+imbrace ai-agent list --json
+
+# Manage workflows
+imbrace workflow list --json
+
+# Document AI extraction agents
+imbrace document-ai list --json
+```
+
+Resource commands (`data-board`, `ai-agent`, `workflow`, `document-ai`, `orchestrator`, `guardrail`) support `--json` for machine-readable output. Every command supports `-h` / `--help` for usage. See [CLI Commands](/cli/commands/) for the full reference.
+
+## Keep it up to date
+
+The file is regenerated on every release. Re-fetch the URL if you upgrade the SDK to pick up new methods or changed signatures.
