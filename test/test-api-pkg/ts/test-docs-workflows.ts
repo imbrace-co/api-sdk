@@ -2,7 +2,7 @@
  * Mirrors website/public/sdk/workflows.md against @imbrace/sdk@1.0.4 (npm)
  * — API-key auth.
  *
- * Doc-gap (TS only): the doc shows `client.activepieces.*` for §Activepieces.
+ * Doc-gap (TS only): the doc shows `client.activepieces.*` for §Workflow.
  * SDK 1.0.4 only exposes `client.workflows.*`. The Py snippets in the doc
  * already use `client.workflows.*` so no Py rename is needed.
  */

@@ -3,7 +3,7 @@
   "info": {
     "title": "imbrace-workflows",
     "version": "1.0.0",
-    "description": "Imbrace workflow (ActivePieces) APIs exported for AI-agent tool use. Curated subset matching the Imbrace SDK. Import a subset with ?tags=… — available tags: flows, triggers, runs, folders, connections, pieces, tables, fields, mcp-servers, invitations."
+    "description": "Imbrace workflow APIs exported for AI-agent tool use. Curated subset matching the Imbrace SDK. Import a subset with ?tags=… — available tags: flows, triggers, runs, folders, connections, pieces, tables, fields, mcp-servers, invitations."
   },
   "servers": [
     {

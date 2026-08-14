@@ -345,7 +345,7 @@ Danh sách key hợp lệ:
 | `ai` | `ai` | AI service |
 | `marketplaces` | `marketplaces` | Marketplace service |
 | `file_service` | `fileService` | File service |
-| `activepieces` | `activepieces` | ActivePieces |
+| `activepieces` | `activepieces` | Workflow |
 
 ---
 

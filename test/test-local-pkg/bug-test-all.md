@@ -130,7 +130,7 @@ Mode:   Access Token
 
 ❌ MODULE [ChatAi] FAILED: Invalid or expired access token (x-access-token).
 
-🚀 Testing Activepieces Resource...
+🚀 Testing Workflow Resource...
 
 --- [TEST] activepieces.listFlows ---
    Flows: 4 items
@@ -160,7 +160,7 @@ Mode:   Access Token
 ❌ Failed: [400] {"statusCode":400,"code":"FST_ERR_VALIDATION","error":"Bad Request","message":"querystring must have required property 'projectId'"}
    HTTP Status: 400
 
-❌ MODULE [Activepieces] FAILED: [400] {"statusCode":400,"code":"FST_ERR_VALIDATION","error":"Bad Request","message":"querystring must have required property 'projectId'"}
+❌ MODULE [Workflow] FAILED: [400] {"statusCode":400,"code":"FST_ERR_VALIDATION","error":"Bad Request","message":"querystring must have required property 'projectId'"}
 
 🚀 Testing Boards Resource...
 
@@ -224,7 +224,7 @@ Mode:   Access Token
    Assistant Renamed: SDK Assistant 1776927042341 (Updated)
 ✅ Passed (3440ms)
 
-[FLOW 2] Activepieces Workflows
+[FLOW 2] Workflows
 
 --- [TEST] Workflow Lifecycle ---
    Using Existing Flow: VDaPxdtTjgQa4k5DqTUqX

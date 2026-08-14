@@ -161,7 +161,7 @@ class WorkflowsResource:
     _cached_project_id: Optional[str] = None
 
     def resolve_project_id(self) -> str:
-        """Resolve the ActivePieces project id by listing first flow.
+        """Resolve the Workflow project id by listing first flow.
 
         Caches the result so repeated calls don't refetch. Raises if the org
         has no flows yet (caller must pass ``project_id`` explicitly).

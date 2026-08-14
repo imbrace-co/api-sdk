@@ -2,7 +2,7 @@
  * Exhaustive workflows resource verification — pulls @imbrace/sdk from npm.
  * Auth: API Key.
  *
- * Covers (Workflow Engine = ActivePieces under the hood):
+ * Covers (Workflow Engine = Workflow under the hood):
  *   - Channel automation: listChannelAutomation
  *   - Flows:              listFlows, getFlow, createFlow, deleteFlow, applyFlowOperation
  *   - Runs:               listRuns, getRun

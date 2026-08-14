@@ -162,7 +162,7 @@ class TemplatesResource:
         """Create a custom UseCase + AI Agent in one POST.
 
         Routes to ``POST /v2/backend/templates/v2/custom``. Backend auto-creates
-        the linked channel, workflow (ActivePieces), and assistant_app, and
+        the linked channel, workflow, and assistant_app, and
         returns the assembled use case (with ``assistant_id``, ``channel_id``).
 
         The wire body still uses the ``assistant`` key for backend compatibility.

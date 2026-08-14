@@ -174,7 +174,7 @@ export interface RecordListParams {
 }
 
 // ── Flow builder (declarative) ────────────────────────────────────────────────
-// The raw ActivePieces flow-operation payload has two easy-to-miss requirements
+// The raw Workflow flow-operation payload has two easy-to-miss requirements
 // that otherwise fail with a 400 or silently orphan every later step:
 //   1. every PIECE trigger/action `settings` needs a `propertySettings` entry
 //      for each input key;
@@ -236,11 +236,11 @@ export class WorkflowsResource {
     this.apBase = apBase.replace(/\/$/, '')
   }
 
-  /** Cache of resolved ActivePieces project id (per-org, fetched lazily). */
+  /** Cache of resolved Workflow project id (per-org, fetched lazily). */
   private _cachedProjectId?: string
 
   /**
-   * Resolve the ActivePieces project id for the current org by listing the
+   * Resolve the Workflow project id for the current org by listing the
    * first flow and reading its `projectId`. Caches the result so repeated
    * calls don't refetch. Throws if the org has no flows yet (caller must
    * pass `projectId` explicitly in that case).
@@ -395,7 +395,7 @@ export class WorkflowsResource {
 
   /**
    * Build a whole flow — trigger + (optionally nested) steps — in ONE call.
-   * Auto-fills the two things the raw ActivePieces flow-operation API requires:
+   * Auto-fills the two things the raw Workflow flow-operation API requires:
    * `propertySettings` on every piece, and `stepLocationRelativeToParent` on
    * every added action (mandatory after a loop, or later steps silently orphan).
    * Step names auto-increment (`step_1`, `step_2`, …) unless a step sets `name`.

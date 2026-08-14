@@ -2,7 +2,7 @@
 
 Auth: Access Token.
 
-Covers (Workflow Engine = ActivePieces under the hood):
+Covers (Workflow Engine = Workflow under the hood):
   - Channel automation: list_channel_automation
   - Flows:              list_flows, get_flow, create_flow, delete_flow, apply_flow_operation
   - Runs:               list_runs (+ get_run skipped — needs run id fixture)
