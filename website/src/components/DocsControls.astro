@@ -23,14 +23,14 @@ const authOptions = [
 
 const versionOptions = [
   {
-    value: '1.0.4',
-    label: 'v1.0.4 (latest)',
-    desc: 'Released May 2026 — current stable.',
+    value: '1.4.0',
+    label: 'v1.4.0 (latest)',
+    desc: 'Released July 2026 — current stable.',
   },
 ] as const
 
 const defaultAuth = 'access-token'
-const defaultVersion = '1.0.4'
+const defaultVersion = '1.4.0'
 
 const authJson = JSON.stringify(
   Object.fromEntries(authOptions.map((o) => [o.value, o.desc]))

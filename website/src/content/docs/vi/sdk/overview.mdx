@@ -77,6 +77,21 @@ Mọi namespace đều có trên cả hai SDK. Các phương thức tuân theo q
 
 Để xem danh sách đầy đủ và tài liệu tham khảo phương thức, hãy xem [Resources](/sdk/resources/).
 
+### Toàn bộ bề mặt API — `client.api` (TypeScript)
+
+Từ `v1.3.0`, TypeScript SDK còn kèm một bề mặt **sinh tự động** bao phủ mọi operation mà các service Imbrace mở cho AI agent — 272 operation trên 5 service, sinh từ các spec OpenAPI `agent-tools` của chính các service:
+
+```typescript
+const boards = await client.api.dataBoard.listBoards<{ data: Board[] }>();
+const flows  = await client.api.workflow.listFlows();
+```
+
+Namespace: `client.api.dataBoard`, `.channel`, `.platform`, `.marketplace`, `.workflow`.
+
+Bề mặt này đầy đủ và luôn đồng bộ với service đã triển khai, nhưng phần lớn operation trả về `unknown` (spec không khai báo schema response) — hãy truyền type argument khi bạn biết cấu trúc dữ liệu. Ưu tiên các resource viết tay ở trên khi chúng đáp ứng được; dùng `client.api` cho phần còn lại thay vì tự viết `fetch`.
+
+Cùng registry operation này cũng là nền tảng của lệnh [`imbrace mcp`](/vi/cli/commands/#mcp-server) trong CLI, mở các operation này thành tool MCP cho AI agent.
+
 ### Khi nào nên chọn loại thông tin xác thực nào
 
 | | API Key | Access Token |

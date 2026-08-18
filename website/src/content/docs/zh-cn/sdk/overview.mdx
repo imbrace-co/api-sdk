@@ -77,6 +77,21 @@ Imbrace SDK 是 Imbrace Gateway 的官方客户端，提供 **TypeScript** 和 *
 
 完整列表和方法参考请参见[资源](/zh-cn/sdk/resources/)。
 
+### 完整 API 表面 — `client.api`（TypeScript）
+
+自 `v1.3.0` 起，TypeScript SDK 还附带一个**生成的** API 表面，覆盖 Imbrace 各服务向 AI 代理开放的全部操作 — 5 个服务共 272 个操作，由各服务的 `agent-tools` OpenAPI 规范生成：
+
+```typescript
+const boards = await client.api.dataBoard.listBoards<{ data: Board[] }>();
+const flows  = await client.api.workflow.listFlows();
+```
+
+命名空间：`client.api.dataBoard`、`.channel`、`.platform`、`.marketplace`、`.workflow`。
+
+它完整且始终与已部署的服务保持同步，但大多数操作返回 `unknown`（规范未声明响应 schema）— 已知数据结构时请传入类型参数。优先使用上面的手写资源；它们未覆盖的调用再用 `client.api`，而不要自己手写 `fetch`。
+
+同一操作注册表也驱动 CLI 的 [`imbrace mcp`](/zh-cn/cli/commands/#mcp-server) 命令，把这些操作作为 MCP 工具暴露给 AI 代理。
+
 ### 如何选择凭证
 
 | | API Key | Access Token |
