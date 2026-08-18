@@ -406,7 +406,7 @@ imbrace workflow run-detail <runId> [--json]
 
 ## MCP Server
 
-> `@imbrace/cli` `v0.8.0`+. Đừng nhầm với `imbrace workflow mcp ...` ở trên — nhóm lệnh đó quản lý tài nguyên MCP-server của chính workflow engine.
+> `@imbrace/cli` `v0.8.0`+. Đừng nhầm với `imbrace workflow mcp ...` ở trên — nhóm lệnh đó quản lý tài nguyên MCP-server của chính workflow engine. Muốn không phải cài gì? Gateway host sẵn cùng bộ tool này qua HTTP — xem [MCP Server](/vi/mcp/overview/).
 
 `imbrace mcp` chạy một server [Model Context Protocol](https://modelcontextprotocol.io) qua **stdio**, mở API Imbrace thành tool cho AI agent (Claude Code, Claude Desktop, Cursor, …). Tool được sinh từ cùng bộ spec OpenAPI `agent-tools` với bề mặt [`client.api`](/vi/sdk/overview/) của SDK — 272 operation trên 5 service — và đặt tên dạng `<service>_<operationId>`, ví dụ `dataBoard_listBoards`, `workflow_listFlows`.
 

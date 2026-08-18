@@ -90,7 +90,7 @@ const flows  = await client.api.workflow.listFlows();
 
 它完整且始终与已部署的服务保持同步，但大多数操作返回 `unknown`（规范未声明响应 schema）— 已知数据结构时请传入类型参数。优先使用上面的手写资源；它们未覆盖的调用再用 `client.api`，而不要自己手写 `fetch`。
 
-同一操作注册表也驱动 CLI 的 [`imbrace mcp`](/zh-cn/cli/commands/#mcp-server) 命令，把这些操作作为 MCP 工具暴露给 AI 代理。
+同一操作注册表也驱动网关的[托管 MCP 服务器](/zh-cn/mcp/overview/)和 CLI 的 [`imbrace mcp`](/zh-cn/cli/commands/#mcp-server) 命令，二者都把这些操作作为 MCP 工具暴露给 AI 代理。
 
 ### 如何选择凭证
 

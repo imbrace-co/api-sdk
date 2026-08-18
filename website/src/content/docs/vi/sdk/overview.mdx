@@ -90,7 +90,7 @@ Namespace: `client.api.dataBoard`, `.channel`, `.platform`, `.marketplace`, `.wo
 
 Bề mặt này đầy đủ và luôn đồng bộ với service đã triển khai, nhưng phần lớn operation trả về `unknown` (spec không khai báo schema response) — hãy truyền type argument khi bạn biết cấu trúc dữ liệu. Ưu tiên các resource viết tay ở trên khi chúng đáp ứng được; dùng `client.api` cho phần còn lại thay vì tự viết `fetch`.
 
-Cùng registry operation này cũng là nền tảng của lệnh [`imbrace mcp`](/vi/cli/commands/#mcp-server) trong CLI, mở các operation này thành tool MCP cho AI agent.
+Cùng registry operation này cũng là nền tảng của [MCP server host sẵn trên gateway](/vi/mcp/overview/) và lệnh [`imbrace mcp`](/vi/cli/commands/#mcp-server) trong CLI — cả hai đều mở các operation này thành tool MCP cho AI agent.
 
 ### Khi nào nên chọn loại thông tin xác thực nào
 

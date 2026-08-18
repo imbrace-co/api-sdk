@@ -405,7 +405,7 @@ imbrace workflow run-detail <runId> [--json]
 
 ## MCP Server
 
-> `@imbrace/cli` `v0.8.0`+. Not to be confused with `imbrace workflow mcp ...` above, which manages the workflow engine's own MCP-server resources.
+> `@imbrace/cli` `v0.8.0`+. Not to be confused with `imbrace workflow mcp ...` above, which manages the workflow engine's own MCP-server resources. Prefer zero install? The gateway hosts the same tools over HTTP — see [MCP Server](/mcp/overview/).
 
 `imbrace mcp` runs a [Model Context Protocol](https://modelcontextprotocol.io) server over **stdio**, exposing the Imbrace API as tools for AI agents (Claude Code, Claude Desktop, Cursor, …). Tools are generated from the same `agent-tools` OpenAPI specs as the SDK's [`client.api`](/sdk/overview/#the-full-api-surface--clientapi-typescript) surface — 272 operations across 5 services — and named `<service>_<operationId>`, e.g. `dataBoard_listBoards`, `workflow_listFlows`.
 

@@ -91,7 +91,7 @@ Namespaces: `client.api.dataBoard`, `.channel`, `.platform`, `.marketplace`, `.w
 
 It is complete and always in sync with the deployed services, but most operations return `unknown` (their specs declare no response schema) — pass a type argument when you know the shape. Prefer the hand-written resources above when they cover your call; reach for `client.api` for anything they don't, instead of hand-rolling a `fetch`.
 
-The same operation registry powers the CLI's [`imbrace mcp`](/cli/commands/#mcp-server) command, which exposes these operations as MCP tools for AI agents.
+The same operation registry powers the gateway's [hosted MCP server](/mcp/overview/) and the CLI's [`imbrace mcp`](/cli/commands/#mcp-server) command, both of which expose these operations as MCP tools for AI agents.
 
 ### When to pick which credential
 

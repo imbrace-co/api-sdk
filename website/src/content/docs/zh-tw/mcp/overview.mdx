@@ -1,0 +1,60 @@
+---
+title: MCP Server
+description: 透過託管 MCP 伺服器將 AI agent 接入 Imbrace API — 一個 URL，無需安裝。
+---
+
+Imbrace 閘道在 `/mcp` 託管了一個 **[Model Context Protocol](https://modelcontextprotocol.io) 伺服器**。把任何 MCP 用戶端 — Claude Code、Claude Desktop、Cursor 等 — 指向該 URL 並附上你的 API key 即可，無需安裝：
+
+```json
+{
+  "mcpServers": {
+    "imbrace": {
+      "url": "https://app-gateway.sandbox.imbrace.co/mcp",
+      "headers": { "Authorization": "Bearer api_xxx..." }
+    }
+  }
+}
+```
+
+請使用你所在環境的閘道主機名稱（上例為 sandbox 環境）。API key 可在 Imbrace Dashboard 取得 — 請參閱[取得 API Key](/zh-tw/guides/api-key/)。
+
+### 運作原理
+
+- 基於 HTTP `POST` 的無狀態 JSON-RPC — 無需管理工作階段；支援批次請求。
+- 每次工具呼叫都會帶著**你的** token 經閘道自身路由重放，因此組織範圍、權限與 license 檢查與直接呼叫 API 完全一致。
+- 工具即精選的 `agent-tools` 操作集，與 SDK 的 [`client.api`](/zh-tw/sdk/overview/) 介面同源，依 `operationId` 命名 — `listBoards`、`listFlows`、`getMyAccount` 等。
+
+### 選項
+
+作用範圍與權限透過所設定 URL 上的查詢參數指定：
+
+| 查詢參數 | 效果 |
+|---|---|
+| _（無）_ | 唯讀工具（預設） |
+| `?allowWrite=1` | 額外提供建立/修改資料的操作 |
+| `?allowDestructive=1` | 額外提供刪除資料的操作（隱含 write） |
+| `?services=dataBoard,workflow` | 限定服務 |
+| `?tags=boards,records` | 依 OpenAPI 標籤限定 |
+
+服務：`dataBoard`、`channel`、`platform`、`marketplace`、`workflow`。範例：
+
+```
+https://app-gateway.sandbox.imbrace.co/mcp?services=dataBoard&allowWrite=1
+```
+
+未開啟對應開關就呼叫 write/destructive 工具會回傳明確的工具錯誤，而不是靜默失敗。
+
+### 註冊到 Claude Code
+
+```bash
+claude mcp add --transport http imbrace "https://app-gateway.sandbox.imbrace.co/mcp" \
+  --header "Authorization: Bearer api_xxx..."
+```
+
+### 統一 OpenAPI — `/agent-tools/openapi.json`
+
+若使用 OpenAPI 工具伺服器執行器（如 Open WebUI）而非 MCP 用戶端，`GET /agent-tools/openapi.json`（同樣的 `Authorization` 標頭）會把所有服務的 agent-tools 合併為**一份** spec 回傳，支援同樣的 `?services=` / `?tags=` 篩選 — 只需設定一個工具伺服器而不是五個。對於把基礎 URL 與操作路徑直接拼接的執行器（請求成 `/agent-tools/<op-path>`）也能相容：閘道會去掉前綴並帶你的憑證重放請求。
+
+### 本機替代方案 — CLI
+
+如果你偏好本機 stdio 伺服器（憑證來自 CLI profile，不監聽網路埠），CLI 內建同一套工具註冊表：[`imbrace mcp`](/zh-tw/cli/commands/#mcp-server)。

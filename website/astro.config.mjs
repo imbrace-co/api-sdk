@@ -86,6 +86,17 @@ export default defineConfig({
           ],
         },
         {
+          label: 'MCP Server',
+          translations: { vi: 'MCP Server', 'zh-CN': 'MCP 服务器', 'zh-TW': 'MCP 伺服器' },
+          items: [
+            {
+              label: 'Overview',
+              translations: { vi: 'Tổng Quan', 'zh-CN': '概览', 'zh-TW': '概覽' },
+              link: '/mcp/overview/',
+            },
+          ],
+        },
+        {
           label: 'CLI',
           translations: { vi: 'CLI' },
           items: [

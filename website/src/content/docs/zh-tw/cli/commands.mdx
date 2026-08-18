@@ -406,7 +406,7 @@ imbrace workflow run-detail <runId> [--json]
 
 ## MCP Server
 
-> `@imbrace/cli` `v0.8.0`+。請勿與上文的 `imbrace workflow mcp ...` 混淆 — 那組指令管理的是工作流程引擎自身的 MCP-server 資源。
+> `@imbrace/cli` `v0.8.0`+。請勿與上文的 `imbrace workflow mcp ...` 混淆 — 那組指令管理的是工作流程引擎自身的 MCP-server 資源。想零安裝？閘道透過 HTTP 託管同一套工具 — 請參閱 [MCP Server](/zh-tw/mcp/overview/)。
 
 `imbrace mcp` 透過 **stdio** 執行一個 [Model Context Protocol](https://modelcontextprotocol.io) 伺服器，把 Imbrace API 作為工具提供給 AI agent（Claude Code、Claude Desktop、Cursor 等）。工具與 SDK 的 [`client.api`](/zh-tw/sdk/overview/) 介面出自同一套 `agent-tools` OpenAPI 規格 — 5 個服務共 272 個操作 — 命名格式為 `<service>_<operationId>`，例如 `dataBoard_listBoards`、`workflow_listFlows`。
 

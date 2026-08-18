@@ -90,7 +90,7 @@ const flows  = await client.api.workflow.listFlows();
 
 它完整且始終與已部署的服務保持同步，但大多數操作回傳 `unknown`（規格未宣告回應 schema）— 已知資料結構時請傳入型別參數。優先使用上面的手寫資源；它們未涵蓋的呼叫再用 `client.api`，而不要自己手寫 `fetch`。
 
-同一操作註冊表也驅動 CLI 的 [`imbrace mcp`](/zh-tw/cli/commands/#mcp-server) 指令，把這些操作作為 MCP 工具提供給 AI agent。
+同一操作註冊表也驅動閘道的[託管 MCP 伺服器](/zh-tw/mcp/overview/)和 CLI 的 [`imbrace mcp`](/zh-tw/cli/commands/#mcp-server) 指令，兩者都把這些操作作為 MCP 工具提供給 AI agent。
 
 ### 何時選擇哪種憑證
 
