@@ -1,9 +1,39 @@
 ---
 title: MCP Server
-description: Kết nối AI agent với API Imbrace qua MCP server host sẵn — một URL, không cần cài đặt.
+description: Cho AI agent truy cập API Imbrace — một URL, một API key, không cần cài gì.
 ---
 
-Gateway Imbrace host sẵn một **[Model Context Protocol](https://modelcontextprotocol.io) server** tại `/mcp`. Trỏ bất kỳ MCP client nào — Claude Code, Claude Desktop, Cursor, … — vào URL này kèm API key của bạn. Không cần cài đặt gì:
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+Kết nối công cụ AI của bạn — Claude Code, Cursor, Codex, Claude Desktop, … — với Imbrace, và nó có thể làm việc trực tiếp với dữ liệu Imbrace của bạn: liệt kê board CRM, đọc hội thoại, xem lượt chạy workflow, v.v.
+
+Bạn chỉ cần hai thứ:
+
+- **Một URL** — gateway Imbrace host sẵn một server [Model Context Protocol](https://modelcontextprotocol.io) tại `/mcp`. Không phải cài hay chạy gì cả.
+- **Một API key** — gửi dưới dạng Bearer token. Agent chỉ thấy đúng những gì tổ chức và vai trò của bạn cho phép, không hơn.
+
+### Bước 1 — Lấy API key
+
+Tạo external token trong Imbrace Dashboard (xem [Lấy API Key](/vi/guides/api-key/)). Key có dạng `api_...`.
+
+### Bước 2 — Kết nối công cụ của bạn
+
+Chọn công cụ bên dưới và dán config. Ví dụ dùng gateway **sandbox** — thay host bằng gateway môi trường của bạn.
+
+<Tabs>
+<TabItem label="Claude Code">
+
+Một lệnh duy nhất:
+
+```bash
+claude mcp add --transport http imbrace "https://app-gateway.sandbox.imbrace.co/mcp" \
+  --header "Authorization: Bearer api_xxx..."
+```
+
+</TabItem>
+<TabItem label="Cursor">
+
+Thêm vào `.cursor/mcp.json` trong project — hoặc `~/.cursor/mcp.json` để dùng ở mọi nơi:
 
 ```json
 {
@@ -16,45 +46,102 @@ Gateway Imbrace host sẵn một **[Model Context Protocol](https://modelcontext
 }
 ```
 
-Dùng host gateway của môi trường bạn (ví dụ trên là môi trường sandbox). Lấy key từ Imbrace Dashboard — xem [Lấy API Key](/vi/guides/api-key/).
+</TabItem>
+<TabItem label="Codex CLI">
 
-### Cách hoạt động
+Thêm vào `~/.codex/config.toml` (bản Codex mới có hỗ trợ HTTP MCP):
 
-- JSON-RPC stateless qua HTTP `POST` — không phải quản lý session; hỗ trợ batch request.
-- Mỗi lần gọi tool được phát lại qua chính các route của gateway với token **của bạn**, nên phạm vi tổ chức, quyền hạn và kiểm tra license áp dụng đúng như khi bạn gọi API trực tiếp.
-- Tool chính là bộ operation `agent-tools` được tuyển chọn, cùng nguồn với bề mặt [`client.api`](/vi/sdk/overview/) của SDK, đặt tên theo `operationId` — `listBoards`, `listFlows`, `getMyAccount`, ….
+```toml
+[mcp_servers.imbrace]
+url = "https://app-gateway.sandbox.imbrace.co/mcp"
+bearer_token = "api_xxx..."
+```
 
-### Tùy chọn
+Với bản Codex cũ chưa hỗ trợ HTTP, bắc cầu qua `mcp-remote`:
 
-Phạm vi và quyền được đặt bằng query parameter trên URL bạn cấu hình:
+```toml
+[mcp_servers.imbrace]
+command = "npx"
+args = ["-y", "mcp-remote", "https://app-gateway.sandbox.imbrace.co/mcp", "--header", "Authorization: Bearer api_xxx..."]
+```
 
-| Query parameter | Tác dụng |
+</TabItem>
+<TabItem label="Claude Desktop">
+
+Claude Desktop chỉ khởi chạy server local, nên bắc cầu URL qua `mcp-remote`. Vào **Settings → Developer → Edit Config**, thêm vào `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "imbrace": {
+      "command": "npx",
+      "args": [
+        "-y", "mcp-remote",
+        "https://app-gateway.sandbox.imbrace.co/mcp",
+        "--header", "Authorization: Bearer api_xxx..."
+      ]
+    }
+  }
+}
+```
+
+</TabItem>
+<TabItem label="Client khác">
+
+Mọi MCP client nhận URL kèm header đều dùng dạng chuẩn:
+
+```json
+{
+  "mcpServers": {
+    "imbrace": {
+      "url": "https://app-gateway.sandbox.imbrace.co/mcp",
+      "headers": { "Authorization": "Bearer api_xxx..." }
+    }
+  }
+}
+```
+
+Nếu client chỉ hỗ trợ server local (stdio), bắc cầu bằng:
+
+```bash
+npx -y mcp-remote "https://app-gateway.sandbox.imbrace.co/mcp" \
+  --header "Authorization: Bearer api_xxx..."
+```
+
+</TabItem>
+</Tabs>
+
+### Bước 3 — Thử ngay
+
+Hỏi agent của bạn, ví dụ *"Liệt kê các board Imbrace của tôi"* hoặc *"Xem các hội thoại mới nhất"*. Nó sẽ tự chọn các tool như `listBoards`, `listConversations`, `listFlows`.
+
+### Mặc định chỉ đọc
+
+Mặc định agent chỉ được **xem chứ không được sửa** — chỉ các tool đọc được mở. Muốn thêm quyền, thêm query parameter vào URL đã cấu hình:
+
+| Thêm vào URL | Tác dụng |
 |---|---|
-| _(không có)_ | Tool chỉ đọc (mặc định) |
-| `?allowWrite=1` | Mở thêm operation tạo/sửa dữ liệu |
-| `?allowDestructive=1` | Mở thêm operation xóa dữ liệu (bao hàm write) |
-| `?services=dataBoard,workflow` | Giới hạn theo service |
-| `?tags=boards,records` | Giới hạn theo tag OpenAPI |
+| `?allowWrite=1` | Agent được thêm quyền tạo và sửa dữ liệu |
+| `?allowDestructive=1` | Agent được thêm quyền xóa dữ liệu (bao hàm write) |
+| `?services=dataBoard,workflow` | Thu hẹp: chỉ các service này |
+| `?tags=boards,records` | Thu hẹp: chỉ các chủ đề này |
 
-Service: `dataBoard`, `channel`, `platform`, `marketplace`, `workflow`. Ví dụ:
+Ví dụ — chỉ data board, có quyền ghi:
 
 ```
 https://app-gateway.sandbox.imbrace.co/mcp?services=dataBoard&allowWrite=1
 ```
 
-Gọi tool write/destructive khi chưa bật flag tương ứng sẽ trả về lỗi tool rõ ràng, không thất bại âm thầm.
+Service: `dataBoard`, `channel`, `platform`, `marketplace`, `workflow`. Agent gọi tool chưa được bật sẽ nhận lỗi rõ ràng — không có gì thất bại âm thầm.
 
-### Đăng ký với Claude Code
+### Cách hoạt động
 
-```bash
-claude mcp add --transport http imbrace "https://app-gateway.sandbox.imbrace.co/mcp" \
-  --header "Authorization: Bearer api_xxx..."
-```
+Mỗi lần gọi tool được phát lại qua chính các route API của gateway với token **của bạn**, nên phạm vi tổ chức, quyền hạn và kiểm tra license áp dụng đúng như khi bạn tự gọi API. Tool chính là bộ operation `agent-tools` được tuyển chọn, cùng nguồn với bề mặt [`client.api`](/vi/sdk/overview/) của SDK. Endpoint là JSON-RPC stateless qua HTTP `POST` — không phải quản lý session.
 
-### OpenAPI hợp nhất — `/agent-tools/openapi.json`
+### Không dùng MCP? OpenAPI hợp nhất
 
-Với các executor tool-server kiểu OpenAPI (ví dụ Open WebUI) thay vì MCP client, `GET /agent-tools/openapi.json` (cùng header `Authorization`) trả về agent-tools của tất cả service gộp thành **một** spec, với cùng bộ lọc `?services=` / `?tags=` — cấu hình một tool server thay vì năm. Executor "ngây thơ" tự ghép base URL với path của operation (request thành `/agent-tools/<op-path>`) cũng được chấp nhận: gateway bỏ prefix và phát lại request với thông tin xác thực của bạn.
+Nền tảng dùng spec OpenAPI thay vì MCP (ví dụ Open WebUI) có thể trỏ vào `GET /agent-tools/openapi.json` với cùng header `Authorization`: agent-tools của tất cả service gộp thành **một** spec, cùng bộ lọc `?services=` / `?tags=` — một tool server thay vì năm. Executor tự ghép base URL với path của operation (request thành `/agent-tools/<op-path>`) cũng được chấp nhận: gateway bỏ prefix và phát lại request với thông tin xác thực của bạn.
 
 ### Lựa chọn local — CLI
 
-Nếu bạn muốn một stdio server chạy local (credential lấy từ profile CLI, không mở endpoint mạng), CLI có sẵn cùng bộ registry tool này qua lệnh [`imbrace mcp`](/vi/cli/commands/#mcp-server).
+Muốn một stdio server chạy local (credential lấy từ profile CLI, không cấu hình URL)? CLI có sẵn cùng bộ registry tool: [`imbrace mcp`](/vi/cli/commands/#mcp-server).

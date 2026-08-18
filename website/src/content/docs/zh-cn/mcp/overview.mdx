@@ -1,9 +1,39 @@
 ---
 title: MCP Server
-description: 通过托管 MCP 服务器把 AI 代理接入 Imbrace API — 一个 URL，无需安装。
+description: 让 AI 代理访问 Imbrace API — 一个 URL、一个 API key，无需安装。
 ---
 
-Imbrace 网关在 `/mcp` 托管了一个 **[Model Context Protocol](https://modelcontextprotocol.io) 服务器**。把任意 MCP 客户端 — Claude Code、Claude Desktop、Cursor 等 — 指向该 URL 并附上你的 API key 即可，无需安装：
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+把你的 AI 工具 — Claude Code、Cursor、Codex、Claude Desktop 等 — 连接到 Imbrace，它就能直接操作你的 Imbrace 数据：列出 CRM 看板、读取会话、查看工作流运行等。
+
+你只需要两样东西：
+
+- **一个 URL** — Imbrace 网关在 `/mcp` 托管了一个 [Model Context Protocol](https://modelcontextprotocol.io) 服务器，无需安装或自行运行任何东西。
+- **一个 API key** — 作为 Bearer token 发送。代理只能看到你的组织和角色允许的内容，不会更多。
+
+### 第 1 步 — 获取 API key
+
+在 Imbrace Dashboard 生成外部 token（参见[获取 API Key](/zh-cn/guides/api-key/)），形如 `api_...`。
+
+### 第 2 步 — 连接你的工具
+
+在下方选择你的工具并粘贴配置。示例使用 **sandbox** 网关 — 请替换为你所在环境的网关主机名。
+
+<Tabs>
+<TabItem label="Claude Code">
+
+一条命令：
+
+```bash
+claude mcp add --transport http imbrace "https://app-gateway.sandbox.imbrace.co/mcp" \
+  --header "Authorization: Bearer api_xxx..."
+```
+
+</TabItem>
+<TabItem label="Cursor">
+
+添加到项目中的 `.cursor/mcp.json` — 或 `~/.cursor/mcp.json` 以全局启用：
 
 ```json
 {
@@ -16,45 +46,102 @@ Imbrace 网关在 `/mcp` 托管了一个 **[Model Context Protocol](https://mode
 }
 ```
 
-请使用你所在环境的网关主机名（上例为 sandbox 环境）。API key 可在 Imbrace Dashboard 获取 — 参见[获取 API Key](/zh-cn/guides/api-key/)。
+</TabItem>
+<TabItem label="Codex CLI">
 
-### 工作原理
+添加到 `~/.codex/config.toml`（支持 HTTP MCP 的新版 Codex）：
 
-- 基于 HTTP `POST` 的无状态 JSON-RPC — 无需管理会话；支持批量请求。
-- 每次工具调用都会带着**你的** token 经网关自身路由重放，因此组织范围、权限与 license 检查与直接调用 API 完全一致。
-- 工具即精选的 `agent-tools` 操作集，与 SDK 的 [`client.api`](/zh-cn/sdk/overview/) 表面同源，按 `operationId` 命名 — `listBoards`、`listFlows`、`getMyAccount` 等。
+```toml
+[mcp_servers.imbrace]
+url = "https://app-gateway.sandbox.imbrace.co/mcp"
+bearer_token = "api_xxx..."
+```
 
-### 选项
+旧版 Codex 不支持 HTTP 时，通过 `mcp-remote` 桥接：
 
-作用范围与权限通过所配置 URL 上的查询参数设定：
+```toml
+[mcp_servers.imbrace]
+command = "npx"
+args = ["-y", "mcp-remote", "https://app-gateway.sandbox.imbrace.co/mcp", "--header", "Authorization: Bearer api_xxx..."]
+```
 
-| 查询参数 | 效果 |
+</TabItem>
+<TabItem label="Claude Desktop">
+
+Claude Desktop 只启动本地服务器，因此用 `mcp-remote` 桥接 URL。在 **Settings → Developer → Edit Config** 中，添加到 `claude_desktop_config.json`：
+
+```json
+{
+  "mcpServers": {
+    "imbrace": {
+      "command": "npx",
+      "args": [
+        "-y", "mcp-remote",
+        "https://app-gateway.sandbox.imbrace.co/mcp",
+        "--header", "Authorization: Bearer api_xxx..."
+      ]
+    }
+  }
+}
+```
+
+</TabItem>
+<TabItem label="其他客户端">
+
+任何接受 URL 加请求头的 MCP 客户端都使用标准形式：
+
+```json
+{
+  "mcpServers": {
+    "imbrace": {
+      "url": "https://app-gateway.sandbox.imbrace.co/mcp",
+      "headers": { "Authorization": "Bearer api_xxx..." }
+    }
+  }
+}
+```
+
+如果客户端只支持本地（stdio）服务器，用以下方式桥接：
+
+```bash
+npx -y mcp-remote "https://app-gateway.sandbox.imbrace.co/mcp" \
+  --header "Authorization: Bearer api_xxx..."
+```
+
+</TabItem>
+</Tabs>
+
+### 第 3 步 — 试一试
+
+问你的代理，例如*"列出我的 Imbrace 看板"*或*"看看最新的会话"*。它会自动选用 `listBoards`、`listConversations`、`listFlows` 等工具。
+
+### 默认只读
+
+默认情况下代理**只能看、不能改** — 只暴露读取工具。要开放更多权限，在所配置的 URL 上添加查询参数：
+
+| 添加到 URL | 效果 |
 |---|---|
-| _（无）_ | 只读工具（默认） |
-| `?allowWrite=1` | 额外暴露创建/修改数据的操作 |
-| `?allowDestructive=1` | 额外暴露删除数据的操作（隐含 write） |
-| `?services=dataBoard,workflow` | 限定服务 |
-| `?tags=boards,records` | 按 OpenAPI 标签限定 |
+| `?allowWrite=1` | 代理还可以创建和修改数据 |
+| `?allowDestructive=1` | 代理还可以删除数据（包含 write） |
+| `?services=dataBoard,workflow` | 收窄：仅这些服务 |
+| `?tags=boards,records` | 收窄：仅这些主题 |
 
-服务：`dataBoard`、`channel`、`platform`、`marketplace`、`workflow`。示例：
+示例 — 仅数据看板，带写入权限：
 
 ```
 https://app-gateway.sandbox.imbrace.co/mcp?services=dataBoard&allowWrite=1
 ```
 
-未开启对应开关就调用 write/destructive 工具会返回明确的工具错误，而不是静默失败。
+服务：`dataBoard`、`channel`、`platform`、`marketplace`、`workflow`。代理调用未启用的工具会收到明确错误 — 不会静默失败。
 
-### 注册到 Claude Code
+### 工作原理
 
-```bash
-claude mcp add --transport http imbrace "https://app-gateway.sandbox.imbrace.co/mcp" \
-  --header "Authorization: Bearer api_xxx..."
-```
+每次工具调用都会带着**你的** token 经网关的正常 API 路由重放，因此组织范围、权限与 license 检查与你亲自调用 API 完全一致。工具即精选的 `agent-tools` 操作集，与 SDK 的 [`client.api`](/zh-cn/sdk/overview/) 表面同源。端点是基于 HTTP `POST` 的无状态 JSON-RPC — 无需管理会话。
 
-### 统一 OpenAPI — `/agent-tools/openapi.json`
+### 不用 MCP？统一 OpenAPI
 
-若使用 OpenAPI 工具服务器执行器（如 Open WebUI）而非 MCP 客户端，`GET /agent-tools/openapi.json`（同样的 `Authorization` 头）会把所有服务的 agent-tools 合并为**一份** spec 返回，支持同样的 `?services=` / `?tags=` 过滤 — 只需配置一个工具服务器而不是五个。对于把基础 URL 与操作路径简单拼接的执行器（请求成 `/agent-tools/<op-path>`）也能兼容：网关会去掉前缀并带你的凭证重放请求。
+使用 OpenAPI 工具规范而非 MCP 的平台（如 Open WebUI）可以指向 `GET /agent-tools/openapi.json`（同样的 `Authorization` 头）：所有服务的 agent-tools 合并为**一份** spec，支持同样的 `?services=` / `?tags=` 过滤 — 一个工具服务器而不是五个。把基础 URL 与操作路径简单拼接的执行器（请求成 `/agent-tools/<op-path>`）也能兼容：网关会去掉前缀并带你的凭证重放请求。
 
 ### 本地替代方案 — CLI
 
-如果你更想要本地 stdio 服务器（凭证来自 CLI profile，不监听网络端口），CLI 内置了同一套工具注册表：[`imbrace mcp`](/zh-cn/cli/commands/#mcp-server)。
+想要本地 stdio 服务器（凭证来自 CLI profile，无需配置 URL）？CLI 内置同一套工具注册表：[`imbrace mcp`](/zh-cn/cli/commands/#mcp-server)。
