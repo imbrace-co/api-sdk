@@ -1,0 +1,60 @@
+---
+title: MCP Server
+description: Connect AI agents to the Imbrace API through the hosted MCP server — one URL, no install.
+---
+
+The Imbrace gateway hosts a **[Model Context Protocol](https://modelcontextprotocol.io) server** at `/mcp`. Point any MCP client — Claude Code, Claude Desktop, Cursor, … — at the URL with your API key. Nothing to install:
+
+```json
+{
+  "mcpServers": {
+    "imbrace": {
+      "url": "https://app-gateway.sandbox.imbrace.co/mcp",
+      "headers": { "Authorization": "Bearer api_xxx..." }
+    }
+  }
+}
+```
+
+Use your environment's gateway host (the example above is the sandbox environment). Get a key from the Imbrace Dashboard — see [Getting an API Key](/guides/api-key/).
+
+### How it works
+
+- Stateless JSON-RPC over HTTP `POST` — no session to manage; batch requests are supported.
+- Every tool call is replayed through the gateway's own routes with **your** token, so org scoping, permissions, and license checks apply exactly as if you had called the API directly.
+- The tools are the same curated `agent-tools` operations that power the SDK's [`client.api`](/sdk/overview/#the-full-api-surface--clientapi-typescript) surface, named by `operationId` — `listBoards`, `listFlows`, `getMyAccount`, ….
+
+### Options
+
+Scope and permissions are set with query parameters on the URL you configure:
+
+| Query parameter | Effect |
+|---|---|
+| _(none)_ | Read-only tools (default) |
+| `?allowWrite=1` | Also expose operations that create or modify data |
+| `?allowDestructive=1` | Also expose operations that delete data (implies write) |
+| `?services=dataBoard,workflow` | Limit to specific services |
+| `?tags=boards,records` | Limit by OpenAPI tag |
+
+Services: `dataBoard`, `channel`, `platform`, `marketplace`, `workflow`. Example:
+
+```
+https://app-gateway.sandbox.imbrace.co/mcp?services=dataBoard&allowWrite=1
+```
+
+Calling a write or destructive tool without the matching flag returns a tool error, not silent failure.
+
+### Register with Claude Code
+
+```bash
+claude mcp add --transport http imbrace "https://app-gateway.sandbox.imbrace.co/mcp" \
+  --header "Authorization: Bearer api_xxx..."
+```
+
+### Unified OpenAPI — `/agent-tools/openapi.json`
+
+For OpenAPI tool-server executors (e.g. Open WebUI) rather than MCP clients, `GET /agent-tools/openapi.json` (same `Authorization` header) returns every service's agent-tools merged into **one** spec, with the same `?services=` / `?tags=` filters — configure one tool server instead of five. Executors that naively join their base URL with the op path (requesting `/agent-tools/<op-path>`) are accepted too: the gateway strips the prefix and replays the call with your credentials.
+
+### Local alternative — the CLI
+
+If you prefer a local stdio server (credentials from a CLI profile, nothing listening on the network), the CLI ships the same tool registry as [`imbrace mcp`](/cli/commands/#mcp-server).

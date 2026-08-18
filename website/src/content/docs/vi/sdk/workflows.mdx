@@ -65,6 +65,59 @@ client.workflows.delete_flow("flow_id")
 </TabItem>
 </Tabs>
 
+### Flow Builder — `buildFlow` / `addSteps`
+
+> TypeScript SDK `v1.4.0`+. Chưa có trong Python SDK — dùng `apply_flow_operation` (bên dưới).
+
+`buildFlow` tạo trọn một flow — trigger cùng các step (có thể lồng nhau) — trong **một lệnh gọi duy nhất**, từ một spec khai báo. Nó tự điền hai thứ mà flow-operation API gốc yêu cầu và rất dễ bỏ sót: một mục `propertySettings` cho mỗi input của piece, và `stepLocationRelativeToParent` cho action thêm sau một loop (thiếu nó, các step phía sau sẽ bị bỏ rơi một cách âm thầm). Tên step tự tăng (`step_1`, `step_2`, …) trừ khi step tự đặt `name`.
+
+```typescript
+const flow = await client.workflows.buildFlow({
+  displayName: "Qualify new leads",
+  trigger: {
+    kind: "piece",
+    pieceName: "@activepieces/piece-webhook",
+    pieceVersion: "0.1.24",
+    triggerName: "catch_webhook",
+    displayName: "Webhook",
+  },
+  steps: [
+    {
+      kind: "code",
+      displayName: "Score lead",
+      code: "export const code = async (inputs) => inputs;",
+    },
+    {
+      kind: "loop",
+      displayName: "For each lead",
+      items: "{{trigger.leads}}",
+      steps: [
+        {
+          kind: "piece",
+          displayName: "Notify sales",
+          pieceName: "@activepieces/piece-slack",
+          pieceVersion: "0.5.1",
+          actionName: "send_channel_message",
+          input: { channel: "#sales" },
+        },
+      ],
+    },
+  ],
+});
+```
+
+Các loại step: `code` (TypeScript inline), `piece` (một action của piece), và `loop` (lặp qua `items`, có thể lồng `steps`). Trigger là một `piece` trigger hoặc `{ kind: "empty" }`; bỏ qua để giữ trigger rỗng mặc định của flow.
+
+`addSteps` nối thêm step vào flow có sẵn với cùng cơ chế tự điền. Mặc định step gắn sau trigger; truyền `parentStep` / `location` để gắn vào chỗ khác (ví dụ bên trong loop). `startIndex` tiếp tục bộ đếm tên step để tên không bị trùng:
+
+```typescript
+await client.workflows.addSteps(
+  flow.id,
+  [{ kind: "code", displayName: "Log result", code: "export const code = async () => 'done';" }],
+  { parentStep: "step_2", location: "INSIDE_LOOP", startIndex: 3 },
+);
+```
+
 ### Áp dụng thao tác
 
 <Tabs syncKey="lang">

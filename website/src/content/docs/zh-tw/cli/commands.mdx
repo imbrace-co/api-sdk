@@ -404,6 +404,53 @@ imbrace workflow run-detail <runId> [--json]
 
 ---
 
+## MCP Server
+
+> `@imbrace/cli` `v0.8.0`+。請勿與上文的 `imbrace workflow mcp ...` 混淆 — 那組指令管理的是工作流程引擎自身的 MCP-server 資源。想零安裝？閘道透過 HTTP 託管同一套工具 — 請參閱 [MCP Server](/zh-tw/mcp/overview/)。
+
+`imbrace mcp` 透過 **stdio** 執行一個 [Model Context Protocol](https://modelcontextprotocol.io) 伺服器，把 Imbrace API 作為工具提供給 AI agent（Claude Code、Claude Desktop、Cursor 等）。工具與 SDK 的 [`client.api`](/zh-tw/sdk/overview/) 介面出自同一套 `agent-tools` OpenAPI 規格 — 5 個服務共 272 個操作 — 命名格式為 `<service>_<operationId>`，例如 `dataBoard_listBoards`、`workflow_listFlows`。
+
+```bash
+imbrace mcp                                     # 唯讀工具（預設）
+imbrace mcp --allow-write                       # + 建立/修改資料的操作
+imbrace mcp --allow-write --allow-destructive   # + 刪除資料的操作
+imbrace mcp --services dataBoard,workflow       # 限定服務
+imbrace mcp --tags boards,records               # 依 OpenAPI 標籤限定
+imbrace mcp --profile dev                       # 以指定 profile 執行
+```
+
+| 模式 | 提供的工具數 |
+|---|---|
+| 預設（唯讀） | 140 |
+| `--allow-write` | 229 |
+| `--allow-destructive`（隱含 `--allow-write`） | 272 |
+
+服務：`dataBoard`、`channel`、`platform`、`marketplace`、`workflow`。
+
+**請先登入。** stdout 是 JSON-RPC 通道，因此指令會直接回報錯誤而不是互動式提示：
+
+```bash
+imbrace login --api-key api_xxx...
+```
+
+註冊到 Claude Code：
+
+```bash
+claude mcp add imbrace -- imbrace mcp --services dataBoard,workflow
+```
+
+或透過 JSON 設定任何 MCP 用戶端：
+
+```json
+{
+  "mcpServers": {
+    "imbrace": { "command": "imbrace", "args": ["mcp", "--allow-write"] }
+  }
+}
+```
+
+---
+
 ## 工具
 
 ### 列印 LLM 參考

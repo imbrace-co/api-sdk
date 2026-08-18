@@ -65,6 +65,59 @@ client.workflows.delete_flow("flow_id")
 </TabItem>
 </Tabs>
 
+### Flow Builder — `buildFlow` / `addSteps`
+
+> TypeScript SDK `v1.4.0`+。Python SDK 暂未提供 — 请使用 `apply_flow_operation`（见下文）。
+
+`buildFlow` 通过一份声明式 spec，**一次调用**即可创建完整流程 — 触发器加（可嵌套的）步骤。它会自动补全原始 flow-operation API 要求且容易遗漏的两件事：为每个 piece 输入补一条 `propertySettings`，以及为循环之后添加的 action 补 `stepLocationRelativeToParent`（缺少它，后续步骤会被静默孤立）。步骤名自动递增（`step_1`、`step_2`、…），除非步骤自行设置 `name`。
+
+```typescript
+const flow = await client.workflows.buildFlow({
+  displayName: "Qualify new leads",
+  trigger: {
+    kind: "piece",
+    pieceName: "@activepieces/piece-webhook",
+    pieceVersion: "0.1.24",
+    triggerName: "catch_webhook",
+    displayName: "Webhook",
+  },
+  steps: [
+    {
+      kind: "code",
+      displayName: "Score lead",
+      code: "export const code = async (inputs) => inputs;",
+    },
+    {
+      kind: "loop",
+      displayName: "For each lead",
+      items: "{{trigger.leads}}",
+      steps: [
+        {
+          kind: "piece",
+          displayName: "Notify sales",
+          pieceName: "@activepieces/piece-slack",
+          pieceVersion: "0.5.1",
+          actionName: "send_channel_message",
+          input: { channel: "#sales" },
+        },
+      ],
+    },
+  ],
+});
+```
+
+步骤类型：`code`（内联 TypeScript）、`piece`（piece 的 action）、`loop`（遍历 `items`，可嵌套 `steps`）。触发器可以是 `piece` 触发器或 `{ kind: "empty" }`；省略则保留流程默认的空触发器。
+
+`addSteps` 以同样的自动补全把步骤追加到现有流程。默认接在触发器之后；传 `parentStep` / `location` 可接到其他位置（如循环内部）。`startIndex` 延续步骤名计数器，保证名称唯一：
+
+```typescript
+await client.workflows.addSteps(
+  flow.id,
+  [{ kind: "code", displayName: "Log result", code: "export const code = async () => 'done';" }],
+  { parentStep: "step_2", location: "INSIDE_LOOP", startIndex: 3 },
+);
+```
+
 ### 应用操作
 
 <Tabs syncKey="lang">

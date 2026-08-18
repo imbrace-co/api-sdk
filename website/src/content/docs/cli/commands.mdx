@@ -403,6 +403,53 @@ imbrace workflow run-detail <runId> [--json]
 
 ---
 
+## MCP Server
+
+> `@imbrace/cli` `v0.8.0`+. Not to be confused with `imbrace workflow mcp ...` above, which manages the workflow engine's own MCP-server resources. Prefer zero install? The gateway hosts the same tools over HTTP — see [MCP Server](/mcp/overview/).
+
+`imbrace mcp` runs a [Model Context Protocol](https://modelcontextprotocol.io) server over **stdio**, exposing the Imbrace API as tools for AI agents (Claude Code, Claude Desktop, Cursor, …). Tools are generated from the same `agent-tools` OpenAPI specs as the SDK's [`client.api`](/sdk/overview/#the-full-api-surface--clientapi-typescript) surface — 272 operations across 5 services — and named `<service>_<operationId>`, e.g. `dataBoard_listBoards`, `workflow_listFlows`.
+
+```bash
+imbrace mcp                                     # read-only tools (default)
+imbrace mcp --allow-write                       # + operations that create or modify data
+imbrace mcp --allow-write --allow-destructive   # + operations that delete data
+imbrace mcp --services dataBoard,workflow       # limit to specific services
+imbrace mcp --tags boards,records               # limit by OpenAPI tag
+imbrace mcp --profile dev                       # run against a specific profile
+```
+
+| Mode | Tools exposed |
+|---|---|
+| default (read-only) | 140 |
+| `--allow-write` | 229 |
+| `--allow-destructive` (implies `--allow-write`) | 272 |
+
+Services: `dataBoard`, `channel`, `platform`, `marketplace`, `workflow`.
+
+**Log in first.** stdout is the JSON-RPC channel, so the command fails loudly instead of prompting interactively:
+
+```bash
+imbrace login --api-key api_xxx...
+```
+
+Register with Claude Code:
+
+```bash
+claude mcp add imbrace -- imbrace mcp --services dataBoard,workflow
+```
+
+Or configure any MCP client via JSON:
+
+```json
+{
+  "mcpServers": {
+    "imbrace": { "command": "imbrace", "args": ["mcp", "--allow-write"] }
+  }
+}
+```
+
+---
+
 ## Profile
 
 Manage multiple credential profiles (AWS-style). Each profile stores credentials, environment preset, organization ID, and other SDK settings. Resolution order: `--profile` flag > `IMBRACE_PROFILE` env var > `active_profile` config > `"default"`.

@@ -404,6 +404,53 @@ imbrace workflow run-detail <runId> [--json]
 
 ---
 
+## MCP Server
+
+> `@imbrace/cli` `v0.8.0`+. Đừng nhầm với `imbrace workflow mcp ...` ở trên — nhóm lệnh đó quản lý tài nguyên MCP-server của chính workflow engine. Muốn không phải cài gì? Gateway host sẵn cùng bộ tool này qua HTTP — xem [MCP Server](/vi/mcp/overview/).
+
+`imbrace mcp` chạy một server [Model Context Protocol](https://modelcontextprotocol.io) qua **stdio**, mở API Imbrace thành tool cho AI agent (Claude Code, Claude Desktop, Cursor, …). Tool được sinh từ cùng bộ spec OpenAPI `agent-tools` với bề mặt [`client.api`](/vi/sdk/overview/) của SDK — 272 operation trên 5 service — và đặt tên dạng `<service>_<operationId>`, ví dụ `dataBoard_listBoards`, `workflow_listFlows`.
+
+```bash
+imbrace mcp                                     # tool chỉ đọc (mặc định)
+imbrace mcp --allow-write                       # + operation tạo/sửa dữ liệu
+imbrace mcp --allow-write --allow-destructive   # + operation xóa dữ liệu
+imbrace mcp --services dataBoard,workflow       # giới hạn theo service
+imbrace mcp --tags boards,records               # giới hạn theo tag OpenAPI
+imbrace mcp --profile dev                       # chạy với một profile cụ thể
+```
+
+| Chế độ | Số tool |
+|---|---|
+| mặc định (chỉ đọc) | 140 |
+| `--allow-write` | 229 |
+| `--allow-destructive` (bao hàm `--allow-write`) | 272 |
+
+Service: `dataBoard`, `channel`, `platform`, `marketplace`, `workflow`.
+
+**Đăng nhập trước.** stdout là kênh JSON-RPC nên lệnh sẽ báo lỗi ngay thay vì hỏi tương tác:
+
+```bash
+imbrace login --api-key api_xxx...
+```
+
+Đăng ký với Claude Code:
+
+```bash
+claude mcp add imbrace -- imbrace mcp --services dataBoard,workflow
+```
+
+Hoặc cấu hình cho bất kỳ MCP client nào qua JSON:
+
+```json
+{
+  "mcpServers": {
+    "imbrace": { "command": "imbrace", "args": ["mcp", "--allow-write"] }
+  }
+}
+```
+
+---
+
 ## Tiện ích
 
 ### In Tài liệu Tham khảo LLM

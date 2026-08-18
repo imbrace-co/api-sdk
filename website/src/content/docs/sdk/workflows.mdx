@@ -65,6 +65,59 @@ client.workflows.delete_flow("flow_id")
 </TabItem>
 </Tabs>
 
+### Flow Builder — `buildFlow` / `addSteps`
+
+> TypeScript SDK `v1.4.0`+. Not yet in the Python SDK — use `apply_flow_operation` (below).
+
+`buildFlow` creates a whole flow — trigger plus (optionally nested) steps — in **one call**, from a declarative spec. It auto-fills the two things the raw flow-operation API requires and that are easy to miss: a `propertySettings` entry for every piece input, and `stepLocationRelativeToParent` on actions added after a loop (without it, later steps are silently orphaned). Step names auto-increment (`step_1`, `step_2`, …) unless a step sets `name`.
+
+```typescript
+const flow = await client.workflows.buildFlow({
+  displayName: "Qualify new leads",
+  trigger: {
+    kind: "piece",
+    pieceName: "@activepieces/piece-webhook",
+    pieceVersion: "0.1.24",
+    triggerName: "catch_webhook",
+    displayName: "Webhook",
+  },
+  steps: [
+    {
+      kind: "code",
+      displayName: "Score lead",
+      code: "export const code = async (inputs) => inputs;",
+    },
+    {
+      kind: "loop",
+      displayName: "For each lead",
+      items: "{{trigger.leads}}",
+      steps: [
+        {
+          kind: "piece",
+          displayName: "Notify sales",
+          pieceName: "@activepieces/piece-slack",
+          pieceVersion: "0.5.1",
+          actionName: "send_channel_message",
+          input: { channel: "#sales" },
+        },
+      ],
+    },
+  ],
+});
+```
+
+Step kinds: `code` (inline TypeScript), `piece` (a piece action), and `loop` (iterates `items`, may nest `steps`). The trigger is either a `piece` trigger or `{ kind: "empty" }`; omit it to keep the flow's default empty trigger.
+
+`addSteps` appends steps to an existing flow with the same auto-fill. By default steps attach after the trigger; pass `parentStep` / `location` to attach elsewhere (e.g. inside a loop). `startIndex` continues the auto step-name counter so names stay unique:
+
+```typescript
+await client.workflows.addSteps(
+  flow.id,
+  [{ kind: "code", displayName: "Log result", code: "export const code = async () => 'done';" }],
+  { parentStep: "step_2", location: "INSIDE_LOOP", startIndex: 3 },
+);
+```
+
 ### Apply operation
 
 <Tabs syncKey="lang">

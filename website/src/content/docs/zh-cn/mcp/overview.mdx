@@ -1,0 +1,60 @@
+---
+title: MCP Server
+description: 通过托管 MCP 服务器把 AI 代理接入 Imbrace API — 一个 URL，无需安装。
+---
+
+Imbrace 网关在 `/mcp` 托管了一个 **[Model Context Protocol](https://modelcontextprotocol.io) 服务器**。把任意 MCP 客户端 — Claude Code、Claude Desktop、Cursor 等 — 指向该 URL 并附上你的 API key 即可，无需安装：
+
+```json
+{
+  "mcpServers": {
+    "imbrace": {
+      "url": "https://app-gateway.sandbox.imbrace.co/mcp",
+      "headers": { "Authorization": "Bearer api_xxx..." }
+    }
+  }
+}
+```
+
+请使用你所在环境的网关主机名（上例为 sandbox 环境）。API key 可在 Imbrace Dashboard 获取 — 参见[获取 API Key](/zh-cn/guides/api-key/)。
+
+### 工作原理
+
+- 基于 HTTP `POST` 的无状态 JSON-RPC — 无需管理会话；支持批量请求。
+- 每次工具调用都会带着**你的** token 经网关自身路由重放，因此组织范围、权限与 license 检查与直接调用 API 完全一致。
+- 工具即精选的 `agent-tools` 操作集，与 SDK 的 [`client.api`](/zh-cn/sdk/overview/) 表面同源，按 `operationId` 命名 — `listBoards`、`listFlows`、`getMyAccount` 等。
+
+### 选项
+
+作用范围与权限通过所配置 URL 上的查询参数设定：
+
+| 查询参数 | 效果 |
+|---|---|
+| _（无）_ | 只读工具（默认） |
+| `?allowWrite=1` | 额外暴露创建/修改数据的操作 |
+| `?allowDestructive=1` | 额外暴露删除数据的操作（隐含 write） |
+| `?services=dataBoard,workflow` | 限定服务 |
+| `?tags=boards,records` | 按 OpenAPI 标签限定 |
+
+服务：`dataBoard`、`channel`、`platform`、`marketplace`、`workflow`。示例：
+
+```
+https://app-gateway.sandbox.imbrace.co/mcp?services=dataBoard&allowWrite=1
+```
+
+未开启对应开关就调用 write/destructive 工具会返回明确的工具错误，而不是静默失败。
+
+### 注册到 Claude Code
+
+```bash
+claude mcp add --transport http imbrace "https://app-gateway.sandbox.imbrace.co/mcp" \
+  --header "Authorization: Bearer api_xxx..."
+```
+
+### 统一 OpenAPI — `/agent-tools/openapi.json`
+
+若使用 OpenAPI 工具服务器执行器（如 Open WebUI）而非 MCP 客户端，`GET /agent-tools/openapi.json`（同样的 `Authorization` 头）会把所有服务的 agent-tools 合并为**一份** spec 返回，支持同样的 `?services=` / `?tags=` 过滤 — 只需配置一个工具服务器而不是五个。对于把基础 URL 与操作路径简单拼接的执行器（请求成 `/agent-tools/<op-path>`）也能兼容：网关会去掉前缀并带你的凭证重放请求。
+
+### 本地替代方案 — CLI
+
+如果你更想要本地 stdio 服务器（凭证来自 CLI profile，不监听网络端口），CLI 内置了同一套工具注册表：[`imbrace mcp`](/zh-cn/cli/commands/#mcp-server)。

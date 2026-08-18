@@ -1,0 +1,60 @@
+---
+title: MCP Server
+description: Kết nối AI agent với API Imbrace qua MCP server host sẵn — một URL, không cần cài đặt.
+---
+
+Gateway Imbrace host sẵn một **[Model Context Protocol](https://modelcontextprotocol.io) server** tại `/mcp`. Trỏ bất kỳ MCP client nào — Claude Code, Claude Desktop, Cursor, … — vào URL này kèm API key của bạn. Không cần cài đặt gì:
+
+```json
+{
+  "mcpServers": {
+    "imbrace": {
+      "url": "https://app-gateway.sandbox.imbrace.co/mcp",
+      "headers": { "Authorization": "Bearer api_xxx..." }
+    }
+  }
+}
+```
+
+Dùng host gateway của môi trường bạn (ví dụ trên là môi trường sandbox). Lấy key từ Imbrace Dashboard — xem [Lấy API Key](/vi/guides/api-key/).
+
+### Cách hoạt động
+
+- JSON-RPC stateless qua HTTP `POST` — không phải quản lý session; hỗ trợ batch request.
+- Mỗi lần gọi tool được phát lại qua chính các route của gateway với token **của bạn**, nên phạm vi tổ chức, quyền hạn và kiểm tra license áp dụng đúng như khi bạn gọi API trực tiếp.
+- Tool chính là bộ operation `agent-tools` được tuyển chọn, cùng nguồn với bề mặt [`client.api`](/vi/sdk/overview/) của SDK, đặt tên theo `operationId` — `listBoards`, `listFlows`, `getMyAccount`, ….
+
+### Tùy chọn
+
+Phạm vi và quyền được đặt bằng query parameter trên URL bạn cấu hình:
+
+| Query parameter | Tác dụng |
+|---|---|
+| _(không có)_ | Tool chỉ đọc (mặc định) |
+| `?allowWrite=1` | Mở thêm operation tạo/sửa dữ liệu |
+| `?allowDestructive=1` | Mở thêm operation xóa dữ liệu (bao hàm write) |
+| `?services=dataBoard,workflow` | Giới hạn theo service |
+| `?tags=boards,records` | Giới hạn theo tag OpenAPI |
+
+Service: `dataBoard`, `channel`, `platform`, `marketplace`, `workflow`. Ví dụ:
+
+```
+https://app-gateway.sandbox.imbrace.co/mcp?services=dataBoard&allowWrite=1
+```
+
+Gọi tool write/destructive khi chưa bật flag tương ứng sẽ trả về lỗi tool rõ ràng, không thất bại âm thầm.
+
+### Đăng ký với Claude Code
+
+```bash
+claude mcp add --transport http imbrace "https://app-gateway.sandbox.imbrace.co/mcp" \
+  --header "Authorization: Bearer api_xxx..."
+```
+
+### OpenAPI hợp nhất — `/agent-tools/openapi.json`
+
+Với các executor tool-server kiểu OpenAPI (ví dụ Open WebUI) thay vì MCP client, `GET /agent-tools/openapi.json` (cùng header `Authorization`) trả về agent-tools của tất cả service gộp thành **một** spec, với cùng bộ lọc `?services=` / `?tags=` — cấu hình một tool server thay vì năm. Executor "ngây thơ" tự ghép base URL với path của operation (request thành `/agent-tools/<op-path>`) cũng được chấp nhận: gateway bỏ prefix và phát lại request với thông tin xác thực của bạn.
+
+### Lựa chọn local — CLI
+
+Nếu bạn muốn một stdio server chạy local (credential lấy từ profile CLI, không mở endpoint mạng), CLI có sẵn cùng bộ registry tool này qua lệnh [`imbrace mcp`](/vi/cli/commands/#mcp-server).

@@ -20,7 +20,7 @@ The Imbrace SDK is the official client for the Imbrace Gateway, available in **T
 
 ### Install
 
-> **Current version:** `v1.0.4` (`@imbrace/sdk` · `imbrace`)
+> **Current version:** `@imbrace/sdk` `v1.4.0` (npm) · `imbrace` `v1.2.1` (PyPI)
 
 <Tabs syncKey="lang">
   <TabItem label="TypeScript">
@@ -77,6 +77,21 @@ Every namespace is on both SDKs. Methods follow the language conventions — `cl
 | `client.auth` | platform / legacy backend | Sign-in (OTP, password, SSO), token exchange |
 
 For the complete list and method reference, see [Resources](/sdk/resources/).
+
+### The full API surface — `client.api` (TypeScript)
+
+Since `v1.3.0` the TypeScript SDK also ships a **generated** surface covering every operation the Imbrace services expose to AI agents — 272 operations across 5 services, generated from their `agent-tools` OpenAPI specs:
+
+```typescript
+const boards = await client.api.dataBoard.listBoards<{ data: Board[] }>();
+const flows  = await client.api.workflow.listFlows();
+```
+
+Namespaces: `client.api.dataBoard`, `.channel`, `.platform`, `.marketplace`, `.workflow`.
+
+It is complete and always in sync with the deployed services, but most operations return `unknown` (their specs declare no response schema) — pass a type argument when you know the shape. Prefer the hand-written resources above when they cover your call; reach for `client.api` for anything they don't, instead of hand-rolling a `fetch`.
+
+The same operation registry powers the gateway's [hosted MCP server](/mcp/overview/) and the CLI's [`imbrace mcp`](/cli/commands/#mcp-server) command, both of which expose these operations as MCP tools for AI agents.
 
 ### When to pick which credential
 
