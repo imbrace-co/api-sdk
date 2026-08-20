@@ -1,0 +1,259 @@
+---
+title: Contact
+description: Tham chiếu schema và method cho client.contacts — CRUD, search, conversations, comments, files, activities, và notifications.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+`client.contacts` quản lý contacts — khách hàng tiềm năng, khách hàng, hoặc người dùng giao tiếp qua các kênh của bạn. Mỗi contact có thể có các hội thoại, comments, files, và lịch sử hoạt động liên kết.
+
+---
+
+## Schema
+
+### Contact
+
+| Field | Type | Mô tả |
+|-------|------|-------|
+| `object_name` | string? | Định danh loại đối tượng |
+| `id` | string | ID duy nhất của contact |
+| `organization_id` | string | Tổ chức sở hữu contact này |
+| `display_name` | string? | Tên hiển thị của contact |
+| `email` | string? | Địa chỉ email |
+| `phone_number` | string? | Số điện thoại |
+| `avatar_url` | string? | URL ảnh đại diện |
+| `created_at` | string | ISO 8601 thời gian tạo |
+| `updated_at` | string | ISO 8601 thời gian cập nhật |
+
+### UpdateContactInput
+
+| Field | Type | Required | Mô tả |
+|-------|------|----------|-------|
+| `name` | string | | Cập nhật tên hiển thị |
+| `email` | string | | Cập nhật địa chỉ email |
+| `phone` | string | | Cập nhật số điện thoại |
+
+### ContactComment
+
+| Field | Type | Mô tả |
+|-------|------|-------|
+| `_id` | string | ID duy nhất của comment |
+| `text` | string? | Nội dung comment |
+| `created_at` | string? | ISO 8601 thời gian tạo |
+
+### ContactFile
+
+| Field | Type | Mô tả |
+|-------|------|-------|
+| `_id` | string | ID duy nhất của file |
+| `name` | string? | Tên file |
+| `url` | string? | URL tải xuống |
+| `size` | number? | Kích thước file (bytes) |
+
+---
+
+## Methods
+
+| Method | TypeScript | Python | Mô tả |
+|--------|-----------|--------|-------|
+| List | `list` | `list` | Danh sách contacts có phân trang |
+| Get | `get` | `get` | Lấy contact theo ID |
+| Update | `update` | `update` | Cập nhật trường contact |
+| Search | `search` | `search` | Tìm kiếm toàn văn contacts |
+| Export CSV | `exportCsv` | `export_csv` | Tải xuống tất cả contacts dưới dạng CSV |
+| Get conversations | `getConversations` | `get_conversations` | Danh sách hội thoại của contact |
+| Get comments | `getComments` | `get_comments` | Danh sách comments nội bộ trên contact |
+| Get files | `getFiles` | `get_files` | Danh sách files đính kèm với contact |
+| Get activities | `getActivities` | `get_activities` | Nhật ký hoạt động hội thoại |
+| Upload avatar | `uploadAvatar` | `upload_contacts` | Tải lên file cho contacts (avatar / import file) |
+| List notifications | `listNotifications` | `list_notifications` | Danh sách thông báo cho người dùng hiện tại |
+| Mark notifications read | `markNotificationsRead` | `mark_notifications_read` | Đánh dấu thông báo đã đọc |
+| Dismiss notification | `dismissNotification` | `dismiss_notification` | Bỏ qua một thông báo |
+| Dismiss all notifications | `dismissAllNotifications` | `dismiss_all_notifications` | Xóa tất cả thông báo |
+
+---
+
+## list / list
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const page = await client.contacts.list({ limit: 50, skip: 0 });
+for (const contact of page.data) {
+  console.log(contact.id, contact.display_name, contact.email);
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+page = client.contacts.list(limit=50, skip=0)
+for contact in page.get("data", []):
+    print(contact["id"], contact.get("display_name"), contact.get("email"))
+```
+</TabItem>
+</Tabs>
+
+---
+
+## search / search
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const results = await client.contacts.search({
+  q: "alice@example.com",
+  limit: 10,
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+results = client.contacts.search("alice@example.com")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## update / update
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const contact = await client.contacts.update("contact_id", {
+  name: "Alice Smith",
+  email: "alice@example.com",
+  phone: "+84912345678",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+contact = client.contacts.update("contact_id", {
+    "name": "Alice Smith",
+    "email": "alice@example.com",
+    "phone": "+84912345678",
+})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## getConversations / get_conversations
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const conversations = await client.contacts.getConversations("contact_id", {
+  channelTypes: "whatsapp,web",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+conversations = client.contacts.get_conversations(
+    "contact_id",
+    channel_types="whatsapp,web",
+)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## getComments / get_comments
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const comments = await client.contacts.getComments("contact_id", {
+  limit: 20,
+  skip: 0,
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+comments = client.contacts.get_comments("contact_id", limit=20, skip=0)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## getActivities / get_activities
+
+Trả về nhật ký hoạt động cho một hội thoại liên kết với contact này.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const activities = await client.contacts.getActivities("conversation_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+activities = client.contacts.get_activities("conversation_id")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## listNotifications / list_notifications
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const page = await client.contacts.listNotifications({ limit: 20, skip: 0 });
+for (const n of page.data) {
+  console.log(n);
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+page = client.contacts.list_notifications(limit=20, skip=0)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## markNotificationsRead / mark_notifications_read
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+await client.contacts.markNotificationsRead(["notif_id_1", "notif_id_2"]);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+client.contacts.mark_notifications_read()
+```
+</TabItem>
+</Tabs>
+
+---
+
+## uploadAvatar / upload_contacts
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const formData = new FormData();
+formData.append("file", avatarBlob, "avatar.png");
+const result = await client.contacts.uploadAvatar(formData);
+console.log(result.url);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+with open("avatar.png", "rb") as f:
+    result = client.contacts.upload_contacts(files={"file": f})
+print(result)
+```
+</TabItem>
+</Tabs>

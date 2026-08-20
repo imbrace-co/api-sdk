@@ -1,0 +1,98 @@
+---
+title: 安装
+description: 安装并认证 Imbrace CLI。
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+## 安装 CLI
+
+### 公共 npm 包
+
+```bash
+npm install -g @imbrace/cli
+```
+
+### 从源码安装
+
+克隆仓库并运行安装脚本：
+
+```bash
+git clone https://github.com/imbraceltd/imbrace-cli.git
+cd imbrace-cli
+./install.sh
+```
+
+`install.sh` 依次运行 `npm install`、`npm run build`、`npm link`，然后将 `imbrace` 符号链接到 `/opt/homebrew/bin`（Apple Silicon）或 `/usr/local/bin`（Intel）。
+
+### 手动构建
+
+```bash
+cd cli
+npm install
+npm run build
+npm link
+```
+
+## 认证
+
+所有命令（`login` 除外）在未认证时会自动提示登录。
+
+### 使用 API Key 登录
+
+推荐用于 CI/CD 和编码代理：
+
+```bash
+imbrace login --api-key api_xxx...
+```
+
+### 使用邮箱 + 密码登录
+
+```bash
+imbrace login --email user@example.com --password mypass
+imbrace login --email user@example.com --password mypass --org-id org_xxx
+```
+
+密码登录会在保存凭证前先确定组织：如果账户只属于**一个**组织，则自动选择；如果属于
+**多个**组织，请传入 `--org-id <id>`（或在终端中交互式选择）。CLI 会保存绑定该组织的
+令牌，因此后续命令都在该组织下运行。
+
+### 查看当前登录状态
+
+```bash
+imbrace whoami [--json]
+```
+
+### 退出登录
+
+```bash
+imbrace logout
+```
+
+<Aside type="tip">
+  如果命令返回 401，请重新运行 `imbrace login --api-key api_xxx...`。
+</Aside>
+
+## 更新 CLI
+
+从 **v0.6.8** 起，CLI 内置自更新命令：
+
+```bash
+imbrace update              # 更新到最新版本
+imbrace update --check      # 检查更新但不安装
+imbrace update --version 0.6.7  # 安装指定版本
+```
+
+v0.6.8 之前的版本请手动更新：
+
+```bash
+npm install -g @imbrace/cli@latest
+```
+
+## 凭证存储
+
+| 操作系统 | 路径 |
+|---|---|
+| macOS | `~/Library/Preferences/imbrace-nodejs/config.json` |
+| Linux | `~/.config/imbrace-nodejs/config.json` |
+| Windows | `%APPDATA%\imbrace-nodejs\Config\config.json` |

@@ -1,0 +1,112 @@
+﻿---
+title: 快速入门
+description: 在一分钟内完成你的第一个 Imbrace API 调用。
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+import AuthOnly from "../../../../components/AuthOnly.astro";
+
+### 1. 初始化客户端
+
+<AuthOnly mode="access-token">
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    import { ImbraceClient } from "@imbrace/sdk"
+
+    const client = new ImbraceClient({
+      accessToken: process.env.IMBRACE_ACCESS_TOKEN,
+      env: "stable",
+    })
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    import os
+    from dotenv import load_dotenv
+    from imbrace import ImbraceClient
+
+    load_dotenv()
+
+    client = ImbraceClient(
+        access_token=os.environ["IMBRACE_ACCESS_TOKEN"],
+        env="stable",
+    )
+    ```
+  </TabItem>
+</Tabs>
+</AuthOnly>
+
+<AuthOnly mode="api-key">
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    import { ImbraceClient } from "@imbrace/sdk"
+
+    const client = new ImbraceClient({
+      apiKey:         process.env.IMBRACE_API_KEY,
+      organizationId: process.env.IMBRACE_ORGANIZATION_ID,
+      env:            "stable",
+    })
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    import os
+    from dotenv import load_dotenv
+    from imbrace import ImbraceClient
+
+    load_dotenv()
+
+    client = ImbraceClient(
+        api_key=os.environ["IMBRACE_API_KEY"],
+        organization_id=os.environ.get("IMBRACE_ORGANIZATION_ID"),
+        env="stable",
+    )
+    ```
+  </TabItem>
+</Tabs>
+</AuthOnly>
+
+> 切换页眉中的**认证**下拉菜单可在整个网站范围内切换 API Key 和 Access Token 示例。请参见[认证](/zh-cn/sdk/authentication/)了解如何选择。
+
+---
+
+### 2. 获取你的面板
+
+面板是 CRM 管道 — 线索、交易、任务或任何结构化数据。此调用只需要你的凭证。
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    const { data: boards } = await client.boards.list()
+
+    for (const board of boards) {
+      console.log(board.id, board.name)
+    }
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    boards = client.boards.list()
+
+    for board in boards.get("data", []):
+        print(board["id"], board.get("name"))
+    ```
+  </TabItem>
+</Tabs>
+
+如果你看到了面板列表，说明 SDK 已连接并认证通过。
+
+---
+
+### 3. 下一步
+
+[完整流程指南](/zh-cn/sdk/full-flow-guide/) 端到端地介绍了四大工作流。直接跳转到相关章节：
+
+- **AI 代理 + streamChat** → [完整流程指南 §1](/zh-cn/sdk/full-flow-guide/#1-create-an-ai-agent-and-start-chatting)
+- **工作流** → [完整流程指南 §2](/zh-cn/sdk/full-flow-guide/#2-create-a-workflow-and-bind-it-to-an-ai-agent)
+- **知识中心（文件夹、RAG）** → [完整流程指南 §3](/zh-cn/sdk/full-flow-guide/#3-manage-knowledge-hubs-and-attach-to-an-ai-agent)
+- **面板与条目（CRM）** → [完整流程指南 §4](/zh-cn/sdk/full-flow-guide/#4-manage-data-boards-and-items-crm-pipelines)
+
+按命名空间查看 API 参考，请参见[资源](/zh-cn/sdk/resources/)。

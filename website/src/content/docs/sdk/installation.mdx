@@ -1,0 +1,149 @@
+---
+title: Installation
+description: Install the Imbrace SDK for TypeScript or Python.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+import AuthOnly from "../../../components/AuthOnly.astro";
+import VersionOnly from "../../../components/VersionOnly.astro";
+
+### Install
+
+<VersionOnly version="1.4.0">
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```bash
+    npm install @imbrace/sdk
+    # or
+    yarn add @imbrace/sdk
+    # or
+    pnpm add @imbrace/sdk
+    ```
+
+    Requires Node.js 18+ (or any browser with native `fetch` and `ReadableStream`).
+  </TabItem>
+  <TabItem label="Python">
+    ```bash
+    pip install imbrace
+    # or
+    uv add imbrace
+    ```
+
+    Requires Python 3.9+.
+  </TabItem>
+</Tabs>
+</VersionOnly>
+
+### Initialize the client
+
+<AuthOnly mode="access-token">
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    import { ImbraceClient } from "@imbrace/sdk"
+
+    // Build on Imbrace — Imbrace IS your backend, end-users log in via OTP
+    const client = new ImbraceClient({
+      accessToken: process.env.IMBRACE_ACCESS_TOKEN,
+      env: "stable",
+    })
+    ```
+
+    The client is stateful — create it once and reuse it across your app.
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    import os
+    from imbrace import ImbraceClient
+
+    # Build on Imbrace — Imbrace IS your backend, end-users log in via OTP
+    with ImbraceClient(
+        access_token=os.environ["IMBRACE_ACCESS_TOKEN"],
+        env="stable",
+    ) as client:
+        me = client.platform.get_me()
+    ```
+
+    Python also exports `AsyncImbraceClient` (`async with ...`) for async stacks like FastAPI.
+
+    The context manager closes the underlying HTTP connection pool automatically.
+  </TabItem>
+</Tabs>
+</AuthOnly>
+
+<AuthOnly mode="api-key">
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    import { ImbraceClient } from "@imbrace/sdk"
+
+    // Wrap Imbrace — Imbrace is a feature inside YOUR backend, your users
+    const client = new ImbraceClient({
+      apiKey:         process.env.IMBRACE_API_KEY,
+      organizationId: process.env.IMBRACE_ORGANIZATION_ID,
+      env:            "stable",
+    })
+    ```
+
+    The client is stateful — create it once and reuse it across your app.
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    import os
+    from imbrace import ImbraceClient
+
+    # Wrap Imbrace — Imbrace is a feature inside YOUR backend, your users
+    with ImbraceClient(
+        api_key=os.environ["IMBRACE_API_KEY"],
+        organization_id=os.environ.get("IMBRACE_ORGANIZATION_ID"),
+        env="stable",
+    ) as client:
+        me = client.platform.get_me()
+    ```
+
+    Python also exports `AsyncImbraceClient` (`async with ...`) for async stacks like FastAPI.
+
+    The context manager closes the underlying HTTP connection pool automatically.
+  </TabItem>
+</Tabs>
+</AuthOnly>
+
+For when to use each credential, see [Authentication](/sdk/authentication/). For step-by-step credential setup (env vars, dotenv, secrets), see [Setup Guide](/getting-started/setup/#configure-credentials).
+
+### Verify
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    import { ImbraceClient } from "@imbrace/sdk"
+    console.log("SDK loaded:", typeof ImbraceClient) // "function"
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    from imbrace import ImbraceClient
+    print("SDK ready:", ImbraceClient)
+    ```
+  </TabItem>
+</Tabs>
+
+### Environment variables
+
+The SDK does **not** auto-read environment variables. Pass credentials directly to the constructor and use a loader (`dotenv` / your framework's env handling) if you keep them in `.env`.
+
+| Variable | Purpose |
+|---|---|
+| `IMBRACE_API_KEY` | Your API key (org-level credential) |
+| `IMBRACE_ACCESS_TOKEN` | A user's access token (per-session credential) |
+| `IMBRACE_ORGANIZATION_ID` | Organization ID — passed as `x-organization-id` on every request |
+| `IMBRACE_GATEWAY_URL` | Override the gateway URL (default: `https://app-gatewayv2.imbrace.co`) |
+
+The org id is encoded inside both API keys and access tokens. You can optionally override it by passing `organizationId` (TypeScript) or `organization_id` (Python) to the constructor. See [Authentication](/sdk/authentication/) for details.
+
+---
+
+### Next steps
+
+- [Quick Start →](/sdk/quick-start/) — make your first API call in 60 seconds
+- [Authentication →](/sdk/authentication/) — credential types, OTP login flow, and when to use each
+- [Setup Guide →](/getting-started/setup/) — environments, env vars, and service URL overrides

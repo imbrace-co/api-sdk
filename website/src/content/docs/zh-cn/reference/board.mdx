@@ -1,0 +1,282 @@
+---
+title: Board
+description: client.boards 的 schema 和方法参考 — CRM 管道、字段、项目、分段、导入/导出和 Knowledge Hub。
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+`client.boards` 是 CRM 管道的核心数据存储 — 潜在客户、交易、任务或任何结构化数据。每个 board 都有自定义字段和项目。Board 也可以链接到 Knowledge Hub 以进行 AI 驱动的搜索。
+
+如需逐步指南，请参阅 [SDK 指南中的 DataBoards](/sdk/databoard/)。
+
+---
+
+## Schema
+
+### Board
+
+| Field | Type | 说明 |
+|-------|------|------|
+| `object_name` | string? | 对象类型标识符 |
+| `id` | string | 唯一 board ID |
+| `organization_id` | string | 所属组织 |
+| `name` | string | Board 显示名称 |
+| `description` | string? | 可选描述 |
+| `workflow_id` | string? | 链接的 workflow ID |
+| `hidden` | boolean? | Board 是否隐藏 |
+| `team_ids` | string[]? | 有访问权限的团队 |
+| `created_at` | string | ISO 8601 创建时间戳 |
+| `updated_at` | string | ISO 8601 更新时间戳 |
+
+### BoardField
+
+| Field | Type | 说明 |
+|-------|------|------|
+| `_id` | string | 唯一字段 ID |
+| `name` | string | 字段显示名称 |
+| `type` | string | 字段类型（text, number, date, select 等） |
+| `options` | object[]? | 类型特定配置 |
+| `required` | boolean? | 字段是否必填 |
+
+### CreateBoardInput
+
+| Field | Type | Required | 说明 |
+|-------|------|----------|------|
+| `name` | string | ✓ | Board 名称 |
+| `description` | string | | 可选描述 |
+| `type` | string | | Board 类型 |
+| `fields` | object[] | | 初始字段定义 |
+| `team_ids` | string[] | | 有访问权限的团队 ID |
+| `show_id` | boolean | | 显示 ID 列 |
+
+---
+
+## Methods
+
+### Board CRUD
+
+| Method | TypeScript | Python | 说明 |
+|--------|-----------|--------|------|
+| List boards | `list` | `list` | 列出所有 board |
+| Get board | `get` | `get` | 按 ID 获取 board |
+| Create board | `create` | `create` | 创建新 board |
+| Update board | `update` | `update` | 更新 board 名称/描述 |
+| Delete board | `delete` | `delete` | 删除 board |
+| Reorder boards | `reorder` | `reorder` | 更改显示顺序 |
+
+### Import / Export
+
+| Method | TypeScript | Python | 说明 |
+|--------|-----------|--------|------|
+| Export CSV | `exportCsv` | `export_csv` | 将所有项目导出为 CSV |
+| Import CSV | `importCsv` | `import_csv` | 从 CSV 文件导入项目 |
+| Import Excel | `importExcel` | `import_excel` | 从 Excel 文件导入项目 |
+| Get import progress | `getImportProgress` | `get_import_progress` | 轮询进行中导入的状态 |
+
+### Fields
+
+| Method | TypeScript | Python | 说明 |
+|--------|-----------|--------|------|
+| Create field | `createField` | `create_field` | 向 board 添加列 |
+| Update field | `updateField` | `update_field` | 修改字段配置 |
+| Delete field | `deleteField` | `delete_field` | 移除字段 |
+| Reorder fields | `reorderFields` | `reorder_fields` | 更改列顺序 |
+| Bulk update fields | `bulkUpdateFields` | `bulk_update_fields` | 同时更新多个字段 |
+
+### Items
+
+| Method | TypeScript | Python | 说明 |
+|--------|-----------|--------|------|
+| List items | `listItems` | `list_items` | 分页的 board 项目列表 |
+| Get item | `getItem` | `get_item` | 获取单个项目 |
+| Create item | `createItem` | `create_item` | 向 board 添加项目 |
+| Update item | `updateItem` | `update_item` | 更新项目字段值 |
+| Delete item | `deleteItem` | `delete_item` | 移除项目 |
+| Bulk delete | `bulkDeleteItems` | `bulk_delete_items` | 按 ID 删除多个项目 |
+| Search | `search` | `search` | 在 board 内进行全文搜索 |
+| Link items | `linkItems` | `link_items` | 将项目链接到相关 board 项目 |
+| Unlink items | `unlinkItems` | `unlink_items` | 移除项目间的链接 |
+
+### Segments
+
+| Method | TypeScript | Python | 说明 |
+|--------|-----------|--------|------|
+| List segments | `listSegments` | `list_segments` | 列出已保存的筛选视图 |
+| Create segment | `createSegment` | `create_segment` | 将筛选保存为分段 |
+| Update segment | `updateSegment` | `update_segment` | 更新分段的筛选条件 |
+| Delete segment | `deleteSegment` | `delete_segment` | 移除分段 |
+
+---
+
+## list / list
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { data: boards } = await client.boards.list({ limit: 20 });
+for (const board of boards) {
+  console.log(board.id, board.name);
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.boards.list(limit=20)
+for board in result.get("data", []):
+    print(board["id"], board["name"])
+```
+</TabItem>
+</Tabs>
+
+---
+
+## create / create
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const board = await client.boards.create({
+  name: "Enterprise Leads",
+  description: "Leads from the enterprise segment",
+  fields: [
+    { name: "Company", type: "text" },
+    { name: "Deal Size", type: "number" },
+    { name: "Stage", type: "select", options: { choices: ["Prospect", "Qualified", "Closed"] } },
+  ],
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+board = client.boards.create(
+    "Enterprise Leads",
+    description="Leads from the enterprise segment",
+    fields=[
+        {"name": "Company", "type": "text"},
+        {"name": "Deal Size", "type": "number"},
+        {"name": "Stage", "type": "select", "options": {"choices": ["Prospect", "Qualified", "Closed"]}},
+    ],
+)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## createItem / create_item
+
+传递一个 `fields` 数组，每个条目包含 `board_field_id`（`BoardField` 的 `_id`）和对应的 `value`。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const item = await client.boards.createItem("board_id", {
+  fields: [
+    { board_field_id: "field_id_company", value: "Acme Corp" },
+    { board_field_id: "field_id_deal_size", value: 50000 },
+    { board_field_id: "field_id_stage", value: "Qualified" },
+  ],
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+item = client.boards.create_item("board_id", {
+    "fields": [
+        {"board_field_id": "field_id_company", "value": "Acme Corp"},
+        {"board_field_id": "field_id_deal_size", "value": 50000},
+        {"board_field_id": "field_id_stage", "value": "Qualified"},
+    ],
+})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## listItems / list_items
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const page = await client.boards.listItems("board_id", { limit: 50, skip: 0 });
+console.log(`${page.data.length} of ${page.total} items`);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+page = client.boards.list_items("board_id", limit=50, skip=0)
+print(f"{len(page['data'])} of {page['total']} items")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## search
+
+在 board 的项目中进行全文搜索。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const results = await client.boards.search("board_id", {
+  q: "Acme",
+  limit: 20,
+  offset: 0,
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+results = client.boards.search("board_id", q="Acme", limit=20, offset=0)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## importCsv / import_csv
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const formData = new FormData();
+formData.append("file", csvBlob, "leads.csv");
+const result = await client.boards.importCsv("board_id", formData);
+console.log(`Imported: ${result.imported}, Errors: ${result.errors}`);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+with open("leads.csv", "rb") as f:
+    result = client.boards.import_csv("board_id", files={"file": f})
+print(result)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## createField / create_field
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const field = await client.boards.createField("board_id", {
+  name: "Priority",
+  type: "select",
+  options: { choices: ["Low", "Medium", "High"] },
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+field = client.boards.create_field("board_id", {
+    "name": "Priority",
+    "type": "select",
+    "options": {"choices": ["Low", "Medium", "High"]},
+})
+```
+</TabItem>
+</Tabs>

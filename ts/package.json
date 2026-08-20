@@ -1,0 +1,90 @@
+{
+  "name": "@imbrace/sdk",
+  "version": "1.4.0",
+  "description": "Official TypeScript/JavaScript SDK for Imbrace — dual auth (API Key + Access Token)",
+  "type": "module",
+  "license": "MIT",
+  "author": "Imbrace Team <dev@imbrace.co>",
+  "homepage": "https://imbrace.co",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/imbrace/sdk.git",
+    "directory": "ts"
+  },
+  "keywords": [
+    "imbrace",
+    "sdk",
+    "api",
+    "typescript",
+    "javascript"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./client": {
+      "import": "./dist/client.js",
+      "types": "./dist/client.d.ts"
+    },
+    "./resources/marketplace": {
+      "import": "./dist/resources/marketplace.js",
+      "types": "./dist/resources/marketplace.d.ts"
+    },
+    "./resources/platform": {
+      "import": "./dist/resources/platform.js",
+      "types": "./dist/resources/platform.d.ts"
+    },
+    "./resources/channel": {
+      "import": "./dist/resources/channel.js",
+      "types": "./dist/resources/channel.d.ts"
+    },
+    "./resources/ips": {
+      "import": "./dist/resources/ips.js",
+      "types": "./dist/resources/ips.d.ts"
+    },
+    "./resources/agent": {
+      "import": "./dist/resources/agent.js",
+      "types": "./dist/resources/agent.d.ts"
+    },
+    "./resources/ai": {
+      "import": "./dist/resources/ai.js",
+      "types": "./dist/resources/ai.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc --project tsconfig.build.json",
+    "dev": "tsc --project tsconfig.build.json --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
+    "test": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:all": "vitest run",
+    "test:watch": "vitest tests/unit",
+    "clean": "rm -rf dist",
+    "codegen": "node scripts/generate-api.mjs",
+    "codegen:fetch": "node scripts/fetch-specs.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.59.0",
+    "@typescript-eslint/parser": "^8.59.0",
+    "@vitest/ui": "^1.6.0",
+    "dotenv": "^17.4.2",
+    "eslint": "^8.57.1",
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,86 @@
+---
+title: Tổng quan CLI
+description: Kiến trúc và luồng xác thực của Imbrace CLI.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+Imbrace CLI (`@imbrace/cli`) là một công cụ dòng lệnh để tương tác với nền tảng Imbrace. Các lệnh gọi trực tiếp đến nền tảng Imbrace thông qua gói `@imbrace/sdk`. Nguồn: [imbraceltd/imbrace-cli](https://github.com/imbraceltd/imbrace-cli).
+
+```
+imbrace (CLI) → https://app-gatewayv2.imbrace.co (Nền tảng Imbrace)
+```
+
+Ngoài các lệnh resource, CLI còn chạy được như một **MCP server** (`imbrace mcp`), mở toàn bộ API Imbrace thành tool cho AI agent — xem [Commands → MCP Server](/vi/cli/commands/#mcp-server).
+
+## Luồng xác thực
+
+CLI hỗ trợ hai phương thức xác thực:
+
+**1. API Key** (thông tin xác thực bắt đầu bằng `sk-` hoặc `api_`):
+- Được truyền trực tiếp đến SDK: `new ImbraceClient({ apiKey: credential })`
+- Được lưu nguyên trạng trong cấu hình cục bộ
+
+**2. Email + Mật khẩu** (trả về JWT token):
+- SDK: `client.login(email, password)` trả về danh sách tổ chức của user; CLI sau đó gọi `client.selectOrganization(orgId)` để lấy token gắn theo tổ chức
+- Tài khoản nhiều tổ chức: truyền `--org-id` (một tổ chức thì tự chọn, nhiều tổ chức sẽ hỏi trong TTY)
+- JWT gắn theo tổ chức được lưu làm thông tin xác thực
+
+### Lưu trữ thông tin xác thực
+
+Thông tin xác thực được lưu qua gói `conf` với `projectName: "imbrace"`.
+
+| Hệ điều hành | Đường dẫn cấu hình |
+|---|---|
+| macOS | `~/Library/Preferences/imbrace-nodejs/config.json` |
+| Linux | `~/.config/imbrace-nodejs/config.json` |
+| Windows | `%APPDATA%\imbrace-nodejs\Config\config.json` |
+
+Các trường được lưu: `credential`, `method` (`"api-key"` | `"password"`), `email`.
+
+### Tự động đăng nhập
+
+Mọi lệnh CLI (ngoại trừ `login`) đều kế thừa `BaseCommand`, lệnh này gọi `ensureLoggedIn()` khi khởi tạo. Nếu không tìm thấy thông tin xác thực, nó sẽ tương tác yêu cầu người dùng chọn phương thức đăng nhập (API Key hoặc Email + Mật khẩu).
+
+<Aside type="tip">
+  Tất cả các lệnh đều chấp nhận `--json` để xuất ra dữ liệu máy có thể đọc được và `-h` / `--help` để xem hướng dẫn sử dụng.
+</Aside>
+
+## Cấu trúc dự án
+
+```
+imbrace-cli/
+└── cli/                     ← oclif CLI
+    └── src/
+        ├── base-command.ts       ← Tự động đăng nhập
+        ├── config.ts             ← Lưu trữ thông tin xác thực (conf)
+        └── commands/
+            ├── login.ts / logout.ts / whoami.ts / docs.ts
+            ├── data-board/    (8 lệnh)
+            ├── ai-agent/      (9 lệnh)
+            ├── document-ai/   (7 lệnh)
+            ├── orchestrator/  (4 lệnh)
+            ├── guardrail/     (5 lệnh)
+            └── workflow/      (32 lệnh)
+```
+
+## Kiến trúc Workflow Node
+
+Workflows sử dụng cấu trúc **danh sách liên kết** thông qua con trỏ `nextAction`:
+
+```typescript
+{
+  version: {
+    trigger: {
+      name: "trigger",
+      type: "PIECE_TRIGGER" | "EMPTY" | "PIECE" | "ROUTER" | "LOOP_ON_ITEMS" | "CODE",
+      settings: { pieceName, pieceVersion, input, ... },
+      nextAction: { ... },
+      children?: any[],          // ROUTER branches
+      firstLoopAction?: any,     // LOOP_ON_ITEMS body
+    }
+  }
+}
+```
+
+Tất cả các thao tác node đều sử dụng `applyFlowOperation()` với các loại: `UPDATE_TRIGGER`, `ADD_ACTION`, `UPDATE_ACTION`, `DELETE_ACTION`, `LOCK_AND_PUBLISH`, `CHANGE_STATUS`, `CHANGE_FOLDER`.

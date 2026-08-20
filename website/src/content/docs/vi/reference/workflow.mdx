@@ -1,0 +1,287 @@
+---
+title: Workflow
+description: Tham chiếu schema và method cho client.workflows — flows, runs, folders, app connections, MCP servers, và tables.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+`client.workflows` quản lý flow engine của Imbrace: tạo và kích hoạt các luồng tự động hóa, xem lịch sử chạy, tổ chức với folders, quản lý app connections và MCP servers, và truy cập workflow tables.
+
+Để xem hướng dẫn chi tiết, tham khảo [Workflows trong SDK guide](/sdk/workflows/).
+
+---
+
+## Schema
+
+### Flow
+
+| Field | Type | Mô tả |
+|-------|------|-------|
+| `id` | string | ID duy nhất của flow |
+| `created` | string | ISO 8601 thời gian tạo |
+| `updated` | string | ISO 8601 thời gian cập nhật |
+| `projectId` | string | Dự án sở hữu flow này |
+| `externalId` | string | Định danh bên ngoài tùy chọn |
+| `status` | `"ENABLED"` \| `"DISABLED"` | Flow có đang hoạt động không |
+| `operationStatus` | string | Trạng thái thao tác hiện tại |
+| `version` | FlowVersion | Đối tượng phiên bản đang hoạt động |
+
+### FlowVersion
+
+| Field | Type | Mô tả |
+|-------|------|-------|
+| `id` | string | ID duy nhất của phiên bản |
+| `created` | string | ISO 8601 thời gian tạo |
+| `updated` | string | ISO 8601 thời gian cập nhật |
+| `flowId` | string | Flow của phiên bản này |
+| `displayName` | string | Tên flow dễ đọc |
+| `trigger` | object | Cấu hình trigger |
+| `steps` | object? | Cấu hình bước tùy chọn |
+| `valid` | boolean? | Phiên bản có hợp lệ không |
+
+### FlowRun
+
+| Field | Type | Mô tả |
+|-------|------|-------|
+| `id` | string | ID duy nhất của run |
+| `created` | string | ISO 8601 thời gian tạo |
+| `updated` | string | ISO 8601 thời gian cập nhật |
+| `projectId` | string | ID dự án |
+| `flowId` | string | Flow đã được thực thi |
+| `flowVersionId` | string | Phiên bản cụ thể đã chạy |
+| `status` | `"RUNNING"` \| `"SUCCEEDED"` \| `"FAILED"` \| `"TIMEOUT"` \| `"PAUSED"` \| `"STOPPED"` | Kết quả chạy |
+| `environment` | `"PRODUCTION"` \| `"TESTING"` | Môi trường thực thi |
+| `startTime` | string? | Thời điểm bắt đầu chạy |
+| `finishTime` | string? | Thời điểm kết thúc chạy |
+| `failParentOnFailure` | boolean | Lỗi có lan truyền lên flow cha không |
+| `tags` | string[]? | Thẻ gắn vào run này |
+
+### AppConnection
+
+| Field | Type | Mô tả |
+|-------|------|-------|
+| `id` | string | ID duy nhất của kết nối |
+| `created` | string | ISO 8601 thời gian tạo |
+| `updated` | string | ISO 8601 thời gian cập nhật |
+| `externalId` | string | Định danh bên ngoài |
+| `displayName` | string | Tên dễ đọc |
+| `pieceName` | string | Piece (tích hợp) mà kết nối này dành cho |
+| `projectId` | string | ID dự án |
+| `type` | `"SECRET_TEXT"` \| `"OAUTH2"` \| `"CLOUD_OAUTH2"` \| `"PLATFORM_OAUTH2"` \| `"BASIC_AUTH"` \| `"CUSTOM_AUTH"` | Loại xác thực kết nối |
+
+### McpServer
+
+| Field | Type | Mô tả |
+|-------|------|-------|
+| `id` | string | ID duy nhất của MCP server |
+| `created` | string | ISO 8601 thời gian tạo |
+| `updated` | string | ISO 8601 thời gian cập nhật |
+| `projectId` | string | ID dự án |
+| `name` | string? | Tên server |
+
+---
+
+## Methods
+
+### Flows
+
+| Method | TypeScript | Python | Mô tả |
+|--------|-----------|--------|-------|
+| List flows | `listFlows` | `list_flows` | Danh sách flows có phân trang |
+| Get flow | `getFlow` | `get_flow` | Lấy một flow theo ID |
+| Create flow | `createFlow` | `create_flow` | Tạo flow mới |
+| Delete flow | `deleteFlow` | `delete_flow` | Xóa flow |
+| Apply flow operation | `applyFlowOperation` | `apply_flow_operation` | Áp dụng thao tác (vd: publish, enable) cho flow |
+| Trigger flow | `triggerFlow` | `trigger_flow` | Kích hoạt flow bất đồng bộ |
+| Trigger flow sync | `triggerFlowSync` | `trigger_flow_sync` | Kích hoạt flow và chờ kết quả |
+
+### Flow Runs
+
+| Method | TypeScript | Python | Mô tả |
+|--------|-----------|--------|-------|
+| List runs | `listRuns` | `list_runs` | Danh sách lịch sử chạy |
+| Get run | `getRun` | `get_run` | Lấy một run theo ID |
+
+### Folders
+
+| Method | TypeScript | Python | Mô tả |
+|--------|-----------|--------|-------|
+| List folders | `listFolders` | `list_folders` | Danh sách thư mục flow |
+| Get folder | `getFolder` | `get_folder` | Lấy thư mục theo ID |
+| Create folder | `createFolder` | `create_folder` | Tạo thư mục |
+| Update folder | `updateFolder` | `update_folder` | Đổi tên thư mục |
+| Delete folder | `deleteFolder` | `delete_folder` | Xóa thư mục |
+
+### App Connections
+
+| Method | TypeScript | Python | Mô tả |
+|--------|-----------|--------|-------|
+| List connections | `listConnections` | `list_connections` | Danh sách app connections |
+| Get connection | `getConnection` | `get_connection` | Lấy kết nối theo ID |
+| Upsert connection | `upsertConnection` | `upsert_connection` | Tạo hoặc cập nhật kết nối |
+| Delete connection | `deleteConnection` | `delete_connection` | Xóa kết nối |
+
+### MCP Servers
+
+| Method | TypeScript | Python | Mô tả |
+|--------|-----------|--------|-------|
+| List MCP servers | `listMcpServers` | `list_mcp_servers` | Danh sách MCP servers |
+| Get MCP server | `getMcpServer` | `get_mcp_server` | Lấy server theo ID |
+| Create MCP server | `createMcpServer` | `create_mcp_server` | Đăng ký MCP server mới |
+| Delete MCP server | `deleteMcpServer` | `delete_mcp_server` | Xóa server |
+| Rotate token | `rotateMcpToken` | `rotate_mcp_token` | Xoay token xác thực của server |
+
+---
+
+## listFlows / list_flows
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const page = await client.workflows.listFlows({
+  limit: 10,
+  status: "ENABLED",
+  folderId: "folder_id",
+});
+for (const flow of page.data) {
+  console.log(flow.id, flow.version?.displayName);
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+page = client.workflows.list_flows(limit=10, status="ENABLED", folder_id="folder_id")
+for flow in page.get("data", []):
+    print(flow["id"])
+```
+</TabItem>
+</Tabs>
+
+---
+
+## createFlow / create_flow
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const flow = await client.workflows.createFlow({
+  displayName: "New Lead Notification",
+  projectId: "project_id",
+});
+console.log(flow.id);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+flow = client.workflows.create_flow(
+    display_name="New Lead Notification",
+    project_id="project_id",
+)
+print(flow["id"])
+```
+</TabItem>
+</Tabs>
+
+---
+
+## triggerFlow / trigger_flow
+
+Kích hoạt flow bất đồng bộ với payload tùy chọn.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+await client.workflows.triggerFlow("flow_id", {
+  contact_id: "contact_123",
+  event: "lead_created",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+client.workflows.trigger_flow("flow_id", {
+    "contact_id": "contact_123",
+    "event": "lead_created",
+})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## listRuns / list_runs
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const page = await client.workflows.listRuns({
+  flowId: "flow_id",
+  status: "FAILED",
+  limit: 20,
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+page = client.workflows.list_runs(
+    flow_id="flow_id",
+    status="FAILED",
+    limit=20,
+)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## upsertConnection / upsert_connection
+
+Tạo hoặc cập nhật app connection (vd: API key cho dịch vụ bên thứ ba).
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const conn = await client.workflows.upsertConnection({
+  displayName: "Slack Workspace",
+  pieceName: "slack",
+  projectId: "project_id",
+  type: "SECRET_TEXT",
+  value: { api_key: "xoxb-..." },
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+conn = client.workflows.upsert_connection({
+    "displayName": "Slack Workspace",
+    "pieceName": "slack",
+    "projectId": "project_id",
+    "type": "SECRET_TEXT",
+    "value": {"api_key": "xoxb-..."},
+})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## createMcpServer / create_mcp_server
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const server = await client.workflows.createMcpServer({
+  name: "My MCP Server",
+  projectId: "project_id",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+server = client.workflows.create_mcp_server({
+    "name": "My MCP Server",
+    "projectId": "project_id",
+})
+```
+</TabItem>
+</Tabs>

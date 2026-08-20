@@ -1,0 +1,246 @@
+---
+title: 资源参考
+description: Imbrace SDK 按命名空间的参考文档 — contacts、conversations、messaging、campaigns 等。
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+本页涵盖了 SDK 暴露的 CRM 和消息传递命名空间。首先初始化客户端（参见[安装](/zh-cn/sdk/installation/)或[快速入门](/zh-cn/sdk/quick-start/)）。以下所有代码片段假设 `client` 是已初始化的实例。
+
+有关 AI 和工作流相关资源，请参见：
+- [AI 代理](/zh-cn/sdk/ai-agent/) — AI 代理（`chatAi`）、AI 代理流式传输、嵌入、parquet
+- [工作流](/zh-cn/sdk/workflows/) — 工作流流程和渠道自动化
+- [数据面板](/zh-cn/sdk/databoard/) — CRM 管道面板和条目
+
+有关将这些资源结合使用的端到端演练，请参见[完整流程指南](/zh-cn/sdk/full-flow-guide/)。
+
+---
+
+## 联系人 — `client.contacts`
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { data: contacts } = await client.contacts.list({ limit: 50 });
+const contact = await client.contacts.get("contact_id");
+
+await client.contacts.update("contact_id", {
+  name: "Alice B.",
+  email: "alice@example.com",
+  phone: "+84901234567",
+});
+
+const comments = await client.contacts.getComments("contact_id");
+const files    = await client.contacts.getFiles("contact_id");
+const activity = await client.contacts.getActivities("conversation_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result   = client.contacts.list(limit=50)
+contacts = result.get("data", [])
+
+contact = client.contacts.get("contact_id")
+
+client.contacts.update("contact_id", {
+    "name":  "Alice B.",
+    "email": "alice@example.com",
+    "phone": "+84901234567",
+})
+
+comments  = client.contacts.get_comments("contact_id")
+files     = client.contacts.get_files("contact_id")
+activity  = client.contacts.get_activities("conversation_id")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 对话 — `client.conversations`
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// 搜索
+const { data: convs } = await client.conversations.search({
+  businessUnitId: "bu_xxx",
+  q: "support",
+  limit: 20,
+});
+
+// 待处理（未解决）
+const { data: open } = await client.conversations.getOutstanding({
+  businessUnitId: "bu_xxx",
+  limit: 50,
+});
+
+// 分配
+await client.conversations.assignTeamMember({
+  conversation_id: "conv_xxx",
+  user_id: "user_xxx",
+});
+
+// 更新状态
+await client.conversations.updateStatus({
+  conversation_id: "conv_xxx",
+  status: "resolved",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.conversations.search(
+    business_unit_id="bu_xxx",
+    q="support",
+    limit=20,
+)
+convs = result.get("data", [])
+
+all_convs = client.conversations.list(limit=50).get("data", [])
+
+client.conversations.update_status({
+    "conversation_id": "conv_xxx",
+    "status": "resolved",
+})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 消息传递 — `client.channel`, `client.messages`
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const channels = await client.channel.list();
+
+await client.messages.send({
+  type: "text",
+  text: "Hello, how can I help you today?",
+});
+
+const msgs = await client.messages.list({ limit: 20 });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+channels = client.channel.list()
+
+client.messages.send(
+    type="text",
+    text="Hello, how can I help you today?",
+)
+
+msgs = client.messages.list(limit=20)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 活动与触点 — `client.campaign`
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { data: campaigns } = await client.campaign.list();
+const campaign  = await client.campaign.get("campaign_id");
+const newCamp   = await client.campaign.create({ name: "Q2 Outreach", channel_type: "email" });
+await client.campaign.delete("campaign_id");
+
+// 触点
+const { data: touchpoints } = await client.campaign.listTouchpoints();
+const tp = await client.campaign.getTouchpoint("touchpoint_id");
+
+await client.campaign.createTouchpoint({
+  campaign_id: "campaign_id",
+  type:        "email",
+  delay_days:  3,
+});
+await client.campaign.updateTouchpoint("touchpoint_id", { delay_days: 5 });
+await client.campaign.deleteTouchpoint("touchpoint_id");
+
+// 保存前验证触点配置
+const result = await client.campaign.validateTouchpoint({ type: "email", template_id: "tpl_xxx" });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+campaigns = client.campaign.list().get("data", [])
+campaign  = client.campaign.get("campaign_id")
+new_camp  = client.campaign.create({"name": "Q2 Outreach", "channel_type": "email"})
+client.campaign.delete("campaign_id")
+
+# 触点
+touchpoints = client.campaign.list_touchpoints().get("data", [])
+tp = client.campaign.get_touchpoint("touchpoint_id")
+
+client.campaign.create_touchpoint({
+    "campaign_id": "campaign_id",
+    "type":        "email",
+    "delay_days":  3,
+})
+client.campaign.update_touchpoint("touchpoint_id", {"delay_days": 5})
+client.campaign.delete_touchpoint("touchpoint_id")
+
+# 保存前验证触点配置
+result = client.campaign.validate_touchpoint({"type": "email", "template_id": "tpl_xxx"})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 消息建议 — `client.messageSuggestion` / `client.message_suggestion`
+
+TypeScript 和 Python 均可用。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const suggestions = await client.messageSuggestion.getSuggestions({
+  message: "Can you help me with my order?",
+  conversation_id: "conv_xxx",
+  limit: 3,
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+suggestions = client.message_suggestion.get_suggestions({
+    "message": "Can you help me with my order?",
+    "conversation_id": "conv_xxx",
+    "limit": 3,
+})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 预测 — `client.predict`
+
+TypeScript 和 Python 均可用。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const result = await client.predict.predict({
+  model: "lead_score_v1",
+  input: { company_size: 200, industry: "saas", mrr: 5000 },
+});
+console.log(result.score);   // 0.87
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.predict.predict({
+    "model": "lead_score_v1",
+    "input": {"company_size": 200, "industry": "saas", "mrr": 5000},
+})
+print(result["score"])   # 0.87
+```
+</TabItem>
+</Tabs>

@@ -1,0 +1,77 @@
+---
+title: Tham chiếu Method SDK
+description: Các method SDK được sử dụng bởi mỗi nhóm lệnh CLI.
+---
+
+CLI giao tiếp với nền tảng Imbrace trực tiếp thông qua `@imbrace/sdk`. Trang này ánh xạ từng nhóm lệnh tới các phương thức SDK bên dưới.
+
+Để xem tài liệu tham khảo SDK đầy đủ, hãy xem [Tổng quan SDK](/sdk/overview/).
+
+---
+
+## Data Board — `client.boards`
+
+| Lệnh CLI | Phương thức SDK |
+|---|---|
+| `data-board list` | `client.boards.list()` |
+| `data-board get <id>` | `client.boards.get(id)` |
+| `data-board create` | `client.boards.create(body)` |
+| `data-board delete <id>` | `client.boards.delete(id)` |
+| `data-board create-field <boardId>` | `client.boards.createField(boardId, body)` |
+| `data-board list-items` | `client.boards.listItems(boardId, params)` |
+| `data-board create-item <boardId>` | `client.boards.createItem(boardId, body)` |
+| `data-board update-item <boardId> <itemId>` | `client.boards.updateItem(boardId, itemId, body)` |
+| `data-board delete-item <boardId> <itemId>` | `client.boards.deleteItem(boardId, itemId)` |
+| `data-board export-csv` | `client.boards.exportCsv(boardId)` |
+
+---
+
+## AI Agent — `client.chatAi`, `client.ai`
+
+| Lệnh CLI | Phương thức SDK |
+|---|---|
+| `ai-agent list` | `client.chatAi.listAiAgents()` |
+| `ai-agent get <id>` | `client.chatAi.getAiAgent(id)` |
+| `ai-agent create` | `client.chatAi.createAiAgent(body)` |
+| `ai-agent update <id>` | `client.chatAi.updateAiAgent(id, body)` |
+| `ai-agent delete <id>` | `client.chatAi.deleteAiAgent(id)` |
+| `ai-agent list-providers` | `client.ai.listProviders()` |
+| `ai-agent list-models --provider-id <id>` | `client.ai.listProviders()` (được lọc theo provider) |
+| `ai-agent list-folders` | `client.boards.searchFolders(query)` |
+| `ai-agent list-files --folder-id <id>` | `client.boards.searchFiles({ folderId })` |
+
+---
+
+## Workflow — `client.workflows`
+
+| Lệnh CLI | Phương thức SDK |
+|---|---|
+| `workflow list` | `client.workflows.listFlows(params)` |
+| `workflow get <id>` | `client.workflows.getFlow(id)` |
+| `workflow create` | `client.workflows.createFlow(body)` |
+| `workflow delete <id>` | `client.workflows.deleteFlow(id)` |
+| `workflow move <id>` | `client.workflows.applyFlowOperation(id, CHANGE_FOLDER)` |
+| `workflow publish <id>` | `client.workflows.applyFlowOperation(id, LOCK_AND_PUBLISH)` |
+| `workflow enable <id>` | `client.workflows.applyFlowOperation(id, CHANGE_STATUS enabled)` |
+| `workflow disable <id>` | `client.workflows.applyFlowOperation(id, CHANGE_STATUS disabled)` |
+| `workflow run <id>` | `client.workflows.triggerFlow(id, payload)` |
+| `workflow runs` | `client.workflows.listRuns()` |
+| `workflow run-detail <runId>` | `client.workflows.getRun(runId)` |
+| `workflow node list <id>` | `client.workflows.getFlow(id)` (đã phân tích) |
+| `workflow node add <id>` | `client.workflows.applyFlowOperation(id, ADD_ACTION / UPDATE_TRIGGER)` |
+| `workflow node update <id> <node>` | `client.workflows.applyFlowOperation(id, UPDATE_ACTION)` |
+| `workflow node delete <id> <node>` | `client.workflows.applyFlowOperation(id, DELETE_ACTION)` |
+| `workflow piece list` | `client.workflows.listPieces()` |
+| `workflow conn list` | `client.workflows.listConnections()` |
+| `workflow conn get <connId>` | `client.workflows.getConnection(connId)` |
+| `workflow conn create` | `client.workflows.upsertConnection(body)` |
+| `workflow conn delete <id>` | `client.workflows.deleteConnection(id)` |
+| `workflow folder list` | `client.workflows.listFolders()` |
+| `workflow folder create` | `client.workflows.createFolder(body)` |
+| `workflow folder update <id>` | `client.workflows.updateFolder(id, body)` |
+| `workflow folder delete <id>` | `client.workflows.deleteFolder(id)` |
+| `workflow mcp list` | `client.workflows.listMcpServers()` |
+| `workflow mcp get <id>` | `client.workflows.getMcpServer(id)` |
+| `workflow mcp create` | `client.workflows.createMcpServer(body)` |
+| `workflow mcp delete <id>` | `client.workflows.deleteMcpServer(id)` |
+| `workflow mcp rotate-token <id>` | `client.workflows.rotateMcpToken(id)` |

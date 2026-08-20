@@ -1,0 +1,86 @@
+---
+title: 疑難排解
+description: 使用 Imbrace SDK 時的常見錯誤和解決方案。
+---
+
+## `AuthError: Invalid or expired access token.`（HTTP 401）
+
+`.env` 中的 API 金鑰已過期。
+
+```bash
+# 更新 .env
+IMBRACE_API_KEY=new_api_key
+```
+---
+
+## `ApiError: [404]` URL 中包含雙重路徑
+
+傳遞給建構函式的 `baseUrl` / `base_url` 指向完整的端點路徑，而非僅閘道根目錄。
+
+> SDK **不會**自動讀取環境變數。慣例是在 `.env` 中使用 `IMBRACE_GATEWAY_URL`；您手動傳遞：`new ImbraceClient({ baseUrl: process.env.IMBRACE_GATEWAY_URL })`。
+
+```env
+# 錯誤
+IMBRACE_GATEWAY_URL=https://app-gatewayv2.imbrace.co/private/backend/v1/third_party_token
+
+# 正確
+IMBRACE_GATEWAY_URL=https://app-gatewayv2.imbrace.co
+```
+
+---
+
+## 整合測試全部被跳過
+
+未設定 `IMBRACE_API_KEY`。
+
+```bash
+# 在執行期間暫時設定
+IMBRACE_API_KEY=api_xxx pytest tests/integration -v -m integration
+
+# 或新增至 .env
+echo "IMBRACE_API_KEY=api_xxx" >> py/.env
+```
+
+---
+
+## `Cannot find module`（TypeScript 測試）
+
+測試檔案中的匯入路徑必須相對於目錄深度：
+
+| 測試檔案位置 | 匯入 |
+| -------------------------------- | --------------------------------- |
+| `tests/unit/*.test.ts`           | `../../src/client.js`             |
+| `tests/unit/resources/*.test.ts` | `../../../src/resources/x.js`     |
+| `tests/integration/*.test.ts`    | `../../src/client.js`             |
+
+---
+
+## `mypy` 錯誤：`Pattern matching is only supported in Python 3.10`
+
+mypy 錯誤地掃描 `site-packages`。已在 `pyproject.toml` 中設定。如果問題持續存在：
+
+```bash
+mypy src/imbrace --exclude site-packages
+```
+
+---
+
+## CLI：指令回傳 `401 Unauthorized`
+
+您的憑證已過期，或 API 伺服器有過期的令牌。
+
+```bash
+imbrace login --api-key api_xxx...
+```
+
+---
+
+## CLI：`workflow run --sync` 逾時
+
+同步模式可能在大約 60 秒時逾時。請改用非同步 + 輪詢：
+
+```bash
+imbrace workflow run <flowId> --payload '{}'
+imbrace workflow runs --limit 10           # 尋找執行 ID
+imbrace workflow run-detail <runId>        # 檢查結果
+```

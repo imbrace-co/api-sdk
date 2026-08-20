@@ -1,0 +1,125 @@
+---
+title: Imbrace SDK
+description: Imbrace Gateway 的官方 TypeScript 和 Python SDK — 类型安全、开箱即用、生产就绪。
+template: splash
+hero:
+  title: 使用 Imbrace SDK 更快交付
+  tagline: 类型安全、功能完备的 Imbrace Gateway SDK。几分钟内将 TypeScript 和 Python 应用连接到 Imbrace 平台。
+  image:
+    file: ../../../assets/imbrace_logo_small.svg
+    alt: Imbrace
+  actions:
+    - text: 开始使用
+      link: getting-started/overview/
+      icon: right-arrow
+      variant: primary
+    - text: SDK 概览
+      link: sdk/overview/
+      variant: secondary
+    - text: 快速入门
+      link: sdk/quick-start/
+      variant: minimal
+---
+
+import { Card, CardGrid, LinkCard } from "@astrojs/starlight/components";
+
+<div class="splash-features">
+
+## 为什么选择 Imbrace SDK？
+
+<CardGrid>
+  <Card title="类型安全设计" icon="approve-check-circle">
+    覆盖全部 27+ 资源命名空间的完整 TypeScript 定义和 Python 类型提示。在编译时而非运行时捕获错误。
+  </Card>
+  <Card title="自动重试与弹性" icon="random">
+    内置针对 429 和 5xx 响应的指数退避。无需任何配置 — 您的应用在负载下保持稳定。
+  </Card>
+  <Card title="三层认证" icon="setting">
+    API Key、JWT Bearer 和旧版访问令牌 — 全部透明处理。无需更改业务逻辑即可切换认证策略。
+  </Card>
+  <Card title="Python 异步优先" icon="rocket">
+    同步客户端与并行 `AsyncImbraceClient`。一次导入即可用于 FastAPI、asyncio 或 Django。
+  </Card>
+</CardGrid>
+
+</div>
+
+<div class="splash-install">
+
+## 快速安装
+
+<div class="install-grid">
+  <div class="install-card">
+    <div class="install-card__header">
+      <span class="install-badge install-badge--ts">TypeScript</span>
+    </div>
+
+    ```bash
+    npm install @imbrace/sdk
+    ```
+
+    ```ts
+    import { ImbraceClient } from "@imbrace/sdk";
+    const client = new ImbraceClient();
+    const me = await client.platform.getMe();
+    ```
+
+  </div>
+  <div class="install-card">
+    <div class="install-card__header">
+      <span class="install-badge install-badge--py">Python</span>
+    </div>
+
+    ```bash
+    pip install imbrace
+    ```
+
+    ```python
+    from imbrace import ImbraceClient
+    client = ImbraceClient()
+    me = client.platform.get_me()
+    ```
+
+  </div>
+</div>
+
+</div>
+
+<div class="splash-links">
+
+## 浏览文档
+
+<CardGrid>
+  <LinkCard
+    title="SDK 概览"
+    description="架构、资源命名空间、认证策略。TypeScript 和 Python 统一呈现。"
+    href="sdk/overview/"
+  />
+  <LinkCard
+    title="快速入门"
+    description="60 秒内发起您的第一个 API 调用 — 切换 TypeScript 或 Python。"
+    href="sdk/quick-start/"
+  />
+  <LinkCard
+    title="认证"
+    description="API Key 与访问令牌、OTP 登录流程以及如何选择。"
+    href="sdk/authentication/"
+  />
+  <LinkCard
+    title="完整流程指南"
+    description="四大工作流的端到端演练。"
+    href="sdk/full-flow-guide/"
+  />
+  <LinkCard
+    title="测试指南"
+    description="单元测试、模拟、集成测试模式。"
+    href="guides/testing/"
+  />
+  <LinkCard
+    title="故障排除"
+    description="常见错误、调试技巧、已知问题。"
+    href="guides/troubleshooting/"
+  />
+</CardGrid>
+
+</div>

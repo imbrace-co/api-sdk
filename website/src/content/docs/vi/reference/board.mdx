@@ -1,0 +1,282 @@
+---
+title: Board
+description: Tham chiếu schema và method cho client.boards — CRM pipelines, fields, items, segments, import/export, và Knowledge Hub.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+`client.boards` là kho dữ liệu cốt lõi cho CRM pipelines — leads, deals, tasks, hoặc bất kỳ dữ liệu có cấu trúc nào. Mỗi board có các trường tùy chỉnh và items. Board cũng có thể liên kết với Knowledge Hub để tìm kiếm bằng AI.
+
+Để xem hướng dẫn chi tiết, tham khảo [DataBoards trong SDK guide](/sdk/databoard/).
+
+---
+
+## Schema
+
+### Board
+
+| Field | Type | Mô tả |
+|-------|------|-------|
+| `object_name` | string? | Định danh loại đối tượng |
+| `id` | string | ID duy nhất của board |
+| `organization_id` | string | Tổ chức sở hữu board này |
+| `name` | string | Tên hiển thị của board |
+| `description` | string? | Mô tả tùy chọn |
+| `workflow_id` | string? | ID workflow liên kết |
+| `hidden` | boolean? | Board có bị ẩn hay không |
+| `team_ids` | string[]? | Nhóm có quyền truy cập |
+| `created_at` | string | ISO 8601 thời gian tạo |
+| `updated_at` | string | ISO 8601 thời gian cập nhật |
+
+### BoardField
+
+| Field | Type | Mô tả |
+|-------|------|-------|
+| `_id` | string | ID duy nhất của trường |
+| `name` | string | Tên hiển thị của trường |
+| `type` | string | Kiểu trường (text, number, date, select, v.v.) |
+| `options` | object[]? | Cấu hình theo kiểu |
+| `required` | boolean? | Trường có bắt buộc không |
+
+### CreateBoardInput
+
+| Field | Type | Required | Mô tả |
+|-------|------|----------|-------|
+| `name` | string | ✓ | Tên board |
+| `description` | string | | Mô tả tùy chọn |
+| `type` | string | | Loại board |
+| `fields` | object[] | | Định nghĩa trường ban đầu |
+| `team_ids` | string[] | | ID nhóm có quyền truy cập |
+| `show_id` | boolean | | Hiển thị cột ID |
+
+---
+
+## Methods
+
+### Board CRUD
+
+| Method | TypeScript | Python | Mô tả |
+|--------|-----------|--------|-------|
+| List boards | `list` | `list` | Danh sách tất cả board |
+| Get board | `get` | `get` | Lấy board theo ID |
+| Create board | `create` | `create` | Tạo board mới |
+| Update board | `update` | `update` | Cập nhật tên/mô tả board |
+| Delete board | `delete` | `delete` | Xóa board |
+| Reorder boards | `reorder` | `reorder` | Thay đổi thứ tự hiển thị |
+
+### Import / Export
+
+| Method | TypeScript | Python | Mô tả |
+|--------|-----------|--------|-------|
+| Export CSV | `exportCsv` | `export_csv` | Xuất tất cả items dưới dạng CSV |
+| Import CSV | `importCsv` | `import_csv` | Nhập items từ file CSV |
+| Import Excel | `importExcel` | `import_excel` | Nhập items từ file Excel |
+| Get import progress | `getImportProgress` | `get_import_progress` | Kiểm tra trạng thái import đang chạy |
+
+### Fields
+
+| Method | TypeScript | Python | Mô tả |
+|--------|-----------|--------|-------|
+| Create field | `createField` | `create_field` | Thêm cột vào board |
+| Update field | `updateField` | `update_field` | Sửa cấu hình trường |
+| Delete field | `deleteField` | `delete_field` | Xóa trường |
+| Reorder fields | `reorderFields` | `reorder_fields` | Thay đổi thứ tự cột |
+| Bulk update fields | `bulkUpdateFields` | `bulk_update_fields` | Cập nhật nhiều trường cùng lúc |
+
+### Items
+
+| Method | TypeScript | Python | Mô tả |
+|--------|-----------|--------|-------|
+| List items | `listItems` | `list_items` | Danh sách items có phân trang |
+| Get item | `getItem` | `get_item` | Lấy một item |
+| Create item | `createItem` | `create_item` | Thêm item vào board |
+| Update item | `updateItem` | `update_item` | Cập nhật giá trị trường của item |
+| Delete item | `deleteItem` | `delete_item` | Xóa item |
+| Bulk delete | `bulkDeleteItems` | `bulk_delete_items` | Xóa nhiều items theo ID |
+| Search | `search` | `search` | Tìm kiếm toàn văn trong board |
+| Link items | `linkItems` | `link_items` | Liên kết item với item board khác |
+| Unlink items | `unlinkItems` | `unlink_items` | Xóa liên kết giữa các items |
+
+### Segments
+
+| Method | TypeScript | Python | Mô tả |
+|--------|-----------|--------|-------|
+| List segments | `listSegments` | `list_segments` | Danh sách các view filter đã lưu |
+| Create segment | `createSegment` | `create_segment` | Lưu filter thành segment |
+| Update segment | `updateSegment` | `update_segment` | Cập nhật filter của segment |
+| Delete segment | `deleteSegment` | `delete_segment` | Xóa segment |
+
+---
+
+## list / list
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { data: boards } = await client.boards.list({ limit: 20 });
+for (const board of boards) {
+  console.log(board.id, board.name);
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.boards.list(limit=20)
+for board in result.get("data", []):
+    print(board["id"], board["name"])
+```
+</TabItem>
+</Tabs>
+
+---
+
+## create / create
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const board = await client.boards.create({
+  name: "Enterprise Leads",
+  description: "Leads from the enterprise segment",
+  fields: [
+    { name: "Company", type: "text" },
+    { name: "Deal Size", type: "number" },
+    { name: "Stage", type: "select", options: { choices: ["Prospect", "Qualified", "Closed"] } },
+  ],
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+board = client.boards.create(
+    "Enterprise Leads",
+    description="Leads from the enterprise segment",
+    fields=[
+        {"name": "Company", "type": "text"},
+        {"name": "Deal Size", "type": "number"},
+        {"name": "Stage", "type": "select", "options": {"choices": ["Prospect", "Qualified", "Closed"]}},
+    ],
+)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## createItem / create_item
+
+Truyền một mảng `fields` với mỗi phần tử có `board_field_id` (`_id` của `BoardField`) và `value` tương ứng.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const item = await client.boards.createItem("board_id", {
+  fields: [
+    { board_field_id: "field_id_company", value: "Acme Corp" },
+    { board_field_id: "field_id_deal_size", value: 50000 },
+    { board_field_id: "field_id_stage", value: "Qualified" },
+  ],
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+item = client.boards.create_item("board_id", {
+    "fields": [
+        {"board_field_id": "field_id_company", "value": "Acme Corp"},
+        {"board_field_id": "field_id_deal_size", "value": 50000},
+        {"board_field_id": "field_id_stage", "value": "Qualified"},
+    ],
+})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## listItems / list_items
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const page = await client.boards.listItems("board_id", { limit: 50, skip: 0 });
+console.log(`${page.data.length} of ${page.total} items`);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+page = client.boards.list_items("board_id", limit=50, skip=0)
+print(f"{len(page['data'])} of {page['total']} items")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## search
+
+Tìm kiếm toàn văn trong các items của board.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const results = await client.boards.search("board_id", {
+  q: "Acme",
+  limit: 20,
+  offset: 0,
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+results = client.boards.search("board_id", q="Acme", limit=20, offset=0)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## importCsv / import_csv
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const formData = new FormData();
+formData.append("file", csvBlob, "leads.csv");
+const result = await client.boards.importCsv("board_id", formData);
+console.log(`Imported: ${result.imported}, Errors: ${result.errors}`);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+with open("leads.csv", "rb") as f:
+    result = client.boards.import_csv("board_id", files={"file": f})
+print(result)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## createField / create_field
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const field = await client.boards.createField("board_id", {
+  name: "Priority",
+  type: "select",
+  options: { choices: ["Low", "Medium", "High"] },
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+field = client.boards.create_field("board_id", {
+    "name": "Priority",
+    "type": "select",
+    "options": {"choices": ["Low", "Medium", "High"]},
+})
+```
+</TabItem>
+</Tabs>

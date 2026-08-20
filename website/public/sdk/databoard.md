@@ -1,0 +1,378 @@
+# Data Boards
+
+Boards are the core data store for CRM pipelines — leads, deals, tasks, or any structured data. Pass board ids in `board_ids` when creating an AI agent to give it access to that data — see [Full Flow Guide §4](/sdk/full-flow-guide.md#4-manage-data-boards-and-items-crm-pipelines).
+
+Initialize the client first (see [Installation](/sdk/installation.md) or [Quick Start](/sdk/quick-start.md)).
+
+---
+
+## Board CRUD
+
+**TypeScript**
+
+```typescript
+const { data: boards } = await client.boards.list();
+const board = await client.boards.get("board_id");
+
+const newBoard = await client.boards.create({ name: "Enterprise Leads" });
+await client.boards.update("board_id", { name: "Enterprise Leads 2025" });
+await client.boards.delete("board_id");
+```
+
+**Python**
+
+```python
+boards = client.boards.list().get("data", [])
+board = client.boards.get("board_id")
+
+new_board = client.boards.create("Enterprise Leads")
+client.boards.update("board_id", {"name": "Enterprise Leads 2025"})
+client.boards.delete("board_id")
+```
+
+### Reorder
+
+**TypeScript**
+
+```typescript
+await client.boards.reorder({ order: ["board_id_1", "board_id_2", "board_id_3"] });
+```
+
+**Python**
+
+```python
+client.boards.reorder({"order": ["board_id_1", "board_id_2", "board_id_3"]})
+```
+
+---
+
+## Import / Export
+
+**TypeScript**
+
+```typescript
+// CSV import (multipart/form-data)
+const formData = new FormData();
+formData.append("file", csvFile);
+const result = await client.boards.importCsv("board_id", formData);
+
+// Excel import
+const excelForm = new FormData();
+excelForm.append("file", excelFile);
+await client.boards.importExcel("board_id", excelForm);
+
+// Import progress
+const progress = await client.boards.getImportProgress("board_id");
+
+// CSV export
+const csv = await client.boards.exportCsv("board_id");
+
+// CSV export via email
+await client.boards.exportCsvViaMail("board_id", { email: "user@example.com" });
+```
+
+**Python**
+
+```python
+# CSV import (multipart/form-data)
+result = client.boards.import_csv("board_id", files={"file": open("data.csv", "rb")})
+
+# Excel import
+client.boards.import_excel("board_id", files={"file": open("data.xlsx", "rb")})
+
+# Import progress
+progress = client.boards.get_import_progress("board_id")
+
+# CSV export
+csv = client.boards.export_csv("board_id")
+```
+
+Note: `exportCsvViaMail` is TypeScript-only.
+
+---
+
+## Items
+
+**TypeScript**
+
+```typescript
+const { data: items } = await client.boards.listItems("board_id", { limit: 100 });
+const item = await client.boards.getItem("board_id", "item_id");
+
+// createItem uses { fields: [{ board_field_id, value }] }
+const lead = await client.boards.createItem("board_id", {
+  fields: [
+    { board_field_id: "name_field_id",   value: "Acme Corp" },
+    { board_field_id: "status_field_id", value: "new" },
+    { board_field_id: "value_field_id",  value: 50000 },
+  ],
+});
+
+// updateItem uses { data: [{ key, value }] } — note `key`, not `board_field_id`
+await client.boards.updateItem("board_id", lead._id, {
+  data: [{ key: "status_field_id", value: "qualified" }],
+});
+
+await client.boards.deleteItem("board_id", "item_id");
+await client.boards.bulkDeleteItems("board_id", { ids: ["item_1", "item_2", "item_3"] });
+```
+
+**Python**
+
+```python
+leads = client.boards.list_items("board_id", limit=100).get("data", [])
+
+# create_item uses {"fields": [{"board_field_id", "value"}]}
+lead = client.boards.create_item("board_id", {
+    "fields": [
+        {"board_field_id": "name_field_id",   "value": "Acme Corp"},
+        {"board_field_id": "status_field_id", "value": "new"},
+        {"board_field_id": "value_field_id",  "value": 50000},
+    ],
+})
+
+# update_item uses {"data": [{"key", "value"}]} — note "key", not "board_field_id"
+client.boards.update_item("board_id", lead["_id"], {
+    "data": [{"key": "status_field_id", "value": "qualified"}],
+})
+
+client.boards.delete_item("board_id", "item_id")
+client.boards.bulk_delete_items("board_id", {"ids": ["item_1", "item_2", "item_3"]})
+```
+
+### Conflict detection
+
+Conflict checks are now surfaced inline: `updateItem` returns HTTP `409 Conflict` when the row has been modified since the caller's last read — catch the resulting `ApiError` (`statusCode === 409`) instead of calling a separate endpoint.
+
+### Linked items (related boards)
+
+**TypeScript**
+
+```typescript
+const related = await client.boards.getRelatedItems("board_id", "item_id", "related_board_id");
+
+// data-board service — POST/DELETE /boards/:id/items/:itemId/related
+await client.boards.linkItems("board_id", "item_id", "related_board_id", { relatedItemIds: ["other_item_id"] });
+await client.boards.unlinkItems("board_id", "item_id", "related_board_id", { relatedItemIds: ["other_item_id"] });
+```
+
+**Python**
+
+```python
+related = client.boards.get_related_items("board_id", "item_id", "related_board_id")
+
+client.boards.link_items("board_id", "item_id", "related_board_id", {"relatedItemIds": ["other_item_id"]})
+client.boards.unlink_items("board_id", "item_id", "related_board_id", {"relatedItemIds": ["other_item_id"]})
+```
+
+---
+
+## Search
+
+**TypeScript**
+
+```typescript
+const results = await client.boards.search("board_id", { q: "enterprise" });
+```
+
+**Python**
+
+```python
+results = client.boards.search("board_id", q="enterprise")
+```
+
+---
+
+## Fields
+
+**TypeScript**
+
+```typescript
+const field = await client.boards.createField("board_id", {
+  name: "Deal Value",
+  type: "Number",
+});
+await client.boards.updateField("board_id", field._id, { name: "Contract Value" });
+await client.boards.deleteField("board_id", field._id);
+
+// Reorder and bulk update
+await client.boards.reorderFields("board_id", { fields: ["field_id_1", "field_id_2"] });
+await client.boards.bulkUpdateFields("board_id", { fields: [{ _id: "field_1", name: "Updated" }] });
+```
+
+**Python**
+
+```python
+field = client.boards.create_field("board_id", {"name": "Deal Value", "type": "Number"})
+client.boards.update_field("board_id", field["_id"], {"name": "Contract Value"})
+client.boards.delete_field("board_id", field["_id"])
+
+# Reorder and bulk update
+client.boards.reorder_fields("board_id", {"fields": ["field_id_1", "field_id_2"]})
+client.boards.bulk_update_fields("board_id", {"fields": [{"_id": "field_1", "name": "Updated"}]})
+```
+
+---
+
+## Segments
+
+**TypeScript**
+
+```typescript
+// listSegments returns BoardSegment[] directly (no { data } wrapper)
+const segments = await client.boards.listSegments("board_id");
+const segment = await client.boards.createSegment("board_id", {
+  name: "High Value Leads",
+  filter: {},
+});
+await client.boards.updateSegment("board_id", segment._id, { name: "VIP Leads" });
+await client.boards.deleteSegment("board_id", segment._id);
+```
+
+**Python**
+
+```python
+segments = client.boards.list_segments("board_id")
+segment = client.boards.create_segment("board_id", {
+    "name": "High Value Leads",
+    "filter": {},
+})
+client.boards.update_segment("board_id", segment["_id"], {"name": "VIP Leads"})
+client.boards.delete_segment("board_id", segment["_id"])
+```
+
+---
+
+## Knowledge Hub — Folders
+
+**TypeScript**
+
+```typescript
+const folders = await client.boards.searchFolders({ q: "contracts" });
+
+const folder = await client.boards.getFolder("folder_id", { recursive: true });
+const newFolder = await client.boards.createFolder({ name: "Contracts", parent_id: "parent_id" });
+await client.boards.updateFolder("folder_id", { name: "Renamed" });
+await client.boards.deleteFolders({ ids: ["folder_id_1", "folder_id_2"] });
+
+const contents = await client.boards.getFolderContents("folder_id");
+```
+
+**Python**
+
+```python
+folders = client.boards.search_folders(q="contracts")
+
+folder = client.boards.get_folder("folder_id", recursive=True)
+new_folder = client.boards.create_folder({"name": "Contracts", "parent_id": "parent_id"})
+client.boards.update_folder("folder_id", {"name": "Renamed"})
+client.boards.delete_folders(["folder_id_1", "folder_id_2"])
+
+contents = client.boards.get_folder_contents("folder_id")
+```
+
+---
+
+## Knowledge Hub — Files
+
+**TypeScript**
+
+```typescript
+const files = await client.boards.searchFiles({ folderId: "folder_id" });
+const file = await client.boards.getFile("file_id");
+const newFile = await client.boards.createFile({ name: "report.pdf", folder_id: "folder_id" });
+await client.boards.updateFile("file_id", { name: "renamed.pdf" });
+await client.boards.deleteFiles({ ids: ["file_id_1", "file_id_2"] });
+
+const uploaded = await client.boards.uploadFile(formData);
+const response = await client.boards.downloadFile("file_id");
+```
+
+**Python**
+
+```python
+files = client.boards.search_files(folder_id="folder_id")
+file = client.boards.get_file("file_id")
+new_file = client.boards.create_file({"name": "report.pdf", "folder_id": "folder_id"})
+client.boards.update_file("file_id", {"name": "renamed.pdf"})
+client.boards.delete_files(["file_id_1", "file_id_2"])
+
+uploaded = client.boards.upload_file(files={"file": open("report.pdf", "rb")})
+response = client.boards.download_file("file_id")
+```
+
+---
+
+## Board Files
+
+Upload files attached to board records (not Knowledge Hub).
+
+**TypeScript**
+
+```typescript
+const formData = new FormData();
+formData.append("file", file);
+const { url } = await client.boards.uploadBoardFile(formData);
+
+const { url: url2 } = await client.boards.uploadBoardFileV2(formData);
+```
+
+**Python**
+
+```python
+result = client.boards.upload_board_file(files={"file": open("photo.jpg", "rb")})
+
+result = client.boards.upload_board_file_v2(files={"file": open("photo.jpg", "rb")})
+```
+
+---
+
+## AI Features
+
+**TypeScript**
+
+```typescript
+const { tags } = await client.boards.generateAiTags({ text: "Enterprise deal with Acme Corp" });
+
+const preview = await client.boards.getLinkPreview("https://example.com");
+```
+
+**Python**
+
+```python
+tags = client.boards.generate_ai_tags({"text": "Enterprise deal with Acme Corp"})
+
+preview = client.boards.get_link_preview("https://example.com")
+```
+
+---
+
+## External Drive
+
+OneDrive / Google Drive integration for Knowledge Hub.
+
+**TypeScript**
+
+```typescript
+const { auth_url } = await client.boards.initiateDriveAuth("onedrive");
+
+const folders = await client.boards.listDriveFolders("onedrive");
+const files = await client.boards.listDriveFiles("onedrive", { folder_id: "remote_folder_id" });
+
+const response = await client.boards.downloadDriveFile("onedrive", { file_id: "remote_file_id" });
+
+const { status } = await client.boards.getOneDriveSessionStatus();
+```
+
+**Python**
+
+```python
+auth = client.boards.initiate_drive_auth("onedrive")
+
+folders = client.boards.list_drive_folders("onedrive")
+files = client.boards.list_drive_files("onedrive", {"folder_id": "remote_folder_id"})
+
+response = client.boards.download_drive_file("onedrive", {"file_id": "remote_file_id"})
+
+status = client.boards.get_onedrive_session_status()
+```

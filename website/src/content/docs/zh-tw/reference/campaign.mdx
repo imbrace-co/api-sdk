@@ -1,0 +1,268 @@
+---
+title: Campaign
+description: client.campaign 的結構與方法參考 — 行銷活動和接觸點。
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+`client.campaign` 管理行銷活動及其相關的接觸點 — 構成活動序列的個別互動點（訊息、動作）。
+
+---
+
+## Schema
+
+### Campaign
+
+| Field | Type | 說明 |
+|-------|------|------|
+| `_id` | string | 唯一活動 ID |
+| `name` | string | 活動顯示名稱 |
+| `status` | string? | 活動狀態（例如 `draft`、`active`、`completed`） |
+| `channel_type` | string? | 活動運行的頻道類型 |
+| `created_at` | string? | ISO 8601 建立時間戳 |
+| `updated_at` | string? | ISO 8601 更新時間戳 |
+
+### Touchpoint
+
+| Field | Type | 說明 |
+|-------|------|------|
+| `_id` | string | 唯一接觸點 ID |
+| `name` | string? | 接觸點顯示名稱 |
+| `type` | string? | 接觸點類型 |
+| `campaign_id` | string? | 父活動 ID |
+| `created_at` | string? | ISO 8601 建立時間戳 |
+
+### CreateCampaignInput
+
+| Field | Type | Required | 說明 |
+|-------|------|----------|------|
+| `name` | string | ✓ | 活動名稱 |
+| `channel_type` | string | | 頻道類型（例如 `whatsapp`、`email`） |
+
+### CreateTouchpointInput
+
+| Field | Type | Required | 說明 |
+|-------|------|----------|------|
+| `name` | string | | 接觸點名稱 |
+| `type` | string | | 接觸點類型 |
+| `campaign_id` | string | | 父活動 ID |
+| `message` | string \| object | | 訊息承載 |
+
+---
+
+## Methods
+
+### Campaign
+
+| Method | TypeScript | Python | 說明 |
+|--------|-----------|--------|------|
+| List campaigns | `list` | `list` | 列出所有活動 |
+| Get campaign | `get` | `get` | 依 ID 取得活動 |
+| Create campaign | `create` | `create` | 建立新活動 |
+| Delete campaign | `delete` | `delete` | 刪除活動 |
+
+### Touchpoint
+
+| Method | TypeScript | Python | 說明 |
+|--------|-----------|--------|------|
+| List touchpoints | `listTouchpoints` | `list_touchpoints` | 列出所有接觸點 |
+| Get touchpoint | `getTouchpoint` | `get_touchpoint` | 依 ID 取得接觸點 |
+| Create touchpoint | `createTouchpoint` | `create_touchpoint` | 向活動新增接觸點 |
+| Update touchpoint | `updateTouchpoint` | `update_touchpoint` | 更新接觸點 |
+| Delete touchpoint | `deleteTouchpoint` | `delete_touchpoint` | 移除接觸點 |
+| Validate touchpoint | `validateTouchpoint` | `validate_touchpoint` | 驗證接觸點配置 |
+
+---
+
+## list / list
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { data: campaigns } = await client.campaign.list();
+for (const c of campaigns) {
+  console.log(c._id, c.name, c.status);
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.campaign.list()
+for c in result.get("data", []):
+    print(c["_id"], c["name"], c.get("status"))
+```
+</TabItem>
+</Tabs>
+
+---
+
+## create / create
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const campaign = await client.campaign.create({
+  name: "Q3 Re-engagement",
+  channel_type: "whatsapp",
+});
+console.log(campaign._id);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+campaign = client.campaign.create({
+    "name": "Q3 Re-engagement",
+    "channel_type": "whatsapp",
+})
+print(campaign["_id"])
+```
+</TabItem>
+</Tabs>
+
+---
+
+## get / get
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const campaign = await client.campaign.get("campaign_id");
+console.log(campaign._id, campaign.name, campaign.status);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+campaign = client.campaign.get("campaign_id")
+print(campaign["_id"], campaign.get("name"), campaign.get("status"))
+```
+</TabItem>
+</Tabs>
+
+---
+
+## delete / delete
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+await client.campaign.delete("campaign_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+client.campaign.delete("campaign_id")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## createTouchpoint / create_touchpoint
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const touchpoint = await client.campaign.createTouchpoint({
+  name: "Welcome Message",
+  type: "message",
+  campaign_id: "campaign_id",
+  message: { text: "Hi! Welcome to our service." },
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+touchpoint = client.campaign.create_touchpoint({
+    "name": "Welcome Message",
+    "type": "message",
+    "campaign_id": "campaign_id",
+    "message": {"text": "Hi! Welcome to our service."},
+})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## updateTouchpoint / update_touchpoint
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const updated = await client.campaign.updateTouchpoint("touchpoint_id", {
+  name: "Updated Welcome Message",
+  message: { text: "Hi! Great to have you here." },
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+updated = client.campaign.update_touchpoint("touchpoint_id", {
+    "name": "Updated Welcome Message",
+    "message": {"text": "Hi! Great to have you here."},
+})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## getTouchpoint / get_touchpoint
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const touchpoint = await client.campaign.getTouchpoint("touchpoint_id");
+console.log(touchpoint._id, touchpoint.name);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+touchpoint = client.campaign.get_touchpoint("touchpoint_id")
+print(touchpoint["_id"], touchpoint.get("name"))
+```
+</TabItem>
+</Tabs>
+
+---
+
+## deleteTouchpoint / delete_touchpoint
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+await client.campaign.deleteTouchpoint("touchpoint_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+client.campaign.delete_touchpoint("touchpoint_id")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## validateTouchpoint / validate_touchpoint
+
+在啟動活動前檢查接觸點是否已正確配置。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const result = await client.campaign.validateTouchpoint({
+  touchpoint_id: "touchpoint_id",
+});
+if (!result.valid) {
+  console.error("Validation errors:", result.errors);
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.campaign.validate_touchpoint({"touchpoint_id": "touchpoint_id"})
+if not result.get("valid"):
+    print("Validation errors:", result.get("errors"))
+```
+</TabItem>
+</Tabs>

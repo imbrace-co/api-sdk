@@ -1,0 +1,147 @@
+---
+title: MCP Server
+description: Give your AI agent access to the Imbrace API — one URL, one API key, nothing to install.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+Connect your AI tool — Claude Code, Cursor, Codex, Claude Desktop, … — to Imbrace, and it can work with your Imbrace data directly: list CRM boards, read conversations, check workflow runs, and more.
+
+You only need two things:
+
+- **One URL** — the Imbrace gateway hosts a [Model Context Protocol](https://modelcontextprotocol.io) server at `/mcp`. Nothing to install or run yourself.
+- **One API key** — sent as a Bearer token. The agent sees exactly what your organization and role allow, nothing more.
+
+### Step 1 — Get an API key
+
+Generate an external token in the Imbrace Dashboard (see [Getting an API Key](/guides/api-key/)). It looks like `api_...`.
+
+### Step 2 — Connect your tool
+
+Pick your tool below and paste the config. The examples use the **sandbox** gateway — replace the host with your environment's gateway.
+
+<Tabs>
+<TabItem label="Claude Code">
+
+One command:
+
+```bash
+claude mcp add --transport http imbrace "https://app-gateway.sandbox.imbrace.co/mcp" \
+  --header "Authorization: Bearer api_xxx..."
+```
+
+</TabItem>
+<TabItem label="Cursor">
+
+Add to `.cursor/mcp.json` in your project — or `~/.cursor/mcp.json` to enable it everywhere:
+
+```json
+{
+  "mcpServers": {
+    "imbrace": {
+      "url": "https://app-gateway.sandbox.imbrace.co/mcp",
+      "headers": { "Authorization": "Bearer api_xxx..." }
+    }
+  }
+}
+```
+
+</TabItem>
+<TabItem label="Codex CLI">
+
+Add to `~/.codex/config.toml` (recent Codex versions with HTTP MCP support):
+
+```toml
+[mcp_servers.imbrace]
+url = "https://app-gateway.sandbox.imbrace.co/mcp"
+bearer_token = "api_xxx..."
+```
+
+On an older Codex without HTTP support, bridge through `mcp-remote` instead:
+
+```toml
+[mcp_servers.imbrace]
+command = "npx"
+args = ["-y", "mcp-remote", "https://app-gateway.sandbox.imbrace.co/mcp", "--header", "Authorization: Bearer api_xxx..."]
+```
+
+</TabItem>
+<TabItem label="Claude Desktop">
+
+Claude Desktop launches local servers, so bridge the URL with `mcp-remote`. In **Settings → Developer → Edit Config**, add to `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "imbrace": {
+      "command": "npx",
+      "args": [
+        "-y", "mcp-remote",
+        "https://app-gateway.sandbox.imbrace.co/mcp",
+        "--header", "Authorization: Bearer api_xxx..."
+      ]
+    }
+  }
+}
+```
+
+</TabItem>
+<TabItem label="Other clients">
+
+Any MCP client that accepts a URL plus headers uses the standard form:
+
+```json
+{
+  "mcpServers": {
+    "imbrace": {
+      "url": "https://app-gateway.sandbox.imbrace.co/mcp",
+      "headers": { "Authorization": "Bearer api_xxx..." }
+    }
+  }
+}
+```
+
+If a client only supports local (stdio) servers, bridge with:
+
+```bash
+npx -y mcp-remote "https://app-gateway.sandbox.imbrace.co/mcp" \
+  --header "Authorization: Bearer api_xxx..."
+```
+
+</TabItem>
+</Tabs>
+
+### Step 3 — Try it
+
+Ask your agent something like *"List my Imbrace boards"* or *"Show my latest conversations"*. It should reach for tools like `listBoards`, `listConversations`, `listFlows`.
+
+### Read-only by default
+
+Out of the box the agent can **look but not touch** — only read tools are exposed. You opt in to more by adding query parameters to the URL you configured:
+
+| Add to the URL | Effect |
+|---|---|
+| `?allowWrite=1` | The agent can also create and update data |
+| `?allowDestructive=1` | The agent can also delete data (includes write) |
+| `?services=dataBoard,workflow` | Narrow: only these services |
+| `?tags=boards,records` | Narrow: only these topics |
+
+Example — data boards only, with write access:
+
+```
+https://app-gateway.sandbox.imbrace.co/mcp?services=dataBoard&allowWrite=1
+```
+
+Services: `dataBoard`, `channel`, `platform`, `marketplace`, `workflow`. If the agent calls a tool that isn't enabled, it gets a clear error back — nothing fails silently.
+
+### How it works
+
+Every tool call is replayed through the gateway's normal API routes with **your** token, so org scoping, permissions, and license checks apply exactly as if you had called the API yourself. The tools are the same curated `agent-tools` operations that power the SDK's [`client.api`](/sdk/overview/#the-full-api-surface--clientapi-typescript) surface. The endpoint is stateless JSON-RPC over HTTP `POST` — no session to manage.
+
+### Not using MCP? Unified OpenAPI
+
+Platforms that consume OpenAPI tool specs instead of MCP (e.g. Open WebUI) can point at `GET /agent-tools/openapi.json` with the same `Authorization` header: every service's agent-tools merged into **one** spec, with the same `?services=` / `?tags=` filters — one tool server instead of five. Executors that naively join their base URL with the op path (requesting `/agent-tools/<op-path>`) are accepted too: the gateway strips the prefix and replays the call with your credentials.
+
+### Local alternative — the CLI
+
+Prefer a local stdio server (credentials from a CLI profile, nothing configured with a URL)? The CLI ships the same tool registry: [`imbrace mcp`](/cli/commands/#mcp-server).

@@ -1,0 +1,174 @@
+---
+title: Kiểm thử Cục bộ
+description: Kiểm thử các gói Imbrace SDK đã được xây dựng cục bộ với gateway thực hoặc giả lập.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+Hướng dẫn này cho phép bạn kiểm thử **gói đã được xây dựng** giống hệt như cách người dùng cài đặt — không phải mã nguồn thô. Sử dụng trước khi xuất bản phiên bản mới, hoặc khi tái tạo lỗi mà người dùng đã báo cáo.
+
+## Điều kiện tiên quyết
+
+- TypeScript: Node 18+
+- Python: Python 3.10+ và `pip`
+
+## URL Môi trường
+
+Cùng một tập hợp các URL cơ sở gateway áp dụng cho cả hai SDK. Đặt một lần trong môi trường kiểm thử của bạn:
+
+| Môi trường | `IMBRACE_GATEWAY_URL` |
+| ----------- | ------------------------------------------ |
+| develop     | `https://app-gateway.dev.imbrace.co`       |
+| sandbox     | `https://app-gateway.sandbox.imbrace.co`   |
+| stable      | `https://app-gatewayv2.imbrace.co`         |
+
+## Thông tin xác thực
+
+Tạo `.env` từ tệp mẫu ở thư mục gốc của repo, rồi dán vào thông tin xác thực
+được cấp từ Imbrace Portal:
+
+```bash
+# từ thư mục gốc của SDK repo
+cp .env.example .env
+```
+
+Tối thiểu cần thiết cho các lời gọi trực tiếp:
+
+| Biến                | Nơi lấy                                                                               |
+| ------------------- | -------------------------------------------------------------------------------------- |
+| `IMBRACE_API_KEY`   | Cổng thông tin Imbrace, hoặc `POST /private/backend/v1/third_party_token` với access token hiện có |
+| `IMBRACE_GATEWAY_URL` | Một trong các URL trong bảng trên (mặc định là dev nếu không được đặt)              |
+
+Ngữ cảnh tổ chức được mã hóa bên trong API key — bạn không cần truyền ID tổ chức.
+
+---
+
+## TypeScript — liên kết thư mục dist đã xây dựng
+
+### Thiết lập một lần
+
+```bash
+cd ts
+npm install
+npm run build
+npm pack        # tạo ra ts/imbrace-sdk-<version>.tgz
+```
+
+Sau đó trong thư mục kiểm thử:
+
+```bash
+cd test/test-local-pkg/ts
+npm install     # cài @imbrace/sdk từ tệp .tgz cục bộ
+cp ../../../.env.example .env
+# điền .env
+```
+
+### Chạy kiểm thử
+
+```bash
+cd test/test-local-pkg/ts
+npm run test:all
+```
+
+Bạn cũng có thể chạy từng bộ riêng lẻ — `npm run test:full-flow`, `npm run test:ai`,
+`npm run test:crm`, v.v. Xem `package.json` trong thư mục đó để biết danh sách đầy đủ.
+Thông tin xác thực được đọc từ tệp `.env` bạn vừa tạo ở trên.
+
+### Lặp lại khi thay đổi SDK
+
+Mỗi lần chỉnh sửa cần xây dựng lại để liên kết nhận được thay đổi:
+
+```bash
+# terminal 1 — ts/
+npm run build && npm pack
+
+# terminal 2 — test/test-local-pkg/ts
+npm install && npm run test:all
+```
+
+---
+
+## Python — cài đặt từ wheel hoặc editable
+
+### Cài đặt editable (lặp nhanh nhất)
+
+Từ thư mục `py/`:
+
+```bash
+cd py
+pip install -e .
+```
+
+Các chỉnh sửa mã được nhận mà không cần cài đặt lại.
+
+### Cài đặt Wheel (xác minh hình dạng xuất bản)
+
+```bash
+cd py
+python -m build               # tạo ra dist/imbrace-*.whl
+pip install dist/imbrace-*.whl --force-reinstall
+```
+
+Điều này phát hiện các tệp bị thiếu, lỗi đóng gói và vấn đề đường dẫn import mà cài đặt editable che giấu.
+
+### Chạy kiểm thử
+
+```bash
+cd py
+pip install -e ".[dev]"
+python -m pytest tests/
+```
+
+Để kiểm thử hồi quy luồng đầy đủ tương ứng với [Hướng dẫn toàn diện](/sdk/full-flow-guide/) (chạy từ thư mục gốc của repo):
+
+```bash
+cd test-pip-pkg/py
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python -m pytest tests/test_guide_flow.py -v
+```
+
+Cùng một kiểm thử chạy với cả `IMBRACE_API_KEY` và `IMBRACE_ACCESS_TOKEN` để bao phủ cả hai chế độ xác thực.
+
+---
+
+## Chuyển đổi môi trường
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```bash
+IMBRACE_GATEWAY_URL=https://app-gateway.sandbox.imbrace.co node test-local.mjs
+```
+</TabItem>
+<TabItem label="Python">
+```bash
+IMBRACE_GATEWAY_URL=https://app-gateway.sandbox.imbrace.co python -m pytest tests/
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Khắc phục sự cố
+
+**`Cannot find package '@imbrace/sdk'`** (TypeScript)
+Chạy lại `npm install` trong `test/test-local-pkg/ts`. Lệnh này phân giải `@imbrace/sdk` từ tệp `.tgz` được build trong `ts/` — hãy chạy lại `npm pack` ở đó nếu tệp này thiếu hoặc đã cũ.
+
+**`ERR_MODULE_NOT_FOUND` cho tệp trong dist** (TypeScript)
+Bản dựng chưa được chạy, hoặc tệp nguồn đã được thêm mà không xây dựng lại. Chạy `npm run build` trong `ts/`.
+
+**`ModuleNotFoundError: No module named 'imbrace'`** (Python)
+Gói chưa được cài đặt trong venv đang hoạt động. Chạy lại `pip install -e .` (editable) hoặc `pip install dist/imbrace-*.whl`.
+
+**401 / 403 trên các lời gọi trực tiếp**
+Thông tin xác thực của bạn đã hết hạn, bị thu hồi hoặc sai. Đối với API key, hãy tạo một key mới:
+
+```bash
+curl -X POST https://app-gateway.dev.imbrace.co/private/backend/v1/third_party_token \
+  -H "x-access-token: <your_existing_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"expirationDays": 30}'
+```
+
+Đối với các lỗi thời gian chạy khác, xem [Xử lý Lỗi](/sdk/error-handling/) và [Khắc phục sự cố](/guides/troubleshooting/).

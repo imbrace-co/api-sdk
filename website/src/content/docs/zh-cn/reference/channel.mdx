@@ -1,0 +1,214 @@
+---
+title: Channel
+description: client.channel 的 schema 和方法参考 — 创建和管理消息渠道（Web、WhatsApp、Facebook、Instagram、Email、WeChat、LINE）。
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+`client.channel` 管理消息渠道 — 联系人通过这些入口点与您的 AI 代理互动。支持的渠道类型：**Web、WhatsApp、Facebook Messenger、Instagram、Email、WeChat、LINE**。
+
+---
+
+## Schema
+
+### Channel
+
+| Field | Type | 说明 |
+|-------|------|------|
+| `object_name` | string? | 对象类型标识符 |
+| `id` | string | 唯一渠道 ID |
+| `name` | string | 渠道显示名称 |
+| `type` | `"web"` \| `"facebook"` \| `"whatsapp"` \| `"instagram"` \| `"wechat"` \| `"line"` \| `"email"` \| `"wecom"` | 渠道平台类型 |
+| `organization_id` | string | 所属组织 |
+| `business_unit_id` | string? | 业务单元 ID |
+| `is_active` | boolean | 渠道是否启用 |
+| `config` | object? | 渠道特定配置 |
+| `created_at` | string | ISO 8601 创建时间戳 |
+| `updated_at` | string | ISO 8601 更新时间戳 |
+
+### ChannelCredential
+
+| Field | Type | 说明 |
+|-------|------|------|
+| `_id` | string | 唯一凭证 ID |
+| `type` | string? | 凭证类型（例如 `facebook`、`whatsapp`） |
+| `name` | string? | 显示名称 |
+
+---
+
+## Methods
+
+### Core CRUD
+
+| Method | TypeScript | Python | 说明 |
+|--------|-----------|--------|------|
+| List channels | `list` | `list` | 列出所有渠道，可按类型筛选 |
+| Get channel | `get` | `get` | 按 ID 获取渠道 |
+| Create channel | `create` | `create` | 通用渠道创建 |
+| Update channel | `update` | `update` | 切换启用状态或更新配置 |
+| Delete channel | `delete` / `deleteV3` | `delete` / `delete_v3` | 删除渠道 |
+| Get count | `getCount` | `get_count` | 渠道总数 |
+
+### Per-type Creation
+
+| Method | TypeScript | Python | 说明 |
+|--------|-----------|--------|------|
+| Create Web | `createWeb` | `create_web` | Web 聊天渠道 |
+| Create Facebook | `createFacebook` | `create_facebook` | Facebook Messenger 渠道 |
+| Update Facebook | `updateFacebook` | `update_facebook` | 更新 Facebook 渠道配置 |
+| Create Instagram | `createInstagram` | `create_instagram` | Instagram 渠道 |
+| Create Email | `createEmail` | `create_email` | Email 渠道 |
+| Create WeChat | `createWechat` | `create_wechat` | WeChat 渠道 |
+| Create LINE | `createLine` | `create_line` | LINE 渠道 |
+| Create WhatsApp | `createWhatsApp` | `create_whatsapp` | WhatsApp 渠道 |
+| Update WhatsApp | `updateWhatsApp` | `update_whatsapp` | 更新 WhatsApp 配置 |
+
+### Credentials
+
+| Method | TypeScript | Python | 说明 |
+|--------|-----------|--------|------|
+| Get Facebook pages | `getFacebookPages` | `get_facebook_pages` | 列出凭证的 Facebook 主页 |
+| Get credential | `getCredential` | `get_credential` | 获取已存储的凭证 |
+| Update credential | `updateCredential` | `update_credential` | 更新凭证 |
+| Delete credential | `deleteCredential` | `delete_credential` | 移除凭证 |
+
+### Workflow & Teams
+
+| Method | TypeScript | Python | 说明 |
+|--------|-----------|--------|------|
+| Update channel workflow | `updateChannelWorkflow` | `update_channel_workflow` | 将 workflow 附加到渠道 |
+| Delete channel workflow | `deleteChannelWorkflow` | `delete_channel_workflow` | 卸除 workflow |
+| List assignable teams | `listAssignableTeams` | `list_assignable_teams` | 可指派到此渠道的团队 |
+| List team observers | `listTeamObservers` | `list_team_observers` | 团队的观察者 |
+
+---
+
+## list / list
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const channels = await client.channel.list({ type: "whatsapp" });
+for (const ch of channels) {
+  console.log(ch.id, ch.name, ch.is_active);
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+channels = client.channel.list(type="whatsapp")
+for ch in channels.data:
+    print(ch.id, ch.name, ch.is_active)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## createWeb / create_web
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const channel = await client.channel.createWeb({ name: "Website Chat" });
+console.log(channel.id);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+channel = client.channel.create_web("Website Chat")
+print(channel.id)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## createWhatsApp / create_whatsapp
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const channel = await client.channel.createWhatsApp({
+  phone_number_id: "phone_number_id",
+  access_token: "whatsapp_access_token",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+channel = client.channel.create_whatsapp({
+    "phone_number_id": "phone_number_id",
+    "access_token": "whatsapp_access_token",
+})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## createFacebook / create_facebook
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// 首先获取凭证的可用主页
+const pages = await client.channel.getFacebookPages("credential_id");
+
+// 然后使用主页创建渠道
+const channel = await client.channel.createFacebook({
+  page_id: pages[0]._id,
+  credential_id: "credential_id",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+pages = client.channel.get_facebook_pages("credential_id")
+channel = client.channel.create_facebook({
+    "page_id": pages[0]["_id"],
+    "credential_id": "credential_id",
+})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## createEmail / create_email
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const channel = await client.channel.createEmail({
+  name: "Support Inbox",
+  email: "support@example.com",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+channel = client.channel.create_email({
+    "name": "Support Inbox",
+    "email": "support@example.com",
+})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## update / update
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+await client.channel.update("channel_id", { active: false });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+client.channel.update("channel_id", {"active": False})
+```
+</TabItem>
+</Tabs>

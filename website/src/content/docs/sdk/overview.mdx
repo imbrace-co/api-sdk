@@ -1,0 +1,110 @@
+---
+title: Overview
+description: What the Imbrace SDK is, how it works, and when to use it.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+The Imbrace SDK is the official client for the Imbrace Gateway, available in **TypeScript** and **Python**. Both SDKs wrap the same Gateway API with the same resource namespaces, the same auth model, and the same retry/error semantics — pick whichever language fits your stack.
+
+### Key Features
+
+| Feature | Detail |
+|---|---|
+| **Type safety** | TypeScript types and Python type hints across every resource |
+| **Two credential types** | `apiKey` or `accessToken` — see [Authentication](/sdk/authentication/) |
+| **Auto retry** | 429 and 5xx retry with exponential backoff, no config needed |
+| **Streaming AI** | SSE / async iterator for `streamChat` and AI completions |
+| **Async & sync (Py)** | `ImbraceClient` (sync) and `AsyncImbraceClient` (async) |
+| **Cancellation (TS)** | `AbortSignal` propagation for in-flight cancellation |
+
+### Install
+
+> **Current version:** `@imbrace/sdk` `v1.4.0` (npm) · `imbrace` `v1.2.1` (PyPI)
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```bash
+    npm install @imbrace/sdk
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```bash
+    pip install imbrace
+    ```
+  </TabItem>
+</Tabs>
+
+### Hello, world
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    import { ImbraceClient } from "@imbrace/sdk"
+
+    const client = new ImbraceClient({ apiKey: "api_your_key" })
+    const me = await client.platform.getMe()
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    from imbrace import ImbraceClient
+
+    with ImbraceClient(api_key="api_your_key") as client:
+        me = client.platform.get_me()
+    ```
+  </TabItem>
+</Tabs>
+
+### Available resources
+
+Every namespace is on both SDKs. Methods follow the language conventions — `client.aiAgent.streamChat()` in TS, `client.ai_agent.stream_chat()` in Python.
+
+| Namespace | Microservice | Purpose |
+|---|---|---|
+| `client.aiAgent` / `client.ai_agent` | ai-agent | Streaming AI chat, embeddings, parquet, chat-client sub-API |
+| `client.chatAi` / `client.chat_ai` | ai-service-v2 | AI Agent CRUD (create/update/delete/list AI agents) |
+| `client.documentAi` / `client.document_ai` | ai-service-v2 | Document parsing, extraction, and AI over files |
+| `client.agent` | marketplace | AI agent **templates** + use-cases (atomic create of assistant + workflow + channel via `createUseCase`) |
+| `client.workflows` | workflow-engine | Workflow automation — flows, triggers, runs |
+| `client.boards` | data-board | CRM boards — CRUD, items, fields, search, segments, CSV; KnowledgeHub folders & files |
+| `client.platform`, `client.organizations`, `client.teams` | platform | Users, organizations, teams, business units |
+| `client.contacts`, `client.conversations`, `client.messages`, `client.channel`, `client.categories`, `client.campaign`, `client.outbound` | channel-service | Contacts, conversations, messaging, channel/campaign management |
+| `client.marketplace` | marketplace | Marketplace files, email templates, channel workflows |
+| `client.fileService` | file-service | Context-aware file uploads (board attachments, contact files, financial files, presigned URLs) |
+| `client.ips`, `client.schedule` | ips | Inter-process scheduling / automation rules |
+| `client.ai` | ai-service-v2 | OpenAI-compatible completions, embeddings, providers, guardrails |
+| `client.auth` | platform / legacy backend | Sign-in (OTP, password, SSO), token exchange |
+
+For the complete list and method reference, see [Resources](/sdk/resources/).
+
+### The full API surface — `client.api` (TypeScript)
+
+Since `v1.3.0` the TypeScript SDK also ships a **generated** surface covering every operation the Imbrace services expose to AI agents — 272 operations across 5 services, generated from their `agent-tools` OpenAPI specs:
+
+```typescript
+const boards = await client.api.dataBoard.listBoards<{ data: Board[] }>();
+const flows  = await client.api.workflow.listFlows();
+```
+
+Namespaces: `client.api.dataBoard`, `.channel`, `.platform`, `.marketplace`, `.workflow`.
+
+It is complete and always in sync with the deployed services, but most operations return `unknown` (their specs declare no response schema) — pass a type argument when you know the shape. Prefer the hand-written resources above when they cover your call; reach for `client.api` for anything they don't, instead of hand-rolling a `fetch`.
+
+The same operation registry powers the gateway's [hosted MCP server](/mcp/overview/) and the CLI's [`imbrace mcp`](/cli/commands/#mcp-server) command, both of which expose these operations as MCP tools for AI agents.
+
+### When to pick which credential
+
+| | API Key (`api_...`) | Access Token (`eyJ...`) |
+|---|---|---|
+| **How you get it** | Imbrace Dashboard → Generate External Token | OTP login (`requestOtp` / `loginWithOtp`) |
+| **Best for** | Server scripts, backend integrations, CI pipelines | User-facing apps where each end-user logs in |
+| **Scope** | Your organization — full API access | Per-user session — scoped to that user's permissions |
+
+Full decision tree: [Authentication →](/sdk/authentication/) · [Get an API Key →](/guides/api-key/)
+
+### Next steps
+
+- [Installation →](/sdk/installation/) — set up the package and credentials
+- [Quick Start →](/sdk/quick-start/) — make your first call in 60 seconds
+- [Full Flow Guide →](/sdk/full-flow-guide/) — end-to-end walkthrough of the four major workflows (AI agents, workflows, knowledge hub, boards)

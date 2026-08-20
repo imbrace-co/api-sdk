@@ -1,0 +1,721 @@
+﻿---
+title: Hướng dẫn toàn diện
+description: Hướng dẫn từ đầu đến cuối — từ thiết lập client đến AI agents, workflows, knowledge hubs, và data boards. TypeScript và Python.
+---
+
+import { Steps, Tabs, TabItem, Aside } from "@astrojs/starlight/components";
+import AuthOnly from "../../../../components/AuthOnly.astro";
+
+Hướng dẫn này đi qua bốn quy trình làm việc chính trong Imbrace SDK từ đầu đến cuối. Mỗi phần là độc lập — hãy theo thứ tự hoặc nhảy đến phần bạn cần.
+
+---
+
+## 1. Tạo AI Agent và Bắt đầu Chat
+
+<Steps>
+
+1. **Khởi tạo client**
+
+   <AuthOnly mode="access-token">
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       import { ImbraceClient } from "@imbrace/sdk"
+
+        const client = new ImbraceClient({
+          accessToken: process.env.IMBRACE_ACCESS_TOKEN,
+          env: "stable",
+        })
+       ```
+     </TabItem>
+     <TabItem label="Python">
+        ```python
+        import os
+        from imbrace import ImbraceClient
+
+        client = ImbraceClient(
+            access_token=os.environ["IMBRACE_ACCESS_TOKEN"],
+            env="stable",
+        )
+       ```
+     </TabItem>
+   </Tabs>
+   </AuthOnly>
+
+   <AuthOnly mode="api-key">
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       import { ImbraceClient } from "@imbrace/sdk"
+
+        const client = new ImbraceClient({
+          apiKey:         process.env.IMBRACE_API_KEY,
+          organizationId: process.env.IMBRACE_ORGANIZATION_ID,
+          env:            "stable",
+        })
+       ```
+     </TabItem>
+     <TabItem label="Python">
+        ```python
+        import os
+        from imbrace import ImbraceClient
+
+        client = ImbraceClient(
+            api_key=os.environ["IMBRACE_API_KEY"],
+            organization_id=os.environ.get("IMBRACE_ORGANIZATION_ID"),
+            env="stable",
+        )
+       ```
+     </TabItem>
+   </Tabs>
+   </AuthOnly>
+
+   <Aside type="tip">
+     Không chắc nên dùng thông tin xác thực nào? Xem [Xác thực →](/sdk/authentication/#which-credential-should-i-use)
+   </Aside>
+
+2. **Tạo AI agent**
+
+   `workflow_name` phải là duy nhất trong tổ chức của bạn.
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       const agent = await client.chatAi.createAiAgent({
+         name: "Support Bot",
+         workflow_name: "support_bot_v1",
+         description: "Handles tier-1 customer support queries",
+         instructions: "You are a helpful support agent. Be concise and friendly.",
+         provider_id: "system",   // sử dụng nhà cung cấp LLM mặc định của tổ chức
+         model_id: "Default",     // gắn với model mặc định của tổ chức (an toàn cho mọi tổ chức)
+       })
+
+       const aiAgentId = agent.id  // UUID — sử dụng cho tất cả các lời gọi tiếp theo
+       console.log("AI agent created:", aiAgentId)
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       agent = client.chat_ai.create_ai_agent({
+           "name": "Support Bot",
+           "workflow_name": "support_bot_v1",
+           "description": "Handles tier-1 customer support queries",
+           "instructions": "You are a helpful support agent. Be concise and friendly.",
+           "provider_id": "system",   # sử dụng nhà cung cấp LLM mặc định của tổ chức
+           "model_id": "Default",     # gắn với model mặc định của tổ chức (an toàn cho mọi tổ chức)
+       })
+
+       ai_agent_id = agent["id"]
+       print("AI agent created:", ai_agent_id)
+       ```
+     </TabItem>
+   </Tabs>
+
+   `provider_id` và `model_id` là tùy chọn — SDK tự điền `{ provider_id: "system", model_id: "Default" }` khi bỏ trống. `"Default"` gắn với bất kỳ model nào mà tổ chức cấu hình làm mặc định và là lựa chọn an toàn cho mọi tổ chức. Truyền tường minh để ghi đè: `provider_id: "<uuid>"` để gắn nhà cung cấp LLM tùy chỉnh, hoặc `model_id: "gpt-4o"` v.v. — nhưng tên model cụ thể chỉ hoạt động nếu nhà cung cấp `system` của tổ chức thực sự có model đó. Liệt kê các model của tổ chức bằng `client.ai.listModels()` (TypeScript) / `client.ai.list_models()` (Python) trước khi hardcode.
+
+3. **Stream phản hồi chat bằng AI agent**
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       const response = await client.aiAgent.streamChat({
+         assistant_id: aiAgentId,
+         messages: [{ role: "user", content: "How do I reset my password?" }],
+         // id là UUID phiên — tái sử dụng để duy trì lịch sử hội thoại
+         // Nếu bỏ qua, UUID mới sẽ được tự động tạo mỗi lần gọi
+       })
+
+       const reader = response.body!.getReader()
+       const decoder = new TextDecoder()
+
+       while (true) {
+         const { done, value } = await reader.read()
+         if (done) break
+         const text = decoder.decode(value)
+         for (const line of text.split("\n")) {
+           if (line.startsWith("data: ")) {
+             const data = line.slice(6).trim()
+             if (data && data !== "[DONE]") {
+               try {
+                 const chunk = JSON.parse(data)
+                 process.stdout.write(chunk.delta ?? chunk.content ?? "")
+               } catch {}
+             }
+           }
+         }
+       }
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       response = client.ai_agent.stream_chat({
+           "assistant_id": ai_agent_id,
+           "messages": [{"role": "user", "content": "How do I reset my password?"}],
+           # id là UUID phiên — tái sử dụng để duy trì lịch sử hội thoại.
+           # Nếu bỏ qua, UUID mới sẽ được tự động tạo mỗi lần gọi.
+       })
+
+       import json
+       for line in response.iter_lines():
+           if isinstance(line, bytes):
+               line = line.decode()
+           if not line.startswith("data: "):
+               continue
+           data = line[6:].strip()
+           if data and data != "[DONE]":
+               try:
+                   chunk = json.loads(data)
+                   print(chunk.get("delta") or chunk.get("content") or "", end="")
+               except Exception:
+                   pass
+       ```
+     </TabItem>
+   </Tabs>
+
+4. **Duy trì lịch sử hội thoại (session ID)**
+
+   Truyền cùng `id` (phải là UUID) qua các lời gọi để giữ ngữ cảnh:
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       import { randomUUID } from "crypto"
+
+       const sessionId = randomUUID()
+
+       // Tin nhắn đầu tiên
+       await client.aiAgent.streamChat({
+         assistant_id: aiAgentId,
+         id: sessionId,
+         messages: [{ role: "user", content: "What's your refund policy?" }],
+       })
+
+       // Tin nhắn tiếp theo — cùng phiên, AI agent nhớ ngữ cảnh
+       await client.aiAgent.streamChat({
+         assistant_id: aiAgentId,
+         id: sessionId,
+         messages: [{ role: "user", content: "How long does it take?" }],
+       })
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       import uuid
+
+       session_id = str(uuid.uuid4())
+
+       # Tin nhắn đầu tiên
+       client.ai_agent.stream_chat({
+           "assistant_id": ai_agent_id,
+           "id": session_id,
+           "messages": [{"role": "user", "content": "What's your refund policy?"}],
+       })
+
+       # Tin nhắn tiếp theo — cùng phiên, AI agent nhớ ngữ cảnh
+       client.ai_agent.stream_chat({
+           "assistant_id": ai_agent_id,
+           "id": session_id,
+           "messages": [{"role": "user", "content": "How long does it take?"}],
+       })
+       ```
+     </TabItem>
+   </Tabs>
+
+</Steps>
+
+---
+
+## 2. Tạo Workflow và Gắn nó vào AI Agent
+
+<Steps>
+
+1. **Liệt kê các flow hiện có để tìm project ID của bạn**
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       const { data: flows } = await client.workflows.listFlows({ limit: 5 })
+       const projectId = flows[0]?.projectId
+       console.log("Project ID:", projectId)
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       res = client.workflows.list_flows(limit=5)
+       flows = res.get("data", [])
+       project_id = flows[0]["projectId"] if flows else None
+       print("Project ID:", project_id)
+       ```
+     </TabItem>
+   </Tabs>
+
+2. **Tạo một flow mới**
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       const flow = await client.workflows.createFlow({
+         displayName: "CRM Update on New Lead",
+         projectId,
+       })
+       console.log("Flow created:", flow.id)
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       flow = client.workflows.create_flow(
+           display_name="CRM Update on New Lead",
+           project_id=project_id,
+       )
+       print("Flow created:", flow["id"])
+       ```
+     </TabItem>
+   </Tabs>
+
+3. **Thêm trigger Webhook và xuất bản flow**
+
+   Một flow mới tạo ở trạng thái **DRAFT** không có trigger — URL webhook chưa tồn tại, vì vậy `triggerFlow` sẽ trả về 404. Thêm piece Webhook làm trigger, sau đó xuất bản:
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       // Đặt piece Webhook làm trigger của flow
+       await client.workflows.applyFlowOperation(flow.id, {
+         type: "UPDATE_TRIGGER",
+         request: {
+           name: "trigger",
+           type: "PIECE_TRIGGER",
+           valid: true,
+           displayName: "Webhook",
+           settings: {
+             pieceName: "@activepieces/piece-webhook",
+             pieceVersion: "0.1.24",
+             triggerName: "catch_webhook",
+             input: { authType: "none" },
+             propertySettings: {},
+           },
+         },
+       })
+
+       // Xuất bản — trạng thái flow chuyển từ DISABLED → ENABLED và URL webhook hoạt động
+       await client.workflows.applyFlowOperation(flow.id, {
+         type: "LOCK_AND_PUBLISH",
+         request: {},
+       })
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       # Đặt piece Webhook làm trigger của flow
+       client.workflows.apply_flow_operation(flow["id"], {
+           "type": "UPDATE_TRIGGER",
+           "request": {
+               "name": "trigger",
+               "type": "PIECE_TRIGGER",
+               "valid": True,
+               "displayName": "Webhook",
+               "settings": {
+                   "pieceName": "@activepieces/piece-webhook",
+                   "pieceVersion": "0.1.24",
+                   "triggerName": "catch_webhook",
+                   "input": {"authType": "none"},
+                   "propertySettings": {},
+               },
+           },
+       })
+
+       # Xuất bản — DISABLED → ENABLED, URL webhook hoạt động
+       client.workflows.apply_flow_operation(flow["id"], {
+           "type": "LOCK_AND_PUBLISH",
+           "request": {},
+       })
+       ```
+     </TabItem>
+   </Tabs>
+
+4. **Kích hoạt flow thủ công với payload**
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       // Fire and forget (bất đồng bộ)
+       await client.workflows.triggerFlow(flow.id, {
+         contact_name: "Jane Smith",
+         email: "jane@example.com",
+       })
+
+       // Trigger đồng bộ — để lời gọi này thực sự trả về dữ liệu thay vì hết thời gian,
+       // flow cần có hành động "Return Response" được thêm qua applyFlowOperation
+       // ADD_ACTION (nếu không gateway đợi 30s cho phản hồi và từ bỏ).
+       const result = await client.workflows.triggerFlowSync(flow.id, {
+         contact_name: "Jane Smith",
+         email: "jane@example.com",
+       })
+       console.log("Flow result:", result)
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       # Fire and forget (bất đồng bộ)
+       client.workflows.trigger_flow(flow["id"], {
+           "contact_name": "Jane Smith",
+           "email": "jane@example.com",
+       })
+
+       # Trigger đồng bộ — để lời gọi này thực sự trả về dữ liệu thay vì hết thời gian,
+       # flow cần có hành động "Return Response" được thêm qua apply_flow_operation
+       # ADD_ACTION (nếu không gateway đợi 30s và từ bỏ).
+       result = client.workflows.trigger_flow_sync(flow["id"], {
+           "contact_name": "Jane Smith",
+           "email": "jane@example.com",
+       })
+       print("Flow result:", result)
+       ```
+     </TabItem>
+   </Tabs>
+
+5. **Gắn flow vào AI agent của bạn**
+
+   Mở AI agent của bạn trong bảng điều khiển Imbrace, đi đến **Tools → Workflows**, và đính kèm flow. AI agent sẽ có thể kích hoạt nó trong cuộc hội thoại khi thích hợp.
+
+   Ngoài ra, cập nhật AI agent để tham chiếu workflow theo tên:
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       await client.chatAi.updateAiAgent(aiAgentId, {
+         name: "Support Bot",
+         workflow_name: "support_bot_v1",
+         workflow_function_call: [{ flow_id: flow.id, description: "Update CRM on new lead" }],
+       })
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       client.chat_ai.update_ai_agent(ai_agent_id, {
+           "name": "Support Bot",
+           "workflow_name": "support_bot_v1",
+           "workflow_function_call": [
+               {"flow_id": flow["id"], "description": "Update CRM on new lead"}
+           ],
+       })
+       ```
+     </TabItem>
+   </Tabs>
+
+6. **Kiểm tra lịch sử chạy**
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       const { data: runs } = await client.workflows.listRuns({
+         flowId: flow.id,
+         limit: 10,
+       })
+       for (const run of runs) {
+         console.log(run.id, run.status, run.startTime)
+       }
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       res = client.workflows.list_runs(flow_id=flow["id"], limit=10)
+       for run in res.get("data", []):
+           print(run["id"], run.get("status"), run.get("startTime"))
+       ```
+     </TabItem>
+   </Tabs>
+
+</Steps>
+
+---
+
+## 3. Quản lý Knowledge Hubs và Gắn vào AI Agent
+
+Các tệp và thư mục Knowledge Hub nằm trong dịch vụ **data-board** (`client.boards`). `_id` của thư mục là giá trị bạn truyền cho AI agent làm nguồn kiến thức.
+
+<Steps>
+
+1. **Tạo một thư mục**
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       const folder = await client.boards.createFolder({
+         name: "Product Documentation",
+          organization_id: process.env.IMBRACE_ORGANIZATION_ID,
+         parent_id: "root",
+       })
+       console.log("Folder ID:", folder._id)
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       folder = client.boards.create_folder({
+           "name": "Product Documentation",
+            "organization_id": os.environ.get("IMBRACE_ORGANIZATION_ID"),
+           "parent_id": "root",
+       })
+       print("Folder ID:", folder["_id"])
+       ```
+     </TabItem>
+   </Tabs>
+
+2. **Tải tệp lên thư mục**
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       import { readFileSync } from "fs"
+
+       const fileBuffer = readFileSync("./docs/faq.pdf")
+       const formData = new FormData()
+       formData.append("file", new Blob([fileBuffer], { type: "application/pdf" }), "faq.pdf")
+       formData.append("folder_id", folder._id)
+        formData.append("organization_id", process.env.IMBRACE_ORGANIZATION_ID ?? "")
+
+       const uploaded = await client.boards.uploadFile(formData)
+       console.log("File uploaded:", uploaded.file_id)
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       from pathlib import Path
+
+       path = Path("./docs/faq.pdf")
+       files = {
+           "file": (path.name, path.read_bytes(), "application/pdf"),
+           "folder_id": (None, folder["_id"]),
+            "organization_id": (None, os.environ.get("IMBRACE_ORGANIZATION_ID")),
+       }
+       uploaded = client.boards.upload_file(files)
+       print("File uploaded:", uploaded.get("file_id") or uploaded.get("_id"))
+       ```
+     </TabItem>
+   </Tabs>
+
+3. **Gắn thư mục vào AI agent**
+
+   Truyền `_id` của thư mục trong `folder_ids` — AI agent truy xuất từ mọi tệp trong thư mục đó. Sử dụng `board_ids` để gắn một data-board CRM (các mục của nó trở thành nguồn kiến thức — xem [Resources → Boards & items](/sdk/resources/#boards--items--clientboards)). Trường `knowledge_hubs` cũ đã không còn được dùng nữa.
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       await client.chatAi.updateAiAgent(aiAgentId, {
+         name: "Support Bot",
+         workflow_name: "support_bot_v1",
+         folder_ids: [folder._id],
+         // board_ids: [boardId],  // tùy chọn: gắn thêm data-board CRM
+       })
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       client.chat_ai.update_ai_agent(ai_agent_id, {
+           "name": "Support Bot",
+           "workflow_name": "support_bot_v1",
+           "folder_ids": [folder["_id"]],
+           # "board_ids": [board_id],  # tùy chọn: gắn thêm data-board CRM
+       })
+       ```
+     </TabItem>
+   </Tabs>
+
+4. **Kiểm tra và quản lý thư mục và tệp**
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       // Tìm kiếm thư mục
+       const folders = await client.boards.searchFolders({ q: "Product" })
+
+       // Lấy thư mục với nội dung
+       const contents = await client.boards.getFolderContents(folder._id)
+       console.log("Files:", contents.files?.length)
+
+       // Đổi tên thư mục
+       await client.boards.updateFolder(folder._id, { name: "Product Docs v2" })
+
+       // Tìm kiếm tệp trong thư mục
+       const files = await client.boards.searchFiles({ folderId: folder._id })
+
+       // Xóa thư mục
+       await client.boards.deleteFolders({ ids: [folder._id] })
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       # Tìm kiếm thư mục
+       folders = client.boards.search_folders(q="Product")
+
+       # Lấy thư mục với nội dung
+       contents = client.boards.get_folder_contents(folder["_id"])
+       print("Files:", len(contents.get("files") or []))
+
+       # Đổi tên thư mục
+       client.boards.update_folder(folder["_id"], {"name": "Product Docs v2"})
+
+       # Tìm kiếm tệp trong thư mục
+       files = client.boards.search_files(folder_id=folder["_id"])
+
+       # Xóa thư mục
+       client.boards.delete_folders([folder["_id"]])
+       ```
+     </TabItem>
+   </Tabs>
+
+</Steps>
+
+---
+
+## 4. Quản lý Data Boards và Mục (CRM Pipelines)
+
+<Steps>
+
+1. **Tạo một board**
+
+   Board là một pipeline CRM — khách hàng tiềm năng, giao dịch, nhiệm vụ, hoặc bất kỳ dữ liệu có cấu trúc nào.
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       const board = await client.boards.create({
+         name: "Sales Pipeline",
+         description: "Track all active deals",
+       })
+       console.log("Board ID:", board._id)
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       board = client.boards.create(
+           name="Sales Pipeline",
+           description="Track all active deals",
+       )
+       print("Board ID:", board["_id"])
+       ```
+     </TabItem>
+   </Tabs>
+
+2. **Thêm trường tùy chỉnh**
+
+   Các loại trường là `ShortText`, `LongText`, `Number`, `Dropdown`, `Date`, `Checkbox`, v.v. `createField` trả về board đã cập nhật — tìm trường mới của bạn bên trong `board.fields`.
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       const updated = await client.boards.createField(board._id, {
+         name: "Company",
+         type: "ShortText",
+       })
+       // Tìm trường định danh (tự động tạo với mọi board)
+       const identifierField = updated.fields.find(f => f.is_identifier)
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       updated = client.boards.create_field(board["_id"], {
+           "name": "Company",
+           "type": "ShortText",
+       })
+       identifier_field = next(f for f in updated["fields"] if f.get("is_identifier"))
+       ```
+     </TabItem>
+   </Tabs>
+
+3. **Tạo mục board (bản ghi)**
+
+   Các mục sử dụng định dạng `{ fields: [{ board_field_id, value }] }`:
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       const item = await client.boards.createItem(board._id, {
+         fields: [
+           { board_field_id: identifierField._id, value: "Acme Corp" },
+         ],
+       })
+       console.log("Item ID:", item._id)
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       item = client.boards.create_item(board["_id"], {
+           "fields": [
+               {"board_field_id": identifier_field["_id"], "value": "Acme Corp"},
+           ],
+       })
+       print("Item ID:", item["_id"])
+       ```
+     </TabItem>
+   </Tabs>
+
+4. **Liệt kê và tìm kiếm mục**
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       // Phân trang qua các mục
+       const { data: items } = await client.boards.listItems(board._id, { limit: 20, skip: 0 })
+
+       // Tìm kiếm toàn văn
+       const { data: results } = await client.boards.search(board._id, {
+         q: "Acme",
+         limit: 10,
+       })
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       # Phân trang qua các mục
+       items = client.boards.list_items(board["_id"], limit=20, skip=0)
+
+       # Tìm kiếm toàn văn
+       results = client.boards.search(board["_id"], q="Acme", limit=10)
+       ```
+     </TabItem>
+   </Tabs>
+
+5. **Cập nhật và xóa mục**
+
+   Cập nhật sử dụng `{ data: [{ key, value }] }` (lưu ý: `key`, không phải `board_field_id`):
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       await client.boards.updateItem(board._id, item._id, {
+         data: [{ key: identifierField._id, value: "Acme Corp — Closed Won" }],
+       })
+
+       await client.boards.deleteItem(board._id, item._id)
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       client.boards.update_item(board["_id"], item["_id"], {
+           "data": [{"key": identifier_field["_id"], "value": "Acme Corp — Closed Won"}],
+       })
+
+       client.boards.delete_item(board["_id"], item["_id"])
+       ```
+     </TabItem>
+   </Tabs>
+
+6. **Xuất ra CSV**
+
+   <Tabs syncKey="lang">
+     <TabItem label="TypeScript">
+       ```typescript
+       const csv = await client.boards.exportCsv(board._id)
+       // csv là một chuỗi — ghi vào tệp hoặc gửi dưới dạng tải xuống
+       ```
+     </TabItem>
+     <TabItem label="Python">
+       ```python
+       csv = client.boards.export_csv(board["_id"])
+       # csv là một chuỗi — ghi vào tệp hoặc gửi dưới dạng tải xuống
+       ```
+     </TabItem>
+   </Tabs>
+
+</Steps>

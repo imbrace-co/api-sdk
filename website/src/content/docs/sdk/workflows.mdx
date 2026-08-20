@@ -1,0 +1,365 @@
+---
+title: Workflows
+description: Workflows — visual workflow builder and channel automation — create, trigger, and manage flows via the SDK.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+`client.workflows` exposes both channel automation (v2/backend route) and the flow engine (CRUD flows, runs, folders, connections, pieces, MCP servers, tables, invitations).
+
+Initialize the client first (see [Installation](/sdk/installation/) or [Quick Start](/sdk/quick-start/)). For an end-to-end walkthrough that wires a workflow to an AI agent, see [Full Flow Guide §2](/sdk/full-flow-guide/#2-create-a-workflow-and-bind-it-to-an-ai-agent).
+
+---
+
+## Channel Automation — `client.workflows`
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { data: automations }    = await client.workflows.listChannelAutomation();
+const { data: whatsappFlows }  = await client.workflows.listChannelAutomation({ channelType: "whatsapp" });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+automations    = client.workflows.list_channel_automation().get("data", [])
+whatsapp_flows = client.workflows.list_channel_automation(channel_type="whatsapp").get("data", [])
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Flows
+
+### CRUD
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { data: flows } = await client.workflows.listFlows();
+
+const flow = await client.workflows.getFlow("flow_id");
+
+const newFlow = await client.workflows.createFlow({
+  displayName: "New Lead Notification",
+  projectId: "project_id",
+});
+
+await client.workflows.deleteFlow("flow_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+flows = client.workflows.list_flows().get("data", [])
+
+flow = client.workflows.get_flow("flow_id")
+
+new_flow = client.workflows.create_flow(
+    display_name="New Lead Notification",
+    project_id="project_id",
+)
+
+client.workflows.delete_flow("flow_id")
+```
+</TabItem>
+</Tabs>
+
+### Flow Builder — `buildFlow` / `addSteps`
+
+> TypeScript SDK `v1.4.0`+. Not yet in the Python SDK — use `apply_flow_operation` (below).
+
+`buildFlow` creates a whole flow — trigger plus (optionally nested) steps — in **one call**, from a declarative spec. It auto-fills the two things the raw flow-operation API requires and that are easy to miss: a `propertySettings` entry for every piece input, and `stepLocationRelativeToParent` on actions added after a loop (without it, later steps are silently orphaned). Step names auto-increment (`step_1`, `step_2`, …) unless a step sets `name`.
+
+```typescript
+const flow = await client.workflows.buildFlow({
+  displayName: "Qualify new leads",
+  trigger: {
+    kind: "piece",
+    pieceName: "@activepieces/piece-webhook",
+    pieceVersion: "0.1.24",
+    triggerName: "catch_webhook",
+    displayName: "Webhook",
+  },
+  steps: [
+    {
+      kind: "code",
+      displayName: "Score lead",
+      code: "export const code = async (inputs) => inputs;",
+    },
+    {
+      kind: "loop",
+      displayName: "For each lead",
+      items: "{{trigger.leads}}",
+      steps: [
+        {
+          kind: "piece",
+          displayName: "Notify sales",
+          pieceName: "@activepieces/piece-slack",
+          pieceVersion: "0.5.1",
+          actionName: "send_channel_message",
+          input: { channel: "#sales" },
+        },
+      ],
+    },
+  ],
+});
+```
+
+Step kinds: `code` (inline TypeScript), `piece` (a piece action), and `loop` (iterates `items`, may nest `steps`). The trigger is either a `piece` trigger or `{ kind: "empty" }`; omit it to keep the flow's default empty trigger.
+
+`addSteps` appends steps to an existing flow with the same auto-fill. By default steps attach after the trigger; pass `parentStep` / `location` to attach elsewhere (e.g. inside a loop). `startIndex` continues the auto step-name counter so names stay unique:
+
+```typescript
+await client.workflows.addSteps(
+  flow.id,
+  [{ kind: "code", displayName: "Log result", code: "export const code = async () => 'done';" }],
+  { parentStep: "step_2", location: "INSIDE_LOOP", startIndex: 3 },
+);
+```
+
+### Apply operation
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+await client.workflows.applyFlowOperation("flow_id", {
+  type: "UPDATE_TRIGGER",
+  request: {
+    name: "trigger",
+    type: "PIECE_TRIGGER",
+    valid: true,
+    displayName: "Webhook",
+    settings: {
+      pieceName: "@activepieces/piece-webhook",
+      pieceVersion: "0.1.24",
+      triggerName: "catch_webhook",
+      input: {},
+      propertySettings: {},
+    },
+  },
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+client.workflows.apply_flow_operation("flow_id", {
+    "type": "UPDATE_TRIGGER",
+    "request": {
+        "name": "trigger",
+        "type": "PIECE_TRIGGER",
+        "valid": True,
+        "displayName": "Webhook",
+        "settings": {
+            "pieceName": "@activepieces/piece-webhook",
+            "pieceVersion": "0.1.24",
+            "triggerName": "catch_webhook",
+            "input": {},
+            "propertySettings": {},
+        },
+    },
+})
+```
+</TabItem>
+</Tabs>
+
+### Trigger a flow
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// Fire and forget
+await client.workflows.triggerFlow("flow_id", {
+  contactId: "contact_xxx",
+  event: "lead_qualified",
+});
+
+// Wait for result
+const result = await client.workflows.triggerFlowSync("flow_id", {
+  contactId: "contact_xxx",
+  event: "lead_qualified",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# Fire and forget
+client.workflows.trigger_flow("flow_id", {"contactId": "contact_xxx", "event": "lead_qualified"})
+
+# Wait for result
+result = client.workflows.trigger_flow_sync("flow_id", {"contactId": "contact_xxx", "event": "lead_qualified"})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Flow Runs
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { data: runs } = await client.workflows.listRuns({ flowId: "flow_id", limit: 20 });
+const run            = await client.workflows.getRun("run_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+runs = client.workflows.list_runs(flow_id="flow_id", limit=20).get("data", [])
+run  = client.workflows.get_run("run_id")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Folders
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { data: folders }  = await client.workflows.listFolders();
+const folder             = await client.workflows.getFolder("folder_id");
+const newFolder          = await client.workflows.createFolder({ displayName: "CRM Automations", projectId: "project_id" });
+const updated            = await client.workflows.updateFolder("folder_id", { displayName: "Updated Name" });
+await client.workflows.deleteFolder("folder_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+folders    = client.workflows.list_folders().get("data", [])
+folder     = client.workflows.get_folder("folder_id")
+new_folder = client.workflows.create_folder(display_name="CRM Automations", project_id="project_id")
+updated    = client.workflows.update_folder(folder_id="folder_id", display_name="Updated Name")
+client.workflows.delete_folder("folder_id")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## App Connections
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { data: connections } = await client.workflows.listConnections();
+const connection            = await client.workflows.getConnection("connection_id");
+await client.workflows.upsertConnection({
+  name: "slack-integration",
+  type: "OAUTH2",
+  value: { access_token: "xoxb-xxx" },
+});
+await client.workflows.deleteConnection("connection_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+connections = client.workflows.list_connections().get("data", [])
+connection  = client.workflows.get_connection("connection_id")
+client.workflows.upsert_connection({"name": "slack-integration", "type": "OAUTH2", "value": {"access_token": "xoxb-xxx"}})
+client.workflows.delete_connection("connection_id")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Pieces
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const pieces = await client.workflows.listPieces({ limit: 20 });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+pieces = client.workflows.list_pieces(limit=20)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Triggers
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const status = await client.workflows.getTriggerRunStatus();
+await client.workflows.testTrigger({ pieceName: "@activepieces/piece-webhook", flowId: "flow_id" });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+status = client.workflows.get_trigger_run_status()
+client.workflows.test_trigger({"pieceName": "@activepieces/piece-webhook", "flowId": "flow_id"})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Tables & Records
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { data: tables }  = await client.workflows.listTables();
+const table             = await client.workflows.getTable("table_id");
+const { data: records } = await client.workflows.listRecords({ tableId: "table_id" });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+tables  = client.workflows.list_tables().get("data", [])
+table   = client.workflows.get_table("table_id")
+records = client.workflows.list_records(table_id="table_id").get("data", [])
+```
+</TabItem>
+</Tabs>
+
+---
+
+## MCP Servers
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { data: servers } = await client.workflows.listMcpServers("project_id");
+const server            = await client.workflows.getMcpServer("mcp_server_id");
+const newServer         = await client.workflows.createMcpServer({ projectId: "project_id", name: "My MCP" });
+await client.workflows.deleteMcpServer("mcp_server_id");
+await client.workflows.rotateMcpToken("mcp_server_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+servers    = client.workflows.list_mcp_servers(project_id="project_id").get("data", [])
+server     = client.workflows.get_mcp_server("mcp_server_id")
+new_server = client.workflows.create_mcp_server({"projectId": "project_id", "name": "My MCP"})
+client.workflows.delete_mcp_server("mcp_server_id")
+client.workflows.rotate_mcp_token("mcp_server_id")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## User Invitations
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { data: invitations } = await client.workflows.listInvitations({ type: "PROJECT" });
+await client.workflows.deleteInvitation("invitation_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+invitations = client.workflows.list_invitations(type="PROJECT").get("data", [])
+client.workflows.delete_invitation("invitation_id")
+```
+</TabItem>
+</Tabs>

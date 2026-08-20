@@ -1,0 +1,287 @@
+---
+title: Workflow
+description: client.workflows 的 schema 和方法参考 — flows、runs、folders、app connections、MCP servers 和 tables。
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+`client.workflows` 管理 Imbrace 流程引擎：创建和触发自动化流程、查看运行历史、使用文件夹组织、管理应用连接和 MCP 服务器，以及访问工作流表格。
+
+如需逐步指南，请参阅 [SDK 指南中的 Workflows](/sdk/workflows/)。
+
+---
+
+## Schema
+
+### Flow
+
+| Field | Type | 说明 |
+|-------|------|------|
+| `id` | string | 唯一流程 ID |
+| `created` | string | ISO 8601 创建时间戳 |
+| `updated` | string | ISO 8601 更新时间戳 |
+| `projectId` | string | 所属项目 |
+| `externalId` | string | 可选外部标识符 |
+| `status` | `"ENABLED"` \| `"DISABLED"` | 流程是否启用 |
+| `operationStatus` | string | 当前操作状态 |
+| `version` | FlowVersion | 启用中的版本对象 |
+
+### FlowVersion
+
+| Field | Type | 说明 |
+|-------|------|------|
+| `id` | string | 唯一版本 ID |
+| `created` | string | ISO 8601 创建时间戳 |
+| `updated` | string | ISO 8601 更新时间戳 |
+| `flowId` | string | 此版本所属的流程 |
+| `displayName` | string | 人类可读的流程名称 |
+| `trigger` | object | 触发器配置 |
+| `steps` | object? | 可选步骤配置 |
+| `valid` | boolean? | 版本是否有效 |
+
+### FlowRun
+
+| Field | Type | 说明 |
+|-------|------|------|
+| `id` | string | 唯一运行 ID |
+| `created` | string | ISO 8601 创建时间戳 |
+| `updated` | string | ISO 8601 更新时间戳 |
+| `projectId` | string | 项目 ID |
+| `flowId` | string | 已执行的流程 |
+| `flowVersionId` | string | 运行的特定版本 |
+| `status` | `"RUNNING"` \| `"SUCCEEDED"` \| `"FAILED"` \| `"TIMEOUT"` \| `"PAUSED"` \| `"STOPPED"` | 运行结果 |
+| `environment` | `"PRODUCTION"` \| `"TESTING"` | 执行环境 |
+| `startTime` | string? | 运行开始时间 |
+| `finishTime` | string? | 运行结束时间 |
+| `failParentOnFailure` | boolean | 失败是否传播到父流程 |
+| `tags` | string[]? | 附加到此运行的标签 |
+
+### AppConnection
+
+| Field | Type | 说明 |
+|-------|------|------|
+| `id` | string | 唯一连接 ID |
+| `created` | string | ISO 8601 创建时间戳 |
+| `updated` | string | ISO 8601 更新时间戳 |
+| `externalId` | string | 外部标识符 |
+| `displayName` | string | 人类可读名称 |
+| `pieceName` | string | 此连接所属的 piece（集成） |
+| `projectId` | string | 项目 ID |
+| `type` | `"SECRET_TEXT"` \| `"OAUTH2"` \| `"CLOUD_OAUTH2"` \| `"PLATFORM_OAUTH2"` \| `"BASIC_AUTH"` \| `"CUSTOM_AUTH"` | 连接认证类型 |
+
+### McpServer
+
+| Field | Type | 说明 |
+|-------|------|------|
+| `id` | string | 唯一 MCP 服务器 ID |
+| `created` | string | ISO 8601 创建时间戳 |
+| `updated` | string | ISO 8601 更新时间戳 |
+| `projectId` | string | 项目 ID |
+| `name` | string? | 服务器名称 |
+
+---
+
+## Methods
+
+### Flows
+
+| Method | TypeScript | Python | 说明 |
+|--------|-----------|--------|------|
+| List flows | `listFlows` | `list_flows` | 分页的流程列表 |
+| Get flow | `getFlow` | `get_flow` | 按 ID 获取单个流程 |
+| Create flow | `createFlow` | `create_flow` | 创建新流程 |
+| Delete flow | `deleteFlow` | `delete_flow` | 删除流程 |
+| Apply flow operation | `applyFlowOperation` | `apply_flow_operation` | 对流程应用操作（例如发布、启用） |
+| Trigger flow | `triggerFlow` | `trigger_flow` | 异步触发流程 |
+| Trigger flow sync | `triggerFlowSync` | `trigger_flow_sync` | 触发流程并等待结果 |
+
+### Flow Runs
+
+| Method | TypeScript | Python | 说明 |
+|--------|-----------|--------|------|
+| List runs | `listRuns` | `list_runs` | 列出运行历史 |
+| Get run | `getRun` | `get_run` | 按 ID 获取单个运行 |
+
+### Folders
+
+| Method | TypeScript | Python | 说明 |
+|--------|-----------|--------|------|
+| List folders | `listFolders` | `list_folders` | 列出流程文件夹 |
+| Get folder | `getFolder` | `get_folder` | 按 ID 获取文件夹 |
+| Create folder | `createFolder` | `create_folder` | 创建文件夹 |
+| Update folder | `updateFolder` | `update_folder` | 重命名文件夹 |
+| Delete folder | `deleteFolder` | `delete_folder` | 删除文件夹 |
+
+### App Connections
+
+| Method | TypeScript | Python | 说明 |
+|--------|-----------|--------|------|
+| List connections | `listConnections` | `list_connections` | 列出应用连接 |
+| Get connection | `getConnection` | `get_connection` | 按 ID 获取连接 |
+| Upsert connection | `upsertConnection` | `upsert_connection` | 创建或更新连接 |
+| Delete connection | `deleteConnection` | `delete_connection` | 移除连接 |
+
+### MCP Servers
+
+| Method | TypeScript | Python | 说明 |
+|--------|-----------|--------|------|
+| List MCP servers | `listMcpServers` | `list_mcp_servers` | 列出 MCP 服务器 |
+| Get MCP server | `getMcpServer` | `get_mcp_server` | 按 ID 获取服务器 |
+| Create MCP server | `createMcpServer` | `create_mcp_server` | 注册新的 MCP 服务器 |
+| Delete MCP server | `deleteMcpServer` | `delete_mcp_server` | 移除服务器 |
+| Rotate token | `rotateMcpToken` | `rotate_mcp_token` | 轮换服务器的认证令牌 |
+
+---
+
+## listFlows / list_flows
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const page = await client.workflows.listFlows({
+  limit: 10,
+  status: "ENABLED",
+  folderId: "folder_id",
+});
+for (const flow of page.data) {
+  console.log(flow.id, flow.version?.displayName);
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+page = client.workflows.list_flows(limit=10, status="ENABLED", folder_id="folder_id")
+for flow in page.get("data", []):
+    print(flow["id"])
+```
+</TabItem>
+</Tabs>
+
+---
+
+## createFlow / create_flow
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const flow = await client.workflows.createFlow({
+  displayName: "New Lead Notification",
+  projectId: "project_id",
+});
+console.log(flow.id);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+flow = client.workflows.create_flow(
+    display_name="New Lead Notification",
+    project_id="project_id",
+)
+print(flow["id"])
+```
+</TabItem>
+</Tabs>
+
+---
+
+## triggerFlow / trigger_flow
+
+使用可选负载异步触发流程。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+await client.workflows.triggerFlow("flow_id", {
+  contact_id: "contact_123",
+  event: "lead_created",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+client.workflows.trigger_flow("flow_id", {
+    "contact_id": "contact_123",
+    "event": "lead_created",
+})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## listRuns / list_runs
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const page = await client.workflows.listRuns({
+  flowId: "flow_id",
+  status: "FAILED",
+  limit: 20,
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+page = client.workflows.list_runs(
+    flow_id="flow_id",
+    status="FAILED",
+    limit=20,
+)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## upsertConnection / upsert_connection
+
+创建或更新应用连接（例如第三方服务的 API 密钥）。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const conn = await client.workflows.upsertConnection({
+  displayName: "Slack Workspace",
+  pieceName: "slack",
+  projectId: "project_id",
+  type: "SECRET_TEXT",
+  value: { api_key: "xoxb-..." },
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+conn = client.workflows.upsert_connection({
+    "displayName": "Slack Workspace",
+    "pieceName": "slack",
+    "projectId": "project_id",
+    "type": "SECRET_TEXT",
+    "value": {"api_key": "xoxb-..."},
+})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## createMcpServer / create_mcp_server
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const server = await client.workflows.createMcpServer({
+  name: "My MCP Server",
+  projectId: "project_id",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+server = client.workflows.create_mcp_server({
+    "name": "My MCP Server",
+    "projectId": "project_id",
+})
+```
+</TabItem>
+</Tabs>

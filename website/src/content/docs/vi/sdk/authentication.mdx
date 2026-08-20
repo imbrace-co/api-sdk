@@ -1,0 +1,263 @@
+---
+title: Xác thực
+description: API Key so với Access Token — khi nào nên sử dụng mỗi loại, và cách truyền chúng vào SDK.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+SDK hỗ trợ hai loại thông tin xác thực. Truyền `apiKey` / `api_key` hoặc `accessToken` / `access_token` vào constructor client — tầng vận chuyển tự động xử lý các header.
+
+### Tôi nên sử dụng thông tin xác thực nào?
+
+Sự lựa chọn phụ thuộc vào **vai trò của Imbrace trong sản phẩm của bạn**:
+
+#### Build on Imbrace → sử dụng Access Token
+
+Imbrace là backend của bạn. Người dùng cuối của bạn đăng nhập vào Imbrace (qua OTP hoặc mật khẩu); access token `acc_...` của họ là thông tin xác thực mà SDK sử dụng cho mọi yêu cầu. Xác thực, cơ sở dữ liệu và logic nghiệp vụ của Imbrace (AI agents, knowledge hubs, workflows) đều chạy thay mặt cho người dùng đã đăng nhập thực tế.
+
+Sản phẩm điển hình: widget chat, dashboard, hoặc ứng dụng di động nơi danh tính của mỗi người dùng là người dùng Imbrace. Imbrace ghi lại lịch sử, quyền và nhật ký kiểm toán theo từng người dùng.
+
+#### Wrap Imbrace → sử dụng API Key
+
+Bạn có backend riêng, người dùng riêng, cơ sở dữ liệu riêng. Imbrace là một khả năng mà dịch vụ của bạn gọi đến — "dùng AI của Imbrace để trả lời câu này" — cùng với mọi thứ khác bạn làm. Người dùng cuối của bạn không bao giờ thấy Imbrace; dịch vụ của bạn gọi Imbrace bằng một key `api_...` cấp tổ chức duy nhất (do quản trị viên Imbrace cấp). Imbrace thấy một danh tính (người dùng dịch vụ của API key) và bạn tự xử lý việc ghi nhận theo từng người dùng ở phía bạn.
+
+Sản phẩm điển hình: một CRM hiện có, hệ thống ticket, hoặc công cụ nội bộ nhúng Imbrace như một tính năng. Một thông tin xác thực nằm trong tệp env của bạn và phục vụ mọi yêu cầu.
+
+| | Build on Imbrace (Access Token) | Wrap Imbrace (API Key) |
+| --- | --- | --- |
+| **Ai chạy xác thực?** | Imbrace (đăng nhập OTP / mật khẩu) | Bạn (xác thực riêng) |
+| **Người dùng của ai?** | Người dùng Imbrace | Người dùng của bạn |
+| **CSDL chính thức của ai?** | Của Imbrace | Của bạn |
+| **Danh tính Imbrace thấy** | Người dùng cuối thực tế | Một tài khoản dịch vụ |
+| **Ghi nhận theo người dùng** | Tích hợp sẵn | Tùy bạn |
+| **Thời hạn thông tin xác thực** | Theo phiên; làm mới khi cần | Dài hạn; không tự hết hạn |
+| **Header được gửi** | `x-access-token: acc_...` | `x-api-key: api_...` |
+
+> Cả hai loại thông tin xác thực đều là hạng nhất. Hầu hết các resource đều chấp nhận cả hai. Một số tính năng phụ thuộc vào ngữ cảnh người dùng (document artifacts, lịch sử chat theo người dùng) chỉ có ý nghĩa với access token.
+
+### Tham chiếu Header
+
+| Thông tin xác thực | Header được gửi |
+| --- | --- |
+| `apiKey` / `api_key` | `x-api-key: api_xxx...` |
+| `accessToken` / `access_token` | `x-access-token: acc_xxx...` |
+
+Ngữ cảnh tổ chức được **mã hóa bên trong chính thông tin xác thực** — mọi API key và mọi access token đều gắn với chính xác một tổ chức. Cổng gateway phân giải tổ chức trên mọi yêu cầu từ thông tin xác thực bạn đã gửi. Bạn có thể tùy chọn ghi đè bằng cách truyền `organizationId` (TypeScript) hoặc `organization_id` (Python) vào constructor.
+
+Để biết hướng dẫn thiết lập thông tin xác thực từng bước (env vars, dotenv, secrets), hãy xem [Hướng dẫn thiết lập](/getting-started/setup/#configure-credentials).
+
+---
+
+### API Key
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    import { ImbraceClient } from "@imbrace/sdk";
+
+    const client = new ImbraceClient({
+      apiKey: process.env.IMBRACE_API_KEY,
+      env: "stable",
+    });
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    import os
+    from imbrace import ImbraceClient
+
+    client = ImbraceClient(
+        api_key=os.environ["IMBRACE_API_KEY"],
+    )
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+### Access Token
+
+Nếu bạn đã có token `acc_...`, hãy truyền trực tiếp:
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    const client = new ImbraceClient({
+      accessToken: process.env.IMBRACE_ACCESS_TOKEN,
+      env: "stable",
+    });
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    client = ImbraceClient(
+        access_token=os.environ["IMBRACE_ACCESS_TOKEN"],
+    )
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+### Luồng đăng nhập OTP
+
+Sử dụng luồng này để xác thực người dùng qua email OTP và lấy token phiên. SDK tự động lưu token sau khi đăng nhập.
+
+Đăng nhập là quy trình đổi token **hai giai đoạn**:
+
+1. **`requestOtp` → `loginWithOtp`** cấp một token `login_acc_...` ngắn hạn (TTL 3 giờ). Token này chỉ làm được một việc: liệt kê các tổ chức mà người dùng thuộc về.
+2. **`selectOrganization(orgId)`** đổi nó lấy một token `acc_...` gắn với tổ chức đã chọn (TTL 30 ngày). Mọi lệnh gọi resource khác đều dùng token này.
+
+Nếu người dùng chỉ thuộc đúng một tổ chức, bạn có thể bỏ qua bước chọn và truyền thẳng id tổ chức đó cho `selectOrganization`. Nếu họ thuộc nhiều tổ chức, hãy liệt kê và để người dùng chọn trước.
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    import { ImbraceClient } from "@imbrace/sdk"
+
+    const client = new ImbraceClient({
+      env: "stable",
+    })
+
+    // Bước 1: Gửi OTP đến email của người dùng
+    await client.requestOtp("user@example.com")
+
+    // Bước 2: Người dùng nhập OTP họ nhận được. SDK lưu token login_acc_...
+    //         ngắn hạn VÀ lấy danh sách tổ chức của người dùng trong cùng một lệnh gọi.
+    const { organizations } = await client.loginWithOtp("user@example.com", "ABC123")
+    const chosen = organizations[0]  // ← thay bằng lựa chọn từ UI của bạn
+
+    // Bước 3: Đổi token login_acc_ lấy token acc_ gắn với tổ chức.
+    //         SDK tự động cập nhật token nội bộ và x-organization-id.
+    await client.selectOrganization(chosen.id)
+
+    // Bây giờ sử dụng bất kỳ resource nào
+    const { data: boards } = await client.boards.list()
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    from imbrace import ImbraceClient
+
+    client = ImbraceClient()
+
+    # Bước 1: Gửi OTP đến email của người dùng
+    client.request_otp("user@example.com")
+
+    # Bước 2: Người dùng nhập OTP. login_with_otp lưu token login_acc_ ngắn hạn
+    #         VÀ trả về danh sách tổ chức của người dùng.
+    res = client.login_with_otp("user@example.com", "123456")
+    chosen = res["organizations"][0]  # ← thay bằng lựa chọn từ UI của bạn
+
+    # Bước 3: Đổi login_acc_ lấy token acc_ gắn theo tổ chức.
+    #         SDK tự cập nhật token + x-organization-id.
+    client.select_organization(chosen["organization_id"])
+
+    # Bước 4: Bây giờ dùng bất kỳ resource nào
+    me = client.platform.get_me()
+    ```
+
+    Biến thể bất đồng bộ:
+
+    ```python
+    from imbrace import AsyncImbraceClient
+
+    async with AsyncImbraceClient() as client:
+        await client.request_otp("user@example.com")
+        res = await client.login_with_otp("user@example.com", "123456")
+        chosen = res["organizations"][0]
+        await client.select_organization(chosen["organization_id"])
+        me = await client.platform.get_me()
+    ```
+  </TabItem>
+</Tabs>
+
+> **Lối tắt cho một tổ chức.** Nếu id tổ chức đã được biết trước (ví dụ lưu trong `IMBRACE_ORGANIZATION_ID`), bạn có thể bỏ qua bước chọn và truyền thẳng cho `selectOrganization`. Bước chọn chỉ cần thiết khi người dùng thuộc nhiều tổ chức.
+
+---
+
+### Đăng nhập bằng mật khẩu
+
+`login()` trả về cả token đăng nhập và danh sách tổ chức của người dùng trong một lệnh gọi. Chọn một bằng `selectOrganization()` và SDK sẽ đổi token + header tổ chức giúp bạn.
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    const client = new ImbraceClient({ env: "stable" })
+
+    // Bước 1: Đăng nhập. Trả về { token: "login_acc_...", organizations: [...] }.
+    const { organizations } = await client.login("user@example.com", "password")
+    const chosen = organizations[0]  // ← thay bằng lựa chọn từ UI của bạn
+
+    // Bước 2: Đổi login_acc_ lấy token acc_ gắn với tổ chức.
+    await client.selectOrganization(chosen.id)
+
+    // Bây giờ sử dụng bất kỳ resource nào
+    const { data: boards } = await client.boards.list()
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    client = ImbraceClient()
+
+    # Bước 1: Đăng nhập. Trả về { token: "login_acc_...", organizations: [...] }.
+    res = client.login("user@example.com", "password123")
+    chosen = res["organizations"][0]  # ← thay bằng lựa chọn từ UI của bạn
+
+    # Bước 2: Đổi login_acc_ lấy token acc_ gắn theo tổ chức.
+    client.select_organization(chosen["organization_id"])
+
+    # Bây giờ sử dụng bất kỳ resource nào
+    boards = client.boards.list()
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+### Quản lý token
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    // Thay thế token (ví dụ: sau khi làm mới)
+    client.setAccessToken("acc_new_token...")
+
+    // Xóa token (ví dụ: khi đăng xuất)
+    client.clearAccessToken()
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    # Thay thế token (ví dụ: sau khi làm mới)
+    client.set_access_token("acc_new_token...")
+
+    # Xóa token (ví dụ: khi đăng xuất)
+    client.clear_access_token()
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+### Context manager (chỉ Python)
+
+Luôn bao bọc Python client trong context manager để pool kết nối `httpx` bên dưới được đóng sạch sẽ:
+
+```python
+# Đồng bộ
+with ImbraceClient(api_key=os.environ["IMBRACE_API_KEY"]) as client:
+    me = client.platform.get_me()
+
+# Bất đồng bộ
+async with AsyncImbraceClient(api_key=os.environ["IMBRACE_API_KEY"]) as client:
+    me = await client.platform.get_me()
+```
+
+---
+
+### Next steps
+
+- [Setup Guide ?](/getting-started/setup/#configure-credentials) � env vars, dotenv, and secrets management
+- [Quick Start ?](/sdk/quick-start/) � first API call using your credential
+- [Integrations ?](/sdk/integrations/) � framework wiring patterns (React, Next.js, FastAPI, Django)

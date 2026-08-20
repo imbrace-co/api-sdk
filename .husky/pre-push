@@ -1,0 +1,1 @@
+cd ts && npm run lint && npm run typecheck

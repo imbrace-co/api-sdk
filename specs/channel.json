@@ -1,0 +1,3605 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "channel-service",
+    "version": "1.0.0",
+    "description": "imbrace channel-service APIs exported for AI-agent tool use. Import a subset with ?tags=… — available tags: channels, conversations, messages, contacts, touchpoints, campaigns, templates, notifications, workflows, external-data-sync."
+  },
+  "servers": [
+    {
+      "url": "http://channel.dev.imbrace.lan/v1"
+    }
+  ],
+  "tags": [
+    {
+      "name": "channels"
+    },
+    {
+      "name": "conversations"
+    },
+    {
+      "name": "messages"
+    },
+    {
+      "name": "contacts"
+    },
+    {
+      "name": "touchpoints"
+    },
+    {
+      "name": "campaigns"
+    },
+    {
+      "name": "templates"
+    },
+    {
+      "name": "notifications"
+    },
+    {
+      "name": "workflows"
+    },
+    {
+      "name": "external-data-sync"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Agent API key (AGENT_API_KEYS, org-scoped) or the dashboard bearer token via the gateway."
+      }
+    }
+  },
+  "paths": {
+    "/channels": {
+      "get": {
+        "operationId": "listChannels",
+        "summary": "List communication channels of the organization",
+        "tags": [
+          "channels"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Filter by channel type (web, line, facebook, instagram, email, wechat, whatsapp)"
+            },
+            "description": "Filter by channel type (web, line, facebook, instagram, email, wechat, whatsapp)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Max rows to return"
+            },
+            "description": "Max rows to return"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Rows to skip (pagination)"
+            },
+            "description": "Rows to skip (pagination)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/channels/_count": {
+      "get": {
+        "operationId": "countChannelsByType",
+        "summary": "Count channels grouped by type",
+        "tags": [
+          "channels"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/channels/_conv_count": {
+      "get": {
+        "operationId": "countConversationsPerChannel",
+        "summary": "Count the current user's conversations per channel type",
+        "tags": [
+          "channels"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "view",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "joined | yours — narrows to conversations the user joined as member"
+            },
+            "description": "joined | yours — narrows to conversations the user joined as member"
+          },
+          {
+            "name": "team_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Scope counts to one team"
+            },
+            "description": "Scope counts to one team"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Conversation status bucket (open, resolved, archived, pending, …)"
+            },
+            "description": "Conversation status bucket (open, resolved, archived, pending, …)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/channels/providers": {
+      "get": {
+        "operationId": "listChannelProviders",
+        "summary": "List supported channel providers",
+        "tags": [
+          "channels"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/channels/{id}": {
+      "get": {
+        "operationId": "getChannelById",
+        "summary": "Get a single channel by id",
+        "tags": [
+          "channels"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateChannel",
+        "summary": "Update a channel (name, config, active flag)",
+        "tags": [
+          "channels"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "New channel name"
+                  },
+                  "config": {
+                    "type": "object",
+                    "description": "Partial config to merge"
+                  },
+                  "active": {
+                    "type": "boolean",
+                    "description": "Enable/disable the channel"
+                  }
+                },
+                "required": []
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteChannel",
+        "summary": "⚠️ DESTRUCTIVE — Delete a channel",
+        "tags": [
+          "channels"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-destructive": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/channels/status": {
+      "patch": {
+        "operationId": "bulkUpdateChannelStatus",
+        "summary": "Activate/deactivate multiple channels at once",
+        "tags": [
+          "channels"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "channel_ids": {
+                    "type": "array",
+                    "items": {},
+                    "description": "Channel ids to update"
+                  },
+                  "status": {
+                    "type": "string",
+                    "description": "active | inactive"
+                  }
+                },
+                "required": [
+                  "status"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/channels/_web": {
+      "post": {
+        "operationId": "createWebChannel",
+        "summary": "Create a Web (widget) channel",
+        "tags": [
+          "channels"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Channel display name"
+                  },
+                  "config": {
+                    "type": "object",
+                    "description": "Type-specific channel config (tokens, ids, …)"
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/channels/_line": {
+      "post": {
+        "operationId": "createLineChannel",
+        "summary": "Create a LINE channel",
+        "tags": [
+          "channels"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Channel display name"
+                  },
+                  "config": {
+                    "type": "object",
+                    "description": "Type-specific channel config (tokens, ids, …)"
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/channels/_facebook": {
+      "post": {
+        "operationId": "createFacebookChannel",
+        "summary": "Create a Facebook Messenger channel",
+        "tags": [
+          "channels"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Channel display name"
+                  },
+                  "config": {
+                    "type": "object",
+                    "description": "Type-specific channel config (tokens, ids, …)"
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/channels/_instagram": {
+      "post": {
+        "operationId": "createInstagramChannel",
+        "summary": "Create an Instagram channel",
+        "tags": [
+          "channels"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Channel display name"
+                  },
+                  "config": {
+                    "type": "object",
+                    "description": "Type-specific channel config (tokens, ids, …)"
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/channels/_email": {
+      "post": {
+        "operationId": "createEmailChannel",
+        "summary": "Create an Email channel",
+        "tags": [
+          "channels"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Channel display name"
+                  },
+                  "config": {
+                    "type": "object",
+                    "description": "Type-specific channel config (tokens, ids, …)"
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/channels/_wechat": {
+      "post": {
+        "operationId": "createWechatChannel",
+        "summary": "Create a WeChat channel",
+        "tags": [
+          "channels"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Channel display name"
+                  },
+                  "config": {
+                    "type": "object",
+                    "description": "Type-specific channel config (tokens, ids, …)"
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/channels/_whatsapp": {
+      "post": {
+        "operationId": "createWhatsappChannel",
+        "summary": "Create a WhatsApp channel",
+        "tags": [
+          "channels"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Channel display name"
+                  },
+                  "config": {
+                    "type": "object",
+                    "description": "Type-specific channel config (tokens, ids, …)"
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/init_channel": {
+      "post": {
+        "operationId": "initDefaultWebChannel",
+        "summary": "Get or create the organization's default web channel",
+        "tags": [
+          "channels"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Channel name when creating"
+                  }
+                },
+                "required": []
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/channels/workflows/{id}": {
+      "get": {
+        "operationId": "getChannelWorkflow",
+        "summary": "Get the workflow config attached to a channel",
+        "tags": [
+          "channels"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/channels/_facebook/credential/{credential_id}": {
+      "get": {
+        "operationId": "getChannelCredential",
+        "summary": "Get a stored channel credential",
+        "tags": [
+          "channels"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "credential_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "credential id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateChannelCredential",
+        "summary": "Update a stored channel credential",
+        "tags": [
+          "channels"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "parameters": [
+          {
+            "name": "credential_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "credential id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "credentials": {
+                    "type": "object",
+                    "description": "Credential payload to store"
+                  }
+                },
+                "required": []
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteChannelCredential",
+        "summary": "⚠️ DESTRUCTIVE — Delete a stored channel credential",
+        "tags": [
+          "channels"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-destructive": true,
+        "parameters": [
+          {
+            "name": "credential_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "credential id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/team_conversations": {
+      "get": {
+        "operationId": "listConversations",
+        "summary": "List team conversations (inbox)",
+        "tags": [
+          "conversations"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Status bucket: open, resolved, archived, pending, overdue, …"
+            },
+            "description": "Status bucket: open, resolved, archived, pending, overdue, …"
+          },
+          {
+            "name": "channel_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Filter by channel"
+            },
+            "description": "Filter by channel"
+          },
+          {
+            "name": "team_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Filter by team"
+            },
+            "description": "Filter by team"
+          },
+          {
+            "name": "contact_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Filter by contact"
+            },
+            "description": "Filter by contact"
+          },
+          {
+            "name": "view",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "joined | yours — only conversations the user participates in"
+            },
+            "description": "joined | yours — only conversations the user participates in"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Free-text search"
+            },
+            "description": "Free-text search"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Max rows to return"
+            },
+            "description": "Max rows to return"
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Rows to skip (pagination)"
+            },
+            "description": "Rows to skip (pagination)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/team_conversations/{id}": {
+      "get": {
+        "operationId": "getConversation",
+        "summary": "Get one conversation with details",
+        "tags": [
+          "conversations"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateConversation",
+        "summary": "Update conversation fields",
+        "tags": [
+          "conversations"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Name"
+                  },
+                  "status": {
+                    "type": "string",
+                    "description": "Status"
+                  },
+                  "assigned_to": {
+                    "type": "string",
+                    "description": "Assignee user id"
+                  }
+                },
+                "required": []
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteConversation",
+        "summary": "⚠️ DESTRUCTIVE — Delete a conversation",
+        "tags": [
+          "conversations"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-destructive": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/team_conversations/{id}/users": {
+      "get": {
+        "operationId": "listConversationUsers",
+        "summary": "List users participating in a conversation",
+        "tags": [
+          "conversations"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/team_conversations/_search": {
+      "get": {
+        "operationId": "searchConversations",
+        "summary": "Search conversations by text",
+        "tags": [
+          "conversations"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Search text"
+            },
+            "description": "Search text"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Max rows"
+            },
+            "description": "Max rows"
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Rows to skip"
+            },
+            "description": "Rows to skip"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/team_conversations/_views_count": {
+      "get": {
+        "operationId": "countConversationViews",
+        "summary": "Count conversations per view (all/joined/yours)",
+        "tags": [
+          "conversations"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/team_conversations/_outstanding": {
+      "get": {
+        "operationId": "listOutstandingConversations",
+        "summary": "List conversations awaiting a reply",
+        "tags": [
+          "conversations"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/team_conversations/_join": {
+      "post": {
+        "operationId": "joinConversation",
+        "summary": "Join a conversation as team member",
+        "tags": [
+          "conversations"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "conversation_id": {
+                    "type": "string",
+                    "description": "Conversation to join"
+                  }
+                },
+                "required": [
+                  "conversation_id"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/team_conversations/_join_request": {
+      "post": {
+        "operationId": "requestJoinConversation",
+        "summary": "Request to join a conversation",
+        "tags": [
+          "conversations"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "conversation_id": {
+                    "type": "string",
+                    "description": "Conversation to request"
+                  }
+                },
+                "required": [
+                  "conversation_id"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/team_conversations/_leave": {
+      "post": {
+        "operationId": "leaveConversation",
+        "summary": "Leave a conversation",
+        "tags": [
+          "conversations"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "conversation_id": {
+                    "type": "string",
+                    "description": "Conversation to leave"
+                  }
+                },
+                "required": [
+                  "conversation_id"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/team_conversations/_update_name": {
+      "post": {
+        "operationId": "renameConversation",
+        "summary": "Rename a conversation",
+        "tags": [
+          "conversations"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "conversation_id": {
+                    "type": "string",
+                    "description": "Conversation id"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "New name"
+                  }
+                },
+                "required": [
+                  "conversation_id",
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/team_conversations/_update_status": {
+      "post": {
+        "operationId": "updateConversationStatus",
+        "summary": "Change conversation status (open/resolved/archived/…)",
+        "tags": [
+          "conversations"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "conversation_id": {
+                    "type": "string",
+                    "description": "Conversation id"
+                  },
+                  "status": {
+                    "type": "string",
+                    "description": "New status"
+                  }
+                },
+                "required": [
+                  "conversation_id",
+                  "status"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/team_conversations/assign_team_member": {
+      "post": {
+        "operationId": "assignConversationMember",
+        "summary": "Assign a team member to a conversation",
+        "tags": [
+          "conversations"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "conversation_id": {
+                    "type": "string",
+                    "description": "Conversation id"
+                  },
+                  "user_id": {
+                    "type": "string",
+                    "description": "User to assign"
+                  },
+                  "team_id": {
+                    "type": "string",
+                    "description": "Team to assign"
+                  }
+                },
+                "required": [
+                  "conversation_id"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/team_conversations/remove_team_member": {
+      "post": {
+        "operationId": "removeConversationMember",
+        "summary": "Remove a team member from a conversation",
+        "tags": [
+          "conversations"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "conversation_id": {
+                    "type": "string",
+                    "description": "Conversation id"
+                  },
+                  "user_id": {
+                    "type": "string",
+                    "description": "User to remove"
+                  }
+                },
+                "required": [
+                  "conversation_id",
+                  "user_id"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/assign/teams/all": {
+      "get": {
+        "operationId": "listAssignableTeams",
+        "summary": "List teams available for conversation assignment",
+        "tags": [
+          "conversations"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Conversation id"
+            },
+            "description": "Conversation id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/assign/team/{teamId}/observers": {
+      "get": {
+        "operationId": "listTeamObservers",
+        "summary": "List observer users of a team",
+        "tags": [
+          "conversations"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "teamId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "teamId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/conversations_activities/{conversationId}": {
+      "get": {
+        "operationId": "listConversationActivities",
+        "summary": "List activity log entries of a conversation",
+        "tags": [
+          "conversations"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "conversationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "conversationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/conversation_messages": {
+      "get": {
+        "operationId": "listConversationMessages",
+        "summary": "List messages of a conversation",
+        "tags": [
+          "messages"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Conversation id"
+            },
+            "description": "Conversation id"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Max rows"
+            },
+            "description": "Max rows"
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Rows to skip"
+            },
+            "description": "Rows to skip"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "operationId": "sendConversationMessage",
+        "summary": "Send a message into a conversation",
+        "tags": [
+          "messages"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "conversation_id": {
+                    "type": "string",
+                    "description": "Target conversation id"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Message type (text, image, file, …); default text"
+                  },
+                  "text": {
+                    "type": "string",
+                    "description": "Message text (for type=text)"
+                  },
+                  "content": {
+                    "type": "object",
+                    "description": "Rich content payload (alternative to text)"
+                  },
+                  "url": {
+                    "type": "string",
+                    "description": "Media URL (for media types)"
+                  },
+                  "caption": {
+                    "type": "string",
+                    "description": "Media caption"
+                  }
+                },
+                "required": [
+                  "conversation_id"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/conversations/{conversation_id}/conversation_messages/{message_id}": {
+      "get": {
+        "operationId": "getConversationMessage",
+        "summary": "Get a single message",
+        "tags": [
+          "messages"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "conversation id"
+          },
+          {
+            "name": "message_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "message id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateConversationMessage",
+        "summary": "Update a message",
+        "tags": [
+          "messages"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "conversation id"
+          },
+          {
+            "name": "message_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "message id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "description": "New text"
+                  },
+                  "labels": {
+                    "type": "array",
+                    "items": {},
+                    "description": "Labels"
+                  }
+                },
+                "required": []
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/conversations/{conversation_id}/conversation_messages/{conversation_message_id}/_index": {
+      "get": {
+        "operationId": "getMessageIndex",
+        "summary": "Get the position (index) of a message inside its conversation",
+        "tags": [
+          "messages"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "conversation id"
+          },
+          {
+            "name": "conversation_message_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "conversation message id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/conversations/{conversation_id}/conversation_messages/{message_id}/comments": {
+      "post": {
+        "operationId": "createMessageComment",
+        "summary": "Comment on a message (internal note)",
+        "tags": [
+          "messages"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "conversation id"
+          },
+          {
+            "name": "message_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "message id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "content": {
+                    "type": "string",
+                    "description": "Comment text"
+                  }
+                },
+                "required": [
+                  "content"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/conversations/{conversation_id}/comments/{comment_id}": {
+      "put": {
+        "operationId": "updateConversationComment",
+        "summary": "Edit a conversation comment",
+        "tags": [
+          "messages"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "conversation id"
+          },
+          {
+            "name": "comment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "comment id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "content": {
+                    "type": "string",
+                    "description": "New comment text"
+                  }
+                },
+                "required": [
+                  "content"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteConversationComment",
+        "summary": "⚠️ DESTRUCTIVE — Delete a conversation comment",
+        "tags": [
+          "messages"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-destructive": true,
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "conversation id"
+          },
+          {
+            "name": "comment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "comment id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/contacts": {
+      "get": {
+        "operationId": "listContacts",
+        "summary": "List contacts of the organization",
+        "tags": [
+          "contacts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Free-text filter"
+            },
+            "description": "Free-text filter"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Max rows to return"
+            },
+            "description": "Max rows to return"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Rows to skip (pagination)"
+            },
+            "description": "Rows to skip (pagination)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createContact",
+        "summary": "Create a contact",
+        "tags": [
+          "contacts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "display_name": {
+                    "type": "string",
+                    "description": "Display name"
+                  },
+                  "first_name": {
+                    "type": "string",
+                    "description": "First name"
+                  },
+                  "last_name": {
+                    "type": "string",
+                    "description": "Last name"
+                  },
+                  "email": {
+                    "type": "string",
+                    "description": "Email address"
+                  },
+                  "phone_number": {
+                    "type": "string",
+                    "description": "Phone number"
+                  },
+                  "channel_id": {
+                    "type": "string",
+                    "description": "Origin channel id"
+                  },
+                  "channel_type": {
+                    "type": "string",
+                    "description": "Origin channel type"
+                  },
+                  "labels": {
+                    "type": "array",
+                    "items": {},
+                    "description": "Labels"
+                  },
+                  "time_zone": {
+                    "type": "string",
+                    "description": "IANA time zone"
+                  }
+                },
+                "required": []
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/contacts/_search": {
+      "post": {
+        "operationId": "searchContacts",
+        "summary": "Search contacts",
+        "tags": [
+          "contacts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "query": {
+                    "type": "string",
+                    "description": "Search text"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "description": "Max rows"
+                  },
+                  "offset": {
+                    "type": "integer",
+                    "description": "Rows to skip"
+                  }
+                },
+                "required": [
+                  "query"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/contacts/{id}": {
+      "get": {
+        "operationId": "getContact",
+        "summary": "Get a contact by id",
+        "tags": [
+          "contacts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateContact",
+        "summary": "Update contact fields",
+        "tags": [
+          "contacts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "display_name": {
+                    "type": "string",
+                    "description": "Display name"
+                  },
+                  "email": {
+                    "type": "string",
+                    "description": "Email"
+                  },
+                  "phone_number": {
+                    "type": "string",
+                    "description": "Phone"
+                  },
+                  "labels": {
+                    "type": "array",
+                    "items": {},
+                    "description": "Labels"
+                  }
+                },
+                "required": []
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteContact",
+        "summary": "⚠️ DESTRUCTIVE — Delete a contact",
+        "tags": [
+          "contacts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-destructive": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/contacts/{id}/conversations": {
+      "get": {
+        "operationId": "listContactConversations",
+        "summary": "List conversations of a contact",
+        "tags": [
+          "contacts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/contacts/{id}/files": {
+      "get": {
+        "operationId": "listContactFiles",
+        "summary": "List files exchanged with a contact",
+        "tags": [
+          "contacts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/contacts/{id}/comments": {
+      "get": {
+        "operationId": "listContactComments",
+        "summary": "List comments (notes) on a contact",
+        "tags": [
+          "contacts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createContactComment",
+        "summary": "Add a comment (note) to a contact",
+        "tags": [
+          "contacts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "content": {
+                    "type": "string",
+                    "description": "Comment text"
+                  }
+                },
+                "required": [
+                  "content"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/contacts/{id}/comment/{commentId}": {
+      "get": {
+        "operationId": "getContactComment",
+        "summary": "Get one contact comment",
+        "tags": [
+          "contacts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          },
+          {
+            "name": "commentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "commentId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteContactComment",
+        "summary": "⚠️ DESTRUCTIVE — Delete a contact comment",
+        "tags": [
+          "contacts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-destructive": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          },
+          {
+            "name": "commentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "commentId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/contacts/{id}/message_comments": {
+      "get": {
+        "operationId": "listContactMessageComments",
+        "summary": "List message comments involving a contact",
+        "tags": [
+          "contacts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/contacts/by-board-item/{boardItemId}": {
+      "get": {
+        "operationId": "getContactByBoardItem",
+        "summary": "Resolve a contact from a databoard item id",
+        "tags": [
+          "contacts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "boardItemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "boardItemId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/touchpoints": {
+      "get": {
+        "operationId": "listTouchpoints",
+        "summary": "List routing touchpoints",
+        "tags": [
+          "touchpoints"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "active | inactive | archived | update_needed"
+            },
+            "description": "active | inactive | archived | update_needed"
+          },
+          {
+            "name": "channel_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Filter by channel"
+            },
+            "description": "Filter by channel"
+          },
+          {
+            "name": "campaign_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Filter by campaign"
+            },
+            "description": "Filter by campaign"
+          },
+          {
+            "name": "is_archived",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Include archived only"
+            },
+            "description": "Include archived only"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Max rows to return"
+            },
+            "description": "Max rows to return"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Rows to skip (pagination)"
+            },
+            "description": "Rows to skip (pagination)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createTouchpoint",
+        "summary": "Create a touchpoint (routing rule / entry point)",
+        "tags": [
+          "touchpoints"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Touchpoint name"
+                  },
+                  "channel_id": {
+                    "type": "string",
+                    "description": "Channel the touchpoint belongs to"
+                  },
+                  "initial_phrase": {
+                    "type": "string",
+                    "description": "Trigger phrase that routes to the workflow"
+                  },
+                  "execute_workflow_id": {
+                    "type": "string",
+                    "description": "Workflow to execute on match"
+                  },
+                  "url": {
+                    "type": "string",
+                    "description": "Landing/destination URL"
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/touchpoints/{id}": {
+      "get": {
+        "operationId": "getTouchpoint",
+        "summary": "Get a touchpoint by id",
+        "tags": [
+          "touchpoints"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateTouchpoint",
+        "summary": "Update a touchpoint",
+        "tags": [
+          "touchpoints"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Name"
+                  },
+                  "initial_phrase": {
+                    "type": "string",
+                    "description": "Trigger phrase"
+                  },
+                  "status": {
+                    "type": "string",
+                    "description": "Status"
+                  }
+                },
+                "required": []
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteTouchpoint",
+        "summary": "⚠️ DESTRUCTIVE — Delete a touchpoint",
+        "tags": [
+          "touchpoints"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-destructive": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/touchpoints/_validate": {
+      "post": {
+        "operationId": "validateTouchpoint",
+        "summary": "Validate a touchpoint config (e.g. duplicate initial phrase)",
+        "tags": [
+          "touchpoints"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "channel_id": {
+                    "type": "string",
+                    "description": "Channel id"
+                  },
+                  "initial_phrase": {
+                    "type": "string",
+                    "description": "Phrase to validate"
+                  }
+                },
+                "required": []
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/campaign": {
+      "get": {
+        "operationId": "listCampaigns",
+        "summary": "List campaigns",
+        "tags": [
+          "campaigns"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createCampaign",
+        "summary": "Create a campaign",
+        "tags": [
+          "campaigns"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Campaign name"
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/campaign/{id}": {
+      "get": {
+        "operationId": "getCampaign",
+        "summary": "Get a campaign by id",
+        "tags": [
+          "campaigns"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateCampaign",
+        "summary": "Update a campaign",
+        "tags": [
+          "campaigns"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "New name"
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteCampaign",
+        "summary": "⚠️ DESTRUCTIVE — Delete a campaign",
+        "tags": [
+          "campaigns"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-destructive": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/message_templates": {
+      "get": {
+        "operationId": "listMessageTemplates",
+        "summary": "List reusable message templates",
+        "tags": [
+          "templates"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Max rows to return"
+            },
+            "description": "Max rows to return"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Rows to skip (pagination)"
+            },
+            "description": "Rows to skip (pagination)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createMessageTemplate",
+        "summary": "Create a message template",
+        "tags": [
+          "templates"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "description": "Template title"
+                  },
+                  "text": {
+                    "type": "string",
+                    "description": "Template body text"
+                  },
+                  "category": {
+                    "type": "string",
+                    "description": "Category"
+                  },
+                  "template_language": {
+                    "type": "string",
+                    "description": "Language code (e.g. en, vi)"
+                  }
+                },
+                "required": [
+                  "title",
+                  "text"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/message_templates/_search": {
+      "get": {
+        "operationId": "searchMessageTemplates",
+        "summary": "Search message templates",
+        "tags": [
+          "templates"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Search text"
+            },
+            "description": "Search text"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/message_templates/{id}": {
+      "get": {
+        "operationId": "getMessageTemplate",
+        "summary": "Get a message template",
+        "tags": [
+          "templates"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateMessageTemplate",
+        "summary": "Update a message template",
+        "tags": [
+          "templates"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "description": "Title"
+                  },
+                  "text": {
+                    "type": "string",
+                    "description": "Body text"
+                  }
+                },
+                "required": []
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteMessageTemplate",
+        "summary": "⚠️ DESTRUCTIVE — Delete a message template",
+        "tags": [
+          "templates"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-destructive": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/whatsapp_templates": {
+      "get": {
+        "operationId": "listWhatsappTemplates",
+        "summary": "List WhatsApp HSM templates",
+        "tags": [
+          "templates"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/notifications": {
+      "get": {
+        "operationId": "listNotifications",
+        "summary": "List in-app notifications of the current user",
+        "tags": [
+          "notifications"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Notification type filter"
+            },
+            "description": "Notification type filter"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Max rows"
+            },
+            "description": "Max rows"
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Rows to skip"
+            },
+            "description": "Rows to skip"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/notifications/read": {
+      "put": {
+        "operationId": "markNotificationsRead",
+        "summary": "Mark notifications as read",
+        "tags": [
+          "notifications"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ids": {
+                    "type": "array",
+                    "items": {},
+                    "description": "Notification ids to mark read"
+                  }
+                },
+                "required": []
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/notifications/dismiss": {
+      "post": {
+        "operationId": "dismissNotifications",
+        "summary": "Dismiss notifications",
+        "tags": [
+          "notifications"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ids": {
+                    "type": "array",
+                    "items": {},
+                    "description": "Notification ids to dismiss"
+                  }
+                },
+                "required": []
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/notifications/dismiss/all": {
+      "post": {
+        "operationId": "dismissAllNotifications",
+        "summary": "Dismiss all notifications",
+        "tags": [
+          "notifications"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/workflows/channel_automation": {
+      "get": {
+        "operationId": "listChannelAutomationWorkflows",
+        "summary": "List channel-automation workflows available to the org",
+        "tags": [
+          "workflows"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/credentials": {
+      "get": {
+        "operationId": "listWorkflowCredentials",
+        "summary": "List workflow credential catalog (static)",
+        "tags": [
+          "workflows"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/workflow/processed-credential-types": {
+      "get": {
+        "operationId": "listCredentialTypes",
+        "summary": "List processed credential types (static catalog)",
+        "tags": [
+          "workflows"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/stacks/{conversation_id}": {
+      "get": {
+        "operationId": "peekWorkflowStack",
+        "summary": "Peek the workflow stack of a conversation",
+        "tags": [
+          "workflows"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "conversation id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/positions/{id}": {
+      "delete": {
+        "operationId": "resetConversationWorkflow",
+        "summary": "⚠️ DESTRUCTIVE — Reset the workflow position of a conversation (unstick it)",
+        "tags": [
+          "workflows"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-destructive": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/positions/workflow/{id}": {
+      "delete": {
+        "operationId": "resetWorkflowPositions",
+        "summary": "⚠️ DESTRUCTIVE — Reset workflow positions for every conversation on a workflow",
+        "tags": [
+          "workflows"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-destructive": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/external-data-sync": {
+      "get": {
+        "operationId": "listExternalDataSyncs",
+        "summary": "List external data-sync subscriptions",
+        "tags": [
+          "external-data-sync"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/external-data-sync/{id}": {
+      "get": {
+        "operationId": "getExternalDataSync",
+        "summary": "Get an external data-sync subscription",
+        "tags": [
+          "external-data-sync"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/external-data-sync/{id}/sync": {
+      "post": {
+        "operationId": "syncExternalDataSync",
+        "summary": "Trigger a manual re-sync",
+        "tags": [
+          "external-data-sync"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-write": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "time_frame_start": {
+                    "type": "string",
+                    "description": "ISO start of the re-sync window (optional; both bounds required if either is set)"
+                  },
+                  "time_frame_end": {
+                    "type": "string",
+                    "description": "ISO end of the re-sync window (optional; both bounds required if either is set)"
+                  }
+                },
+                "required": []
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  }
+}

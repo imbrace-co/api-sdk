@@ -1,0 +1,317 @@
+---
+title: Conversation
+description: client.conversations 的 schema 和方法参考 — 列出、搜索、加入、分配和管理对话线程。
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+`client.conversations` 管理联系人与您的团队（或 AI 代理）之间的对话线程。每个对话属于一个 [Channel](/reference/channel/) 并链接到一个 [Contact](/reference/contact/)。
+
+---
+
+## Schema
+
+### Conversation
+
+| Field | Type | 说明 |
+|-------|------|------|
+| `object_name` | `"conversation"` | 对象类型标识符 |
+| `id` | string | 唯一对话 ID |
+| `organization_id` | string | 所属组织 |
+| `business_unit_id` | string | 业务单元 ID |
+| `channel_id` | string | 此对话所属的渠道 |
+| `channel_type` | string | 渠道平台类型（参见 [Channel](/reference/channel/)） |
+| `contact_id` | string | 链接的联系人 ID |
+| `status` | string | 对话状态（例如 `open`、`resolved`） |
+| `name` | string | 对话显示名称 |
+| `timestamp` | string | 最新消息的 ISO 8601 时间戳 |
+| `users` | SimpleUser[] | 当前在此对话中的团队成员 |
+
+---
+
+## Methods
+
+| Method | TypeScript | Python | 说明 |
+|--------|-----------|--------|------|
+| List | `list` | `list` | 分页的对话列表 |
+| Get | `get` | `get` | 按内部 ID 获取对话 |
+| Get by conversation ID | `getByConversationId` | — | 按公开对话 ID 获取 |
+| Search | `search` | `search` | 在业务单元内全文搜索 |
+| Get views count | `getViewsCount` | `get_views_count` | 按视图/状态统计对话数量 |
+| Create | `create` | `create` | 创建新对话 |
+| Join | `join` | `join` | 以团队成员身份加入对话 |
+| Leave | `leave` | `leave` | 离开对话 |
+| Update status | `updateStatus` | `update_status` | 更改对话状态 |
+| Update name | `updateName` | — | 重命名对话 |
+| Init video call | `initVideoCall` | — | 在对话中开始视频通话 |
+| Assign team member | `assignTeamMember` | — | 分配团队成员到对话 |
+| Remove team member | `removeTeamMember` | — | 移除团队成员 |
+| Get invitable users | `getInvitableUsers` | — | 列出可邀请的用户 |
+
+---
+
+## list / list
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const page = await client.conversations.list({
+  type: "open",
+  q: "billing",
+  limit: 20,
+  skip: 0,
+});
+for (const conv of page.data) {
+  console.log(conv.id, conv.name, conv.status);
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+page = client.conversations.list(type="open", q="billing", limit=20, skip=0)
+for conv in page.get("data", []):
+    print(conv["id"], conv.get("name"), conv.get("status"))
+```
+</TabItem>
+</Tabs>
+
+---
+
+## search / search
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const results = await client.conversations.search({
+  businessUnitId: "bu_id",
+  q: "refund request",
+  limit: 10,
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+results = client.conversations.search(
+    business_unit_id="bu_id",
+    q="refund request",
+    limit=10,
+)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## create / create
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const conversation = await client.conversations.create({
+  channel_id: "channel_id",
+  contact_id: "contact_id",
+});
+console.log(conversation.id);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+conversation = client.conversations.create()
+print(conversation["id"])
+```
+</TabItem>
+</Tabs>
+
+---
+
+## join / join
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+await client.conversations.join({ conversation_id: "conversation_id" });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+client.conversations.join({"conversation_id": "conversation_id"})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## updateStatus / update_status
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+await client.conversations.updateStatus({
+  conversation_id: "conversation_id",
+  status: "resolved",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+client.conversations.update_status({
+    "conversation_id": "conversation_id",
+    "status": "resolved",
+})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## assignTeamMember
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+await client.conversations.assignTeamMember({
+  conversation_id: "conversation_id",
+  user_id: "agent_user_id",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# Python SDK 不提供
+```
+</TabItem>
+</Tabs>
+
+---
+
+## leave / leave
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+await client.conversations.leave({ conversation_id: "conversation_id" });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+client.conversations.leave({"conversation_id": "conversation_id"})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## getByConversationId
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const conversation = await client.conversations.getByConversationId("public_conversation_id");
+console.log(conversation.id, conversation.status);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# Python SDK 不提供
+```
+</TabItem>
+</Tabs>
+
+---
+
+## getViewsCount / get_views_count
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const counts = await client.conversations.getViewsCount({ type: "open" });
+console.log(counts);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+counts = client.conversations.get_views_count(type="open")
+print(counts)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## updateName
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+await client.conversations.updateName({
+  conversation_id: "conversation_id",
+  name: "VIP Support Thread",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# Python SDK 不提供
+```
+</TabItem>
+</Tabs>
+
+---
+
+## removeTeamMember
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+await client.conversations.removeTeamMember({
+  conversation_id: "conversation_id",
+  user_id: "agent_user_id",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# Python SDK 不提供
+```
+</TabItem>
+</Tabs>
+
+---
+
+## getInvitableUsers
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const users = await client.conversations.getInvitableUsers("conversation_id");
+for (const u of users) {
+  console.log(u._id, u.name);
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# Python SDK 不提供
+```
+</TabItem>
+</Tabs>
+
+---
+
+## initVideoCall
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const result = await client.conversations.initVideoCall({
+  conversation_id: "conversation_id",
+});
+console.log(result.conversation);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# Python SDK 不提供
+```
+</TabItem>
+</Tabs>

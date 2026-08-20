@@ -1,0 +1,147 @@
+---
+title: MCP Server
+description: 讓 AI agent 存取 Imbrace API — 一個 URL、一個 API key，無需安裝。
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+把你的 AI 工具 — Claude Code、Cursor、Codex、Claude Desktop 等 — 連接到 Imbrace，它就能直接操作你的 Imbrace 資料：列出 CRM 看板、讀取對話、查看工作流程執行等。
+
+你只需要兩樣東西：
+
+- **一個 URL** — Imbrace 閘道在 `/mcp` 託管了一個 [Model Context Protocol](https://modelcontextprotocol.io) 伺服器，無需安裝或自行執行任何東西。
+- **一個 API key** — 作為 Bearer token 送出。Agent 只能看到你的組織與角色允許的內容，不會更多。
+
+### 第 1 步 — 取得 API key
+
+在 Imbrace Dashboard 產生外部 token（請參閱[取得 API Key](/zh-tw/guides/api-key/)），形如 `api_...`。
+
+### 第 2 步 — 連接你的工具
+
+在下方選擇你的工具並貼上設定。範例使用 **sandbox** 閘道 — 請替換為你所在環境的閘道主機名稱。
+
+<Tabs>
+<TabItem label="Claude Code">
+
+一條指令：
+
+```bash
+claude mcp add --transport http imbrace "https://app-gateway.sandbox.imbrace.co/mcp" \
+  --header "Authorization: Bearer api_xxx..."
+```
+
+</TabItem>
+<TabItem label="Cursor">
+
+加入專案中的 `.cursor/mcp.json` — 或 `~/.cursor/mcp.json` 以全域啟用：
+
+```json
+{
+  "mcpServers": {
+    "imbrace": {
+      "url": "https://app-gateway.sandbox.imbrace.co/mcp",
+      "headers": { "Authorization": "Bearer api_xxx..." }
+    }
+  }
+}
+```
+
+</TabItem>
+<TabItem label="Codex CLI">
+
+加入 `~/.codex/config.toml`（支援 HTTP MCP 的新版 Codex）：
+
+```toml
+[mcp_servers.imbrace]
+url = "https://app-gateway.sandbox.imbrace.co/mcp"
+bearer_token = "api_xxx..."
+```
+
+舊版 Codex 不支援 HTTP 時，透過 `mcp-remote` 橋接：
+
+```toml
+[mcp_servers.imbrace]
+command = "npx"
+args = ["-y", "mcp-remote", "https://app-gateway.sandbox.imbrace.co/mcp", "--header", "Authorization: Bearer api_xxx..."]
+```
+
+</TabItem>
+<TabItem label="Claude Desktop">
+
+Claude Desktop 只會啟動本機伺服器，因此用 `mcp-remote` 橋接 URL。在 **Settings → Developer → Edit Config** 中，加入 `claude_desktop_config.json`：
+
+```json
+{
+  "mcpServers": {
+    "imbrace": {
+      "command": "npx",
+      "args": [
+        "-y", "mcp-remote",
+        "https://app-gateway.sandbox.imbrace.co/mcp",
+        "--header", "Authorization: Bearer api_xxx..."
+      ]
+    }
+  }
+}
+```
+
+</TabItem>
+<TabItem label="其他用戶端">
+
+任何接受 URL 加標頭的 MCP 用戶端都使用標準形式：
+
+```json
+{
+  "mcpServers": {
+    "imbrace": {
+      "url": "https://app-gateway.sandbox.imbrace.co/mcp",
+      "headers": { "Authorization": "Bearer api_xxx..." }
+    }
+  }
+}
+```
+
+如果用戶端只支援本機（stdio）伺服器，用以下方式橋接：
+
+```bash
+npx -y mcp-remote "https://app-gateway.sandbox.imbrace.co/mcp" \
+  --header "Authorization: Bearer api_xxx..."
+```
+
+</TabItem>
+</Tabs>
+
+### 第 3 步 — 試試看
+
+問你的 agent，例如*「列出我的 Imbrace 看板」*或*「看看最新的對話」*。它會自動選用 `listBoards`、`listConversations`、`listFlows` 等工具。
+
+### 預設唯讀
+
+預設情況下 agent **只能看、不能改** — 只提供讀取工具。要開放更多權限，在所設定的 URL 上加查詢參數：
+
+| 加到 URL | 效果 |
+|---|---|
+| `?allowWrite=1` | Agent 還可以建立和修改資料 |
+| `?allowDestructive=1` | Agent 還可以刪除資料（包含 write） |
+| `?services=dataBoard,workflow` | 收窄：僅這些服務 |
+| `?tags=boards,records` | 收窄：僅這些主題 |
+
+範例 — 僅資料看板，帶寫入權限：
+
+```
+https://app-gateway.sandbox.imbrace.co/mcp?services=dataBoard&allowWrite=1
+```
+
+服務：`dataBoard`、`channel`、`platform`、`marketplace`、`workflow`。Agent 呼叫未啟用的工具會收到明確錯誤 — 不會靜默失敗。
+
+### 運作原理
+
+每次工具呼叫都會帶著**你的** token 經閘道的正常 API 路由重放，因此組織範圍、權限與 license 檢查與你親自呼叫 API 完全一致。工具即精選的 `agent-tools` 操作集，與 SDK 的 [`client.api`](/zh-tw/sdk/overview/) 介面同源。端點是基於 HTTP `POST` 的無狀態 JSON-RPC — 無需管理工作階段。
+
+### 不用 MCP？統一 OpenAPI
+
+使用 OpenAPI 工具規格而非 MCP 的平台（如 Open WebUI）可以指向 `GET /agent-tools/openapi.json`（同樣的 `Authorization` 標頭）：所有服務的 agent-tools 合併為**一份** spec，支援同樣的 `?services=` / `?tags=` 篩選 — 一個工具伺服器而不是五個。把基礎 URL 與操作路徑直接拼接的執行器（請求成 `/agent-tools/<op-path>`）也能相容：閘道會去掉前綴並帶你的憑證重放請求。
+
+### 本機替代方案 — CLI
+
+想要本機 stdio 伺服器（憑證來自 CLI profile，無需設定 URL）？CLI 內建同一套工具註冊表：[`imbrace mcp`](/zh-tw/cli/commands/#mcp-server)。

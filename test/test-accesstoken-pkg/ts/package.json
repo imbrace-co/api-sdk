@@ -1,0 +1,23 @@
+{
+  "name": "test-accesstoken-pkg-ts",
+  "version": "1.0.0",
+  "description": "Verify @imbrace/sdk (npm) — auth via Access Token — exercises every aiAgent method",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test:agent": "tsx test-ai-agent.ts",
+    "test:all": "tsx test-all-resources.ts",
+    "test:docai": "tsx test-document-ai.ts",
+    "test": "npm run test:agent && npm run test:all"
+  },
+  "dependencies": {
+    "@imbrace/sdk": "1.0.4",
+    "dotenv": "^16.4.5",
+    "test-api-pkg-ts": "file:../../test-api-pkg/ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.6.0"
+  }
+}

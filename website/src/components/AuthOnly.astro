@@ -1,0 +1,22 @@
+---
+// Wrap auth-mode-specific markdown so it only renders when the reader has
+// the matching auth selected in the header dropdown.
+//
+// Usage in MDX:
+//   <AuthOnly mode="access-token">
+//     <!-- access-token only content -->
+//   </AuthOnly>
+//   <AuthOnly mode="api-key">
+//     <!-- api-key only content -->
+//   </AuthOnly>
+
+interface Props {
+  mode: 'access-token' | 'api-key'
+}
+
+const { mode } = Astro.props
+---
+
+<div class="auth-only" data-auth-only={mode}>
+  <slot />
+</div>

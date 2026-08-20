@@ -1,0 +1,86 @@
+---
+title: Khắc phục sự cố
+description: Các lỗi phổ biến và giải pháp khi sử dụng Imbrace SDK.
+---
+
+## `AuthError: Invalid or expired access token.` (HTTP 401)
+
+API key trong `.env` đã hết hạn.
+
+```bash
+# Cập nhật .env
+IMBRACE_API_KEY=api_key_mới
+```
+---
+
+## `ApiError: [404]` với đường dẫn kép trong URL
+
+`baseUrl` / `base_url` được truyền vào constructor trỏ đến một đường dẫn endpoint đầy đủ thay vì chỉ root gateway.
+
+> SDK **không** tự động đọc biến môi trường. Quy ước là `IMBRACE_GATEWAY_URL` trong `.env`; bạn truyền nó thủ công: `new ImbraceClient({ baseUrl: process.env.IMBRACE_GATEWAY_URL })`.
+
+```env
+# Sai
+IMBRACE_GATEWAY_URL=https://app-gatewayv2.imbrace.co/private/backend/v1/third_party_token
+
+# Đúng
+IMBRACE_GATEWAY_URL=https://app-gatewayv2.imbrace.co
+```
+
+---
+
+## Integration tests đều bị bỏ qua
+
+`IMBRACE_API_KEY` chưa được đặt.
+
+```bash
+# Đặt tạm thời trong quá trình thực thi
+IMBRACE_API_KEY=api_xxx pytest tests/integration -v -m integration
+
+# Hoặc thêm vào .env
+echo "IMBRACE_API_KEY=api_xxx" >> py/.env
+```
+
+---
+
+## `Cannot find module` (TypeScript tests)
+
+Đường dẫn import trong tệp kiểm thử phải tương đối với độ sâu thư mục:
+
+| Vị trí tệp kiểm thử                 | Import                            |
+| ----------------------------------- | --------------------------------- |
+| `tests/unit/*.test.ts`              | `../../src/client.js`             |
+| `tests/unit/resources/*.test.ts`    | `../../../src/resources/x.js`     |
+| `tests/integration/*.test.ts`       | `../../src/client.js`             |
+
+---
+
+## `mypy` error: `Pattern matching is only supported in Python 3.10`
+
+mypy đang quét `site-packages` nhầm. Đã cấu hình trong `pyproject.toml`. Nếu vẫn còn:
+
+```bash
+mypy src/imbrace --exclude site-packages
+```
+
+---
+
+## CLI: lệnh trả về `401 Unauthorized`
+
+Thông tin xác thực của bạn đã hết hạn hoặc máy chủ API có token cũ.
+
+```bash
+imbrace login --api-key api_xxx...
+```
+
+---
+
+## CLI: `workflow run --sync` hết thời gian
+
+Chế độ đồng bộ có thể hết thời gian ở ~60s. Sử dụng bất đồng bộ + thăm dò thay thế:
+
+```bash
+imbrace workflow run <flowId> --payload '{}'
+imbrace workflow runs --limit 10           # tìm ID lần chạy
+imbrace workflow run-detail <runId>        # kiểm tra kết quả
+```

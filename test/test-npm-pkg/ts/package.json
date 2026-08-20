@@ -1,0 +1,36 @@
+{
+  "name": "test-npm-pkg",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:flow": "tsx tests/test-full-flow.ts",
+    "test:full-flow": "tsx tests/test-full-flow-guide.ts",
+    "test:frontend": "tsx tests/test-frontend-sdk.ts",
+    "test:multi-agent": "tsx tests/test-multi-agent.ts",
+    "test:crm-advanced": "tsx tests/test-crm-advanced.ts",
+    "test:multimedia": "tsx tests/test-multimedia-ai.ts",
+    "test:settings": "tsx tests/test-settings.ts",
+    "test:error-paths": "tsx tests/test-error-paths.ts",
+    "test:all": "tsx tests/test-all.ts",
+    "test:ai": "tsx tests/test-ai-agent.ts",
+    "test:boards": "tsx tests/test-boards.ts",
+    "test:crm": "tsx tests/test-crm.ts",
+    "test:document-ai": "tsx tests/test-document-ai.ts",
+    "test:workflows": "tsx tests/test-workflows.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.3"
+  },
+  "dependencies": {
+    "@imbrace/sdk": "^1.0.2",
+    "dotenv": "^17.4.2"
+  }
+}

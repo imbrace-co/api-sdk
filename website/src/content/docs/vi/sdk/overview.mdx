@@ -1,0 +1,109 @@
+---
+title: Tổng quan
+description: Imbrace SDK là gì, cách nó hoạt động, và khi nào nên sử dụng.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+Imbrace SDK là client chính thức cho Imbrace Gateway, có sẵn cho **TypeScript** và **Python**. Cả hai SDK đều bao bọc cùng một Gateway API với cùng các resource namespaces, cùng mô hình xác thực, và cùng ngữ nghĩa thử lại/lỗi — hãy chọn ngôn ngữ phù hợp với stack của bạn.
+
+
+### Tính năng chính
+
+| Tính năng | Chi tiết |
+|---|---|
+| **An toàn kiểu dữ liệu** | TypeScript types và Python type hints trên mọi resource |
+| **Hai loại thông tin xác thực** | `apiKey` hoặc `accessToken` — xem [Xác thực](/sdk/authentication/) |
+| **Tự động thử lại** | Thử lại 429 và 5xx với exponential backoff, không cần cấu hình |
+| **Streaming AI** | SSE / async iterator cho `streamChat` và AI completions |
+| **Async & đồng bộ (Py)** | `ImbraceClient` (đồng bộ) và `AsyncImbraceClient` (bất đồng bộ) |
+| **Hủy (TS)** | Truyền `AbortSignal` để hủy tác vụ đang thực hiện |
+
+### Cài đặt
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```bash
+    npm install @imbrace/sdk
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```bash
+    pip install imbrace
+    ```
+  </TabItem>
+</Tabs>
+
+### Hello, world
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    import { ImbraceClient } from "@imbrace/sdk"
+
+    const client = new ImbraceClient({ accessToken: process.env.IMBRACE_ACCESS_TOKEN })
+    const me = await client.platform.getMe()
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    from imbrace import ImbraceClient
+
+    with ImbraceClient(access_token=os.environ["IMBRACE_ACCESS_TOKEN"]) as client:
+        me = client.platform.get_me()
+    ```
+  </TabItem>
+</Tabs>
+
+### Các resource có sẵn
+
+Mọi namespace đều có trên cả hai SDK. Các phương thức tuân theo quy ước ngôn ngữ — `client.aiAgent.streamChat()` trong TS, `client.ai_agent.stream_chat()` trong Python.
+
+| Namespace | Microservice | Mục đích |
+|---|---|---|
+| `client.aiAgent` / `client.ai_agent` | ai-agent | Streaming AI chat, embeddings, parquet, chat-client sub-API |
+| `client.chatAi` / `client.chat_ai` | ai-service-v2 | AI Agent CRUD (tạo/cập nhật/xóa/danh sách) |
+| `client.documentAi` / `client.document_ai` | ai-service-v2 | Phân tích tài liệu, trích xuất, AI trên tệp |
+| `client.agent` | marketplace | Mẫu AI agent + use-case (tạo nguyên tử assistant + workflow + channel qua `createUseCase`) |
+| `client.workflows` | workflow-engine | Tự động hóa workflow — flows, triggers, runs |
+| `client.boards` | data-board | CRM boards — CRUD, items, fields, search, segments, CSV; KnowledgeHub thư mục & tệp |
+| `client.platform`, `client.organizations`, `client.teams` | platform | Người dùng, tổ chức, nhóm, business unit |
+| `client.contacts`, `client.conversations`, `client.messages`, `client.channel`, `client.categories`, `client.campaign`, `client.outbound` | channel-service | Liên hệ, hội thoại, tin nhắn, quản lý kênh/chiến dịch |
+| `client.marketplace` | marketplace | Tệp marketplace, mẫu email, workflow kênh |
+| `client.fileService` | file-service | Tải tệp theo ngữ cảnh (đính kèm board, tệp liên hệ, tệp tài chính, presigned URL) |
+| `client.ips`, `client.schedule` | ips | Lịch / quy tắc tự động giữa các tiến trình |
+| `client.ai` | ai-service-v2 | Completions/embeddings tương thích OpenAI, providers, guardrails |
+| `client.auth` | platform / backend cũ | Đăng nhập (OTP, mật khẩu, SSO), exchange token |
+
+Để xem danh sách đầy đủ và tài liệu tham khảo phương thức, hãy xem [Resources](/sdk/resources/).
+
+### Toàn bộ bề mặt API — `client.api` (TypeScript)
+
+Từ `v1.3.0`, TypeScript SDK còn kèm một bề mặt **sinh tự động** bao phủ mọi operation mà các service Imbrace mở cho AI agent — 272 operation trên 5 service, sinh từ các spec OpenAPI `agent-tools` của chính các service:
+
+```typescript
+const boards = await client.api.dataBoard.listBoards<{ data: Board[] }>();
+const flows  = await client.api.workflow.listFlows();
+```
+
+Namespace: `client.api.dataBoard`, `.channel`, `.platform`, `.marketplace`, `.workflow`.
+
+Bề mặt này đầy đủ và luôn đồng bộ với service đã triển khai, nhưng phần lớn operation trả về `unknown` (spec không khai báo schema response) — hãy truyền type argument khi bạn biết cấu trúc dữ liệu. Ưu tiên các resource viết tay ở trên khi chúng đáp ứng được; dùng `client.api` cho phần còn lại thay vì tự viết `fetch`.
+
+Cùng registry operation này cũng là nền tảng của [MCP server host sẵn trên gateway](/vi/mcp/overview/) và lệnh [`imbrace mcp`](/vi/cli/commands/#mcp-server) trong CLI — cả hai đều mở các operation này thành tool MCP cho AI agent.
+
+### Khi nào nên chọn loại thông tin xác thực nào
+
+| | API Key | Access Token |
+|---|---|---|
+| **Vai trò của Imbrace?** | Một tính năng bên trong *backend của bạn* | *Imbrace LÀ* backend của bạn |
+| **Người dùng của ai?** | Của bạn | Của Imbrace |
+| **Phù hợp nhất cho** | Server-to-server, script nội bộ, tích hợp CRM | Ứng dụng hướng đến người dùng cuối, nơi mỗi người dùng đăng nhập |
+
+Cây quyết định đầy đủ: [Xác thực →](/sdk/authentication/).
+
+### Các bước tiếp theo
+
+- [Cài đặt →](/sdk/installation/) — thiết lập gói và thông tin xác thực
+- [Quick Start →](/sdk/quick-start/) — thực hiện lời gọi đầu tiên trong 60 giây
+- [Hướng dẫn toàn diện →](/sdk/full-flow-guide/) — hướng dẫn từ đầu đến cuối cho bốn quy trình làm việc chính (AI agents, workflows, knowledge hub, boards)

@@ -1,0 +1,173 @@
+---
+title: 本地测试
+description: 针对真实或模拟网关在本地测试构建的 Imbrace SDK 包。
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+本指南让你测试**构建后的包**，就像消费者安装它一样 — 而不是原始源码。在发布新版本之前使用它，或者在复现消费者报告的错误时使用。
+
+## 先决条件
+
+- TypeScript：Node 18+
+- Python：Python 3.10+ 和 `pip`
+
+## 环境 URL
+
+相同的网关基础 URL 集适用于两个 SDK。在你的测试环境中设置一次：
+
+| 环境 | `IMBRACE_GATEWAY_URL` |
+| ----------- | ------------------------------------------ |
+| develop | `https://app-gateway.dev.imbrace.co` |
+| sandbox | `https://app-gateway.sandbox.imbrace.co` |
+| stable | `https://app-gatewayv2.imbrace.co` |
+
+## 凭证
+
+从仓库根目录的模板创建 `.env`，然后粘贴由 Imbrace 门户签发的凭证：
+
+```bash
+# 从 SDK 仓库根目录
+cp .env.example .env
+```
+
+实时调用所需的最低要求：
+
+| 变量 | 获取位置 |
+| ----------------- | --------------------------------------------------------------------------------------------- |
+| `IMBRACE_API_KEY` | Imbrace 门户，或使用现有访问令牌调用 `POST /private/backend/v1/third_party_token` |
+| `IMBRACE_GATEWAY_URL` | 上表中的 URL 之一（未设置时默认为 dev） |
+
+组织上下文编码在 API Key 内部 — 你不需要传递组织 ID。
+
+---
+
+## TypeScript — 链接构建后的 dist
+
+### 一次性设置
+
+```bash
+cd ts
+npm install
+npm run build
+npm pack        # 生成 ts/imbrace-sdk-<version>.tgz
+```
+
+然后在测试文件夹中：
+
+```bash
+cd test/test-local-pkg/ts
+npm install     # 从本地 .tgz 安装 @imbrace/sdk
+cp ../../../.env.example .env
+# 填写 .env
+```
+
+### 运行测试
+
+```bash
+cd test/test-local-pkg/ts
+npm run test:all
+```
+
+也可以单独运行各个套件 — `npm run test:full-flow`、`npm run test:ai`、
+`npm run test:crm` 等。完整列表见该目录下的 `package.json`。
+凭证从你上面创建的 `.env` 中读取。
+
+### 迭代 SDK 更改
+
+每次编辑都需要重新构建，链接才能生效：
+
+```bash
+# 终端 1 — ts/
+npm run build && npm pack
+
+# 终端 2 — test/test-local-pkg/ts
+npm install && npm run test:all
+```
+
+---
+
+## Python — 从 wheel 或 editable 安装
+
+### Editable 安装（最快迭代）
+
+从 `py/` 文件夹：
+
+```bash
+cd py
+pip install -e .
+```
+
+代码编辑后无需重新安装即可生效。
+
+### Wheel 安装（验证发布形态）
+
+```bash
+cd py
+python -m build               # 生成 dist/imbrace-*.whl
+pip install dist/imbrace-*.whl --force-reinstall
+```
+
+这可以捕获 editable 安装隐藏的文件缺失、打包错误和导入路径问题。
+
+### 运行测试
+
+```bash
+cd py
+pip install -e ".[dev]"
+python -m pytest tests/
+```
+
+对于镜像[完整流程指南](/zh-cn/sdk/full-flow-guide/)的全流程回归测试（从仓库根目录运行）：
+
+```bash
+cd test-pip-pkg/py
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python -m pytest tests/test_guide_flow.py -v
+```
+
+同样的测试以 `IMBRACE_API_KEY` 和 `IMBRACE_ACCESS_TOKEN` 两种认证模式运行。
+
+---
+
+## 切换环境
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```bash
+IMBRACE_GATEWAY_URL=https://app-gateway.sandbox.imbrace.co node test-local.mjs
+```
+</TabItem>
+<TabItem label="Python">
+```bash
+IMBRACE_GATEWAY_URL=https://app-gateway.sandbox.imbrace.co python -m pytest tests/
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 故障排除
+
+**`Cannot find package '@imbrace/sdk'`** (TypeScript)
+在 `test/test-local-pkg/ts` 中再次运行 `npm install`。它会从 `ts/` 构建出的 `.tgz` 解析 `@imbrace/sdk` — 若该文件缺失或过期，请在 `ts/` 重新运行 `npm pack`。
+
+**`ERR_MODULE_NOT_FOUND for a dist file`** (TypeScript)
+构建还未运行，或者添加了源文件但没有重新构建。在 `ts/` 中运行 `npm run build`。
+
+**`ModuleNotFoundError: No module named 'imbrace'`** (Python)
+包未安装在当前虚拟环境中。重新运行 `pip install -e .`（editable）或 `pip install dist/imbrace-*.whl`。
+
+**401 / 403 on live calls**
+你的凭证已过期、被撤销或错误。对于 API Key，生成一个新的：
+
+```bash
+curl -X POST https://app-gateway.dev.imbrace.co/private/backend/v1/third_party_token \
+  -H "x-access-token: <your_existing_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"expirationDays": 30}'
+```
+
+对于其他运行时错误，请参见[错误处理](/zh-cn/sdk/error-handling/)和[故障排除](/zh-cn/guides/troubleshooting/)。

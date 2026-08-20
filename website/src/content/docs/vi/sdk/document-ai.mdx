@@ -1,0 +1,414 @@
+---
+title: Document AI
+description: "Trích xuất dữ liệu có cấu trúc từ PDF và hình ảnh bằng vision models. Hai namespace: client.chatAi để xử lý trực tiếp, client.documentAi cho workflow dựa trên agent."
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+Document AI sử dụng vision models (ví dụ: GPT-4o) để trích xuất dữ liệu có cấu trúc từ PDF và hình ảnh — hóa đơn, biểu mẫu, biên lai, hợp đồng, hoặc bất kỳ tài liệu nào có văn bản nhìn thấy được.
+
+SDK hiển thị hai namespace:
+- **`client.chatAi` / `client.chat_ai`** — xử lý tài liệu trực tiếp và liệt kê model
+- **`client.documentAi` / `client.document_ai`** — xử lý tài liệu dựa trên agent với quản lý schema, CRUD agent và điều phối đầu cuối
+
+Khởi tạo client trước (xem [Cài đặt](/sdk/installation/) hoặc [Quick Start](/sdk/quick-start/)).
+
+---
+
+## `client.chatAi` — Xử lý Tài liệu
+
+### Liệt kê model có sẵn
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const models = await client.chatAi.listDocumentModels();
+```
+</TabItem>
+<TabItem label="Python">
+```python
+models = client.chat_ai.list_document_models()
+```
+</TabItem>
+</Tabs>
+
+### Xử lý tài liệu trực tiếp
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const result = await client.chatAi.processDocument({
+  modelName: "gpt-4o",
+  url: "https://example.com/invoice.pdf",
+  organizationId: "org_xxx",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.chat_ai.process_document(
+    model_name="gpt-4o",
+    url="https://example.com/invoice.pdf",
+    organization_id="org_xxx",
+)
+```
+</TabItem>
+</Tabs>
+
+#### Tham số tham chiếu
+
+| Tham số | Trường TS | Tham số Python | Loại | Bắt buộc |
+|---|---|---|---|---|
+| Tên model | `modelName` | `model_name` | `string` / `str` | Có |
+| URL tài liệu | `url` | `url` | `string` / `str` | Có |
+| ID tổ chức | `organizationId` | `organization_id` | `string` / `str` | Có |
+| ID Board | `boardId` | `board_id` | `string` / `str` | Không |
+| Ngôn ngữ | `language` | `language` | `string` / `str` | Không |
+| Hướng dẫn bổ sung | `additionalInstructions` | `additional_instructions` | `string` / `str` | Không |
+| Hướng dẫn tài liệu bổ sung | `additionalDocumentInstructions` | `additional_document_instructions` | `string` / `str` | Không |
+| Tên model xử lý | `processModelName` | `process_model_name` | `string` / `str` | Không |
+| URL tệp để điền | `fileUrlToFill` | `file_url_to_fill` | `string` / `str` | Không |
+| Công cụ | `tools` | `tools` | `Record<string, unknown>[]` / `List[Dict]` | Không |
+| UTC offset | `utc` | `utc` | `number` / `int` | Không |
+| Kích thước chunk | `chunkSize` | `chunk_size` | `number` / `int` | Không |
+| Tối đa đồng thời | `maxConcurrent` | `max_concurrent` | `number` / `int` | Không |
+| Số lần thử lại tối đa | `maxRetries` | `max_retries` | `number` / `int` | Không |
+| Xử lý nâng cao | `useEnhancedProcessing` | `use_enhanced_processing` | `boolean` / `bool` | Không |
+
+#### Ví dụ điền form PDF
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const result = await client.chatAi.processDocument({
+  modelName: "gpt-4o",
+  url: "https://example.com/blank-invoice.pdf",
+  organizationId: "org_xxx",
+  fileUrlToFill: "https://example.com/blank-invoice.pdf",
+  language: "en",
+});
+
+if (result.success && result.data.filledPdfUrl) {
+  console.log("Filled PDF:", result.data.filledPdfUrl);
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.chat_ai.process_document(
+    model_name="gpt-4o",
+    url="https://example.com/blank-invoice.pdf",
+    organization_id="org_xxx",
+    file_url_to_fill="https://example.com/blank-invoice.pdf",
+    language="en",
+)
+
+if result["success"] and result["data"].get("filledPdfUrl"):
+    print("Filled PDF:", result["data"]["filledPdfUrl"])
+```
+</TabItem>
+</Tabs>
+
+---
+
+## `client.documentAi` — CRUD Agent
+
+Document AI Agents lưu trữ schema trích xuất, hướng dẫn và cấu hình model để sử dụng lặp lại.
+
+### Liệt kê agent
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+// Tất cả agent
+const agents = await client.documentAi.listAgents();
+
+// Lọc theo tên
+const filtered = await client.documentAi.listAgents({ nameContains: "Invoice" });
+
+// Chỉ Document AI agents (được tạo qua createFull hoặc webapp)
+const docAiAgents = await client.documentAi.listAgents({ documentAiOnly: true });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+# Tất cả agent
+agents = client.document_ai.list_agents()
+
+# Lọc theo tên
+filtered = client.document_ai.list_agents(name_contains="Invoice")
+
+# Chỉ Document AI agents
+doc_ai_agents = client.document_ai.list_agents(document_ai_only=True)
+```
+</TabItem>
+</Tabs>
+
+### Lấy agent
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const agent = await client.documentAi.getAgent("agent_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+agent = client.document_ai.get_agent("agent_id")
+```
+</TabItem>
+</Tabs>
+
+### Tạo agent
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const agent = await client.documentAi.createAgent({
+  name: "Invoice Extractor",
+  instructions: "Extract invoice fields. Dates as YYYY-MM-DD.",
+  model_id: "gpt-4o",
+  schema: {
+    invoice_number: { type: "string", description: "Invoice ID" },
+    total:          { type: "number" },
+    date:           { type: "string", format: "date" },
+  },
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+agent = client.document_ai.create_agent(
+    name="Invoice Extractor",
+    instructions="Extract invoice fields. Dates as YYYY-MM-DD.",
+    model_id="gpt-4o",
+    schema={
+        "invoice_number": {"type": "string", "description": "Invoice ID"},
+        "total":          {"type": "number"},
+        "date":           {"type": "string", "format": "date"},
+    },
+)
+```
+</TabItem>
+</Tabs>
+
+### Cập nhật agent
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+await client.documentAi.updateAgent("agent_id", {
+  name: "Invoice Extractor v2",
+  instructions: "Updated extraction logic.",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+client.document_ai.update_agent("agent_id", {
+    "name": "Invoice Extractor v2",
+    "instructions": "Updated extraction logic.",
+})
+```
+</TabItem>
+</Tabs>
+
+### Xóa agent
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+await client.documentAi.deleteAgent("agent_id");
+```
+</TabItem>
+<TabItem label="Python">
+```python
+client.document_ai.delete_agent("agent_id")
+```
+</TabItem>
+</Tabs>
+
+---
+
+## `client.documentAi` — Xử lý với Agent
+
+Xử lý tài liệu bằng agent đã cấu hình (tra cứu model + hướng dẫn từ agent).
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const result = await client.documentAi.process({
+  agentId: "agent_id",
+  url: "https://example.com/invoice.pdf",
+  organizationId: "org_xxx",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.document_ai.process(
+    agent_id="agent_id",
+    url="https://example.com/invoice.pdf",
+    organization_id="org_xxx",
+)
+```
+</TabItem>
+</Tabs>
+
+Bạn cũng có thể ghi đè model hoặc hướng dẫn của agent:
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const result = await client.documentAi.process({
+  agentId: "agent_id",
+  url: "https://example.com/invoice.pdf",
+  organizationId: "org_xxx",
+  modelName: "gpt-4o",          // ghi đè model của agent
+  instructions: "Custom prompt", // ghi đè hướng dẫn của agent
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.document_ai.process(
+    agent_id="agent_id",
+    url="https://example.com/invoice.pdf",
+    organization_id="org_xxx",
+    model_name="gpt-4o",
+    instructions="Custom prompt",
+)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## `client.documentAi` — Đề xuất Schema
+
+Tự động đề xuất JSON schema bằng cách phân tích tài liệu mẫu.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const schema = await client.documentAi.suggestSchema({
+  url: "https://example.com/invoice.pdf",
+  organizationId: "org_xxx",
+  modelName: "gpt-4o",  // tùy chọn, mặc định "gpt-4o"
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+schema = client.document_ai.suggest_schema(
+    url="https://example.com/invoice.pdf",
+    organization_id="org_xxx",
+    model_name="gpt-4o",
+)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## `client.documentAi` — Tạo Đầy đủ (Orchestrator)
+
+Tạo Document AI agent từ đầu đến cuối (giống như webapp iMBRACE): tạo board với schema trích xuất, sau đó tạo UseCase + AI Agent liên kết với board đó.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const result = await client.documentAi.createFull({
+  name: "Invoice Extractor",
+  instructions: "Extract invoice fields. Dates as YYYY-MM-DD.",
+  schemaFields: [
+    { name: "invoice_number", type: "ShortText", description: "Invoice ID" },
+    { name: "total",          type: "Number",    description: "Total amount" },
+    { name: "date",           type: "Date",      description: "Invoice date" },
+  ],
+  modelId: "gpt-4o",
+  providerId: "system",
+});
+
+console.log(result.board_id);     // "brd_xxx"
+console.log(result.ai_agent_id);  // UUID của AI Agent đã tạo
+console.log(result.usecase_id);   // UUID của UseCase đã tạo
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.document_ai.create_full(
+    name="Invoice Extractor",
+    instructions="Extract invoice fields. Dates as YYYY-MM-DD.",
+    schema_fields=[
+        {"name": "invoice_number", "type": "ShortText", "description": "Invoice ID"},
+        {"name": "total",          "type": "Number",    "description": "Total amount"},
+        {"name": "date",           "type": "Date",      "description": "Invoice date"},
+    ],
+    model_id="gpt-4o",
+    provider_id="system",
+)
+
+print(result["board_id"])      # "brd_xxx"
+print(result["ai_agent_id"])   # UUID của AI Agent đã tạo
+```
+</TabItem>
+</Tabs>
+
+#### Tùy chọn Tạo Đầy đủ
+
+| Tham số | Trường TS | Tham số Python | Loại | Mặc định |
+|---|---|---|---|---|
+| Tên | `name` | `name` | `string` / `str` | — |
+| Hướng dẫn | `instructions` | `instructions` | `string` / `str` | — |
+| Trường schema | `schemaFields` | `schema_fields` | `CreateBoardFieldInput[]` / `List[Dict]` | — |
+| Model ID | `modelId` | `model_id` | `string` / `str` | — |
+| Provider ID | `providerId` | `provider_id` | `string` / `str` | — |
+| Mô tả | `description` | `description` | `string` / `str` | `None` |
+| Model VLM | `vlmModel` | `vlm_model` | `string` / `str` | `modelId` |
+| Provider VLM | `vlmProviderId` | `vlm_provider_id` | `string` / `str` | `providerId` |
+| Ngôn ngữ nguồn | `sourceLanguages` | `source_languages` | `string[]` / `List[str]` | `["English"]` |
+| Hỗ trợ chữ viết tay | `handwritingSupport` | `handwriting_support` | `boolean` / `bool` | `false` |
+| Offset thời gian | `timeOffset` | `time_offset` | `string` / `str` | `"UTC+00:00"` |
+| Tiếp tục khi lỗi | `continueOnFailure` | `continue_on_failure` | `boolean` / `bool` | `false` |
+| Thời gian thử lại | `retryTime` | `retry_time` | `number` / `int` | `2` |
+| Nhiệt độ | `temperature` | `temperature` | `number` / `float` | `0.1` |
+| URL Demo | `demoUrl` | `demo_url` | `string` / `str` | `None` |
+| ID nhóm | `teamIds` | `team_ids` | `string[]` / `List[str]` | `[]` |
+| Trường AI Agent bổ sung | `extraAiAgent` | `extra_ai_agent` | `Record<string, unknown>` / `Dict` | `None` |
+
+---
+
+## Sử dụng bất đồng bộ (Python)
+
+<Tabs syncKey="lang">
+<TabItem label="AsyncImbraceClient">
+```python
+from imbrace import AsyncImbraceClient
+
+async with AsyncImbraceClient() as client:
+    # Xử lý trực tiếp (chat_ai)
+    models = await client.chat_ai.list_document_models()
+    result = await client.chat_ai.process_document(
+        model_name="gpt-4o",
+        url="https://example.com/invoice.pdf",
+        organization_id="org_xxx",
+    )
+
+    # Xử lý dựa trên agent (document_ai)
+    agents = await client.document_ai.list_agents(document_ai_only=True)
+    result2 = await client.document_ai.process(
+        agent_id=agents[0]["_id"],
+        url="https://example.com/receipt.pdf",
+        organization_id="org_xxx",
+    )
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Xem thêm
+
+- [Hướng dẫn toàn diện §3 — Knowledge Hubs](/sdk/full-flow-guide/#3-manage-knowledge-hubs-and-attach-to-an-ai-agent) — tải tệp lên cho RAG
+- [AI Agent — Embeddings & Knowledge Base](/sdk/ai-agent/#embeddings--knowledge-base) — quản lý tệp embedding để truy xuất

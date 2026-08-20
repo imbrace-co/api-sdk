@@ -1,0 +1,348 @@
+---
+title: AI Agent
+description: Tham chiếu schema và method cho client.aiAgent / client.ai_agent — chat, embeddings, parquet, và distributed tracing.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+`client.aiAgent` (TypeScript) / `client.ai_agent` (Python) cung cấp chat streaming, quản lý embedding, sinh parquet, và distributed tracing cho AI agents.
+
+Để xem hướng dẫn chi tiết, tham khảo [AI Agent trong SDK guide](/sdk/ai-agent/).
+
+---
+
+## Schema
+
+### StreamChatBody
+
+Tham số để khởi tạo một phiên chat streaming.
+
+| Field | Type | Required | Mô tả |
+|-------|------|----------|-------|
+| `assistant_id` | string | ✓ | ID của AI agent để chat |
+| `messages` | array | ✓ | Lịch sử hội thoại (cặp role + content) |
+| `id` | string | | ID phiên chat có sẵn để tiếp tục |
+| `model_id` | string | | Ghi đè mô hình LLM mặc định của agent |
+| `provider_id` | string | | Ghi đè nhà cung cấp LLM mặc định của agent |
+| `user_id` | string | | Định danh người dùng bên ngoài |
+
+### StreamSubAgentChatBody
+
+| Field | Type | Required | Mô tả |
+|-------|------|----------|-------|
+| `assistant_id` | string | ✓ | ID của AI agent |
+| `session_id` | string | ✓ | ID phiên cha |
+| `chat_id` | string | ✓ | ID chat trong phiên |
+| `messages` | array | ✓ | Tin nhắn hội thoại |
+
+---
+
+## Methods
+
+| Method | TypeScript | Python | Mô tả |
+|--------|-----------|--------|-------|
+| Stream chat | `streamChat` | `stream_chat` | Bắt đầu phiên chat streaming với AI agent |
+| Stream sub-agent chat | `streamSubAgentChat` | `stream_sub_agent_chat` | Streaming chat trong phạm vi phiên sub-agent |
+| Get sub-agent history | `getSubAgentHistory` | `get_sub_agent_history` | Lấy lịch sử tin nhắn của sub-agent chat |
+| List chats | `listChats` | `list_chats` | Danh sách phiên chat của tổ chức |
+| Get chat | `getChat` | `get_chat` | Lấy một phiên chat |
+| Delete chat | `deleteChat` | `delete_chat` | Xóa một phiên chat |
+| Prompt suggestions | `getAgentPromptSuggestion` | `get_agent_prompt_suggestion` | Lấy gợi ý prompt cho agent |
+| Classify file | `classifyFile` | `classify_file` | Phân loại file vào danh mục |
+| Suggest field types | `suggestFieldTypes` | `suggest_field_types` | Gợi ý JSON schema từ tài liệu mẫu |
+| Process embedding | `processEmbedding` | `process_embedding` | Nhúng file vào kho tri thức |
+| List embedding files | `listEmbeddingFiles` | `list_embedding_files` | Danh sách các file đã nhúng |
+| Get embedding file | `getEmbeddingFile` | `get_embedding_file` | Lấy một file đã nhúng |
+| Preview embedding file | `previewEmbeddingFile` | `preview_embedding_file` | Xem trước nội dung đã nhúng |
+| Update embedding status | `updateEmbeddingFileStatus` | `update_embedding_file_status` | Cập nhật trạng thái nhúng file |
+| Delete embedding file | `deleteEmbeddingFile` | `delete_embedding_file` | Xóa file khỏi kho tri thức |
+| Generate parquet | `generateParquet` | `generate_parquet` | Chuyển đổi mảng dữ liệu thành file parquet |
+| List parquet files | `listParquetFiles` | `list_parquet_files` | Danh sách file parquet đã sinh |
+| Delete parquet file | `deleteParquetFile` | `delete_parquet_file` | Xóa file parquet theo tên |
+| Get traces | `getTraces` | `get_traces` | Truy vấn distributed traces |
+| Get trace | `getTrace` | `get_trace` | Lấy một trace theo ID |
+| Get trace services | `getTraceServices` | `get_trace_services` | Danh sách dịch vụ phát ra traces |
+
+---
+
+## streamChat / stream_chat
+
+Bắt đầu chat streaming với AI agent. Trả về HTTP response thô — lặp qua stream để đọc các SSE chunks.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const response = await client.aiAgent.streamChat({
+  assistant_id: "agent_id",
+  messages: [{ role: "user", content: "Hello" }],
+  user_id: "user_123",
+});
+
+const reader = response.body?.getReader();
+const decoder = new TextDecoder();
+while (reader) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  console.log(decoder.decode(value));
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+response = client.ai_agent.stream_chat({
+    "assistant_id": "agent_id",
+    "messages": [{"role": "user", "content": "Hello"}],
+    "user_id": "user_123",
+})
+for chunk in response.iter_lines():
+    print(chunk)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## streamSubAgentChat / stream_sub_agent_chat
+
+Stream chat trong phạm vi sub-agent trong một phiên cha.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const response = await client.aiAgent.streamSubAgentChat({
+  assistant_id: "agent_id",
+  session_id: "session_id",
+  chat_id: "chat_id",
+  messages: [{ role: "user", content: "Follow-up question" }],
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+response = client.ai_agent.stream_sub_agent_chat({
+    "assistant_id": "agent_id",
+    "session_id": "session_id",
+    "chat_id": "chat_id",
+    "messages": [{"role": "user", "content": "Follow-up question"}],
+})
+```
+</TabItem>
+</Tabs>
+
+---
+
+## listChats / list_chats
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { data: chats } = await client.aiAgent.listChats({
+  organization_id: "org_id",
+  user_id: "user_123",
+  limit: 20,
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.ai_agent.list_chats(
+    organization_id="org_id",
+    user_id="user_123",
+    limit=20,
+)
+chats = result.get("data", [])
+```
+</TabItem>
+</Tabs>
+
+---
+
+## getSubAgentHistory / get_sub_agent_history
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const history = await client.aiAgent.getSubAgentHistory({
+  session_id: "session_id",
+  chat_id: "chat_id",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+history = client.ai_agent.get_sub_agent_history(
+    session_id="session_id",
+    chat_id="chat_id",
+)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## processEmbedding / process_embedding
+
+Nhúng file vào kho tri thức của agent.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const result = await client.aiAgent.processEmbedding({
+  fileId: "file_id",
+  options: { chunk_size: 512 },
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.ai_agent.process_embedding(
+    file_id="file_id",
+    options={"chunk_size": 512},
+)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## classifyFile / classify_file
+
+Phân loại file vào danh mục định sẵn dựa trên nội dung.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const result = await client.aiAgent.classifyFile({ fileId: "file_id" });
+console.log(result.category);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.ai_agent.classify_file(file_id="file_id")
+print(result.get("category"))
+```
+</TabItem>
+</Tabs>
+
+---
+
+## suggestFieldTypes / suggest_field_types
+
+Phân tích tài liệu mẫu và gợi ý JSON schema với kiểu dữ liệu cho trích xuất tài liệu.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const schema = await client.aiAgent.suggestFieldTypes({
+  fileUrls: ["https://example.com/invoice.pdf"],
+});
+console.log(schema);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+schema = client.ai_agent.suggest_field_types(
+    file_urls=["https://example.com/invoice.pdf"],
+)
+print(schema)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## previewEmbeddingFile / preview_embedding_file
+
+Xem trước nội dung của file đã nhúng trước khi xử lý.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const preview = await client.aiAgent.previewEmbeddingFile({ fileId: "file_id" });
+console.log(preview);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+preview = client.ai_agent.preview_embedding_file(file_id="file_id")
+print(preview)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## updateEmbeddingFileStatus / update_embedding_file_status
+
+Cập nhật trạng thái xử lý của một file nhúng.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const result = await client.aiAgent.updateEmbeddingFileStatus("file_id", "completed");
+console.log(result);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.ai_agent.update_embedding_file_status("file_id", "completed")
+print(result)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## generateParquet / generate_parquet
+
+Chuyển đổi mảng bản ghi thành file parquet để nhập dữ liệu có cấu trúc.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const result = await client.aiAgent.generateParquet({
+  data: [{ name: "Alice", score: 95 }, { name: "Bob", score: 87 }],
+  fileName: "scores",
+  folderName: "results",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.ai_agent.generate_parquet(
+    data=[{"name": "Alice", "score": 95}, {"name": "Bob", "score": 87}],
+    file_name="scores",
+    folder_name="results",
+)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## getTraces / get_traces
+
+Truy vấn distributed traces để debug và quan sát.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const traces = await client.aiAgent.getTraces({
+  service: "ai-agent",
+  limit: 50,
+  timeRange: 3600,
+  orgId: "org_id",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+traces = client.ai_agent.get_traces(
+    service="ai-agent",
+    limit=50,
+    time_range=3600,
+    org_id="org_id",
+)
+```
+</TabItem>
+</Tabs>

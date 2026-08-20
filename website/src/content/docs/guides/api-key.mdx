@@ -1,0 +1,104 @@
+---
+title: Getting an API Key
+description: How to obtain an Imbrace API key — via the Portal UI or programmatically using the SDK.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+import { Image } from "astro:assets";
+import step1 from "../../../assets/get_api_key_from_ui_step_1.png";
+import step2 from "../../../assets/get_api_key_from_ui_step_2.png";
+import step3 from "../../../assets/get_api_key_from_ui_step_3.png";
+
+An API key (`api_...`) lets your backend call Imbrace without user sessions. For when to use an API key versus an access token, see [Authentication](/sdk/authentication/).
+
+---
+
+## Get API Key from UI
+
+**Step 1** — Log in to the Imbrace Portal, then navigate to **GovernCore → Generate External Token**.
+
+<Image src={step1} alt="Imbrace Portal — sidebar showing GovernCore menu with Generate External Token option" />
+
+**Step 2** — Click **Generate Token** to issue a new API key.
+
+<Image src={step2} alt="GovernCore Generate External Token page — Generate Token button highlighted" />
+
+**Step 3** — Copy the generated key. It starts with `api_` and is only shown once.
+
+<Image src={step3} alt="Generated API key displayed in full — copy icon next to the api_... value" />
+
+---
+
+## Generate via SDK (programmatic)
+
+Use this when you need to generate a key from code, for example during automated provisioning. You must be authenticated with an access token first (via [OTP](/sdk/authentication/#otp-login-flow) or [password](/sdk/authentication/#password-login)).
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    // Requires client initialized with an access token
+    const res = await client.auth.getThirdPartyToken(30) // expires in 30 days
+    const apiKey = res.apiKey.apiKey  // "api_..."
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    # Requires client initialized with an access token
+    res = client.auth.get_third_party_token(expiration_days=30)
+    api_key = res["apiKey"]["apiKey"]  # "api_..."
+    ```
+  </TabItem>
+</Tabs>
+
+The response shape (full fields below — internal fields omitted for brevity):
+
+```json
+{
+  "apiKey": {
+    "_id": "...",
+    "apiKey": "api_...",
+    "organization_id": "...",
+    "user_id": "...",
+    "is_active": true,
+    "expired_at": "2025-08-01T00:00:00.000Z",
+    "created_at": "2025-07-01T00:00:00.000Z",
+    "updated_at": "2025-07-01T00:00:00.000Z",
+    "is_temp": false
+  },
+  "expires_in": 2592000
+}
+```
+
+---
+
+## Using the key
+
+Pass the key to the client constructor:
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    import { ImbraceClient } from "@imbrace/sdk";
+
+    const client = new ImbraceClient({
+      apiKey: process.env.IMBRACE_API_KEY!,
+      organizationId: process.env.IMBRACE_ORGANIZATION_ID,
+      env: "stable",
+    });
+    ```
+
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    import os
+    from imbrace import ImbraceClient
+
+    client = ImbraceClient(
+        api_key=os.environ["IMBRACE_API_KEY"],
+        organization_id=os.environ.get("IMBRACE_ORGANIZATION_ID"),
+        env="stable",
+    )
+    ```
+
+  </TabItem>
+</Tabs>

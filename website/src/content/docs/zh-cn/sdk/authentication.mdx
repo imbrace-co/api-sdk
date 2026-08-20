@@ -1,0 +1,263 @@
+---
+title: 认证
+description: API Key 与 Access Token — 何时使用每种方式，以及如何将它们传递给 SDK。
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+SDK 支持两种凭证类型。将 `apiKey` / `api_key` 或 `accessToken` / `access_token` 传递给客户端构造函数 — 传输层会自动处理请求头。
+
+### 我应该使用哪种凭证？
+
+选择取决于 **Imbrace 在你的产品中扮演的角色**：
+
+#### 构建在 Imbrace 之上 → 使用 Access Token
+
+Imbrace 是你的后端。你的终端用户登录 Imbrace（通过 OTP 或密码）；他们的 `acc_...` 访问令牌是 SDK 用于每个请求的凭证。Imbrace 的认证、数据库和业务逻辑（AI 代理、知识中心、工作流）都以实际登录用户的名义运行。
+
+典型产品：聊天小部件、仪表盘或移动应用，其中每个用户的身份都是 Imbrace 用户。Imbrace 记录每个用户的历史记录、权限和审计轨迹。
+
+#### 包装 Imbrace → 使用 API Key
+
+你有自己的后端、自己的用户、自己的数据库。Imbrace 是你的服务调用的一个能力 — "用 Imbrace 的 AI 来回答这个问题" — 与你做的其他事情并行。你的终端用户从不直接看到 Imbrace；你的服务使用一个组织级的 `api_...` 密钥（由 Imbrace 组织管理员签发）来调用 Imbrace。Imbrace 只看到一个身份（API Key 的服务用户），由你在自己这边处理每个用户的归属。
+
+典型产品：现有的 CRM、工单系统或嵌入 Imbrace 作为功能的内部工具。一个凭证存在于你的环境文件中，服务于每个请求。
+
+| | 构建在 Imbrace 之上（Access Token） | 包装 Imbrace（API Key） |
+| --- | --- | --- |
+| **谁负责认证？** | Imbrace（OTP / 密码登录） | 你（你自己的认证） |
+| **用户是谁的？** | Imbrace 用户 | 你的用户 |
+| **谁的数据库是权威的？** | Imbrace 的 | 你的 |
+| **Imbrace 看到的身份** | 实际的终端用户 | 一个服务账号 |
+| **上游的用户归属** | 内置 | 由你负责 |
+| **凭证生命周期** | 会话范围；根据需要刷新 | 长期有效；不会自动过期 |
+| **发送的请求头** | `x-access-token: acc_...` | `x-api-key: api_...` |
+
+> 两种凭证类型都是一等公民。大多数资源接受任意一种。少数依赖用户上下文的功能（文档制品、按用户聊天历史）在访问令牌下才有意义。
+
+### 请求头参考
+
+| 凭证 | 发送的请求头 |
+| --- | --- |
+| `apiKey` / `api_key` | `x-api-key: api_xxx...` |
+| `accessToken` / `access_token` | `x-access-token: acc_xxx...` |
+
+组织上下文**编码在凭证本身内部** — 每个 API Key 和每个访问令牌都绑定到恰好一个组织。网关在每次请求时根据你发送的凭证解析组织。你可以选择性地通过向构造函数传递 `organizationId`（TypeScript）或 `organization_id`（Python）来覆盖它。
+
+关于凭证设置的分步指南（环境变量、dotenv、密钥），请参见[设置指南](/zh-cn/getting-started/setup/#configure-credentials)。
+
+---
+
+### API Key
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    import { ImbraceClient } from "@imbrace/sdk";
+
+    const client = new ImbraceClient({
+      apiKey: process.env.IMBRACE_API_KEY,
+      env: "stable",
+    });
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    import os
+    from imbrace import ImbraceClient
+
+    client = ImbraceClient(
+        api_key=os.environ["IMBRACE_API_KEY"],
+    )
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+### Access Token
+
+如果你已经有 `acc_...` 令牌，请直接传递：
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    const client = new ImbraceClient({
+      accessToken: process.env.IMBRACE_ACCESS_TOKEN,
+      env: "stable",
+    });
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    client = ImbraceClient(
+        access_token=os.environ["IMBRACE_ACCESS_TOKEN"],
+    )
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+### OTP 登录流程
+
+使用此流程通过邮箱 OTP 认证用户并获取会话令牌。SDK 在登录后自动存储令牌。
+
+登录是 **两阶段** 令牌兑换：
+
+1. **`requestOtp` → `loginWithOtp`** 颁发短期的 `login_acc_...` 令牌（3 小时 TTL）。此令牌只能做一件事：列出用户所属的组织。
+2. **`selectOrganization(orgId)`** 将其兑换为绑定所选组织的 `acc_...` 令牌（30 天 TTL）。其他所有资源调用都使用该令牌。
+
+如果用户只属于一个组织，可以跳过选择步骤，直接将该组织的 id 传给 `selectOrganization`。如果属于多个组织，请先列出供用户选择。
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    import { ImbraceClient } from "@imbrace/sdk"
+
+    const client = new ImbraceClient({
+      env: "stable",
+    })
+
+    // 步骤 1：向用户邮箱发送 OTP
+    await client.requestOtp("user@example.com")
+
+    // 步骤 2：用户提交收到的 OTP。SDK 会存储短期 login_acc_... 令牌,
+    //         并在同一次调用中获取用户的组织列表。
+    const { organizations } = await client.loginWithOtp("user@example.com", "ABC123")
+    const chosen = organizations[0]  // ← 由您的 UI 选择
+
+    // 步骤 3：将 login_acc_ 兑换为绑定组织的 acc_ 令牌。
+    //         SDK 会自动更新内部令牌与 x-organization-id。
+    await client.selectOrganization(chosen.id)
+
+    // 现在可以使用任何资源
+    const { data: boards } = await client.boards.list()
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    from imbrace import ImbraceClient
+
+    client = ImbraceClient()
+
+    # 步骤 1：向用户邮箱发送 OTP
+    client.request_otp("user@example.com")
+
+    # 步骤 2：用户提交 OTP。login_with_otp 会存储短期 login_acc_ 令牌
+    #         并返回用户所属的组织。
+    res = client.login_with_otp("user@example.com", "123456")
+    chosen = res["organizations"][0]  # ← 由您的 UI 选择
+
+    # 步骤 3：将 login_acc_ 兑换为绑定组织的 acc_ 令牌。
+    #         SDK 会自动更新令牌 + x-organization-id。
+    client.select_organization(chosen["organization_id"])
+
+    # 步骤 4：现在可以使用任何资源
+    me = client.platform.get_me()
+    ```
+
+    异步版本：
+
+    ```python
+    from imbrace import AsyncImbraceClient
+
+    async with AsyncImbraceClient() as client:
+        await client.request_otp("user@example.com")
+        res = await client.login_with_otp("user@example.com", "123456")
+        chosen = res["organizations"][0]
+        await client.select_organization(chosen["organization_id"])
+        me = await client.platform.get_me()
+    ```
+  </TabItem>
+</Tabs>
+
+> **单组织捷径。** 如果已预先知道组织 id（例如存储在 `IMBRACE_ORGANIZATION_ID`）,可以跳过挑选步骤,直接传给 `selectOrganization`。挑选步骤仅在用户属于多个组织时才需要。
+
+---
+
+### 密码登录
+
+`login()` 在单次调用中同时返回登录令牌和用户的组织列表。使用 `selectOrganization()` 选择其中一个,SDK 会为您交换令牌和组织标头。
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    const client = new ImbraceClient({ env: "stable" })
+
+    // 步骤 1：登录。返回 { token: "login_acc_...", organizations: [...] }。
+    const { organizations } = await client.login("user@example.com", "password")
+    const chosen = organizations[0]  // ← 由您的 UI 选择
+
+    // 步骤 2：将 login_acc_ 兑换为绑定组织的 acc_ 令牌。
+    await client.selectOrganization(chosen.id)
+
+    // 现在可以使用任何资源
+    const { data: boards } = await client.boards.list()
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    client = ImbraceClient()
+
+    # 步骤 1：登录。返回 { token: "login_acc_...", organizations: [...] }。
+    res = client.login("user@example.com", "password123")
+    chosen = res["organizations"][0]  # ← 由您的 UI 选择
+
+    # 步骤 2：将 login_acc_ 兑换为绑定组织的 acc_ 令牌。
+    client.select_organization(chosen["organization_id"])
+
+    # 现在可以使用任何资源
+    boards = client.boards.list()
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+### 令牌管理
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```typescript
+    // 替换令牌（例如在刷新后）
+    client.setAccessToken("acc_new_token...")
+
+    // 清除令牌（例如在退出登录时）
+    client.clearAccessToken()
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    # 替换令牌（例如在刷新后）
+    client.set_access_token("acc_new_token...")
+
+    # 清除令牌（例如在退出登录时）
+    client.clear_access_token()
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+### 上下文管理器（仅 Python）
+
+始终将 Python 客户端包装在上下文管理器中，以便底层的 `httpx` 连接池被正确关闭：
+
+```python
+# 同步
+with ImbraceClient(api_key=os.environ["IMBRACE_API_KEY"]) as client:
+    me = client.platform.get_me()
+
+# 异步
+async with AsyncImbraceClient(api_key=os.environ["IMBRACE_API_KEY"]) as client:
+    me = await client.platform.get_me()
+```
+
+---
+
+### Next steps
+
+- [Setup Guide ?](/getting-started/setup/#configure-credentials) � env vars, dotenv, and secrets management
+- [Quick Start ?](/sdk/quick-start/) � first API call using your credential
+- [Integrations ?](/sdk/integrations/) � framework wiring patterns (React, Next.js, FastAPI, Django)

@@ -1,0 +1,159 @@
+---
+title: Hướng dẫn Kiểm thử
+description: Hướng dẫn toàn diện để chạy unit tests, integration tests, lint và type checks cho Imbrace SDK.
+---
+
+
+## Thiết lập Môi trường
+
+### Python SDK
+
+```bash
+cd py
+
+# Cài đặt phụ thuộc + công cụ dev (pytest, pytest-asyncio, pytest-httpx, ruff, mypy)
+pip install -e ".[dev]"
+```
+
+Tạo `py/.env` (chỉ cần cho integration tests):
+
+```env
+IMBRACE_API_KEY=api_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+IMBRACE_GATEWAY_URL=https://app-gatewayv2.imbrace.co
+IMBRACE_ORGANIZATION_ID=org_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+```
+
+### TypeScript SDK
+
+```bash
+cd ts
+npm install
+```
+
+---
+
+## Python — Chạy & Kiểm thử
+
+### Unit Tests (Không cần API key)
+
+```bash
+cd py
+
+# Chạy tất cả unit tests
+pytest tests/unit -v
+
+# Chạy một tệp cụ thể
+pytest tests/unit/test_http.py -v
+pytest tests/unit/resources/test_channel.py -v
+
+# Chạy một test case cụ thể
+pytest tests/unit/test_http.py::test_401_raises_auth_error -v
+
+# Chạy theo từ khóa
+pytest tests/unit -k "channel" -v
+pytest tests/unit -k "boards" -v
+```
+
+### Integration Tests (Yêu cầu API key thực)
+
+Integration tests thực hiện các lời gọi thực đến API Gateway.
+
+```bash
+cd py
+
+# Tùy chọn 1: Đặt key trực tiếp trong lệnh
+IMBRACE_API_KEY=api_xxx pytest tests/integration -v -m integration
+
+# Tùy chọn 2: Sử dụng .env (conftest.py tự động tải qua load_dotenv)
+pytest tests/integration -v -m integration
+```
+
+### Chạy Tất cả (Unit + Integration)
+
+```bash
+pytest tests/ -v
+```
+
+### Báo cáo Độ phủ
+
+> `pytest-cov` không được bao gồm theo mặc định. Cài đặt riêng: `pip install pytest-cov`
+
+```bash
+pytest tests/unit --cov=src/imbrace --cov-report=term-missing
+```
+
+---
+
+## TypeScript — Chạy & Kiểm thử
+
+### Xây dựng
+
+```bash
+cd ts
+
+# Xây dựng một lần
+npm run build
+
+# Xây dựng ở chế độ watch (tự động xây dựng lại khi thay đổi)
+npm run dev
+
+# Dọn dẹp dist/
+npm run clean
+```
+
+### Unit Tests (Không cần API key)
+
+```bash
+cd ts
+
+# Chạy tất cả unit tests
+npm test
+
+# Chạy một tệp cụ thể
+npx vitest run tests/unit/http.test.ts
+npx vitest run tests/unit/resources/contacts.test.ts
+
+# Chế độ watch (tự động chạy khi thay đổi mã)
+npm run test:watch
+```
+
+### Chạy Tất cả (Unit + Local Tests)
+
+```bash
+npm run test:all
+```
+
+Lệnh này chạy vitest trên toàn bộ dự án (unit + bất kỳ tệp cục bộ nào khớp với mẫu kiểm thử). TypeScript integration tests chưa có sẵn — xem `py/tests/integration/` để kiểm tra API trực tiếp, hoặc `test/test-local-pkg/ts/` để có các script kiểm thử trực tiếp thủ công.
+
+---
+
+## Lint & Type Check
+
+### Python
+
+```bash
+cd py
+
+# Kiểm tra code style
+ruff check src/ tests/
+
+# Tự động sửa lỗi ruff có thể sửa được
+ruff check src/ tests/ --fix
+
+# Kiểm tra type annotations
+mypy src/imbrace
+```
+
+### TypeScript
+
+```bash
+cd ts
+
+# Kiểm tra type
+npm run typecheck
+
+# Lint
+npm run lint
+
+```
+

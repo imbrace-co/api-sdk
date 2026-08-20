@@ -1,0 +1,22 @@
+{
+  "name": "imbrace-sdk-workspace",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "workspaces": [
+    "ts"
+  ],
+  "scripts": {
+    "prepare": "husky || true"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.1",
+    "eslint": "^8.57.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.2",
+    "prettier": "^3.2.5"
+  }
+}
+  

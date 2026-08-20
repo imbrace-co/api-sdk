@@ -1,0 +1,214 @@
+# iMBRACE SDK - Full Reference for LLMs
+
+> iMBRACE is an enterprise-grade multi-channel engagement platform. This SDK provides a unified interface to three core gateways: **App Gateway** (Stable/v2), **Server Gateway** (3rd party automation), and **Journey API** (Marketplace).
+
+## Install
+
+- **TypeScript / JavaScript** — npm package [`@imbrace/sdk`](https://www.npmjs.com/package/@imbrace/sdk)
+  ```bash
+  npm install @imbrace/sdk
+  # or: yarn add @imbrace/sdk / pnpm add @imbrace/sdk
+  ```
+- **Python** — PyPI package [`imbrace`](https://pypi.org/project/imbrace/) (requires Python ≥ 3.9)
+  ```bash
+  pip install imbrace
+  ```
+
+## Documentation & Links
+
+- [SDK Landing Page](https://developer.imbrace.co/index.md) - Official TypeScript and Python SDK overview, quick install, and why Imbrace.
+
+### Getting Started
+- [Platform Overview](https://developer.imbrace.co/getting-started/overview.md) - What Imbrace is and what you can build.
+- [SDK Overview](https://developer.imbrace.co/sdk/overview.md) - Key features and architecture.
+- [Setup Guide](https://developer.imbrace.co/getting-started/setup.md) - Install, credentials, environment, and client init for TS and Python.
+- [Installation](https://developer.imbrace.co/sdk/installation.md) - Step-by-step package setup for TS and Python.
+- [Quick Start](https://developer.imbrace.co/sdk/quick-start.md) - Make your first API call in 60 seconds.
+
+### Guides & Workflows
+- [API Key Guide](https://developer.imbrace.co/guides/api-key.md) - How to get and use an API key.
+- [Authentication Guide](https://developer.imbrace.co/sdk/authentication.md) - API Key vs Access Token strategies.
+- [Full Flow Guide (E2E)](https://developer.imbrace.co/sdk/full-flow-guide.md) - End-to-end examples for Assistants, Workflows, Knowledge Hub, and CRM.
+- [Framework Integrations](https://developer.imbrace.co/sdk/integrations.md) - Patterns for React, Next.js, FastAPI, Django, and Celery.
+- [Testing Guide](https://developer.imbrace.co/guides/testing.md) - Unit testing, mocking, and integration patterns.
+- [Local Testing](https://developer.imbrace.co/sdk/local-testing.md) - Test the built SDK package locally before publishing (TS + Python).
+- [Troubleshooting](https://developer.imbrace.co/guides/troubleshooting.md) - Common errors, 401s, and double-path issues.
+- [Vibe Coding](https://developer.imbrace.co/guides/vibe-coding.md) - Use llms.txt with Claude, Cursor, Copilot to code faster.
+
+### API Reference
+- [Namespace Resource Reference](https://developer.imbrace.co/sdk/resources.md) - Detailed signatures for all 30+ namespaces.
+- [AI Agent Deep Dive](https://developer.imbrace.co/sdk/ai-agent.md) - SSE Streaming, TraceQL, Parquet, and Chat Client Sub-API.
+- [Document AI](https://developer.imbrace.co/sdk/document-ai.md) - Extract structured data from PDFs/images via chatAi and documentAi namespaces.
+- [Data Boards](https://developer.imbrace.co/sdk/databoard.md) - CRM pipeline boards, fields, items, and export.
+- [Workflows](https://developer.imbrace.co/sdk/workflows.md) - Workflow flow engine, runs, folders, connections, and MCP.
+- [Error Handling](https://developer.imbrace.co/sdk/error-handling.md) - Full error class hierarchy, retry behavior, and 401/403 handling.
+
+### Reference (Schema + Method Tables)
+- [AI Agent Reference](https://developer.imbrace.co/reference/ai-agent.md) - client.aiAgent: streamChat / streamChatText (set agent.streaming=true for SSE), embeddings, parquet, tracing.
+- [Board Reference](https://developer.imbrace.co/reference/board.md) - client.boards: CRUD, fields, items, segments, import/export.
+- [Channel Reference](https://developer.imbrace.co/reference/channel.md) - client.channel: Web, WhatsApp, Facebook, Instagram, Email, WeChat, LINE.
+- [Contact Reference](https://developer.imbrace.co/reference/contact.md) - client.contacts: CRUD, search, conversations, notifications.
+- [Conversation Reference](https://developer.imbrace.co/reference/conversation.md) - client.conversations: list, search, join, assign, status.
+- [Workflow Reference](https://developer.imbrace.co/reference/workflow.md) - client.workflows: flows, runs, folders, connections, MCP servers.
+- [Campaign Reference](https://developer.imbrace.co/reference/campaign.md) - client.campaign: campaigns and touchpoints.
+- [Communication Overview](https://developer.imbrace.co/reference/communication.md) - How Channel, Conversation, and Contact relate.
+
+### CLI
+- [CLI Overview](https://developer.imbrace.co/cli/overview.md) - CLI architecture, auth flow, and credential storage.
+- [CLI Installation](https://developer.imbrace.co/cli/installation.md) - Install from npm or build from source.
+- [CLI Commands](https://developer.imbrace.co/cli/commands.md) - Full command reference: data-board, ai-agent, workflow, and more.
+- [CLI API Reference](https://developer.imbrace.co/cli/api-reference.md) - Maps CLI commands to underlying SDK methods.
+
+## Core Technical Specs
+- **Naming:** TS uses `camelCase` (e.g. `streamChat`), Py uses `snake_case` (e.g. `stream_chat`).
+- **Backend Routing:** Gateway routes most logic through `/v1/backend` or `/v2/backend`. SDK handles this automatically.
+- **Retries:** Exponential backoff for 429/5xx. TS: 2 retries. Py: 3 retries.
+
+## Implementation "Must-Knows"
+
+### Critical Schemas
+- **Board Item Create:** `fields: [{ board_field_id: string, value: any }]`. Note: Identifier field is usually required.
+- **Board Item Update:** `data: [{ key: fieldId, value: any }]`.
+- **AI Agent SSE:** Events start with `data: `. Payload: `{"type": "text-delta", "textDelta": "..."}` or `[DONE]`.
+
+### Implementation Pitfalls
+- **Workflow State:** Newly created flows are `DRAFT`. You MUST add a trigger and call `LOCK_AND_PUBLISH` before they can be triggered.
+- **Conversation Params:** `conversations.list()` requires `type` (e.g., 'channel') and `view` (e.g., 'all') to avoid 400 errors.
+- **Base URL:** `IMBRACE_GATEWAY_URL` must be a root domain (e.g. `https://app-gatewayv2.imbrace.co`). Do not add path fragments. The SDK does **not** auto-read env vars — pass it explicitly to the constructor.
+
+## Resource Inventory (Selected)
+
+### AI & Agents
+- **`chatAi`**: Assistant CRUD, LLM completions, Knowledge Hub, File Extraction. Includes `processDocument(body)` → `POST /ai/v3/document/` — low-level one-shot URL-to-structured-data extraction with an LLM vision model.
+- **`aiAgent`**: Streaming Chat (SSE), Sub-agent, Embeddings/RAG, Parquet, Tracing.
+
+### CRM & Automation
+- **`boards`**: CRM pipelines. CRUD for `items`, `fields`, and `segments`.
+- **`workflows`**: Channel automation + visual flow engine (CRUD flows, runs, folders, connections, pieces, MCP servers, tables, invitations). Mandatory ops for new flows: `UPDATE_TRIGGER`, `LOCK_AND_PUBLISH`.
+
+### Messaging & Engagement
+- **`contacts`**: Customer profiles, activities, and notifications.
+- **`conversations`**: Management, assignment, status, and `listParticipants(id)`.
+- **`messages`**: Sending text/media, comments, pins.
+- **`channel`**: Config for WhatsApp, FB, WeChat, LINE, Email, and Web.
+
+### Platform & IPS
+- **`platform`**: Orgs, Teams, Permissions, and `listBusinessUnits()`.
+- **`ips`**: Profile management and `listIdentities(userId)`.
+
+## Service Key Registry (URL Overrides)
+`gateway`, `platform`, `channel_service`, `data_board`, `backend`, `ips`, `ai`, `marketplaces`, `file_service`, `message_suggestion`, `predict`, `workflow_engine` (TS: `workflowEngine`), `ai_agent`.
+
+## Error Hierarchy
+- `ImbraceError` (Base)
+    - `AuthError` (401/403): Invalid credentials. **No retry.**
+    - `ApiError` (4xx/5xx): Has `statusCode`.
+    - `NetworkError`: Connection/Timeout. **Auto retry.**
+
+---
+
+# Imbrace CLI — Reference for LLMs
+
+> CLI tool for interacting with the Imbrace platform from the terminal. Designed for coding agents (Claude, Cursor, Copilot).
+
+## Authentication
+
+- `imbrace login --api-key api_xxx...` — Login with API key (recommended for CI/CD)
+- `imbrace login --email user@example.com --password mypass` — Login with email + password
+- `imbrace logout` — Clear credentials
+- `imbrace whoami --json` — Verify login status
+
+Credentials stored via `conf` package: macOS `~/Library/Preferences/imbrace-nodejs/config.json`, Linux `~/.config/imbrace-nodejs/config.json`, Windows `%APPDATA%\imbrace-nodejs\Config\config.json`.
+
+If a command returns 401, run `imbrace login --api-key api_xxx...` again. All commands support `--json` flag for machine-readable output — always use it when scripting.
+
+## Data Board
+
+- `imbrace data-board list --json` — List boards (`brd_...` IDs)
+- `imbrace data-board create --name "X" --json` — Create board
+- `imbrace data-board create-field <boardId> --name "X" --type <type> --json` — Add field (types: ShortText, LongText, Number, Date, Email, Phone, Currency, SingleSelection, MultipleSelection, Checkbox, Assignee, MultipleAssignee, Link, Notes, Origin, Priority. **Do NOT use Dropdown** — use SingleSelection.)
+- `imbrace data-board create-item <boardId> --fields '...' --json` — Create item (fields: `[{board_field_id, value}]`)
+- `imbrace data-board list-items --board-id <id> [--limit 20] [--skip 0] [--q <search>] --json` — List/search items
+- `imbrace data-board update-item <boardId> <itemId> --data '...' --json` — Update (data: `[{key, value}]`)
+- `imbrace data-board delete-item <boardId> <itemId> --yes --json`
+- `imbrace data-board export-csv --board-id <id> [--out ./board.csv]`
+
+## AI Agent
+
+- `imbrace ai-agent list|get|delete <id>|create|update <id> --json`
+- `imbrace ai-agent list-providers --json` — LLM providers (UUID `provider_id`, NOT Mongo `_id`)
+- `imbrace ai-agent list-models --provider-id <id> --json` — Models per provider. System provider only has `Default`.
+- `imbrace ai-agent list-folders [--search <q>] --json` — Knowledge Hub folders
+- `imbrace ai-agent list-files --folder-id <id> --json` — Files in a KH folder
+
+Create/update flags (same set; update is PUT-merge): `--name/-n`, `--description/-d`, `--instructions/-i`, `--model`, `--provider-id`, `--mode` (standard|advanced), `--temperature` (0-2), `--personality`, `--core-task`, `--tone`, `--response-length` (short|medium|long), `--banned-words`, `--category` (Support|Sales|Marketing|Team|Other), `--guardrail-id`, `--preload-information`, `--folder-ids`, `--default-folder-id`, `--knowledge-hubs`, `--board-ids`, `--file-ids`, `--show-thinking`/`--no-show-thinking`, `--streaming`/`--no-streaming`, `--use-memory`/`--no-use-memory`, `--yes`, `--json`, `--id-only`.
+
+**All agent content must be in English** — diacritics produce unreadable slugs. Agent create atomically provisions assistant + web channel + template via `createUseCase()`.
+
+The platform's "Create Your AI" dialog has 4 choices, each with its own CLI topic:
+
+| UI choice | CLI command | Backend `agent_type` |
+|---|---|---|
+| AI AGENT | `imbrace ai-agent create` | `agent` |
+| ORCHESTRATOR | `imbrace orchestrator create` | `team_lead` |
+| DOCUMENT AI | `imbrace document-ai create` | `document_ai` |
+| GUARD RAIL | `imbrace guardrail create` | (separate resource, not an agent) |
+
+Use `--agent-type agent|assistant|conversational|workflow` on `ai-agent create` for the other AiAgentType variants.
+
+## Document AI
+
+Extracts structured JSON from PDFs/images. Stored as AI Agents with `agent_type: "document_ai"`.
+
+- `imbrace document-ai list [--search <q>] [--all] --json` — `--all` includes regular agents
+- `imbrace document-ai get <id> --json`
+- `imbrace document-ai create -n -i --model --schema '<json>' [--schema-file <path>] [--provider-id] --json` — schema example: `{"invoice_number":{"type":"string"},"total":{"type":"number"}}`
+- `imbrace document-ai update <id> [partial] --json`
+- `imbrace document-ai delete <id> --yes --json`
+- `imbrace document-ai process --url <url> --org-id <orgId> [--agent-id | --model] [--instructions] [--board-id] --json` — runs extraction
+- `imbrace document-ai suggest-schema --url <url> --org-id <orgId> [--model] --json` — LLM proposes a schema
+
+## Orchestrator
+
+An AI Agent with `agent_type: "team_lead"` that delegates to `sub_agents` / `team_leads`.
+
+- `imbrace orchestrator list|get|delete --json`
+- `imbrace orchestrator create -n "Name" -i "Routing rules" --sub-agents id1,id2 [--team-leads id3] [--model] [--temperature] --json`
+
+CLI handles 3 backend quirks transparently: (1) orchestrator-ness is encoded as `agent_type: "team_lead"` (not a separate boolean), (2) `sub_agents`/`team_leads` must be assistant IDs (UUID), so CLI auto-resolves any `uc_*` use-case IDs, (3) `createUseCase` drops these fields, so CLI follows up with a `chatAi.updateAiAgent` PUT.
+
+## Guard Rail
+
+Content-safety / compliance layer attached to agents via `--guardrail-id`.
+
+- `imbrace guardrail list|get|delete --json`
+- `imbrace guardrail create -n -i [--model nim-nemo|model-armor] [--guardrail-provider-id] [--unsafe-categories "violence,hate"] [--custom-unsafe-patterns] [--competitor-keywords] --json`
+- `imbrace guardrail update <id> -n -i --model --json`
+
+CLI handles backend quirks: `org_id` is required (auto-fetched from account), default model is `nim-nemo`, `model-armor` ignores `instructions`/`custom_unsafe_patterns`/`competitor_keywords`, response ID field is `guardrails_config_id` (CLI normalizes).
+
+## Workflow
+
+A workflow = nodes: trigger → actions. 6 layers: Flow → Version → Nodes → Connections → Runs → Pieces.
+
+**CRUD:** `imbrace workflow list/get/create --name/delete/move <flowId> --folder-id <id|NULL>`.
+**Nodes:** `node list|add --type trigger|action --piece --trigger-name|action-name [--after] [--input '<json>']|update|delete|add-raw`.
+**Pieces:** `piece list [--search]|detail <name>`.
+**Connections:** `conn list|get|create --piece --type SECRET_TEXT|OAUTH2|CLOUD_OAUTH2|BASIC_AUTH|CUSTOM_AUTH --value|delete`.
+**Folders:** `folder list|get|create --name|update --name|delete`. 4 system folders: Channel Workflow, Board Automation, AI Agent Capabilities, Others.
+**MCP:** `mcp list|get|create --name|delete|rotate-token`.
+**Lifecycle:** `publish|enable|disable <flowId>`. **Order: create → add nodes → publish → enable → run.**
+**Runs:** `runs [--limit]|run-detail <runId>|run <flowId> [--payload '<json>'] [--sync]`.
+
+**Known issues:** `--sync` may timeout ~30s — use `runs` + `run-detail` instead. Always `publish` before `enable`. `prompt` field for AI Connector must be `{ prompt: { prompt: "text" } }`. If flow is open in browser, CLI updates may be rejected.
+
+**Variable syntax:** `{{trigger.body.X}}`, `{{trigger.X}}`, `{{step_N.output.Y}}`, `{{connections.<id>.access_token}}`.
+
+## Installation
+
+```bash
+npm install -g @imbrace/cli
+imbrace login --api-key api_xxx...
+```
+
+For full command reference: [CLI Commands](https://developer.imbrace.co/cli/commands.md) · [CLI Overview](https://developer.imbrace.co/cli/overview.md) · [CLI Installation](https://developer.imbrace.co/cli/installation.md) · [CLI API Reference](https://developer.imbrace.co/cli/api-reference.md)
