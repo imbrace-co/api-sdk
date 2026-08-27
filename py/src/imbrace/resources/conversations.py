@@ -78,6 +78,51 @@ class ConversationsResource:
     def update_status(self, body: Dict[str, Any]) -> Dict[str, Any]:
         return self._http.request("POST", f"{self._v1}/team_conversations/_update_status", json=body).json()
 
+    def update_name(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        return self._http.request("POST", f"{self._v1}/team_conversations/_update_name", json=body).json()
+
+    def get_conversation(self, conversation_id: str) -> Dict[str, Any]:
+        return self._http.request("GET", f"{self._v1}/conversations/{conversation_id}").json()
+
+    def get_by_conversation_id(self, conversation_id: str) -> Dict[str, Any]:
+        return self._http.request(
+            "GET", f"{self._v1}/team_conversations", params={"conversationId": conversation_id}
+        ).json()
+
+    def get_outstanding(self, business_unit_id: str, limit: Optional[int] = None,
+                        skip: Optional[int] = None) -> Dict[str, Any]:
+        params: Dict[str, Any] = {"businessUnitId": business_unit_id}
+        if limit is not None:
+            params["limit"] = limit
+        if skip is not None:
+            params["skip"] = skip
+        return self._http.request(
+            "GET", f"{self._v1}/team_conversations/_outstanding", params=params
+        ).json()
+
+    def get_invitable_users(self, team_conv_id: str) -> Any:
+        return self._http.request("GET", f"{self._v1}/team_conversations/{team_conv_id}/users").json()
+
+    def init_video_call(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        return self._http.request(
+            "POST", f"{self._v1}/team_conversations/_init_jaas_conference", json=body
+        ).json()
+
+    def join_request(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        return self._http.request(
+            "POST", f"{self._v1}/team_conversations/_join_request", json=body
+        ).json()
+
+    def assign_team_member(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        return self._http.request(
+            "POST", f"{self._v1}/team_conversations/assign_team_member", json=body
+        ).json()
+
+    def remove_team_member(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        return self._http.request(
+            "POST", f"{self._v1}/team_conversations/remove_team_member", json=body
+        ).json()
+
 
 class AsyncConversationsResource:
     """Conversations domain — Async."""
@@ -141,4 +186,70 @@ class AsyncConversationsResource:
 
     async def create(self) -> Dict[str, Any]:
         res = await self._http.request("POST", f"{self._v1}/conversations")
+        return res.json()
+
+    async def join(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        res = await self._http.request("POST", f"{self._v1}/team_conversations/_join", json=body)
+        return res.json()
+
+    async def leave(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        res = await self._http.request("POST", f"{self._v1}/team_conversations/_leave", json=body)
+        return res.json()
+
+    async def update_status(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        res = await self._http.request("POST", f"{self._v1}/team_conversations/_update_status", json=body)
+        return res.json()
+
+    async def update_name(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        res = await self._http.request("POST", f"{self._v1}/team_conversations/_update_name", json=body)
+        return res.json()
+
+    async def get_conversation(self, conversation_id: str) -> Dict[str, Any]:
+        res = await self._http.request("GET", f"{self._v1}/conversations/{conversation_id}")
+        return res.json()
+
+    async def get_by_conversation_id(self, conversation_id: str) -> Dict[str, Any]:
+        res = await self._http.request(
+            "GET", f"{self._v1}/team_conversations", params={"conversationId": conversation_id}
+        )
+        return res.json()
+
+    async def get_outstanding(self, business_unit_id: str, limit: Optional[int] = None,
+                              skip: Optional[int] = None) -> Dict[str, Any]:
+        params: Dict[str, Any] = {"businessUnitId": business_unit_id}
+        if limit is not None:
+            params["limit"] = limit
+        if skip is not None:
+            params["skip"] = skip
+        res = await self._http.request(
+            "GET", f"{self._v1}/team_conversations/_outstanding", params=params
+        )
+        return res.json()
+
+    async def get_invitable_users(self, team_conv_id: str) -> Any:
+        res = await self._http.request("GET", f"{self._v1}/team_conversations/{team_conv_id}/users")
+        return res.json()
+
+    async def init_video_call(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        res = await self._http.request(
+            "POST", f"{self._v1}/team_conversations/_init_jaas_conference", json=body
+        )
+        return res.json()
+
+    async def join_request(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        res = await self._http.request(
+            "POST", f"{self._v1}/team_conversations/_join_request", json=body
+        )
+        return res.json()
+
+    async def assign_team_member(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        res = await self._http.request(
+            "POST", f"{self._v1}/team_conversations/assign_team_member", json=body
+        )
+        return res.json()
+
+    async def remove_team_member(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        res = await self._http.request(
+            "POST", f"{self._v1}/team_conversations/remove_team_member", json=body
+        )
         return res.json()
