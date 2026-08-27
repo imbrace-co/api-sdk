@@ -87,3 +87,26 @@ def test_delete_channel(httpx_mock: HTTPXMock, client):
     client.channel.delete("ch_1")
     req = httpx_mock.get_requests()[0]
     assert req.method == "DELETE"
+
+
+# ── WhatsApp onboarding ───────────────────────────────────────────────────────
+
+def test_create_whats_app_v1(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{CH}/v1/channels/_whatsapp", method="POST", json={"id": "c1"})
+    assert client.channel.create_whats_app({"phone": "1"})["id"] == "c1"
+
+
+def test_create_whats_app_v2(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{CH}/v2/channels/_whatsapp", method="POST", json={"id": "c2"})
+    assert client.channel.create_whats_app_v2({"phone": "1"})["id"] == "c2"
+
+
+def test_create_whats_app_v3(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{CH}/v3/channels/_whatsapp", method="POST", json={"id": "c3"})
+    assert client.channel.create_whats_app_v3({"phone": "1"})["id"] == "c3"
+
+
+def test_update_whats_app_uses_v2(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{CH}/v2/channels/_whatsapp", method="PUT", json={"id": "c2"})
+    client.channel.update_whats_app({"phone": "1"})
+    assert httpx_mock.get_request().method == "PUT"

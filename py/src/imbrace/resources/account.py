@@ -34,6 +34,17 @@ class AccountResource:
             return User(**res["data"])
         return User(**res)
 
+    def upload_avatar(self, files: Any) -> Dict[str, Any]:
+        """Upload an avatar for the current account."""
+        return self._http.request("POST", f"{self._v1}/account/_fileupload", files=files).json()
+
+    # Aliases matching the TypeScript SDK's getAccount / updateAccount names.
+    def get_account(self) -> User:
+        return self.get()
+
+    def update_account(self, body: Dict[str, Any]) -> User:
+        return self.update(body)
+
 
 class AsyncAccountResource:
     """Account domain — Async."""
@@ -61,3 +72,15 @@ class AsyncAccountResource:
         if "data" in data and "success" in data:
             return User(**data["data"])
         return User(**data)
+
+    async def upload_avatar(self, files: Any) -> Dict[str, Any]:
+        """Upload an avatar for the current account (async)."""
+        res = await self._http.request("POST", f"{self._v1}/account/_fileupload", files=files)
+        return res.json()
+
+    # Aliases matching the TypeScript SDK's getAccount / updateAccount names.
+    async def get_account(self) -> User:
+        return await self.get()
+
+    async def update_account(self, body: Dict[str, Any]) -> User:
+        return await self.update(body)

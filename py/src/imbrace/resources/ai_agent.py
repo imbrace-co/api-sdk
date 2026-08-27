@@ -200,6 +200,9 @@ class AiAgentResource:
     def get_trace_tags(self) -> Any:
         return self._http.request("GET", f"{self._base}/trace/tags").json()
 
+    def search_trace_ql(self, q: str) -> Any:
+        return self._http.request("GET", f"{self._base}/trace/search/traceql{_qs({'q': q})}").json()
+
     def get_trace_tag_values(self, tag_name: str) -> Any:
         return self._http.request("GET", f"{self._base}/trace/tags/{tag_name}/values").json()
 
@@ -432,6 +435,10 @@ class AsyncAiAgentResource:
 
     async def get_trace_tags(self) -> Any:
         res = await self._http.request("GET", f"{self._base}/trace/tags")
+        return res.json()
+
+    async def search_trace_ql(self, q: str) -> Any:
+        res = await self._http.request("GET", f"{self._base}/trace/search/traceql{_qs({'q': q})}")
         return res.json()
 
     async def get_trace_tag_values(self, tag_name: str) -> Any:

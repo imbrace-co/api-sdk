@@ -19,6 +19,10 @@ class OutboundsResource:
         return self._http.request("POST", f"{self._base}/email", json=body).json()
 
 
+    def send_whats_app(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        return self._http.request("POST", f"{self._base}/whatsapp", json=body).json()
+
+
 class AsyncOutboundsResource:
     """Outbound messaging — Async."""
 
@@ -32,4 +36,8 @@ class AsyncOutboundsResource:
 
     async def send_email(self, body: Dict[str, Any]) -> Dict[str, Any]:
         res = await self._http.request("POST", f"{self._base}/email", json=body)
+        return res.json()
+
+    async def send_whats_app(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        res = await self._http.request("POST", f"{self._base}/whatsapp", json=body)
         return res.json()

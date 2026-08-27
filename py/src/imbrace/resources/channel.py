@@ -188,6 +188,20 @@ class ChannelResource:
     def list_team_observers(self, team_id: str) -> Dict[str, Any]:
         return self._http.request("GET", f"{self._v1}/assign/team/{team_id}/observers").json()
 
+    # --- WhatsApp onboarding ---
+    # Three API generations coexist; v3 is current, v1/v2 kept for older tenants.
+    def create_whats_app(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        return self._http.request("POST", f"{self._v1}/channels/_whatsapp", json=body).json()
+
+    def create_whats_app_v2(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        return self._http.request("POST", f"{self._v2}/channels/_whatsapp", json=body).json()
+
+    def create_whats_app_v3(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        return self._http.request("POST", f"{self._v3}/channels/_whatsapp", json=body).json()
+
+    def update_whats_app(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        return self._http.request("PUT", f"{self._v2}/channels/_whatsapp", json=body).json()
+
 
 class AsyncChannelResource:
     """Channel domain — Async."""
@@ -391,4 +405,21 @@ class AsyncChannelResource:
 
     async def list_team_observers(self, team_id: str) -> Dict[str, Any]:
         res = await self._http.request("GET", f"{self._v1}/assign/team/{team_id}/observers")
+        return res.json()
+
+    # --- WhatsApp onboarding ---
+    async def create_whats_app(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        res = await self._http.request("POST", f"{self._v1}/channels/_whatsapp", json=body)
+        return res.json()
+
+    async def create_whats_app_v2(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        res = await self._http.request("POST", f"{self._v2}/channels/_whatsapp", json=body)
+        return res.json()
+
+    async def create_whats_app_v3(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        res = await self._http.request("POST", f"{self._v3}/channels/_whatsapp", json=body)
+        return res.json()
+
+    async def update_whats_app(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        res = await self._http.request("PUT", f"{self._v2}/channels/_whatsapp", json=body)
         return res.json()

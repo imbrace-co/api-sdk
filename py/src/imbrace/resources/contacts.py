@@ -88,6 +88,9 @@ class ContactsResource:
     def upload_contacts(self, files: Any) -> Dict[str, Any]:
         return self._http.request("POST", f"{self._v1}/contacts/_fileupload", files=files).json()
 
+    def upload_avatar(self, files: Any) -> Dict[str, Any]:
+        return self._http.request("POST", f"{self._v1}/contacts/_fileupload", files=files).json()
+
 
 class AsyncContactsResource:
     """Contacts domain — Async."""
@@ -179,5 +182,9 @@ class AsyncContactsResource:
         return res.content
 
     async def upload_contacts(self, files: Any) -> Dict[str, Any]:
+        res = await self._http.request("POST", f"{self._v1}/contacts/_fileupload", files=files)
+        return res.json()
+
+    async def upload_avatar(self, files: Any) -> Dict[str, Any]:
         res = await self._http.request("POST", f"{self._v1}/contacts/_fileupload", files=files)
         return res.json()

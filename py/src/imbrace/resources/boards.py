@@ -245,6 +245,16 @@ class BoardsResource:
     def get_onedrive_session_status(self) -> Dict[str, Any]:
         return self._http.request("GET", f"{self._base}/auth/onedrive/files/session/status").json()
 
+    def export_csv_via_mail(self, board_id: str, params: Optional[Dict[str, str]] = None) -> Any:
+        return self._http.request(
+            "POST", f"{self._base}/boards/{board_id}/export_csv", params=params or {}
+        ).json()
+
+    def get_one_drive_session_status(self) -> Dict[str, Any]:
+        return self._http.request(
+            "GET", f"{self._base}/auth/onedrive/files/session/status"
+        ).json()
+
 
 class AsyncBoardsResource:
     """Boards / Knowledge Hub / External Drive — Async."""
@@ -388,3 +398,15 @@ class AsyncBoardsResource:
         res = await self._http.request("POST", f"{self._base}/files/upload", files=files)
         r = res.json()
         return r.get("data", r)
+
+    async def export_csv_via_mail(self, board_id: str, params: Optional[Dict[str, str]] = None) -> Any:
+        res = await self._http.request(
+            "POST", f"{self._base}/boards/{board_id}/export_csv", params=params or {}
+        )
+        return res.json()
+
+    async def get_one_drive_session_status(self) -> Dict[str, Any]:
+        res = await self._http.request(
+            "GET", f"{self._base}/auth/onedrive/files/session/status"
+        )
+        return res.json()

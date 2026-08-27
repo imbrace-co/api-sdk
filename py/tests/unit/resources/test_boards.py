@@ -147,3 +147,15 @@ def test_search_folders_unwraps_data(httpx_mock: HTTPXMock, client):
     )
     res = client.boards.search_folders(q="kb")
     assert res == [{"id": "fo_1"}]
+
+
+def test_export_csv_via_mail(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{DB}/boards/b_1/export_csv", method="POST", json={"ok": True})
+    assert client.boards.export_csv_via_mail("b_1")["ok"] is True
+
+
+def test_get_one_drive_session_status(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(
+        url=f"{DB}/auth/onedrive/files/session/status", json={"status": "active"}
+    )
+    assert client.boards.get_one_drive_session_status()["status"] == "active"

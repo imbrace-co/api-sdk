@@ -54,6 +54,18 @@ class SettingsResource:
         return self._http.request("POST", f"{self._platform}/v1/users/_bulk_invite", json=body).json()
 
 
+    # --- WhatsApp Templates ---
+    def list_whats_app_templates(self, params: Optional[Dict[str, str]] = None) -> Any:
+        return self._http.request(
+            "GET", f"{self._cs}/v1/whatsapp_templates", params=params or {}
+        ).json()
+
+    def list_whats_app_templates_v2(self, params: Optional[Dict[str, str]] = None) -> Any:
+        return self._http.request(
+            "GET", f"{self._cs}/v2/whatsapp_templates", params=params or {}
+        ).json()
+
+
 class AsyncSettingsResource:
     """Settings domain — Async.
 
@@ -104,4 +116,17 @@ class AsyncSettingsResource:
 
     async def list_users(self, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         res = await self._http.request("GET", f"{self._platform}/v1/users", params=params or {})
+        return res.json()
+
+    # --- WhatsApp Templates ---
+    async def list_whats_app_templates(self, params: Optional[Dict[str, str]] = None) -> Any:
+        res = await self._http.request(
+            "GET", f"{self._cs}/v1/whatsapp_templates", params=params or {}
+        )
+        return res.json()
+
+    async def list_whats_app_templates_v2(self, params: Optional[Dict[str, str]] = None) -> Any:
+        res = await self._http.request(
+            "GET", f"{self._cs}/v2/whatsapp_templates", params=params or {}
+        )
         return res.json()
