@@ -105,14 +105,17 @@ def test_create_agent_respects_custom_provider(httpx_mock: HTTPXMock, client):
 # ── updateAgent ───────────────────────────────────────────────────────────────
 
 def test_update_agent_puts(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{BASE}/assistants/a1", json={"_id": "a1", "name": "old"})
     httpx_mock.add_response(url=f"{BASE}/assistant_apps/a1", method="PUT", json={})
     client.document_ai.update_agent("a1", {"name": "renamed"})
 
 
 def test_update_agent_renames_schema(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{BASE}/assistants/a1", json={"_id": "a1", "name": "old"})
     httpx_mock.add_response(url=f"{BASE}/assistant_apps/a1", method="PUT", json={})
     client.document_ai.update_agent("a1", {"schema": {"x": {"type": "string"}}})
-    body = json.loads(httpx_mock.get_request().content)
+    put_req = [r for r in httpx_mock.get_requests() if r.method == "PUT"][0]
+    body = json.loads(put_req.content)
     assert body["data_schema"] == {"x": {"type": "string"}}
     assert "schema" not in body
 
@@ -206,15 +209,19 @@ def test_suggest_schema_respects_custom_model(httpx_mock: HTTPXMock, client):
 
 # ── createFull (orchestrator) ─────────────────────────────────────────────────
 
-BACKEND = f"{GW}/v1/backend"
+DB = f"{GW}/data-board"
 TPL = f"{GW}/v2/backend/templates"
 
 
 def test_create_full_runs_full_flow(httpx_mock: HTTPXMock, client):
-    """Verify create_full posts to /board with type=DocumentAI then /templates/v2/custom."""
+    """Verify create_full posts a General board, its fields, then /templates/v2/custom."""
     httpx_mock.add_response(
-        url=f"{BACKEND}/board", method="POST",
+        url=f"{DB}/boards", method="POST",
         json={"_id": "brd_xxx", "name": "DEMO", "type": "DocumentAI"},
+    )
+    httpx_mock.add_response(
+        url=f"{DB}/boards/brd_xxx/fields", method="POST", json={"success": True},
+        is_reusable=True,
     )
     httpx_mock.add_response(
         url=f"{TPL}/v2/custom", method="POST",
@@ -248,12 +255,14 @@ def test_create_full_runs_full_flow(httpx_mock: HTTPXMock, client):
 
     # Verify board POST body
     requests = httpx_mock.get_requests()
-    board_req = [r for r in requests if str(r.url).endswith("/v1/backend/board") and r.method == "POST"][0]
+    board_req = [r for r in requests if str(r.url).endswith("/data-board/boards") and r.method == "POST"][0]
     board_body = json.loads(board_req.content)
     assert board_body["name"] == "DEMO"
-    assert board_body["type"] == "DocumentAI"
-    assert len(board_body["fields"]) == 2
-    assert board_body["fields"][0]["name"] == "invoice_number"
+    assert board_body["type"] == "General"
+    field_reqs = [r for r in requests
+                  if r.url.path.endswith("/fields") and r.method == "POST"]
+    assert len(field_reqs) == 2
+    assert json.loads(field_reqs[0].content)["name"] == "invoice_number"
 
     # Verify templates POST body — assistant.document_ai.board_id linked to created board
     tpl_req = [r for r in requests if r.url.path.endswith("/v2/custom") and r.method == "POST"][0]
@@ -271,7 +280,8 @@ def test_create_full_runs_full_flow(httpx_mock: HTTPXMock, client):
 
 
 def test_create_full_default_vlm_falls_back_to_model_id(httpx_mock: HTTPXMock, client):
-    httpx_mock.add_response(url=f"{BACKEND}/board", method="POST", json={"_id": "brd_y"})
+    httpx_mock.add_response(url=f"{DB}/boards", method="POST", json={"_id": "brd_y"})
+    httpx_mock.add_response(url=f"{DB}/boards/brd_y/fields", method="POST", json={"success": True}, is_reusable=True)
     httpx_mock.add_response(url=f"{TPL}/v2/custom", method="POST", json={"data": {}})
 
     client.document_ai.create_full(
@@ -287,7 +297,8 @@ def test_create_full_default_vlm_falls_back_to_model_id(httpx_mock: HTTPXMock, c
 
 
 def test_create_full_extra_ai_agent_overrides(httpx_mock: HTTPXMock, client):
-    httpx_mock.add_response(url=f"{BACKEND}/board", method="POST", json={"_id": "brd_z"})
+    httpx_mock.add_response(url=f"{DB}/boards", method="POST", json={"_id": "brd_z"})
+    httpx_mock.add_response(url=f"{DB}/boards/brd_z/fields", method="POST", json={"success": True}, is_reusable=True)
     httpx_mock.add_response(url=f"{TPL}/v2/custom", method="POST", json={"data": {}})
 
     client.document_ai.create_full(

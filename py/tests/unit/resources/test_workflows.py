@@ -3,7 +3,7 @@ from pytest_httpx import HTTPXMock
 from imbrace import ImbraceClient
 
 GW = "https://app-gatewayv2.imbrace.co"
-BACKEND_V2 = f"{GW}/v2/backend"
+CHANNEL = f"{GW}/channel-service/v1"
 
 
 @pytest.fixture
@@ -12,14 +12,14 @@ def client():
 
 
 def test_list_channel_automation(httpx_mock: HTTPXMock, client):
-    httpx_mock.add_response(url=f"{BACKEND_V2}/workflows/channel_automation", json={"data": []})
+    httpx_mock.add_response(url=f"{CHANNEL}/workflows/channel_automation", json={"data": []})
     res = client.workflows.list_channel_automation()
     assert isinstance(res["data"], list)
 
 
 def test_list_channel_automation_with_type(httpx_mock: HTTPXMock, client):
     httpx_mock.add_response(
-        url=f"{BACKEND_V2}/workflows/channel_automation?channelType=whatsapp",
+        url=f"{CHANNEL}/workflows/channel_automation?channelType=whatsapp",
         json={"data": [{"id": "wf_1"}]},
     )
     res = client.workflows.list_channel_automation(channel_type="whatsapp")

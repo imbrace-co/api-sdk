@@ -20,7 +20,7 @@ def test_get_user(httpx_mock: HTTPXMock, client):
     assert res["id"] == "u_123"
 
 def test_get_me(httpx_mock: HTTPXMock, client):
-    httpx_mock.add_response(url=f"{PL}/v1/users/me", json={"id": "me"})
+    httpx_mock.add_response(url=f"{PL}/v1/users/_me", json={"id": "me"})
     res = client.platform.get_me()
     assert res["id"] == "me"
 
