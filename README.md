@@ -4,7 +4,7 @@ Official TypeScript and Python SDKs for the [Imbrace](https://imbrace.co) platfo
 
 [![TypeScript](https://img.shields.io/npm/v/@imbrace/sdk?label=%40imbrace%2Fsdk&color=blue)](https://www.npmjs.com/package/@imbrace/sdk)
 [![Python](https://img.shields.io/pypi/v/imbrace?label=imbrace&color=blue)](https://pypi.org/project/imbrace/)
-[![Docs](https://img.shields.io/badge/docs-imbraceltd.github.io%2Fapi--sdk-blue)](https://imbraceltd.github.io/api-sdk/)
+[![Docs](https://img.shields.io/badge/docs-imbrace--co.github.io%2Fapi--sdk-blue)](https://imbrace-co.github.io/api-sdk/)
 
 ---
 

@@ -1,6 +1,6 @@
 # CLI Overview
 
-The Imbrace CLI (`@imbrace/cli`) is a terminal tool for interacting with the Imbrace platform. Commands call the Imbrace platform directly via the `@imbrace/sdk` package. Source: [imbraceltd/imbrace-cli](https://github.com/imbraceltd/imbrace-cli).
+The Imbrace CLI (`@imbrace/cli`) is a terminal tool for interacting with the Imbrace platform. Commands call the Imbrace platform directly via the `@imbrace/sdk` package. Source: [imbrace-co/imbrace-cli](https://github.com/imbrace-co/imbrace-cli).
 
 ```
 imbrace (CLI) → https://app-gatewayv2.imbrace.co (Imbrace Platform)

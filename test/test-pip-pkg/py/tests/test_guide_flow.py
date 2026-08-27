@@ -1,6 +1,6 @@
 """
 Mirrors every snippet from
-https://imbraceltd.github.io/api-sdk/typescript/full-flow-guide/
+https://imbrace-co.github.io/api-sdk/typescript/full-flow-guide/
 using the published `imbrace` Python SDK.
 
 Run mode is selected via AUTH_MODE=apikey | token (default: apikey).

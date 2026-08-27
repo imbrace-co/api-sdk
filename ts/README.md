@@ -72,4 +72,4 @@ try {
 
 ## Documentation
 
-Full reference: **[imbraceltd.github.io/api-sdk](https://imbraceltd.github.io/api-sdk/typescript/resources/)**
+Full reference: **[imbrace-co.github.io/api-sdk](https://imbrace-co.github.io/api-sdk/typescript/resources/)**

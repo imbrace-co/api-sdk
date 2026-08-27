@@ -42,7 +42,7 @@ export default defineConfig({
         replacesTitle: true
       },
       social: {
-        github: 'https://github.com/imbraceltd/api-sdk',
+        github: 'https://github.com/imbrace-co/api-sdk',
       },
       defaultLocale: 'root',
       locales: {
