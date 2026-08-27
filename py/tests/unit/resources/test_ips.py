@@ -65,3 +65,76 @@ def test_sends_api_key_header(httpx_mock: HTTPXMock, client):
     httpx_mock.add_response(url=f"{IPS}/schedulers", json={"data": []})
     client.ips.list_schedulers()
     assert httpx_mock.get_request().headers["x-api-key"] == "test_key"
+
+
+# ── profiles ──────────────────────────────────────────────────────────────────
+
+def test_get_profile(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{IPS}/profiles/u_1", json={"id": "u_1"})
+    assert client.ips.get_profile("u_1")["id"] == "u_1"
+
+
+def test_get_my_profile(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{IPS}/profiles/me", json={"id": "me"})
+    assert client.ips.get_my_profile()["id"] == "me"
+
+
+def test_update_profile(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{IPS}/profiles/u_1", method="PATCH", json={"id": "u_1"})
+    client.ips.update_profile("u_1", {"display_name": "Ann"})
+    assert httpx_mock.get_request().method == "PATCH"
+
+
+def test_search_profiles_sends_query(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{IPS}/profiles?q=ann", json={"data": []})
+    client.ips.search_profiles("ann")
+    assert httpx_mock.get_request().url.params["q"] == "ann"
+
+
+def test_search_profiles_includes_pagination(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{IPS}/profiles?q=ann&page=2&limit=50", json={"data": []})
+    client.ips.search_profiles("ann", page=2, limit=50)
+    q = httpx_mock.get_request().url.params
+    assert q["page"] == "2" and q["limit"] == "50"
+
+
+# ── follow graph ──────────────────────────────────────────────────────────────
+
+def test_follow(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{IPS}/profiles/u_2/follow", method="POST", json={})
+    client.ips.follow("u_2")
+    assert httpx_mock.get_request().method == "POST"
+
+
+def test_unfollow(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{IPS}/profiles/u_2/follow", method="DELETE", json={})
+    client.ips.unfollow("u_2")
+    assert httpx_mock.get_request().method == "DELETE"
+
+
+def test_get_followers(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{IPS}/profiles/u_1/followers", json={"data": []})
+    assert client.ips.get_followers("u_1") == {"data": []}
+
+
+def test_get_following(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{IPS}/profiles/u_1/following", json={"data": []})
+    assert client.ips.get_following("u_1") == {"data": []}
+
+
+# ── identities ────────────────────────────────────────────────────────────────
+
+def test_list_identities(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{IPS}/identities/u_1", json=[{"provider": "google"}])
+    assert client.ips.list_identities("u_1")[0]["provider"] == "google"
+
+
+def test_unlink_identity(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{IPS}/identities/u_1/google", method="DELETE", json={})
+    client.ips.unlink_identity("u_1", "google")
+    assert httpx_mock.get_request().url.path.endswith("/identities/u_1/google")
+
+
+def test_list_workflows(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{IPS}/workflows/all", json=[{"id": "wf_1"}])
+    assert client.ips.list_workflows()[0]["id"] == "wf_1"
