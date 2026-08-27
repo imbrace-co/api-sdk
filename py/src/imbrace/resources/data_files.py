@@ -64,3 +64,6 @@ class AsyncDataFilesResource:
     async def upload(self, files: Any) -> Dict[str, Any]:
         res = await self._http.request("POST", f"{self._base}/upload", files=files)
         return res.json()
+
+    async def download(self, file_id: str) -> Any:
+        return await self._http.request("GET", f"{self._base}/{file_id}/download")

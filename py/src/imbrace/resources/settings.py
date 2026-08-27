@@ -130,3 +130,11 @@ class AsyncSettingsResource:
             "GET", f"{self._cs}/v2/whatsapp_templates", params=params or {}
         )
         return res.json()
+
+    async def bulk_invite_users(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        res = await self._http.request("POST", f"{self._platform}/v1/users/_bulk_invite", json=body)
+        return res.json()
+
+    async def get_user_roles_count(self) -> Dict[str, Any]:
+        res = await self._http.request("GET", f"{self._platform}/v1/users/_roles_count")
+        return res.json()

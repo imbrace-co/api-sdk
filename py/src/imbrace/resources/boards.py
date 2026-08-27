@@ -410,3 +410,121 @@ class AsyncBoardsResource:
             "GET", f"{self._base}/auth/onedrive/files/session/status"
         )
         return res.json()
+
+    async def reorder(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        _r = await self._http.request("POST", f"{self._base}/boards/reorder", json=body)
+        return _r.json()
+
+    async def import_csv(self, board_id: str, files: Any) -> Dict[str, Any]:
+        _r = await self._http.request("POST", f"{self._base}/boards/{board_id}/import_csv", files=files)
+        return _r.json()
+
+    async def import_excel(self, board_id: str, files: Any) -> Dict[str, Any]:
+        _r = await self._http.request("POST", f"{self._base}/boards/{board_id}/import", files=files)
+        return _r.json()
+
+    async def get_import_progress(self, board_id: str) -> Dict[str, Any]:
+        _r = await self._http.request("GET", f"{self._base}/boards/{board_id}/import_progress")
+        return _r.json()
+
+    async def upload_board_file(self, files: Any) -> Dict[str, Any]:
+        _r = await self._http.request("POST", f"{self._base}/boards/_fileupload", files=files)
+        return _r.json()
+
+    async def upload_board_file_v2(self, files: Any) -> Dict[str, Any]:
+        _r = await self._http.request("POST", f"{self._base}/boards/upload", files=files)
+        return _r.json()
+
+    async def create_field(self, board_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
+        _r = await self._http.request("POST", f"{self._base}/boards/{board_id}/fields", json=body)
+        return _r.json()
+
+    async def update_field(self, board_id: str, field_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
+        _r = await self._http.request("PATCH", f"{self._base}/boards/{board_id}/fields/{field_id}", json=body)
+        return _r.json()
+
+    async def delete_field(self, board_id: str, field_id: str) -> None:
+        await self._http.request("DELETE", f"{self._base}/boards/{board_id}/fields/{field_id}")
+
+    async def reorder_fields(self, board_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
+        _r = await self._http.request("POST", f"{self._base}/boards/{board_id}/fields/reorder", json=body)
+        return _r.json()
+
+    async def bulk_update_fields(self, board_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
+        _r = await self._http.request("PATCH", f"{self._base}/boards/{board_id}/fields/bulk", json=body)
+        return _r.json()
+
+    async def bulk_delete_items(self, board_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
+        _r = await self._http.request("DELETE", f"{self._base}/boards/{board_id}/items/bulk-delete", json=body)
+        return _r.json()
+
+    async def get_related_items(self, board_id: str, item_id: str, related_board_id: str) -> Dict[str, Any]:
+        _res = await self._http.request("GET", f"{self._base}/boards/{board_id}/items/{item_id}/related/{related_board_id}")
+        r = _res.json()
+        return r.get("data", r) if isinstance(r, dict) else r
+
+    async def link_items(self, board_id: str, item_id: str, related_board_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
+        """Link related board items. Body must include `relatedItemIds: [...]`."""
+        _r = await self._http.request(
+            "POST", f"{self._base}/boards/{board_id}/items/{item_id}/related",
+            json={"relatedBoardId": related_board_id, "relatedItemIds": body.get("relatedItemIds", [])},
+        )
+        return _r.json()
+
+    async def unlink_items(self, board_id: str, item_id: str, related_board_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
+        _r = await self._http.request(
+            "DELETE", f"{self._base}/boards/{board_id}/items/{item_id}/related",
+            json={"relatedBoardId": related_board_id, "relatedItemIds": body.get("relatedItemIds", [])},
+        )
+        return _r.json()
+
+    async def list_segments(self, board_id: str) -> Dict[str, Any]:
+        _r = await self._http.request("GET", f"{self._base}/boards/{board_id}/segmentation")
+        return _r.json()
+
+    async def create_segment(self, board_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
+        _r = await self._http.request("POST", f"{self._base}/boards/{board_id}/segmentation", json=body)
+        return _r.json()
+
+    async def update_segment(self, board_id: str, segment_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
+        _r = await self._http.request("PATCH", f"{self._base}/boards/{board_id}/segmentation/{segment_id}", json=body)
+        return _r.json()
+
+    async def delete_segment(self, board_id: str, segment_id: str) -> None:
+        await self._http.request("DELETE", f"{self._base}/boards/{board_id}/segmentation/{segment_id}")
+
+    async def create_file(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        _res = await self._http.request("POST", f"{self._base}/files", json=body)
+        r = _res.json()
+        return r.get("data", r)
+
+    async def download_file(self, file_id: str) -> Any:
+        return await self._http.request("GET", f"{self._base}/files/{file_id}/download")
+
+    async def generate_ai_tags(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        _res = await self._http.request("POST", f"{self._base}/ai/tag-generation", json=body)
+        r = _res.json()
+        return r.get("data", r)
+
+    async def get_link_preview(self, url: str) -> Dict[str, Any]:
+        _r = await self._http.request("POST", f"{self._base}/link_preview/getWebsiteInfo", json={"url": url})
+        return _r.json()
+
+    async def initiate_drive_auth(self, drive_type: str) -> Dict[str, Any]:
+        _r = await self._http.request("GET", f"{self._base}/auth/{drive_type}/initiate")
+        return _r.json()
+
+    async def list_drive_folders(self, drive_type: str, params: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+        _r = await self._http.request("GET", f"{self._base}/{drive_type}/folders", params=params or {})
+        return _r.json()
+
+    async def list_drive_files(self, drive_type: str, params: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+        _r = await self._http.request("GET", f"{self._base}/{drive_type}/files", params=params or {})
+        return _r.json()
+
+    async def download_drive_file(self, drive_type: str, params: Optional[Dict[str, str]] = None) -> Any:
+        return await self._http.request("GET", f"{self._base}/{drive_type}/files/download", params=params or {})
+
+    async def get_onedrive_session_status(self) -> Dict[str, Any]:
+        _r = await self._http.request("GET", f"{self._base}/auth/onedrive/files/session/status")
+        return _r.json()

@@ -388,3 +388,25 @@ class AsyncWorkflowsResource:
 
     async def delete_invitation(self, invitation_id: str) -> None:
         await self._ap_delete(f"/v1/user-invitations/{invitation_id}")
+
+    _cached_project_id: Optional[str] = None
+
+    async def resolve_project_id(self) -> str:
+        """Resolve the Workflow project id by listing the first flow (async).
+
+        Caches the result so repeated calls don't refetch. Raises if the org
+        has no flows yet (caller must pass ``project_id`` explicitly).
+        """
+        if self._cached_project_id:
+            return self._cached_project_id
+        r = await self.list_flows(limit=1)
+        flows = r.get("data", []) if isinstance(r, dict) else []
+        flow = flows[0] if flows else {}
+        pid = flow.get("projectId") or flow.get("project_id")
+        if not pid:
+            raise RuntimeError(
+                "workflows.resolve_project_id: org has no flows yet — cannot derive project_id. "
+                "Pass it explicitly to the calling method (e.g. list_mcp_servers(project_id))."
+            )
+        self._cached_project_id = pid
+        return pid

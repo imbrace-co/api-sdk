@@ -562,3 +562,40 @@ class AsyncAiAgentResource:
 
     async def get_admin_guide(self, filename: str) -> Any:
         return await self._http.request("GET", f"{self._base}/admin/guides/{quote(filename)}")
+
+    async def stream_chat_text(self, body: StreamChatBody) -> Any:
+        """Async generator yielding each text chunk as it arrives.
+
+        Async twin of the sync generator: wraps `stream_chat` and parses the
+        Vercel-AI-SDK SSE event stream. Use:
+
+            async for chunk in client.ai_agent.stream_chat_text({...}):
+                print(chunk, end="", flush=True)
+        """
+        import json as _json
+        res = await self.stream_chat(body)
+        if not res.is_success:
+            raise RuntimeError(f"stream_chat_text: HTTP {res.status_code} — {res.text}")
+        async for line in res.aiter_lines():
+            if not line:
+                continue
+            if isinstance(line, bytes):
+                line = line.decode("utf-8", errors="replace")
+            if not line.startswith("data:"):
+                continue
+            payload = line[5:].strip()
+            if not payload or payload == "[DONE]":
+                continue
+            try:
+                evt = _json.loads(payload)
+            except Exception:
+                continue
+            if evt.get("type") == "text-delta" and isinstance(evt.get("delta"), str):
+                yield evt["delta"]
+            else:
+                choices = evt.get("choices")
+                if isinstance(choices, list) and choices:
+                    delta = (choices[0] or {}).get("delta") or {}
+                    content = delta.get("content")
+                    if isinstance(content, str):
+                        yield content

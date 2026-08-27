@@ -342,3 +342,184 @@ class AsyncPlatformResource:
     async def get_room(self, room_id: str) -> Dict[str, Any]:
         res = await self._http.request("GET", f"{self._v1}/rooms/{room_id}")
         return res.json()
+
+    async def change_role(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        _r = await self._http.request("POST", f"{self._v1}/users/_change_role", json=body)
+        return _r.json()
+
+    async def archive_user(self, user_id: str) -> Dict[str, Any]:
+        _r = await self._http.request("POST", f"{self._v1}/users/_archive", json={"user_id": user_id})
+        return _r.json()
+
+    async def reactivate_user(self, user_id: str) -> Dict[str, Any]:
+        _r = await self._http.request("POST", f"{self._v1}/users/_reactivate", json={"user_id": user_id})
+        return _r.json()
+
+    async def list_all_users(self, params: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+        _r = await self._http.request("GET", f"{self._v1}/users/_all", params=params or {})
+        return _r.json()
+
+    async def upload_user_avatar(self, files: Any) -> Dict[str, Any]:
+        _r = await self._http.request("POST", f"{self._v1}/users/_fileupload", files=files)
+        return _r.json()
+
+    async def get_user_workflows(self, user_id: str) -> Dict[str, Any]:
+        _r = await self._http.request("GET", f"{self._v1}/users/{user_id}/workflows")
+        return _r.json()
+
+    async def list_all_orgs(self, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        _r = await self._http.request("GET", f"{self._v2}/organizations/_all", params=params or {})
+        return _r.json()
+
+    async def create_aws_org(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        _r = await self._http.request("POST", f"{self._v1}/organizations/aws", json=body)
+        return _r.json()
+
+    async def get_my_teams(self) -> Dict[str, Any]:
+        _r = await self._http.request("GET", f"{self._v2}/teams/my")
+        return _r.json()
+
+    async def update_team_v1(self, team_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
+        _r = await self._http.request("PUT", f"{self._v1}/teams/{team_id}", json=body)
+        return _r.json()
+
+    async def add_team_users(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        _r = await self._http.request("POST", f"{self._v2}/teams/_add_users", json=body)
+        return _r.json()
+
+    async def remove_team_users(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        _r = await self._http.request("POST", f"{self._v2}/teams/_remove_users", json=body)
+        return _r.json()
+
+    async def get_team_workflows(self, team_id: str) -> Dict[str, Any]:
+        _r = await self._http.request("GET", f"{self._v1}/teams/{team_id}/workflows")
+        return _r.json()
+
+    async def upload_team_icon(self, files: Any) -> Dict[str, Any]:
+        base = self._backend_base or self._v1
+        _r = await self._http.request("POST", f"{base}/teams/_fileupload", files=files)
+        return _r.json()
+
+    async def list_team_users(self, params: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+        _r = await self._http.request("GET", f"{self._v1}/team_users", params=params or {})
+        return _r.json()
+
+    async def list_team_invites(self, version: str = "v2") -> Dict[str, Any]:
+        _r = await self._http.request("GET", f"{self._base}/{version}/team_users/_invite_list")
+        return _r.json()
+
+    async def list_team_users_v2(self, params: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+        _r = await self._http.request("GET", f"{self._v2}/team_users", params=params or {})
+        return _r.json()
+
+    async def accept_team_join_request(self, team_id: str, team_user_id: str) -> Dict[str, Any]:
+        _r = await self._http.request("POST", f"{self._v2}/teams/{team_id}/user/{team_user_id}/accept")
+        return _r.json()
+
+    async def get_team_labels(self, team_id: str) -> Dict[str, Any]:
+        _r = await self._http.request("GET", f"{self._v1}/teams/{team_id}/team_labels")
+        return _r.json()
+
+    async def list_business_units(self, params: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+        _r = await self._http.request("GET", f"{self._v1}/business_units", params=params or {})
+        return _r.json()
+
+    async def update_room(self, room_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
+        _r = await self._http.request("PUT", f"{self._v1}/rooms/{room_id}", json=body)
+        return _r.json()
+
+    async def get_room_status(self, params: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+        _r = await self._http.request("GET", f"{self._v1}/rooms/_status", params=params or {})
+        return _r.json()
+
+    async def join_room(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        _r = await self._http.request("POST", f"{self._v1}/rooms/_join", json=body)
+        return _r.json()
+
+    async def get_room_status_count(self) -> Dict[str, Any]:
+        _r = await self._http.request("GET", f"{self._v1}/rooms/_status_count")
+        return _r.json()
+
+    async def search_rooms(self, q: str) -> Dict[str, Any]:
+        _r = await self._http.request("GET", f"{self._v1}/rooms/_search", params={"q": q})
+        return _r.json()
+
+    async def list_stores(self) -> Dict[str, Any]:
+        _r = await self._http.request("GET", f"{self._v1}/stores")
+        return _r.json()
+
+    async def create_store(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        _r = await self._http.request("POST", f"{self._v1}/stores/_create_with_fp", json=body)
+        return _r.json()
+
+    async def update_store(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        _r = await self._http.request("POST", f"{self._v1}/stores/_modify_with_fp", json=body)
+        return _r.json()
+
+    async def get_store(self, store_id: str) -> Dict[str, Any]:
+        _r = await self._http.request("GET", f"{self._v1}/stores/{store_id}")
+        return _r.json()
+
+    async def get_facebook_pages(self, params: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+        _r = await self._http.request("GET", f"{self._v1}/facebooks", params=params or {})
+        return _r.json()
+
+    async def auth_facebook_pages(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        _r = await self._http.request("POST", f"{self._v1}/facebook/_auth_pages", json=body)
+        return _r.json()
+
+    async def cancel_facebook_pages(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        _r = await self._http.request("POST", f"{self._v1}/facebook/_cancel_pages", json=body)
+        return _r.json()
+
+    async def create_mail_channel(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        _r = await self._http.request("POST", f"{self._v1}/mail_channels", json=body)
+        return _r.json()
+
+    async def get_mail_channel(self, channel_id: str) -> Dict[str, Any]:
+        _r = await self._http.request("GET", f"{self._v1}/mail_channels/{channel_id}")
+        return _r.json()
+
+    async def init_channel(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        _r = await self._http.request("POST", f"{self._v1}/init_channel", json=body)
+        return _r.json()
+
+    async def get_contact_v2(self, contact_id: str) -> Dict[str, Any]:
+        _r = await self._http.request("GET", f"{self._v2}/contacts/{contact_id}")
+        return _r.json()
+
+    async def update_contact_v2(self, contact_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
+        _r = await self._http.request("PUT", f"{self._v2}/contacts/{contact_id}", json=body)
+        return _r.json()
+
+    async def list_credentials(self) -> Dict[str, Any]:
+        _r = await self._http.request("GET", f"{self._v1}/credentials")
+        return _r.json()
+
+    async def get_credential_types(self, params: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+        _r = await self._http.request("GET", f"{self._v1}/workflow/credential-types", params=params or {})
+        return _r.json()
+
+    async def get_credential_type_by_name(self, name: str) -> Dict[str, Any]:
+        _r = await self._http.request("GET", f"{self._v1}/workflow/credential-types/{name}")
+        return _r.json()
+
+    async def list_processed_credential_types(self) -> Dict[str, Any]:
+        _r = await self._http.request("GET", f"{self._v1}/workflow/processed-credential-types")
+        return _r.json()
+
+    async def get_credential_param(self, params: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+        _r = await self._http.request("GET", f"{self._v1}/workflow/_credentialParam", params=params or {})
+        return _r.json()
+
+    async def list_knowledge(self) -> Dict[str, Any]:
+        _r = await self._http.request("GET", f"{self._v1}/knowledge")
+        return _r.json()
+
+    async def upload_knowledge(self, files: Any) -> Dict[str, Any]:
+        _r = await self._http.request("POST", f"{self._v1}/knowledge/upload", files=files)
+        return _r.json()
+
+    async def list_resources(self) -> Dict[str, Any]:
+        _r = await self._http.request("GET", f"{self._v1}/resources")
+        return _r.json()
