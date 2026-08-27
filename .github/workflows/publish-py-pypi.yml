@@ -32,11 +32,16 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install build
-          # If you have a test suite, install it here:
-          # pip install -e .[test] 
+          pip install -e ".[dev]"
 
-      # - name: Run tests
-      #   run: pytest # Uncomment this when you have tests ready
+      # tests/unit only — pyproject's testpaths also lists tests/integration,
+      # which needs a live API key and cannot run in CI.
+      #
+      # ruff and mypy are deliberately NOT gated yet: the source currently has
+      # ~1.5k ruff findings and ~700 mypy errors, so enabling them would block
+      # every release. Clean those up first, then add the steps here.
+      - name: Run unit tests
+        run: pytest tests/unit
 
   # ---------------------------------------------------------
   # JOB 2: Sync version, Build, and Publish to PyPI
