@@ -67,3 +67,39 @@ def test_401_raises_auth_error(httpx_mock: HTTPXMock, transport):
     httpx_mock.add_response(url="https://test.com", status_code=401)
     with pytest.raises(AuthError):
         transport.request("GET", "https://test.com")
+
+
+def test_403_raises_auth_error(httpx_mock: HTTPXMock, transport):
+    httpx_mock.add_response(url="https://test.com", status_code=403, json={})
+    with pytest.raises(AuthError):
+        transport.request("GET", "https://test.com")
+
+
+def test_404_raises_api_error(httpx_mock: HTTPXMock, transport):
+    httpx_mock.add_response(url="https://test.com", status_code=404, json={"message": "nope"})
+    with pytest.raises(ApiError):
+        transport.request("GET", "https://test.com")
+
+
+def test_returns_response_on_200(httpx_mock: HTTPXMock, transport):
+    httpx_mock.add_response(url="https://test.com", json={"ok": True})
+    res = transport.request("GET", "https://test.com")
+    assert res.status_code == 200
+    assert res.json() == {"ok": True}
+
+
+def test_retries_on_500_then_raises(httpx_mock: HTTPXMock, transport):
+    """5xx is retried up to max_retries (3), so 4 requests go out in total."""
+    httpx_mock.add_response(url="https://test.com", status_code=500, json={}, is_reusable=True)
+    with pytest.raises(ApiError):
+        transport.request("GET", "https://test.com")
+    assert len(httpx_mock.get_requests()) == 4
+
+
+def test_retries_on_429(httpx_mock: HTTPXMock, transport):
+    """429 is retried like a 5xx; a success on the retry is returned normally."""
+    httpx_mock.add_response(url="https://test.com", status_code=429, json={})
+    httpx_mock.add_response(url="https://test.com", json={"ok": True})
+    res = transport.request("GET", "https://test.com")
+    assert res.json() == {"ok": True}
+    assert len(httpx_mock.get_requests()) == 2

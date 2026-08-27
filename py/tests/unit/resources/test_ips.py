@@ -27,3 +27,41 @@ def test_delete_scheduler(httpx_mock: HTTPXMock):
     
     result = client.ips.delete_scheduler("sch_1")
     assert result["success"] is True
+
+IPS = "https://app-gatewayv2.imbrace.co/ips/v1"
+
+
+@pytest.fixture
+def client():
+    return ImbraceClient(env="stable", api_key="test_key")
+
+
+def test_get_scheduler_filter_options(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{IPS}/schedulers/filter_options", json={"data": []})
+    assert client.ips.get_scheduler_filter_options() == {"data": []}
+
+
+def test_list_external_data_sync(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{IPS}/external-data-sync", json={"data": []})
+    assert client.ips.list_external_data_sync() == {"data": []}
+
+
+def test_enable_external_data_sync(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(
+        url=f"{IPS}/external-data-sync/enable", method="POST", json={"enabled": True}
+    )
+    res = client.ips.enable_external_data_sync({"board_id": "b_1"})
+    assert res["enabled"] is True
+
+
+def test_delete_external_data_sync(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(
+        url=f"{IPS}/external-data-sync/sync_1", method="DELETE", json={"success": True}
+    )
+    assert client.ips.delete_external_data_sync("sync_1")["success"] is True
+
+
+def test_sends_api_key_header(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{IPS}/schedulers", json={"data": []})
+    client.ips.list_schedulers()
+    assert httpx_mock.get_request().headers["x-api-key"] == "test_key"

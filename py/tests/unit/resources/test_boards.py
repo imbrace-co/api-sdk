@@ -84,3 +84,66 @@ def test_update_board(httpx_mock: HTTPXMock, client):
 def test_delete_board(httpx_mock: HTTPXMock, client):
     httpx_mock.add_response(url=f"{DB}/boards/b_1", method="DELETE", status_code=204)
     client.boards.delete("b_1")
+
+
+# ── items ─────────────────────────────────────────────────────────────────────
+
+def test_list_items(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{DB}/boards/b_1/items?limit=20&skip=0", json={"data": []})
+    res = client.boards.list_items("b_1")
+    assert res == {"data": []}
+
+
+def test_create_item(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{DB}/boards/b_1/items", method="POST", json={"id": "i_1"})
+    res = client.boards.create_item("b_1", {"name": "Row"})
+    assert res["id"] == "i_1"
+    assert json.loads(httpx_mock.get_request().content)["name"] == "Row"
+
+
+def test_delete_item(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{DB}/boards/b_1/items/i_1", method="DELETE", json={})
+    client.boards.delete_item("b_1", "i_1")
+    assert httpx_mock.get_request().method == "DELETE"
+
+
+def test_bulk_delete_items(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(
+        url=f"{DB}/boards/b_1/items/bulk-delete", method="DELETE", json={"deleted": 2}
+    )
+    res = client.boards.bulk_delete_items("b_1", {"itemIds": ["i_1", "i_2"]})
+    assert res["deleted"] == 2
+
+
+def test_link_items_sends_related_board_id(httpx_mock: HTTPXMock, client):
+    """link_items folds relatedBoardId and relatedItemIds into one body."""
+    httpx_mock.add_response(
+        url=f"{DB}/boards/b_1/items/i_1/related", method="POST", json={"ok": True}
+    )
+    client.boards.link_items("b_1", "i_1", "b_2", {"relatedItemIds": ["i_9"]})
+    body = json.loads(httpx_mock.get_request().content)
+    assert body == {"relatedBoardId": "b_2", "relatedItemIds": ["i_9"]}
+
+
+# ── fields / search ───────────────────────────────────────────────────────────
+
+def test_create_field(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{DB}/boards/b_1/fields", method="POST", json={"id": "f_1"})
+    res = client.boards.create_field("b_1", {"name": "Amount", "type": "Number"})
+    assert res["id"] == "f_1"
+
+
+def test_search(httpx_mock: HTTPXMock, client):
+    """search POSTs to /search/{board_id}, not /boards/{id}/search."""
+    httpx_mock.add_response(url=f"{DB}/search/b_1", method="POST", json={"hits": []})
+    res = client.boards.search("b_1", q="invoice")
+    assert res == {"hits": []}
+
+
+def test_search_folders_unwraps_data(httpx_mock: HTTPXMock, client):
+    """search_folders returns the `data` envelope contents when present."""
+    httpx_mock.add_response(
+        url=f"{DB}/folders/search?q=kb", json={"data": [{"id": "fo_1"}]}
+    )
+    res = client.boards.search_folders(q="kb")
+    assert res == [{"id": "fo_1"}]

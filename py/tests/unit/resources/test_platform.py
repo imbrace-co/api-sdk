@@ -52,3 +52,32 @@ def test_grant_permission(httpx_mock: HTTPXMock, client):
 def test_revoke_permission(httpx_mock: HTTPXMock, client):
     httpx_mock.add_response(url=f"{PL}/v1/users/u_1/permissions/p_1", method="DELETE", status_code=204)
     client.platform.revoke_permission("u_1", "p_1")
+
+
+def test_list_users_includes_search_param(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{PL}/v1/users?search=ann", json={"data": []})
+    client.platform.list_users({"search": "ann"})
+    assert httpx_mock.get_request().url.params["search"] == "ann"
+
+
+def test_archive_user(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{PL}/v1/users/_archive", method="POST", json={"ok": True})
+    res = client.platform.archive_user("u_1")
+    assert res["ok"] is True
+
+
+def test_list_all_orgs(httpx_mock: HTTPXMock, client):
+    """The paged /v2/organizations/_all endpoint, distinct from list_orgs."""
+    httpx_mock.add_response(url=f"{PL}/v2/organizations/_all", json={"data": []})
+    assert client.platform.list_all_orgs() == {"data": []}
+
+
+def test_list_permissions(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{PL}/v1/users/u_1/permissions", json={"data": []})
+    assert client.platform.list_permissions("u_1") == {"data": []}
+
+
+def test_sends_api_key_header(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{PL}/v1/users", json={"data": []})
+    client.platform.list_users()
+    assert httpx_mock.get_request().headers["x-api-key"] == "test_key"
