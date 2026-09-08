@@ -1,6 +1,6 @@
-# ✨ Imbrace SDK Monorepo
+# ✨ iMBrace SDK Monorepo
 
-Official TypeScript and Python SDKs for the [Imbrace](https://imbrace.co) platform.
+Official TypeScript and Python SDKs for the [iMBrace](https://imbrace.co) platform.
 
 [![TypeScript](https://img.shields.io/npm/v/@imbrace/sdk?label=%40imbrace%2Fsdk&color=blue)](https://www.npmjs.com/package/@imbrace/sdk)
 [![Python](https://img.shields.io/pypi/v/imbrace?label=imbrace&color=blue)](https://pypi.org/project/imbrace/)

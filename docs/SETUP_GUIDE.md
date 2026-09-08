@@ -1,6 +1,6 @@
-# Imbrace SDK — Setup Guide
+# iMBrace SDK — Setup Guide
 
-This document explains how to install and use the Imbrace SDK for both **TypeScript/JavaScript** and **Python**, including installation inside the monorepo and installation from the outside as a standalone package.
+This document explains how to install and use the iMBrace SDK for both **TypeScript/JavaScript** and **Python**, including installation inside the monorepo and installation from the outside as a standalone package.
 
 ---
 
@@ -148,7 +148,7 @@ IMBRACE_GATEWAY_URL=
 
 ### Getting an API Key
 
-Option 1 — via the Portal: log in to the Imbrace Portal, go to **Settings → API Keys**.
+Option 1 — via the Portal: log in to the iMBrace Portal, go to **Settings → API Keys**.
 
 Option 2 — via the API (requires an existing access token):
 
@@ -421,4 +421,4 @@ No `api_key` or `access_token` was passed. If this is intentional (e.g. just to 
 
 ---
 
-*Imbrace SDK — MIT License*
+*iMBrace SDK — MIT License*

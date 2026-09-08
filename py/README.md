@@ -1,6 +1,6 @@
-# Imbrace Python SDK
+# iMBrace Python SDK
 
-Official Python client for the Imbrace Gateway. Supports sync and async.
+Official Python client for the iMBrace Gateway. Supports sync and async.
 
 ## Installation
 

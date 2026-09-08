@@ -1,6 +1,6 @@
-# Imbrace SDK - NPM Package Verification Suite
+# iMBrace SDK - NPM Package Verification Suite
 
-A test suite for the Imbrace TypeScript SDK, designed to validate the published library after it has been released or installed as a dependency from the registry.
+A test suite for the iMBrace TypeScript SDK, designed to validate the published library after it has been released or installed as a dependency from the registry.
 
 ## 1. Objectives
 - Ensure the modules are exported correctly from the `@imbrace/sdk` library.

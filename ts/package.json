@@ -1,10 +1,10 @@
 {
   "name": "@imbrace/sdk",
   "version": "1.4.0",
-  "description": "Official TypeScript/JavaScript SDK for Imbrace — dual auth (API Key + Access Token)",
+  "description": "Official TypeScript/JavaScript SDK for iMBrace — dual auth (API Key + Access Token)",
   "type": "module",
   "license": "MIT",
-  "author": "Imbrace Team <dev@imbrace.co>",
+  "author": "iMBrace Team <dev@imbrace.co>",
   "homepage": "https://imbrace.co",
   "repository": {
     "type": "git",

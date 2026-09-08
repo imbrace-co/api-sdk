@@ -1,6 +1,6 @@
-# Imbrace TypeScript SDK
+# iMBrace TypeScript SDK
 
-Official TypeScript/JavaScript client for the [Imbrace](https://imbrace.co) platform. Build AI chat assistants, automate workflows, and manage CRM data from your own applications.
+Official TypeScript/JavaScript client for the [iMBrace](https://imbrace.co) platform. Build AI chat assistants, automate workflows, and manage CRM data from your own applications.
 
 ## Installation
 

@@ -1,6 +1,6 @@
-# Imbrace SDK - Local Integration Test Suite
+# iMBrace SDK - Local Integration Test Suite
 
-An integration test suite for the Imbrace TypeScript SDK, designed to validate the source code directly during development through a locally packed tarball (`.tgz`).
+An integration test suite for the iMBrace TypeScript SDK, designed to validate the source code directly during development through a locally packed tarball (`.tgz`).
 
 ## 1. Objectives
 - Validate the entire SDK logic before publishing to NPM.
