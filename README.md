@@ -56,6 +56,17 @@ with ImbraceClient() as client:
 
 Set `IMBRACE_API_KEY` in your environment or `.env` file. Both SDKs read it automatically.
 
+> [!NOTE]
+> **The SDK is open source (MIT) — the API it talks to is not.**
+> You can install both SDKs and run their unit tests with no key. But every
+> *real* API call — the Quick Start above, `client.api`, the integration tests,
+> `npm run codegen:fetch`, and `imbrace mcp` — needs an `IMBRACE_API_KEY`.
+>
+> API keys are issued to an iMBrace account on a **paid plan (Enterprise or
+> Community)**. Once you have an account, create a key in the
+> **[iMBrace Portal](https://imbrace.co) → Settings → API Keys**. See
+> [`docs/SETUP_GUIDE.md`](./docs/SETUP_GUIDE.md) for the full walkthrough.
+
 ---
 
 ## The generated API surface (`client.api`)
@@ -150,7 +161,7 @@ npm run build   # production build
 
 ## Integration Tests
 
-Integration tests make real API calls and require credentials.
+Integration tests make real API calls and require a paid-plan API key (see the note under [Quick Start](#quick-start)).
 
 **TypeScript**
 ```bash
