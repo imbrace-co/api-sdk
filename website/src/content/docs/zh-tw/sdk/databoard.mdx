@@ -1,13 +1,13 @@
 ---
 title: 資料看板
-description: client.boards 的 SDK 參考文件 — CRM 管道、項目、欄位、區段、Knowledge Hub、匯入/匯出和外部磁碟整合。
+description: client.boards 的 SDK 參考文件 — CRM 管道、項目、欄位、區隔、Knowledge Hub、匯入/匯出和外部雲端硬碟整合。
 ---
 
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 Boards 是 CRM 管道的核心資料儲存 — 潛在客戶、交易、任務或任何結構化資料。在建立 AI agent 時將 board ID 傳入 `board_ids` 以讓它存取該資料 — 請參閱[完整流程指南 §4](/sdk/full-flow-guide/#4-manage-data-boards-and-items-crm-pipelines)。
 
-請先初始化客戶端（請參閱[安裝](/sdk/installation/)或[快速入門](/sdk/quick-start/)）。
+請先初始化用戶端（請參閱[安裝](/sdk/installation/)或[快速入門](/sdk/quick-start/)）。
 
 ---
 
@@ -151,7 +151,7 @@ client.boards.bulk_delete_items("board_id", {"ids": ["item_1", "item_2", "item_3
 
 ### 衝突偵測
 
-衝突現在內聯回報：`updateItem` 在記錄自上次讀取後被修改時回傳 HTTP `409 Conflict` — 改成捕捉 `ApiError`（`statusCode === 409`），不需要另呼叫專用端點。
+衝突檢查現在會直接在回應中回報：`updateItem` 在記錄自上次讀取後被修改時回傳 HTTP `409 Conflict` — 改成捕捉 `ApiError`（`statusCode === 409`），不需要另呼叫專用端點。
 
 ### 連結項目（相關 boards）
 
@@ -229,7 +229,7 @@ client.boards.bulk_update_fields("board_id", {"fields": [{"_id": "field_1", "nam
 
 ---
 
-## 區段
+## 區隔
 
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">
@@ -383,7 +383,7 @@ preview = client.boards.get_link_preview("https://example.com")
 
 ---
 
-## 外部磁碟
+## 外部雲端硬碟
 
 知識中心的 OneDrive / Google Drive 整合。
 

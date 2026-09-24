@@ -5,7 +5,7 @@ description: Imbrace SDK 是什麼、如何運作以及何時使用。
 
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 
-Imbrace SDK 是 Imbrace Gateway 的官方客戶端，提供 **TypeScript** 和 **Python** 兩種版本。兩個 SDK 都封裝了相同的 Gateway API，具有相同的資源命名空間、相同的認證模型，以及相同的重試/錯誤語義 — 選擇適合您技術棧的語言即可。
+Imbrace SDK 是 Imbrace Gateway 的官方用戶端，提供 **TypeScript** 和 **Python** 兩種版本。兩個 SDK 都封裝了相同的 Gateway API，具有相同的資源命名空間、相同的認證模型，以及相同的重試/錯誤語義 — 選擇適合您技術堆疊的語言即可。
 
 
 ### 主要功能
@@ -17,7 +17,7 @@ Imbrace SDK 是 Imbrace Gateway 的官方客戶端，提供 **TypeScript** 和 *
 | **自動重試** | 429 和 5xx 使用指數退避重試，無需設定 |
 | **串流 AI** | SSE / 非同步迭代器用於 `streamChat` 和 AI 補全 |
 | **同步與非同步（Python）** | `ImbraceClient`（同步）和 `AsyncImbraceClient`（非同步） |
-| **取消（TypeScript）** | 透過 `AbortSignal` 傳播進行進行中請求的取消 |
+| **取消（TypeScript）** | 傳遞 `AbortSignal` 以取消進行中的請求 |
 
 ### 安裝
 
@@ -63,18 +63,18 @@ Imbrace SDK 是 Imbrace Gateway 的官方客戶端，提供 **TypeScript** 和 *
 
 | 命名空間 | 微服務 | 用途 |
 |---|---|---|
-| `client.aiAgent` / `client.ai_agent` | ai-agent | 串流 AI 聊天、嵌入、parquet、聊天客戶端子 API |
+| `client.aiAgent` / `client.ai_agent` | ai-agent | 串流 AI 聊天、嵌入、parquet、聊天用戶端子 API |
 | `client.chatAi` / `client.chat_ai` | ai-service-v2 | AI Agent CRUD（建立/更新/刪除/列出） |
 | `client.documentAi` / `client.document_ai` | ai-service-v2 | 文件解析、擷取、檔案 AI |
-| `client.agent` | marketplace | AI agent 範本 + use-case（透過 `createUseCase` 原子建立 assistant + workflow + channel） |
+| `client.agent` | marketplace | AI agent **範本** + use-case（透過 `createUseCase` 原子建立 assistant + workflow + channel） |
 | `client.workflows` | workflow-engine | 工作流程自動化 — 流程、觸發條件、執行 |
-| `client.boards` | data-board | CRM boards — CRUD、項目、欄位、搜尋、區段、CSV；KnowledgeHub 資料夾與檔案 |
+| `client.boards` | data-board | CRM boards — CRUD、項目、欄位、搜尋、區隔、CSV；KnowledgeHub 資料夾與檔案 |
 | `client.platform`、`client.organizations`、`client.teams` | platform | 使用者、組織、團隊、業務單位 |
 | `client.contacts`、`client.conversations`、`client.messages`、`client.channel`、`client.categories`、`client.campaign`、`client.outbound` | channel-service | 聯絡人、對話、訊息、頻道/活動管理 |
 | `client.marketplace` | marketplace | 市集檔案、電子郵件範本、頻道工作流程 |
 | `client.fileService` | file-service | 情境感知檔案上傳（board 附件、聯絡人檔案、財務檔案、presigned URL） |
 | `client.ips`、`client.schedule` | ips | 程序間排程 / 自動化規則 |
-| `client.ai` | ai-service-v2 | 相容 OpenAI 的補全/嵌入、providers、guardrails |
+| `client.ai` | ai-service-v2 | 相容 OpenAI 的補全、嵌入、提供者、護欄 |
 | `client.auth` | platform / 舊版 backend | 登入（OTP、密碼、SSO）、token 交換 |
 
 如需完整清單和方法參考，請參閱[資源](/sdk/resources/)。
@@ -90,13 +90,13 @@ const flows  = await client.api.workflow.listFlows();
 
 命名空間：`client.api.dataBoard`、`.channel`、`.platform`、`.marketplace`、`.workflow`。
 
-它完整且始終與已部署的服務保持同步，但大多數操作回傳 `unknown`（規格未宣告回應 schema）— 已知資料結構時請傳入型別參數。優先使用上面的手寫資源；它們未涵蓋的呼叫再用 `client.api`，而不要自己手寫 `fetch`。
+它完整且始終與已部署的服務保持同步，但大多數操作回傳 `unknown`（規格未宣告回應 schema）— 已知資料結構時請傳入型別參數。若上面的手寫資源已涵蓋您的呼叫，請優先使用；它們未涵蓋的部分再改用 `client.api`，而不要自己手寫 `fetch`。
 
 同一操作註冊表也驅動閘道的[託管 MCP 伺服器](/zh-tw/mcp/overview/)和 CLI 的 [`imbrace mcp`](/zh-tw/cli/commands/#mcp-server) 指令，兩者都把這些操作作為 MCP 工具提供給 AI agent。
 
 ### 何時選擇哪種憑證
 
-| | API 金鑰（`api_...`） | 存取令牌（`eyJ...`） |
+| | API 金鑰（`api_...`） | 存取權杖（`eyJ...`） |
 |---|---|---|
 | **取得方式** | Imbrace Dashboard → Generate External Token | OTP 登入（`requestOtp` / `loginWithOtp`） |
 | **最適合** | 伺服器腳本、後端整合、CI 管線 | 每個終端使用者各自登入的面向使用者應用程式 |

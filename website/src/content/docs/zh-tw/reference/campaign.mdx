@@ -18,7 +18,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 | `_id` | string | 唯一活動 ID |
 | `name` | string | 活動顯示名稱 |
 | `status` | string? | 活動狀態（例如 `draft`、`active`、`completed`） |
-| `channel_type` | string? | 活動運行的頻道類型 |
+| `channel_type` | string? | 活動執行所在的頻道類型 |
 | `created_at` | string? | ISO 8601 建立時間戳 |
 | `updated_at` | string? | ISO 8601 更新時間戳 |
 
@@ -70,7 +70,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 | 建立接觸點 | `createTouchpoint` | `create_touchpoint` | 向活動新增接觸點 |
 | 更新接觸點 | `updateTouchpoint` | `update_touchpoint` | 更新接觸點 |
 | 刪除接觸點 | `deleteTouchpoint` | `delete_touchpoint` | 移除接觸點 |
-| 驗證接觸點 | `validateTouchpoint` | `validate_touchpoint` | 驗證接觸點配置 |
+| 驗證接觸點 | `validateTouchpoint` | `validate_touchpoint` | 驗證接觸點設定 |
 
 ---
 
@@ -245,7 +245,7 @@ client.campaign.delete_touchpoint("touchpoint_id")
 
 ## validateTouchpoint / validate_touchpoint
 
-在啟動活動前檢查接觸點是否已正確配置。
+在啟動活動前檢查接觸點是否已正確設定。
 
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">

@@ -23,7 +23,7 @@ CLI 支援兩種認證方式：
 - 直接傳遞給 SDK：`new ImbraceClient({ apiKey: credential })`
 - 以原始形式儲存在本機設定中
 
-**2. 電子郵件 + 密碼**（回傳 JWT 令牌）：
+**2. 電子郵件 + 密碼**（回傳 JWT 權杖）：
 - SDK：`client.login(email, password)` 回傳使用者所屬的組織；CLI 隨後呼叫 `client.selectOrganization(orgId)` 取得綁定組織的權杖
 - 多組織帳戶：傳入 `--org-id`（單組織自動選擇，多組織在 TTY 中提示）
 - 綁定組織的 JWT 作為憑證儲存
@@ -42,10 +42,10 @@ CLI 支援兩種認證方式：
 
 | 欄位 | 類型 | 說明 |
 |-------|------|-------------|
-| `credential` | string | API 金鑰或 JWT 令牌 |
+| `credential` | string | API 金鑰或 JWT 權杖 |
 | `method` | `"api-key"` \| `"password"` | 認證方式 |
 | `email` | string? | 電子郵件（密碼認證用） |
-| `env` | `"stable"` \| `"sandbox"` \| `"develop"` \| `"prodv2"`? | SDK 環境預設 |
+| `env` | `"stable"` \| `"sandbox"` \| `"develop"` \| `"prodv2"`? | SDK 環境預設集（preset） |
 | `base_url` | string? | 覆寫閘道 base URL |
 | `organization_id` | string? | 組織 ID |
 | `timeout` | number? | 請求逾時（毫秒） |

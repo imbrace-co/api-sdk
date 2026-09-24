@@ -5,7 +5,7 @@ description: 让 AI 代理访问 Imbrace API — 一个 URL、一个 API key，�
 
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 
-把你的 AI 工具 — Claude Code、Cursor、Codex、Claude Desktop 等 — 连接到 Imbrace，它就能直接操作你的 Imbrace 数据：列出 CRM 看板、读取会话、查看工作流运行等。
+把你的 AI 工具 — Claude Code、Cursor、Codex、Claude Desktop 等 — 连接到 Imbrace，它就能直接操作你的 Imbrace 数据：列出 CRM 面板、读取对话、查看工作流运行等。
 
 你只需要两样东西：
 
@@ -113,7 +113,7 @@ npx -y mcp-remote "https://app-gateway.sandbox.imbrace.co/mcp" \
 
 ### 第 3 步 — 试一试
 
-问你的代理，例如*"列出我的 Imbrace 看板"*或*"看看最新的会话"*。它会自动选用 `listBoards`、`listConversations`、`listFlows` 等工具。
+问你的代理，例如*"列出我的 Imbrace 面板"*或*"看看最新的对话"*。它会自动选用 `listBoards`、`listConversations`、`listFlows` 等工具。
 
 ### 默认只读
 
@@ -126,7 +126,7 @@ npx -y mcp-remote "https://app-gateway.sandbox.imbrace.co/mcp" \
 | `?services=dataBoard,workflow` | 收窄：仅这些服务 |
 | `?tags=boards,records` | 收窄：仅这些主题 |
 
-示例 — 仅数据看板，带写入权限：
+示例 — 仅数据面板，带写入权限：
 
 ```
 https://app-gateway.sandbox.imbrace.co/mcp?services=dataBoard&allowWrite=1
@@ -136,7 +136,7 @@ https://app-gateway.sandbox.imbrace.co/mcp?services=dataBoard&allowWrite=1
 
 ### 工作原理
 
-每次工具调用都会带着**你的** token 经网关的正常 API 路由重放，因此组织范围、权限与 license 检查与你亲自调用 API 完全一致。工具即精选的 `agent-tools` 操作集，与 SDK 的 [`client.api`](/zh-cn/sdk/overview/) 表面同源。端点是基于 HTTP `POST` 的无状态 JSON-RPC — 无需管理会话。
+每次工具调用都会带着**你的** token 经网关的正常 API 路由重放，因此组织范围、权限与 license 检查与你亲自调用 API 完全一致。工具即精选的 `agent-tools` 操作集，与 SDK 的 [`client.api`](/sdk/overview/#the-full-api-surface--clientapi-typescript) 表面同源。端点是基于 HTTP `POST` 的无状态 JSON-RPC — 无需管理会话。
 
 ### 不用 MCP？统一 OpenAPI
 

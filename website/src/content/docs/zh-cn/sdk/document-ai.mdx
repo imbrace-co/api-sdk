@@ -9,7 +9,7 @@ Document AI 使用视觉模型（如 GPT-4o）从 PDF 和图片中提取结构�
 
 SDK 暴露两个命名空间：
 - **`client.chatAi` / `client.chat_ai`** — 直接文档处理和模型列表
-- **`client.documentAi` / `client.document_ai`** — 基于代理的文档处理，具有模式管理、代理增删改查和端到端编排
+- **`client.documentAi` / `client.document_ai`** — 基于代理的文档处理，支持 schema 管理、代理增删改查和端到端编排
 
 首先初始化客户端（参见[安装](/zh-cn/sdk/installation/)或[快速入门](/zh-cn/sdk/quick-start/)）。
 
@@ -113,7 +113,7 @@ if result["success"] and result["data"].get("filledPdfUrl"):
 
 ## `client.documentAi` — 代理增删改查
 
-文档 AI 代理存储提取模式、指令和模型配置，供重复使用。
+Document AI 代理存储提取 schema、指令和模型配置，供重复使用。
 
 ### 列出代理
 
@@ -126,7 +126,7 @@ const agents = await client.documentAi.listAgents();
 // 按名称过滤
 const filtered = await client.documentAi.listAgents({ nameContains: "Invoice" });
 
-// 仅文档 AI 代理（通过 createFull 或 webapp 创建）
+// 仅 Document AI 代理（通过 createFull 或 webapp 创建）
 const docAiAgents = await client.documentAi.listAgents({ documentAiOnly: true });
 ```
 </TabItem>
@@ -138,7 +138,7 @@ agents = client.document_ai.list_agents()
 # 按名称过滤
 filtered = client.document_ai.list_agents(name_contains="Invoice")
 
-# 仅文档 AI 代理
+# 仅 Document AI 代理
 doc_ai_agents = client.document_ai.list_agents(document_ai_only=True)
 ```
 </TabItem>
@@ -284,9 +284,9 @@ result = client.document_ai.process(
 
 ---
 
-## `client.documentAi` — 建议模式
+## `client.documentAi` — 建议 schema
 
-通过分析示例文档自动提出 JSON 模式。
+通过分析示例文档自动提出 JSON schema。
 
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">
@@ -313,7 +313,7 @@ schema = client.document_ai.suggest_schema(
 
 ## `client.documentAi` — 完整创建（编排器）
 
-端到端 Document AI 代理创建（iMBRACE webapp 所做的）：创建一个带有提取模式的面板，然后创建一个链接到该面板的 UseCase + AI 代理。
+端到端 Document AI 代理创建（iMBRACE webapp 所做的）：创建一个带有提取 schema 的面板，然后创建一个链接到该面板的 UseCase + AI 代理。
 
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">
@@ -361,7 +361,7 @@ print(result["ai_agent_id"])   # 所创建的 AI 代理的 UUID
 |---|---|---|---|---|
 | 名称 | `name` | `name` | `string` / `str` | — |
 | 指令 | `instructions` | `instructions` | `string` / `str` | — |
-| 模式字段 | `schemaFields` | `schema_fields` | `CreateBoardFieldInput[]` / `List[Dict]` | — |
+| Schema 字段 | `schemaFields` | `schema_fields` | `CreateBoardFieldInput[]` / `List[Dict]` | — |
 | 模型 ID | `modelId` | `model_id` | `string` / `str` | — |
 | 提供商 ID | `providerId` | `provider_id` | `string` / `str` | — |
 | 描述 | `description` | `description` | `string` / `str` | `None` |

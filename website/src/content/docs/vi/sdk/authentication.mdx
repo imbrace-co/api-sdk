@@ -19,7 +19,7 @@ Sản phẩm điển hình: widget chat, dashboard, hoặc ứng dụng di độ
 
 #### Wrap Imbrace → sử dụng API Key
 
-Bạn có backend riêng, người dùng riêng, cơ sở dữ liệu riêng. Imbrace là một khả năng mà dịch vụ của bạn gọi đến — "dùng AI của Imbrace để trả lời câu này" — cùng với mọi thứ khác bạn làm. Người dùng cuối của bạn không bao giờ thấy Imbrace; dịch vụ của bạn gọi Imbrace bằng một key `api_...` cấp tổ chức duy nhất (do quản trị viên Imbrace cấp). Imbrace thấy một danh tính (người dùng dịch vụ của API key) và bạn tự xử lý việc ghi nhận theo từng người dùng ở phía bạn.
+Bạn có backend riêng, người dùng riêng, cơ sở dữ liệu riêng. Imbrace là một khả năng mà dịch vụ của bạn gọi đến — "dùng AI của Imbrace để trả lời câu này" — cùng với mọi thứ khác bạn làm. Người dùng cuối của bạn không bao giờ thấy Imbrace; dịch vụ của bạn gọi Imbrace bằng một key `api_...` cấp tổ chức duy nhất (do quản trị viên tổ chức Imbrace cấp). Imbrace thấy một danh tính (người dùng dịch vụ của API key) và bạn tự xử lý việc ghi nhận theo từng người dùng ở phía bạn.
 
 Sản phẩm điển hình: một CRM hiện có, hệ thống ticket, hoặc công cụ nội bộ nhúng Imbrace như một tính năng. Một thông tin xác thực nằm trong tệp env của bạn và phục vụ mọi yêu cầu.
 
@@ -29,11 +29,11 @@ Sản phẩm điển hình: một CRM hiện có, hệ thống ticket, hoặc c�
 | **Người dùng của ai?** | Người dùng Imbrace | Người dùng của bạn |
 | **CSDL chính thức của ai?** | Của Imbrace | Của bạn |
 | **Danh tính Imbrace thấy** | Người dùng cuối thực tế | Một tài khoản dịch vụ |
-| **Ghi nhận theo người dùng** | Tích hợp sẵn | Tùy bạn |
+| **Ghi nhận theo người dùng ở phía Imbrace** | Tích hợp sẵn | Tùy bạn |
 | **Thời hạn thông tin xác thực** | Theo phiên; làm mới khi cần | Dài hạn; không tự hết hạn |
 | **Header được gửi** | `x-access-token: acc_...` | `x-api-key: api_...` |
 
-> Cả hai loại thông tin xác thực đều là hạng nhất. Hầu hết các resource đều chấp nhận cả hai. Một số tính năng phụ thuộc vào ngữ cảnh người dùng (document artifacts, lịch sử chat theo người dùng) chỉ có ý nghĩa với access token.
+> Cả hai loại thông tin xác thực đều được hỗ trợ đầy đủ như nhau. Hầu hết các resource đều chấp nhận cả hai. Một số tính năng phụ thuộc vào ngữ cảnh người dùng (document artifacts, lịch sử chat theo người dùng) chỉ có ý nghĩa với access token.
 
 ### Tham chiếu Header
 
@@ -42,7 +42,7 @@ Sản phẩm điển hình: một CRM hiện có, hệ thống ticket, hoặc c�
 | `apiKey` / `api_key` | `x-api-key: api_xxx...` |
 | `accessToken` / `access_token` | `x-access-token: acc_xxx...` |
 
-Ngữ cảnh tổ chức được **mã hóa bên trong chính thông tin xác thực** — mọi API key và mọi access token đều gắn với chính xác một tổ chức. Cổng gateway phân giải tổ chức trên mọi yêu cầu từ thông tin xác thực bạn đã gửi. Bạn có thể tùy chọn ghi đè bằng cách truyền `organizationId` (TypeScript) hoặc `organization_id` (Python) vào constructor.
+Ngữ cảnh tổ chức được **mã hóa bên trong chính thông tin xác thực** — mọi API key và mọi access token đều gắn với chính xác một tổ chức. Gateway phân giải tổ chức trên mọi yêu cầu từ thông tin xác thực bạn đã gửi. Bạn có thể tùy chọn ghi đè bằng cách truyền `organizationId` (TypeScript) hoặc `organization_id` (Python) vào constructor.
 
 Để biết hướng dẫn thiết lập thông tin xác thực từng bước (env vars, dotenv, secrets), hãy xem [Hướng dẫn thiết lập](/getting-started/setup/#configure-credentials).
 

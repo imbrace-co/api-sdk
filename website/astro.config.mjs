@@ -1,6 +1,13 @@
 import { defineConfig } from 'astro/config'
 import starlight from '@astrojs/starlight'
 import { visit } from 'unist-util-visit'
+import { existsSync, readFileSync } from 'node:fs'
+import { unified } from 'unified'
+import remarkParse from 'remark-parse'
+import remarkMdx from 'remark-mdx'
+import remarkGfm from 'remark-gfm'
+import { toString as mdastToString } from 'mdast-util-to-string'
+import GithubSlugger from 'github-slugger'
 
 const isProd = process.env.NODE_ENV === 'production'
 const base = isProd ? '/' : '/'
@@ -49,11 +56,47 @@ function rehypeLocalizeLinks() {
   }
 }
 
+// Headings in translated pages would otherwise get slugs from the translated
+// text, so `/zh-tw/sdk/authentication/#which-credential-should-i-use` lands
+// nowhere. Translations keep the English heading structure, so give the n-th
+// heading the n-th English heading's id; if the counts differ, leave the page
+// on its own slugs rather than guess.
+const englishHeadingIds = new Map()
+
+function headingIdsFor(englishPath) {
+  if (englishHeadingIds.has(englishPath)) return englishHeadingIds.get(englishPath)
+  let ids = null
+  if (existsSync(englishPath)) {
+    const tree = unified().use(remarkParse).use(remarkMdx).use(remarkGfm)
+      .parse(readFileSync(englishPath, 'utf8').replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, ''))
+    const slugger = new GithubSlugger()
+    ids = []
+    visit(tree, 'heading', (node) => { ids.push(slugger.slug(mdastToString(node))) })
+  }
+  englishHeadingIds.set(englishPath, ids)
+  return ids
+}
+
+function rehypeEnglishHeadingIds() {
+  return (tree, file) => {
+    const path = (file.history?.[0] ?? file.path ?? '').replace(/\\/g, '/')
+    const locale = LOCALES.find((l) => path.includes(`/content/docs/${l}/`))
+    if (!locale) return
+    const ids = headingIdsFor(path.replace(`/content/docs/${locale}/`, '/content/docs/'))
+    const headings = []
+    visit(tree, 'element', (node) => {
+      if (/^h[1-6]$/.test(node.tagName)) headings.push(node)
+    })
+    if (!ids || ids.length !== headings.length) return
+    headings.forEach((node, i) => { node.properties.id = ids[i] })
+  }
+}
+
 export default defineConfig({
   site: 'https://engineer.imbrace.co',
   base,
   markdown: {
-    rehypePlugins: [rehypeLocalizeLinks, rehypePrefixBase()],
+    rehypePlugins: [rehypeEnglishHeadingIds, rehypeLocalizeLinks, rehypePrefixBase()],
   },
   integrations: [
     starlight({

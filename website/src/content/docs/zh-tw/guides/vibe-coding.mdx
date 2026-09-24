@@ -5,7 +5,7 @@ description: 將 llms.txt 放入你的 AI 程式設計助手（Claude、Cursor�
 
 import { Aside, Tabs, TabItem } from "@astrojs/starlight/components";
 
-**Vibe Coding** 是指透過與 AI 助手協作來編寫程式碼 — 用平白的語言描述您想要的內容，然後讓 AI 為您產生、解釋或重構程式碼。Imbrace SDK 隨附一個 [`llms.txt`](https://developer.imbrace.co/llms.txt) 檔案，讓任何 AI 工具都能立即理解 SDK，而不會憑空想像方法名稱或參數形狀。
+**Vibe Coding** 是指透過與 AI 助手協作來編寫程式碼 — 用淺白的語言描述您想要的內容，然後讓 AI 為您產生、解釋或重構程式碼。Imbrace SDK 隨附一個 [`llms.txt`](https://developer.imbrace.co/llms.txt) 檔案，讓任何 AI 工具都能立即理解 SDK，而不會憑空捏造方法名稱或參數形狀。
 
 ## 設定
 
@@ -35,9 +35,9 @@ IMBRACE_API_KEY=your_api_key_here
 IMBRACE_ORGANIZATION_ID=your_org_id_here
 ```
 
-請參閱[認證](/sdk/authentication/)以了解何時使用 API 金鑰與存取令牌，以及[設定指南](/getting-started/setup/#get-an-api-key)以了解如何取得 API 金鑰。
+請參閱[認證](/sdk/authentication/)以了解何時使用 API 金鑰與存取權杖，以及[設定指南](/getting-started/setup/#get-an-api-key)以了解如何取得 API 金鑰。
 
-**3. 初始化客戶端**
+**3. 初始化用戶端**
 
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">
@@ -71,7 +71,7 @@ client = ImbraceClient(
 
 ## 什麼是 `llms.txt`？
 
-`llms.txt` 是一個純文字檔案（類似 `robots.txt`），為 AI 模型提供一個簡潔、準確的函式庫摘要 — 包括其客戶端、資源、認證和常見模式。當您將其貼入 AI 上下文視窗時，模型已經了解 SDK，可以在第一次嘗試時就寫出正確的程式碼。
+`llms.txt` 是一個純文字檔案（類似 `robots.txt`），為 AI 模型提供一個簡潔、準確的函式庫摘要 — 包括其用戶端、資源、認證和常見模式。當您將其貼入 AI 上下文視窗時，模型已經了解 SDK，可以在第一次嘗試時就寫出正確的程式碼。
 
 **檔案 URL：** [`https://developer.imbrace.co/llms.txt`](https://developer.imbrace.co/llms.txt)
 
@@ -103,7 +103,7 @@ How do I upload a file and trigger embedding processing?
 
 ### 任何其他 LLM
 
-複製原始檔案內容，並在提問前將其貼到提示詞的開頭。大多數具有 32k+ 上下文視窗的 LLM 都能完整攝取整個檔案而不會損失摘要資訊。
+複製原始檔案內容，並在提問前將其貼到提示詞的開頭。大多數具有 32k+ 上下文視窗的 LLM 都能完整讀入整個檔案，不會因摘要而遺失資訊。
 
 ## 範例提示詞
 
@@ -115,7 +115,7 @@ How do I upload a file and trigger embedding processing?
 - *「依照整合指南的模式，為 Chat Client 撰寫一個 Express.js 認證代理。」*
 
 <Aside type="tip">
-對於長連線，請將 `llms.txt` 固定為**系統提示詞**或**專案指示**，這樣它會自動套用於每一則訊息。
+在長時間的工作階段中，請將 `llms.txt` 固定為**系統提示詞**或**專案指示**，這樣它會自動套用於每一則訊息。
 </Aside>
 
 ### 適用於程式碼代理工具的 CLI
@@ -143,4 +143,4 @@ imbrace document-ai list --json
 
 ## 保持更新
 
-該檔案在每次發佈時都會重新產生。如果您升級 SDK，請重新擷取 URL 以取得新的方法或變更的簽名。
+該檔案在每次發佈時都會重新產生。如果您升級 SDK，請重新擷取 URL 以取得新的方法或變更後的簽章。

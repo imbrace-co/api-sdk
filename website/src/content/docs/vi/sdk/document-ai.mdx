@@ -7,7 +7,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 Document AI sử dụng vision models (ví dụ: GPT-4o) để trích xuất dữ liệu có cấu trúc từ PDF và hình ảnh — hóa đơn, biểu mẫu, biên lai, hợp đồng, hoặc bất kỳ tài liệu nào có văn bản nhìn thấy được.
 
-SDK hiển thị hai namespace:
+SDK cung cấp hai namespace:
 - **`client.chatAi` / `client.chat_ai`** — xử lý tài liệu trực tiếp và liệt kê model
 - **`client.documentAi` / `client.document_ai`** — xử lý tài liệu dựa trên agent với quản lý schema, CRUD agent và điều phối đầu cuối
 
@@ -55,7 +55,7 @@ result = client.chat_ai.process_document(
 </TabItem>
 </Tabs>
 
-#### Tham số tham chiếu
+#### Tham chiếu tham số
 
 | Tham số | Trường TS | Tham số Python | Loại | Bắt buộc |
 |---|---|---|---|---|
@@ -372,7 +372,7 @@ print(result["ai_agent_id"])   # UUID của AI Agent đã tạo
 | Offset thời gian | `timeOffset` | `time_offset` | `string` / `str` | `"UTC+00:00"` |
 | Tiếp tục khi lỗi | `continueOnFailure` | `continue_on_failure` | `boolean` / `bool` | `false` |
 | Thời gian thử lại | `retryTime` | `retry_time` | `number` / `int` | `2` |
-| Nhiệt độ | `temperature` | `temperature` | `number` / `float` | `0.1` |
+| Temperature | `temperature` | `temperature` | `number` / `float` | `0.1` |
 | URL Demo | `demoUrl` | `demo_url` | `string` / `str` | `None` |
 | ID nhóm | `teamIds` | `team_ids` | `string[]` / `List[str]` | `[]` |
 | Trường AI Agent bổ sung | `extraAiAgent` | `extra_ai_agent` | `Record<string, unknown>` / `Dict` | `None` |

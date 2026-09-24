@@ -11,7 +11,7 @@ Trang này bao gồm hai không gian tên AI liên quan:
 - **`chatAi` / `chat_ai`** — tạo và quản lý AI agents, xử lý tài liệu/tệp, và document AI.
 - **`aiAgent` / `ai_agent`** — streaming chat (SSE), quản lý embedding, dữ liệu Parquet, distributed tracing, và Chat Client sub-API.
 
-Tài nguyên AI Agent kết nối đến một dịch vụ chuyên biệt chạy trên một base URL riêng biệt với cổng API chính.
+Tài nguyên AI Agent kết nối đến một dịch vụ chuyên biệt chạy trên một base URL riêng biệt với API gateway chính.
 
 Để biết ví dụ từ đầu đến cuối kết nối các tính năng này, xem [Hướng dẫn toàn diện §1](/sdk/full-flow-guide/#1-create-an-ai-agent-and-start-chatting).
 
@@ -62,7 +62,7 @@ client = ImbraceClient(api_key=os.environ["IMBRACE_API_KEY"], organization_id=os
 </Tabs>
 </AuthOnly>
 
-Cả client đồng bộ (`ImbraceClient`) và bất đồng bộ (`AsyncImbraceClient`) đều hiển thị cùng bề mặt — các phương thức bất đồng bộ được await và client sử dụng `AsyncAiAgentResource` bên dưới.
+Cả client đồng bộ (`ImbraceClient`) và bất đồng bộ (`AsyncImbraceClient`) đều cung cấp cùng một tập phương thức — các phương thức bất đồng bộ được await và client sử dụng `AsyncAiAgentResource` bên dưới.
 
 ---
 
@@ -163,7 +163,7 @@ client.chat_ai.delete_ai_agent(created["id"])
 
 ### Completions (qua `client.ai`)
 
-Chat completions tương thích OpenAI có sẵn trên namespace `client.ai` cho cả TypeScript và Python. Xem phần [Dịch vụ AI tương thích OpenAI](#dịch-vụ-ai-tương-thích-openai--clientai) bên dưới để biết chi tiết.
+Chat completions tương thích OpenAI có sẵn trên namespace `client.ai` cho cả TypeScript và Python. Xem phần [Dịch vụ AI tương thích OpenAI](#openai-compatible-ai-service--clientai) bên dưới để biết chi tiết.
 
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">
@@ -242,7 +242,7 @@ extracted = client.chat_ai.extract_file(files={"file": open("report.pdf", "rb")}
 
 ### Phiên Chat v1
 
-Các endpoint REST chat cũ để duy trì lịch sử hội thoại. Có sẵn trên `client.ai_agent` cho cả TypeScript và Python. Xem [Legacy v1 chat](#chat-v1-cũ) bên dưới.
+Các endpoint REST chat cũ để duy trì lịch sử hội thoại. Có sẵn trên `client.ai_agent` cho cả TypeScript và Python. Xem [Chat v1 cũ](#legacy-v1-chat) bên dưới.
 
 ### Knowledge Hub — thư mục & knowledge bases
 
@@ -286,7 +286,7 @@ files = client.boards.search_files(folder_id=folder["_id"])
 
 ## Dịch vụ AI tương thích OpenAI — `client.ai`
 
-Completions, streaming và embeddings theo phong cách OpenAI. Cũng hiển thị API quản lý cho LLM models, providers, guardrails, RAG files, và AI agents. Có sẵn cho cả TypeScript và Python.
+Completions, streaming và embeddings theo phong cách OpenAI. Ngoài ra còn cung cấp các API quản lý cho LLM models, providers, guardrails, RAG files, và AI agents. Có sẵn cho cả TypeScript và Python.
 
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">
@@ -574,7 +574,7 @@ const agents = await client.ai.listAgents();
 // Lấy một agent
 const agent = await client.ai.getAiAgent("asst_abc");
 
-// Kiểm tra tên có sẵn trước khi tạo
+// Kiểm tra tên còn trống (chưa bị dùng) trước khi tạo
 const check = await client.ai.checkAiAgentName("Support Bot");
 // check.available → true / false
 
@@ -594,7 +594,7 @@ agents = client.ai.list_agents()
 # Lấy một agent
 agent = client.ai.get_ai_agent("asst_abc")
 
-# Kiểm tra tên có sẵn trước khi tạo
+# Kiểm tra tên còn trống (chưa bị dùng) trước khi tạo
 check = client.ai.check_ai_agent_name("Support Bot")
 # check["available"] → True / False
 

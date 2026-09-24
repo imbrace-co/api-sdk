@@ -82,7 +82,7 @@ imbrace data-board export-csv --board-id <boardId> [--out ./board.csv]
 
 ## AI Agent
 
-一個 AI agent 是一個設定好的助手（LLM + 提示詞 + 行為）。建立一個 agent 會同時佈建助理、網頁頻道和使用案例範本。
+一個 AI agent 是一個設定好的助理（LLM + 提示詞 + 行為）。建立 agent 時會以單一原子操作佈建助理、網頁頻道和使用案例範本。
 
 <Aside type="caution">
   所有 agent 內容（名稱、描述、指示、行為欄位）必須使用英文。越南語變音符號會產生無法閱讀的 slug。
@@ -107,13 +107,13 @@ imbrace ai-agent delete <agentId> [--yes] [--json]
 
 ### 建立 / 更新標誌
 
-`create` 和 `update` 接受相同的標誌。`update` 透過 PUT-merge 保留未變更的欄位。`--id-only` 僅適用於 `create`。
+`create` 和 `update` 接受相同的行為標誌。`update` 透過 PUT-merge 保留未變更的欄位。`--id-only` 僅適用於 `create`。
 
 | 標誌 | 對應至 | 備註 |
 |---|---|---|
 | **身份** | | |
 | `--name` / `-n` | `name` + `title` | 建立時必填 |
-| `--description` / `-d` | `description` + `short_description` | 顯示在標題下方 |
+| `--description` / `-d` | `description` + `short_description` | 在 UI 中顯示於標題下方 |
 | `--instructions` / `-i` | `instructions` | 系統提示詞 |
 | **模型** | | |
 | `--model` | `model_id` | 預設 `Default`（系統提供者） |
@@ -407,7 +407,7 @@ imbrace workflow run-detail <runId> [--json]
 
 > `@imbrace/cli` `v0.8.0`+。請勿與上文的 `imbrace workflow mcp ...` 混淆 — 那組指令管理的是工作流程引擎自身的 MCP-server 資源。想零安裝？閘道透過 HTTP 託管同一套工具 — 請參閱 [MCP Server](/zh-tw/mcp/overview/)。
 
-`imbrace mcp` 透過 **stdio** 執行一個 [Model Context Protocol](https://modelcontextprotocol.io) 伺服器，把 Imbrace API 作為工具提供給 AI agent（Claude Code、Claude Desktop、Cursor 等）。工具與 SDK 的 [`client.api`](/zh-tw/sdk/overview/) 介面出自同一套 `agent-tools` OpenAPI 規格 — 5 個服務共 272 個操作 — 命名格式為 `<service>_<operationId>`，例如 `dataBoard_listBoards`、`workflow_listFlows`。
+`imbrace mcp` 透過 **stdio** 執行一個 [Model Context Protocol](https://modelcontextprotocol.io) 伺服器，把 Imbrace API 作為工具提供給 AI agent（Claude Code、Claude Desktop、Cursor 等）。工具與 SDK 的 [`client.api`](/sdk/overview/#the-full-api-surface--clientapi-typescript) 介面出自同一套 `agent-tools` OpenAPI 規格 — 5 個服務共 272 個操作 — 命名格式為 `<service>_<operationId>`，例如 `dataBoard_listBoards`、`workflow_listFlows`。
 
 ```bash
 imbrace mcp                                     # 唯讀工具（預設）
@@ -452,7 +452,7 @@ claude mcp add imbrace -- imbrace mcp --services dataBoard,workflow
 
 ## Profile
 
-管理多組憑證 profile（AWS 風格）。每個 profile 會儲存憑證、環境預設、組織 ID 與其他 SDK 設定。解析順序：`--profile` 標誌 > `IMBRACE_PROFILE` 環境變數 > `active_profile` 設定 > `"default"`。
+管理多組憑證 profile（AWS 風格）。每個 profile 會儲存憑證、環境預設集（preset）、組織 ID 與其他 SDK 設定。解析順序：`--profile` 標誌 > `IMBRACE_PROFILE` 環境變數 > `active_profile` 設定 > `"default"`。
 
 ### 建立
 
@@ -530,7 +530,7 @@ imbrace docs > /tmp/imbrace-llms.txt   # 為 AI agent 儲存
 
 ## 更新
 
-將 CLI 自動更新至 npm 上的最新版本。
+將 CLI 自我更新至 npm 上最新發佈的版本。
 
 ```bash
 imbrace update              # 更新至最新版本
@@ -564,5 +564,5 @@ imbrace update --json       # 機器可讀的 JSON 輸出
 5. **先發佈再啟用** — `workflow enable` 需要先執行 `workflow publish`。
 6. **AI Connector `prompt` 欄位** — 必須為 `{ prompt: { prompt: "text" } }`。
 7. **流程鎖定** — 如果流程在瀏覽器中開啟，CLI 更新可能會被拒絕。
-8. **建立時的 `--no-use-memory`** — 可能無法持久。請在建立後更新。
+8. **建立時的 `--no-use-memory`** — 可能不會生效。請在建立後再更新。
 9. **系統提供者模型** — 只有 `Default`。其他名稱會使 UI 下拉選單為空。

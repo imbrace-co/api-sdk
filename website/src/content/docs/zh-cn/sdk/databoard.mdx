@@ -1,6 +1,6 @@
 ---
 title: 数据面板
-description: client.boards 的 SDK 参考文档 — CRM 管道、项目、字段、分段、Knowledge Hub、导入/导出和外部驱动器集成。
+description: client.boards 的 SDK 参考文档 — CRM 管道、条目、字段、分段、知识中心、导入/导出和外部驱动器集成。
 ---
 
 import { Tabs, TabItem } from "@astrojs/starlight/components";
@@ -151,7 +151,7 @@ client.boards.bulk_delete_items("board_id", {"ids": ["item_1", "item_2", "item_3
 
 ### 冲突检测
 
-冲突现在内联返回:`updateItem` 在记录自上次读取后被修改时返回 HTTP `409 Conflict` — 捕获 `ApiError`(`statusCode === 409`)即可,不再需要单独的检测端点。
+冲突现在直接在响应中体现：`updateItem` 在记录自调用方上次读取后被修改时返回 HTTP `409 Conflict` — 捕获由此产生的 `ApiError`（`statusCode === 409`）即可，无需再调用单独的端点。
 
 ### 链接条目（相关面板）
 
@@ -161,7 +161,7 @@ client.boards.bulk_delete_items("board_id", {"ids": ["item_1", "item_2", "item_3
 // 从另一个面板获取相关条目
 const related = await client.boards.getRelatedItems("board_id", "item_id", "related_board_id");
 
-// 链接和取消链接(data-board 服务 — POST/DELETE /boards/:id/items/:itemId/related)
+// 链接和取消链接（data-board 服务 — POST/DELETE /boards/:id/items/:itemId/related）
 await client.boards.linkItems("board_id", "item_id", "related_board_id", { relatedItemIds: ["other_item_id"] });
 await client.boards.unlinkItems("board_id", "item_id", "related_board_id", { relatedItemIds: ["other_item_id"] });
 ```

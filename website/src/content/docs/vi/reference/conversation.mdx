@@ -1,11 +1,11 @@
 ---
 title: Hội thoại
-description: Tham chiếu schema và method cho client.conversations — list, search, join, assign, và quản lý luồng hội thoại.
+description: Tham chiếu schema và method cho client.conversations — liệt kê, tìm kiếm, tham gia, phân công và quản lý luồng hội thoại.
 ---
 
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 
-`client.conversations` quản lý các luồng hội thoại giữa contacts và nhóm của bạn (hoặc AI agent). Mỗi hội thoại thuộc về một [Channel](/reference/channel/) và được liên kết với một [Contact](/reference/contact/).
+`client.conversations` quản lý các luồng hội thoại giữa các liên hệ và nhóm của bạn (hoặc AI agent). Mỗi hội thoại thuộc về một [Kênh](/reference/channel/) và được liên kết với một [Liên hệ](/reference/contact/).
 
 ---
 
@@ -20,8 +20,8 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 | `organization_id` | string | Tổ chức sở hữu hội thoại này |
 | `business_unit_id` | string | ID đơn vị kinh doanh |
 | `channel_id` | string | Kênh mà hội thoại này thuộc về |
-| `channel_type` | string | Loại nền tảng kênh (xem [Channel](/reference/channel/)) |
-| `contact_id` | string | ID contact liên kết |
+| `channel_type` | string | Loại nền tảng kênh (xem [Kênh](/reference/channel/)) |
+| `contact_id` | string | ID liên hệ được liên kết |
 | `status` | string | Trạng thái hội thoại (vd: `open`, `resolved`) |
 | `name` | string | Tên hiển thị của hội thoại |
 | `timestamp` | string | ISO 8601 thời gian của tin nhắn gần nhất |

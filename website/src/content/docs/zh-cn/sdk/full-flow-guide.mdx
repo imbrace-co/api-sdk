@@ -361,14 +361,14 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
    <Tabs syncKey="lang">
      <TabItem label="TypeScript">
        ```typescript
-       // 触发并忘记（异步）
+       // 触发后不等待结果（异步）
        await client.workflows.triggerFlow(flow.id, {
          contact_name: "Jane Smith",
          email: "jane@example.com",
        })
 
        // 同步触发 — 要让它实际返回数据而不超时，
-       // 流程需要通过 ADD_ACTION 使用 applyFlowOperation 添加 "Return Response" 动作
+       // 流程需要先通过 applyFlowOperation 的 ADD_ACTION 添加 "Return Response" 动作
        // （否则网关会等待 30 秒然后放弃）。
        const result = await client.workflows.triggerFlowSync(flow.id, {
          contact_name: "Jane Smith",
@@ -379,14 +379,14 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
      </TabItem>
      <TabItem label="Python">
        ```python
-       # 触发并忘记（异步）
+       # 触发后不等待结果（异步）
        client.workflows.trigger_flow(flow["id"], {
            "contact_name": "Jane Smith",
            "email": "jane@example.com",
        })
 
        # 同步触发 — 要让它实际返回数据而不超时，
-       # 流程需要通过 ADD_ACTION 使用 apply_flow_operation 添加 "Return Response" 动作
+       # 流程需要先通过 apply_flow_operation 的 ADD_ACTION 添加 "Return Response" 动作
        # （否则网关会等待 30 秒然后放弃）。
        result = client.workflows.trigger_flow_sync(flow["id"], {
            "contact_name": "Jane Smith",
@@ -519,7 +519,7 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
 
 3. **将文件夹附加到 AI 代理**
 
-   在 `folder_ids` 中传入文件夹 `_id` — AI 代理会从该文件夹中的每个文件检索信息。使用 `board_ids` 附加一个 CRM 数据面板（其条目成为知识源 — 参见[资源 → 面板与条目](/zh-cn/sdk/resources/#boards--items--clientboards)）。旧版 `knowledge_hubs` 字段已弃用。
+   在 `folder_ids` 中传入文件夹 `_id` — AI 代理会从该文件夹中的每个文件检索信息。使用 `board_ids` 附加一个 CRM 数据面板（其条目成为知识源 — 参见[资源 → 面板与条目](/zh-cn/sdk/databoard/#items)）。旧版 `knowledge_hubs` 字段已弃用。
 
    <Tabs syncKey="lang">
      <TabItem label="TypeScript">

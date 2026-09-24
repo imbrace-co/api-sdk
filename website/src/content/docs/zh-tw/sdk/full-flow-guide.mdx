@@ -1,6 +1,6 @@
 ---
 title: 完整流程指南
-description: 端到端逐步解說 — 從用戶端設定到 AI Agent、工作流程、知識中心和資料面板。TypeScript 和 Python。
+description: 端到端逐步解說 — 從用戶端設定到 AI Agent、工作流程、知識中心和資料看板。TypeScript 和 Python。
 ---
 
 import { Steps, Tabs, TabItem, Aside } from "@astrojs/starlight/components";
@@ -14,7 +14,7 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
 
 <Steps>
 
-1. **初始化客戶端**
+1. **初始化用戶端**
 
    <AuthOnly mode="access-token">
    <Tabs syncKey="lang">
@@ -87,7 +87,7 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
          description: "Handles tier-1 customer support queries",
          instructions: "You are a helpful support agent. Be concise and friendly.",
          provider_id: "system",   // 使用組織的預設 LLM 提供者
-         model_id: "Default",     // 路由到組織配置的預設模型
+         model_id: "Default",     // 路由到組織設定的預設模型
          streaming: true,         // 發出 text-delta SSE 事件（見下方 Aside）
        })
 
@@ -103,7 +103,7 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
            "description": "Handles tier-1 customer support queries",
            "instructions": "You are a helpful support agent. Be concise and friendly.",
            "provider_id": "system",   # 使用組織的預設 LLM 提供者
-           "model_id": "Default",     # 路由到組織配置的預設模型
+           "model_id": "Default",     # 路由到組織設定的預設模型
            "streaming": True,         # 發出 text-delta SSE 事件（見下方 Aside）
        })
 
@@ -113,7 +113,7 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
      </TabItem>
    </Tabs>
 
-   `provider_id` 和 `model_id` 是可選的 — SDK 在省略時會自動填入 `{ provider_id: "system", model_id: "Default" }`。`"Default"` 路由到組織配置的系統預設模型，是跨組織通用的選擇。顯式傳入即可覆寫：`provider_id: "<uuid>"` 指定自訂 LLM 提供者，或 `model_id: "gpt-4o"` 等 — 但具體模型名稱只在該組織的 `system` 提供者實際公開該模型時才有效。在硬編碼前，使用 `client.ai.listModels()`（TypeScript）/ `client.ai.list_models()`（Python）列出組織的可用模型。
+   `provider_id` 和 `model_id` 是可選的 — SDK 在省略時會自動填入 `{ provider_id: "system", model_id: "Default" }`。`"Default"` 路由到組織設定的系統預設模型，是跨組織通用的選擇。顯式傳入即可覆寫：`provider_id: "<uuid>"` 指定自訂 LLM 提供者，或 `model_id: "gpt-4o"` 等 — 但具體模型名稱只在該組織的 `system` 提供者實際公開該模型時才有效。在寫死於程式碼前，使用 `client.ai.listModels()`（TypeScript）/ `client.ai.list_models()`（Python）列出組織的可用模型。
 
    <Aside type="caution" title="聊天 UI 請一律傳入 streaming: true">
      新建立的代理在伺服器端預設為 **`streaming: false`**。在此預設下，`streamChat` 會以單一 `text/plain` 回應傳回完整回覆 — 沒有任何 `text-delta` 事件 — 因此 `streamChatText` 輔助方法（以及任何其他 SSE 解析器）會產出**零個片段**，聊天 UI 也就什麼都不顯示。在建立時傳入 `streaming: true`，伺服器便會發出 `streamChatText` 設計用來解析的 Vercel-AI-SDK UI-Message-Stream（`Content-Type: text/event-stream`）。您之後也可以透過 `updateAiAgent(id, { streaming: true })` 切換。
@@ -130,7 +130,7 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
        for await (const chunk of client.aiAgent.streamChatText({
          assistant_id: aiAgentId,
          messages: [{ role: "user", content: "How do I reset my password?" }],
-         // id 是連線 UUID — 重複使用以保持對話歷史記錄。
+         // id 是工作階段 UUID — 重複使用以保持對話歷史記錄。
          // 如果省略，每次呼叫會自動產生新的 UUID。
        })) {
          process.stdout.write(chunk)
@@ -142,7 +142,7 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
        for chunk in client.ai_agent.stream_chat_text({
            "assistant_id": ai_agent_id,
            "messages": [{"role": "user", "content": "How do I reset my password?"}],
-           # id 是連線 UUID — 重複使用以保持對話歷史記錄。
+           # id 是工作階段 UUID — 重複使用以保持對話歷史記錄。
            # 如果省略，每次呼叫會自動產生新的 UUID。
        }):
            print(chunk, end="", flush=True)
@@ -190,7 +190,7 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
      </Tabs>
    </Aside>
 
-4. **維護對話歷史記錄（連線 ID）**
+4. **維護對話歷史記錄（工作階段 ID）**
 
    在多次呼叫中傳遞相同的 `id`（必須是 UUID）以保持上下文：
 
@@ -208,7 +208,7 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
          messages: [{ role: "user", content: "What's your refund policy?" }],
        })
 
-       // 後續 — 相同連線，AI agent 記住上下文
+       // 後續 — 相同工作階段，AI agent 記住上下文
        await client.aiAgent.streamChat({
          assistant_id: aiAgentId,
          id: sessionId,
@@ -229,7 +229,7 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
            "messages": [{"role": "user", "content": "What's your refund policy?"}],
        })
 
-       # 後續 — 相同連線，AI agent 記住上下文
+       # 後續 — 相同工作階段，AI agent 記住上下文
        client.ai_agent.stream_chat({
            "assistant_id": ai_agent_id,
            "id": session_id,
@@ -254,7 +254,7 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
    <Tabs syncKey="lang">
      <TabItem label="TypeScript">
        ```typescript
-       // 選項 A — 從 Dashboard 硬編碼（建議新組織使用）
+       // 選項 A — 從 Dashboard 取得後寫死（建議新組織使用）
        const projectId = "your_project_id"
 
        // 選項 B — 從現有流程解析（若組織尚無任何流程會拋出錯誤）
@@ -263,7 +263,7 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
      </TabItem>
      <TabItem label="Python">
        ```python
-       # 選項 A — 從 Dashboard 硬編碼（建議新組織使用）
+       # 選項 A — 從 Dashboard 取得後寫死（建議新組織使用）
        project_id = "your_project_id"
 
        # 選項 B — 從現有流程解析（若組織尚無任何流程會拋出錯誤）
@@ -297,7 +297,7 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
 
 3. **新增 Webhook 觸發條件並發佈流程**
 
-   新建立的流程處於**草稿**狀態且沒有觸發條件 — Webhook URL 還不存在，因此 `triggerFlow` 會回傳 404。新增 Webhook 元件作為觸發條件，然後發佈：
+   新建立的流程處於 **DRAFT**（草稿）狀態且沒有觸發條件 — Webhook URL 還不存在，因此 `triggerFlow` 會回傳 404。新增 Webhook 元件作為觸發條件，然後發佈：
 
    <Tabs syncKey="lang">
      <TabItem label="TypeScript">
@@ -519,7 +519,7 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
 
 3. **將資料夾附加至 AI agent**
 
-   在 `folder_ids` 中傳遞資料夾 `_id` — AI agent 從該資料夾中的每個檔案檢索。使用 `board_ids` 來附加 CRM data-board（其項目成為知識來源 — 請參閱[資源 → Boards 與項目](/sdk/resources/#boards--items--clientboards)）。舊的 `knowledge_hubs` 欄位已棄用。
+   在 `folder_ids` 中傳遞資料夾 `_id` — AI agent 從該資料夾中的每個檔案檢索。使用 `board_ids` 來附加 CRM data-board（其項目成為知識來源 — 請參閱[資源 → Boards 與項目](/sdk/databoard/#items)）。舊的 `knowledge_hubs` 欄位已棄用。
 
    <Tabs syncKey="lang">
      <TabItem label="TypeScript">

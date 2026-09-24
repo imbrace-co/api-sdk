@@ -85,7 +85,7 @@ try {
 } catch (e) {
   if (e instanceof ApiError) {
     console.error(`HTTP ${e.statusCode}: ${e.message}`);
-    // ví dụ: "HTTP 404: Không tìm thấy liên hệ"
+    // ví dụ: "HTTP 404: Contact not found"
   }
 }
 ```
@@ -103,7 +103,7 @@ try:
     client.contacts.get("nonexistent_id")
 except ApiError as e:
     print(f"HTTP {e.status_code}: {e}")
-    # ví dụ: "HTTP 404: Không tìm thấy liên hệ"
+    # ví dụ: "HTTP 404: Contact not found"
 ```
 
 | Thuộc tính    | Loại  | Mô tả                |
@@ -128,7 +128,7 @@ try {
 } catch (e) {
   if (e instanceof NetworkError) {
     console.error("Không thể kết nối baseUrl:", e.message);
-    // ví dụ: "Yêu cầu đã hết thời gian sau 30000ms"
+    // ví dụ: "Request timed out after 30000ms"
   }
 }
 ```
@@ -141,7 +141,7 @@ try:
     client.platform.get_me()
 except NetworkError as e:
     print(f"Lỗi mạng: {e}")
-    # ví dụ: "Lỗi mạng hoặc hết thời gian: ConnectTimeout(...)"
+    # ví dụ: "Network error or timeout: ConnectTimeout(...)"
 ```
 </TabItem>
 </Tabs>
@@ -208,7 +208,7 @@ Tầng vận chuyển HTTP trong cả hai SDK đều thử lại các lỗi tạ
 | HTTP **401 / 403**             | Không thử lại — ném `AuthError` ngay lập tức |
 | HTTP **4xx** (khác)            | Không thử lại — ném `ApiError` ngay lập tức |
 
-**Backoff:** `2^sốLầnThửLại` giây giữa các lần thử (2s → 4s). Tổng tệ nhất: 3 lần thử.
+**Backoff:** `2^retryCount` giây giữa các lần thử (2s → 4s). Trường hợp xấu nhất: tổng cộng 3 lần thử.
 </TabItem>
 <TabItem label="Python">
 | Điều kiện                      | Hành động                                |
@@ -219,7 +219,7 @@ Tầng vận chuyển HTTP trong cả hai SDK đều thử lại các lỗi tạ
 | HTTP **401 / 403**             | Không thử lại — đưa ra `AuthError` ngay lập tức |
 | HTTP **4xx** (khác)            | Không thử lại — đưa ra `ApiError` ngay lập tức |
 
-**Backoff:** `2^sốLầnThửLại` giây giữa các lần thử (1s → 2s → 4s). Tổng tệ nhất: 4 lần thử.
+**Backoff:** `2^retryCount` giây giữa các lần thử (1s → 2s → 4s). Trường hợp xấu nhất: tổng cộng 4 lần thử.
 </TabItem>
 </Tabs>
 
@@ -285,7 +285,7 @@ async function safeGetMe(client: ImbraceClient) {
 </TabItem>
 <TabItem label="Python">
 ```python
-# 1. Sử dụng context manager để kết nối được đóng một cách xác định
+# 1. Sử dụng context manager để kết nối luôn được đóng một cách chắc chắn
 with ImbraceClient() as client:
     ...
 

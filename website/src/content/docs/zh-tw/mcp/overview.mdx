@@ -113,7 +113,7 @@ npx -y mcp-remote "https://app-gateway.sandbox.imbrace.co/mcp" \
 
 ### 第 3 步 — 試試看
 
-問你的 agent，例如*「列出我的 Imbrace 看板」*或*「看看最新的對話」*。它會自動選用 `listBoards`、`listConversations`、`listFlows` 等工具。
+問你的 agent，例如*「列出我的 Imbrace 看板」*或*「看看最新的對話」*。它應該會選用 `listBoards`、`listConversations`、`listFlows` 等工具。
 
 ### 預設唯讀
 
@@ -122,9 +122,9 @@ npx -y mcp-remote "https://app-gateway.sandbox.imbrace.co/mcp" \
 | 加到 URL | 效果 |
 |---|---|
 | `?allowWrite=1` | Agent 還可以建立和修改資料 |
-| `?allowDestructive=1` | Agent 還可以刪除資料（包含 write） |
-| `?services=dataBoard,workflow` | 收窄：僅這些服務 |
-| `?tags=boards,records` | 收窄：僅這些主題 |
+| `?allowDestructive=1` | Agent 還可以刪除資料（包含寫入權限） |
+| `?services=dataBoard,workflow` | 縮小範圍：僅這些服務 |
+| `?tags=boards,records` | 縮小範圍：僅這些主題 |
 
 範例 — 僅資料看板，帶寫入權限：
 
@@ -136,7 +136,7 @@ https://app-gateway.sandbox.imbrace.co/mcp?services=dataBoard&allowWrite=1
 
 ### 運作原理
 
-每次工具呼叫都會帶著**你的** token 經閘道的正常 API 路由重放，因此組織範圍、權限與 license 檢查與你親自呼叫 API 完全一致。工具即精選的 `agent-tools` 操作集，與 SDK 的 [`client.api`](/zh-tw/sdk/overview/) 介面同源。端點是基於 HTTP `POST` 的無狀態 JSON-RPC — 無需管理工作階段。
+每次工具呼叫都會帶著**你的** token 經閘道的正常 API 路由重放，因此組織範圍、權限與 license 檢查與你親自呼叫 API 完全一致。工具即精選的 `agent-tools` 操作集，與 SDK 的 [`client.api`](/sdk/overview/#the-full-api-surface--clientapi-typescript) 介面同源。端點是基於 HTTP `POST` 的無狀態 JSON-RPC — 無需管理工作階段。
 
 ### 不用 MCP？統一 OpenAPI
 

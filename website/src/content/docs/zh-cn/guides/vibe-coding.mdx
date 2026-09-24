@@ -1,15 +1,15 @@
 ---
-title: 畅快编码
+title: Vibe Coding
 description: 将 llms.txt 放入你的 AI 编程助手（Claude、Cursor、Copilot 或任何 LLM 驱动的 IDE）中，更快地使用 Imbrace SDK。
 ---
 
 import { Aside, Tabs, TabItem } from "@astrojs/starlight/components";
 
-**畅快编码（Vibe Coding）** 意味着通过 AI 助手协作编写代码 — 用自然语言描述你想要的内容，让 AI 为你生成、解释或重构代码。Imbrace SDK 附带一个 [`llms.txt`](https://developer.imbrace.co/llms.txt) 文件，以便任何 AI 工具都能立即理解 SDK，而不会幻觉出方法名称或参数结构。
+**Vibe Coding** 指的是通过 AI 助手协作编写代码 — 用自然语言描述你想要的内容，让 AI 为你生成、解释或重构代码。Imbrace SDK 附带一个 [`llms.txt`](https://developer.imbrace.co/llms.txt) 文件，以便任何 AI 工具都能立即理解 SDK，而不会幻觉出方法名称或参数结构。
 
 ## 设置
 
-在畅快编码之前，请确保 SDK 已安装并且凭证已配置。
+在开始 Vibe Coding 之前，请确保 SDK 已安装并且凭证已配置。
 
 **1. 安装 SDK**
 
@@ -103,13 +103,13 @@ client = ImbraceClient(
 
 ### 任何其他 LLM
 
-复制原始文件内容并在提问之前将其粘贴到提示词的开头。大多数具有 32k+ 上下文窗口的 LLM 可以在不损失摘要信息的情况下消化完整文件。
+复制原始文件内容并在提问之前将其粘贴到提示词的开头。大多数具有 32k+ 上下文窗口的 LLM 无需摘要压缩即可完整读入整个文件，不会丢失信息。
 
 ## 示例提示词
 
 一旦 AI 拥有了 `llms.txt` 上下文，尝试如下提示词：
 
-- *"展示我如何在 Python 中创建 AI 代理并流式传输聊天响应。"*
+- *"演示如何在 Python 中创建 AI 代理并流式传输聊天响应。"*
 - *"生成 TypeScript 代码来列出所有嵌入文件并删除状态为 `error` 的文件。"*
 - *"`streamChat` 和 `streamSubAgentChat` 有什么区别？"*
 - *"按照集成指南的模式，为 Chat Client 编写一个 Express.js 认证代理。"*
@@ -135,7 +135,7 @@ imbrace ai-agent list --json
 # 管理工作流
 imbrace workflow list --json
 
-# 文档 AI 提取代理
+# Document AI 提取代理
 imbrace document-ai list --json
 ```
 

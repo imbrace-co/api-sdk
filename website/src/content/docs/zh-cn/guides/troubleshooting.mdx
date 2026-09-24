@@ -3,7 +3,7 @@ title: 故障排除
 description: 使用 Imbrace SDK 时的常见错误和解决方案。
 ---
 
-## `AuthError: Invalid or expired access token.` (HTTP 401)
+## `AuthError: Invalid or expired API key (x-api-key).` (HTTP 401)
 
 `.env` 中的 API Key 已过期。
 
@@ -67,7 +67,7 @@ mypy src/imbrace --exclude site-packages
 
 ## CLI：命令返回 `401 Unauthorized`
 
-你的凭证已过期，或 API 服务器中的令牌已过期。
+你的凭证已过期，或 API 服务器持有的令牌已失效。
 
 ```bash
 imbrace login --api-key api_xxx...

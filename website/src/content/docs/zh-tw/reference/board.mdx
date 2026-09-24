@@ -1,6 +1,6 @@
 ---
 title: 資料看板
-description: client.boards 的結構與方法參考 — CRM 管道、欄位、項目、區段、匯入/匯出和 Knowledge Hub。
+description: client.boards 的結構與方法參考 — CRM 管道、欄位、項目、區隔、匯入/匯出和 Knowledge Hub。
 ---
 
 import { Tabs, TabItem } from "@astrojs/starlight/components";
@@ -35,7 +35,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 | `_id` | string | 唯一的欄位 ID |
 | `name` | string | 欄位顯示名稱 |
 | `type` | string | 欄位類型（text, number, date, select 等） |
-| `options` | object[]? | 類型特定配置 |
+| `options` | object[]? | 類型特定設定 |
 | `required` | boolean? | 欄位是否為必填 |
 
 ### CreateBoardInput
@@ -64,7 +64,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 | 刪除 board | `delete` | `delete` | 刪除 board |
 | 重新排序 boards | `reorder` | `reorder` | 變更顯示順序 |
 
-### Import / Export
+### 匯入 / 匯出
 
 | 方法 | TypeScript | Python | 說明 |
 |--------|-----------|--------|------|
@@ -78,7 +78,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 | 方法 | TypeScript | Python | 說明 |
 |--------|-----------|--------|------|
 | 建立欄位 | `createField` | `create_field` | 向 board 新增欄位 |
-| 更新欄位 | `updateField` | `update_field` | 修改欄位配置 |
+| 更新欄位 | `updateField` | `update_field` | 修改欄位設定 |
 | 刪除欄位 | `deleteField` | `delete_field` | 移除欄位 |
 | 重新排序欄位 | `reorderFields` | `reorder_fields` | 變更欄位順序 |
 | 批次更新欄位 | `bulkUpdateFields` | `bulk_update_fields` | 同時更新多個欄位 |
@@ -102,9 +102,9 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 | 方法 | TypeScript | Python | 說明 |
 |--------|-----------|--------|------|
 | 列出區隔 | `listSegments` | `list_segments` | 列出已儲存的篩選檢視 |
-| 建立區隔 | `createSegment` | `create_segment` | 將篩選儲存為區段 |
-| 更新區隔 | `updateSegment` | `update_segment` | 更新區段的篩選條件 |
-| 刪除區隔 | `deleteSegment` | `delete_segment` | 移除區段 |
+| 建立區隔 | `createSegment` | `create_segment` | 將篩選條件儲存為區隔 |
+| 更新區隔 | `updateSegment` | `update_segment` | 更新區隔的篩選條件 |
+| 刪除區隔 | `deleteSegment` | `delete_segment` | 移除區隔 |
 
 ---
 

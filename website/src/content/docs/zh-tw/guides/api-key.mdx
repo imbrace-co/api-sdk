@@ -9,7 +9,7 @@ import step1 from "../../../../assets/get_api_key_from_ui_step_1.png";
 import step2 from "../../../../assets/get_api_key_from_ui_step_2.png";
 import step3 from "../../../../assets/get_api_key_from_ui_step_3.png";
 
-API 金鑰（`api_...`）讓您的後端可以在沒有使用者連線的情況下呼叫 Imbrace。有關何時使用 API 金鑰與存取令牌，請參閱[認證](/sdk/authentication/)。
+API 金鑰（`api_...`）讓您的後端可以在沒有使用者工作階段的情況下呼叫 Imbrace。有關何時使用 API 金鑰與存取權杖，請參閱[認證](/sdk/authentication/)。
 
 ---
 
@@ -19,7 +19,7 @@ API 金鑰（`api_...`）讓您的後端可以在沒有使用者連線的情況�
 
 <Image src={step1} alt="Imbrace Portal — 側邊欄顯示 GovernCore 選單與 Generate External Token 選項" />
 
-**步驟 2** — 點擊 **Generate Token** 以簽發新的 API 金鑰。
+**步驟 2** — 按一下 **Generate Token** 以簽發新的 API 金鑰。
 
 <Image src={step2} alt="GovernCore Generate External Token 頁面 — Generate Token 按鈕已反白" />
 
@@ -31,19 +31,19 @@ API 金鑰（`api_...`）讓您的後端可以在沒有使用者連線的情況�
 
 ## 透過 SDK 生成（程式化）
 
-當您需要從程式碼產生金鑰時使用，例如在自動化佈建期間。您必須先用存取令牌進行認證（透過 [OTP](/sdk/authentication/#otp-login-flow) 或[密碼](/sdk/authentication/#password-login)）。
+當您需要從程式碼產生金鑰時使用，例如在自動化佈建期間。您必須先用存取權杖進行認證（透過 [OTP](/sdk/authentication/#otp-login-flow) 或[密碼](/sdk/authentication/#password-login)）。
 
 <Tabs syncKey="lang">
   <TabItem label="TypeScript">
     ```typescript
-    // 需要使用存取令牌初始化的客戶端
+    // 需要使用存取權杖初始化的用戶端
     const res = await client.auth.getThirdPartyToken(30) // 30 天後過期
     const apiKey = res.apiKey.apiKey  // "api_..."
     ```
   </TabItem>
   <TabItem label="Python">
     ```python
-    # 需要使用存取令牌初始化的客戶端
+    # 需要使用存取權杖初始化的用戶端
     res = client.auth.get_third_party_token(expiration_days=30)
     api_key = res["apiKey"]["apiKey"]  # "api_..."
     ```
@@ -73,7 +73,7 @@ API 金鑰（`api_...`）讓您的後端可以在沒有使用者連線的情況�
 
 ## 使用金鑰
 
-將金鑰傳遞給客戶端建構函式：
+將金鑰傳遞給用戶端建構函式：
 
 <Tabs syncKey="lang">
   <TabItem label="TypeScript">

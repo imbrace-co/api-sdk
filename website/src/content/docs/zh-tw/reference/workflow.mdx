@@ -1,6 +1,6 @@
 ---
 title: 工作流程
-description: client.workflows 的結構與方法參考 — flows、runs、folders、app connections、MCP servers 和 tables。
+description: client.workflows 的結構與方法參考 — 流程、執行紀錄、資料夾、應用程式連線、MCP 伺服器和資料表。
 ---
 
 import { Tabs, TabItem } from "@astrojs/starlight/components";
@@ -35,8 +35,8 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 | `updated` | string | ISO 8601 更新時間戳 |
 | `flowId` | string | 此版本所屬的流程 |
 | `displayName` | string | 人類可讀的流程名稱 |
-| `trigger` | object | 觸發器配置 |
-| `steps` | object? | 選用步驟配置 |
+| `trigger` | object | 觸發器設定 |
+| `steps` | object? | 選用的步驟設定 |
 | `valid` | boolean? | 版本是否有效 |
 
 ### FlowRun
@@ -91,7 +91,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 | 取得流程 | `getFlow` | `get_flow` | 依 ID 取得單一流程 |
 | 建立流程 | `createFlow` | `create_flow` | 建立新流程 |
 | 刪除流程 | `deleteFlow` | `delete_flow` | 刪除流程 |
-| 套用流程操作 | `applyFlowOperation` | `apply_flow_operation` | 對流程套用操作（例如發布、啟用） |
+| 套用流程操作 | `applyFlowOperation` | `apply_flow_operation` | 對流程套用操作（例如發佈、啟用） |
 | 觸發流程 | `triggerFlow` | `trigger_flow` | 非同步觸發流程 |
 | 同步觸發流程 | `triggerFlowSync` | `trigger_flow_sync` | 觸發流程並等待結果 |
 
@@ -129,7 +129,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 | 取得 MCP 伺服器 | `getMcpServer` | `get_mcp_server` | 依 ID 取得伺服器 |
 | 建立 MCP 伺服器 | `createMcpServer` | `create_mcp_server` | 註冊新的 MCP 伺服器 |
 | 刪除 MCP 伺服器 | `deleteMcpServer` | `delete_mcp_server` | 移除伺服器 |
-| 輪替權杖 | `rotateMcpToken` | `rotate_mcp_token` | 輪換伺服器的驗證令牌 |
+| 輪替權杖 | `rotateMcpToken` | `rotate_mcp_token` | 輪替伺服器的驗證權杖 |
 
 ---
 
@@ -186,7 +186,7 @@ print(flow["id"])
 
 ## triggerFlow / trigger_flow
 
-使用選用承載非同步觸發流程。
+非同步觸發流程，可附帶選用的酬載。
 
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">

@@ -1,13 +1,13 @@
 ---
 title: 数据面板
-description: client.boards 的 schema 和方法参考 — CRM 管道、字段、项目、分段、导入/导出和 Knowledge Hub。
+description: client.boards 的 schema 和方法参考 — CRM 管道、字段、条目、分段、导入/导出和知识中心。
 ---
 
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 
-`client.boards` 是 CRM 管道的核心数据存储 — 潜在客户、交易、任务或任何结构化数据。每个 board 都有自定义字段和项目。Board 也可以链接到 Knowledge Hub 以进行 AI 驱动的搜索。
+`client.boards` 是 CRM 管道的核心数据存储 — 潜在客户、交易、任务或任何结构化数据。每个面板都有自定义字段和条目。面板也可以链接到知识中心以进行 AI 驱动的搜索。
 
-如需逐步指南，请参阅 [SDK 指南中的 DataBoards](/sdk/databoard/)。
+如需逐步指南，请参阅 [SDK 指南中的数据面板](/sdk/databoard/)。
 
 ---
 
@@ -18,12 +18,12 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 | 字段 | 类型 | 说明 |
 |-------|------|------|
 | `object_name` | string? | 对象类型标识符 |
-| `id` | string | 唯一 board ID |
+| `id` | string | 唯一面板 ID |
 | `organization_id` | string | 所属组织 |
-| `name` | string | Board 显示名称 |
+| `name` | string | 面板显示名称 |
 | `description` | string? | 可选描述 |
-| `workflow_id` | string? | 链接的 workflow ID |
-| `hidden` | boolean? | Board 是否隐藏 |
+| `workflow_id` | string? | 关联的工作流 ID |
+| `hidden` | boolean? | 面板是否隐藏 |
 | `team_ids` | string[]? | 有访问权限的团队 |
 | `created_at` | string | ISO 8601 创建时间戳 |
 | `updated_at` | string | ISO 8601 更新时间戳 |
@@ -42,9 +42,9 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 | 字段 | 类型 | 必填 | 说明 |
 |-------|------|----------|------|
-| `name` | string | ✓ | Board 名称 |
+| `name` | string | ✓ | 面板名称 |
 | `description` | string | | 可选描述 |
-| `type` | string | | Board 类型 |
+| `type` | string | | 面板类型 |
 | `fields` | object[] | | 初始字段定义 |
 | `team_ids` | string[] | | 有访问权限的团队 ID |
 | `show_id` | boolean | | 显示 ID 列 |
@@ -53,49 +53,49 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ## 方法
 
-### Board 增删改查
+### 面板增删改查
 
 | 方法 | TypeScript | Python | 说明 |
 |--------|-----------|--------|------|
-| 列出 board | `list` | `list` | 列出所有 board |
-| 获取 board | `get` | `get` | 按 ID 获取 board |
-| 创建 board | `create` | `create` | 创建新 board |
-| 更新 board | `update` | `update` | 更新 board 名称/描述 |
-| 删除 board | `delete` | `delete` | 删除 board |
-| 重新排序 board | `reorder` | `reorder` | 更改显示顺序 |
+| 列出面板 | `list` | `list` | 列出所有面板 |
+| 获取面板 | `get` | `get` | 按 ID 获取面板 |
+| 创建面板 | `create` | `create` | 创建新面板 |
+| 更新面板 | `update` | `update` | 更新面板名称/描述 |
+| 删除面板 | `delete` | `delete` | 删除面板 |
+| 重新排序面板 | `reorder` | `reorder` | 更改显示顺序 |
 
 ### 导入 / 导出
 
 | 方法 | TypeScript | Python | 说明 |
 |--------|-----------|--------|------|
-| 导出 CSV | `exportCsv` | `export_csv` | 将所有项目导出为 CSV |
-| 导入 CSV | `importCsv` | `import_csv` | 从 CSV 文件导入项目 |
-| 导入 Excel | `importExcel` | `import_excel` | 从 Excel 文件导入项目 |
+| 导出 CSV | `exportCsv` | `export_csv` | 将所有条目导出为 CSV |
+| 导入 CSV | `importCsv` | `import_csv` | 从 CSV 文件导入条目 |
+| 导入 Excel | `importExcel` | `import_excel` | 从 Excel 文件导入条目 |
 | 获取导入进度 | `getImportProgress` | `get_import_progress` | 轮询进行中导入的状态 |
 
 ### 字段
 
 | 方法 | TypeScript | Python | 说明 |
 |--------|-----------|--------|------|
-| 创建字段 | `createField` | `create_field` | 向 board 添加列 |
+| 创建字段 | `createField` | `create_field` | 向面板添加列 |
 | 更新字段 | `updateField` | `update_field` | 修改字段配置 |
 | 删除字段 | `deleteField` | `delete_field` | 移除字段 |
 | 重新排序字段 | `reorderFields` | `reorder_fields` | 更改列顺序 |
 | 批量更新字段 | `bulkUpdateFields` | `bulk_update_fields` | 同时更新多个字段 |
 
-### 项目
+### 条目
 
 | 方法 | TypeScript | Python | 说明 |
 |--------|-----------|--------|------|
-| 列出项目 | `listItems` | `list_items` | 分页的 board 项目列表 |
-| 获取项目 | `getItem` | `get_item` | 获取单个项目 |
-| 创建项目 | `createItem` | `create_item` | 向 board 添加项目 |
-| 更新项目 | `updateItem` | `update_item` | 更新项目字段值 |
-| 删除项目 | `deleteItem` | `delete_item` | 移除项目 |
-| 批量删除 | `bulkDeleteItems` | `bulk_delete_items` | 按 ID 删除多个项目 |
-| 搜索 | `search` | `search` | 在 board 内进行全文搜索 |
-| 链接项目 | `linkItems` | `link_items` | 将项目链接到相关 board 项目 |
-| 取消链接项目 | `unlinkItems` | `unlink_items` | 移除项目间的链接 |
+| 列出条目 | `listItems` | `list_items` | 分页的面板条目列表 |
+| 获取条目 | `getItem` | `get_item` | 获取单个条目 |
+| 创建条目 | `createItem` | `create_item` | 向面板添加条目 |
+| 更新条目 | `updateItem` | `update_item` | 更新条目字段值 |
+| 删除条目 | `deleteItem` | `delete_item` | 移除条目 |
+| 批量删除 | `bulkDeleteItems` | `bulk_delete_items` | 按 ID 删除多个条目 |
+| 搜索 | `search` | `search` | 在面板内进行全文搜索 |
+| 链接条目 | `linkItems` | `link_items` | 将条目链接到相关面板条目 |
+| 取消链接条目 | `unlinkItems` | `unlink_items` | 移除条目间的链接 |
 
 ### 分段
 
@@ -215,7 +215,7 @@ print(f"{len(page['data'])} of {page['total']} items")
 
 ## search
 
-在 board 的项目中进行全文搜索。
+在面板的条目中进行全文搜索。
 
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">

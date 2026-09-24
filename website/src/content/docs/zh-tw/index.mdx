@@ -4,7 +4,7 @@ description: Imbrace Gateway 的官方 TypeScript 和 Python SDK — 型別安�
 template: splash
 hero:
   title: 使用 Imbrace SDK 更快交付
-  tagline: 類型安全、功能完備的 Imbrace Gateway SDK。幾分鐘內將 TypeScript 和 Python 應用連接到 Imbrace 平台。
+  tagline: 型別安全、開箱即用的 Imbrace Gateway SDK。幾分鐘內將 TypeScript 和 Python 應用程式連接到 Imbrace 平台。
   image:
     file: ../../../assets/imbrace_logo_small.svg
     alt: Imbrace
@@ -35,10 +35,10 @@ import { Card, CardGrid, LinkCard } from "@astrojs/starlight/components";
     內建針對 429 和 5xx 回應的指數退避。無需任何設定 — 您的應用程式在負載下依然正常運作。
   </Card>
   <Card title="三層認證" icon="setting">
-    API 金鑰、JWT Bearer 及舊版存取令牌 — 全部透明處理。在不改變商業邏輯的情況下切換認證策略。
+    API 金鑰、JWT Bearer 及舊版存取權杖 — 全部透明處理。在不改變商業邏輯的情況下切換認證策略。
   </Card>
-  <Card title="Python 優先非同步" icon="rocket">
-    並行 `AsyncImbraceClient` 與同步客戶端並存。一次匯入即可在 FastAPI、asyncio 或 Django 中使用。
+  <Card title="非同步優先的 Python" icon="rocket">
+    `AsyncImbraceClient` 與同步用戶端並行提供。一次匯入即可在 FastAPI、asyncio 或 Django 中使用。
   </Card>
 </CardGrid>
 
@@ -102,7 +102,7 @@ import { Card, CardGrid, LinkCard } from "@astrojs/starlight/components";
   />
   <LinkCard
     title="認證"
-    description="API 金鑰與存取令牌、OTP 登入流程，以及如何選擇。"
+    description="API 金鑰與存取權杖、OTP 登入流程，以及如何選擇。"
     href="sdk/authentication/"
   />
   <LinkCard

@@ -10,7 +10,7 @@ Hướng dẫn này cho phép bạn kiểm thử **gói đã được xây dựn
 ## Điều kiện tiên quyết
 
 - TypeScript: Node 18+
-- Python: Python 3.10+ và `pip`
+- Python: Python 3.9+ và `pip`
 
 ## URL Môi trường
 
@@ -32,7 +32,7 @@ Tạo `.env` từ tệp mẫu ở thư mục gốc của repo, rồi dán vào t
 cp .env.example .env
 ```
 
-Tối thiểu cần thiết cho các lời gọi trực tiếp:
+Tối thiểu cần thiết cho các lời gọi tới API thật:
 
 | Biến                | Nơi lấy                                                                               |
 | ------------------- | -------------------------------------------------------------------------------------- |
@@ -101,7 +101,7 @@ pip install -e .
 
 Các chỉnh sửa mã được nhận mà không cần cài đặt lại.
 
-### Cài đặt Wheel (xác minh hình dạng xuất bản)
+### Cài đặt Wheel (xác minh đúng dạng gói sẽ phát hành)
 
 ```bash
 cd py
@@ -161,7 +161,7 @@ Bản dựng chưa được chạy, hoặc tệp nguồn đã được thêm mà
 **`ModuleNotFoundError: No module named 'imbrace'`** (Python)
 Gói chưa được cài đặt trong venv đang hoạt động. Chạy lại `pip install -e .` (editable) hoặc `pip install dist/imbrace-*.whl`.
 
-**401 / 403 trên các lời gọi trực tiếp**
+**401 / 403 khi gọi API thật**
 Thông tin xác thực của bạn đã hết hạn, bị thu hồi hoặc sai. Đối với API key, hãy tạo một key mới:
 
 ```bash

@@ -1,11 +1,11 @@
 ---
 title: Liên hệ
-description: Tham chiếu schema và method cho client.contacts — CRUD, search, conversations, comments, files, activities, và notifications.
+description: Tham chiếu schema và method cho client.contacts — CRUD, tìm kiếm, hội thoại, comment, file, hoạt động và thông báo.
 ---
 
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 
-`client.contacts` quản lý contacts — khách hàng tiềm năng, khách hàng, hoặc người dùng giao tiếp qua các kênh của bạn. Mỗi contact có thể có các hội thoại, comments, files, và lịch sử hoạt động liên kết.
+`client.contacts` quản lý các liên hệ — khách hàng tiềm năng, khách hàng, hoặc người dùng giao tiếp qua các kênh của bạn. Mỗi liên hệ có thể có các hội thoại, comments, files, và lịch sử hoạt động liên kết.
 
 ---
 
@@ -16,9 +16,9 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 | Trường | Kiểu | Mô tả |
 |-------|------|-------|
 | `object_name` | string? | Định danh loại đối tượng |
-| `id` | string | ID duy nhất của contact |
-| `organization_id` | string | Tổ chức sở hữu contact này |
-| `display_name` | string? | Tên hiển thị của contact |
+| `id` | string | ID duy nhất của liên hệ |
+| `organization_id` | string | Tổ chức sở hữu liên hệ này |
+| `display_name` | string? | Tên hiển thị của liên hệ |
 | `email` | string? | Địa chỉ email |
 | `phone_number` | string? | Số điện thoại |
 | `avatar_url` | string? | URL ảnh đại diện |
@@ -56,16 +56,16 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 | Phương thức | TypeScript | Python | Mô tả |
 |--------|-----------|--------|-------|
-| Danh sách | `list` | `list` | Danh sách contacts có phân trang |
-| Lấy | `get` | `get` | Lấy contact theo ID |
-| Cập nhật | `update` | `update` | Cập nhật trường contact |
-| Tìm kiếm | `search` | `search` | Tìm kiếm toàn văn contacts |
-| Xuất CSV | `exportCsv` | `export_csv` | Tải xuống tất cả contacts dưới dạng CSV |
-| Lấy hội thoại | `getConversations` | `get_conversations` | Danh sách hội thoại của contact |
-| Lấy comment | `getComments` | `get_comments` | Danh sách comments nội bộ trên contact |
-| Lấy file | `getFiles` | `get_files` | Danh sách files đính kèm với contact |
+| Danh sách | `list` | `list` | Danh sách liên hệ có phân trang |
+| Lấy | `get` | `get` | Lấy liên hệ theo ID |
+| Cập nhật | `update` | `update` | Cập nhật trường liên hệ |
+| Tìm kiếm | `search` | `search` | Tìm kiếm toàn văn trên các liên hệ |
+| Xuất CSV | `exportCsv` | `export_csv` | Tải xuống tất cả liên hệ dưới dạng CSV |
+| Lấy hội thoại | `getConversations` | `get_conversations` | Danh sách hội thoại của liên hệ |
+| Lấy comment | `getComments` | `get_comments` | Danh sách comments nội bộ trên liên hệ |
+| Lấy file | `getFiles` | `get_files` | Danh sách files đính kèm với liên hệ |
 | Lấy hoạt động | `getActivities` | `get_activities` | Nhật ký hoạt động hội thoại |
-| Tải lên avatar | `uploadAvatar` | `upload_contacts` | Tải lên file cho contacts (avatar / import file) |
+| Tải lên avatar | `uploadAvatar` | `upload_contacts` | Tải lên file cho liên hệ (avatar / import file) |
 | Danh sách thông báo | `listNotifications` | `list_notifications` | Danh sách thông báo cho người dùng hiện tại |
 | Đánh dấu thông báo đã đọc | `markNotificationsRead` | `mark_notifications_read` | Đánh dấu thông báo đã đọc |
 | Bỏ qua thông báo | `dismissNotification` | `dismiss_notification` | Bỏ qua một thông báo |
@@ -184,7 +184,7 @@ comments = client.contacts.get_comments("contact_id", limit=20, skip=0)
 
 ## getActivities / get_activities
 
-Trả về nhật ký hoạt động cho một hội thoại liên kết với contact này.
+Trả về nhật ký hoạt động cho một hội thoại liên kết với liên hệ này.
 
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">
