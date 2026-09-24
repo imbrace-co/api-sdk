@@ -13,7 +13,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ### Campaign
 
-| Field | Type | Mô tả |
+| Trường | Kiểu | Mô tả |
 |-------|------|-------|
 | `_id` | string | ID duy nhất của chiến dịch |
 | `name` | string | Tên hiển thị của chiến dịch |
@@ -24,7 +24,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ### Touchpoint
 
-| Field | Type | Mô tả |
+| Trường | Kiểu | Mô tả |
 |-------|------|-------|
 | `_id` | string | ID duy nhất của touchpoint |
 | `name` | string? | Tên hiển thị của touchpoint |
@@ -34,14 +34,14 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ### CreateCampaignInput
 
-| Field | Type | Required | Mô tả |
+| Trường | Kiểu | Bắt buộc | Mô tả |
 |-------|------|----------|-------|
 | `name` | string | ✓ | Tên chiến dịch |
 | `channel_type` | string | | Loại kênh (vd: `whatsapp`, `email`) |
 
 ### CreateTouchpointInput
 
-| Field | Type | Required | Mô tả |
+| Trường | Kiểu | Bắt buộc | Mô tả |
 |-------|------|----------|-------|
 | `name` | string | | Tên touchpoint |
 | `type` | string | | Loại touchpoint |
@@ -50,27 +50,27 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ---
 
-## Methods
+## Phương thức
 
 ### Campaign
 
-| Method | TypeScript | Python | Mô tả |
+| Phương thức | TypeScript | Python | Mô tả |
 |--------|-----------|--------|-------|
-| List campaigns | `list` | `list` | Danh sách tất cả chiến dịch |
-| Get campaign | `get` | `get` | Lấy chiến dịch theo ID |
-| Create campaign | `create` | `create` | Tạo chiến dịch mới |
-| Delete campaign | `delete` | `delete` | Xóa chiến dịch |
+| Danh sách chiến dịch | `list` | `list` | Danh sách tất cả chiến dịch |
+| Lấy chiến dịch | `get` | `get` | Lấy chiến dịch theo ID |
+| Tạo chiến dịch | `create` | `create` | Tạo chiến dịch mới |
+| Xóa chiến dịch | `delete` | `delete` | Xóa chiến dịch |
 
 ### Touchpoint
 
-| Method | TypeScript | Python | Mô tả |
+| Phương thức | TypeScript | Python | Mô tả |
 |--------|-----------|--------|-------|
-| List touchpoints | `listTouchpoints` | `list_touchpoints` | Danh sách tất cả touchpoints |
-| Get touchpoint | `getTouchpoint` | `get_touchpoint` | Lấy touchpoint theo ID |
-| Create touchpoint | `createTouchpoint` | `create_touchpoint` | Thêm touchpoint vào chiến dịch |
-| Update touchpoint | `updateTouchpoint` | `update_touchpoint` | Cập nhật touchpoint |
-| Delete touchpoint | `deleteTouchpoint` | `delete_touchpoint` | Xóa touchpoint |
-| Validate touchpoint | `validateTouchpoint` | `validate_touchpoint` | Xác thực cấu hình touchpoint |
+| Danh sách touchpoint | `listTouchpoints` | `list_touchpoints` | Danh sách tất cả touchpoints |
+| Lấy touchpoint | `getTouchpoint` | `get_touchpoint` | Lấy touchpoint theo ID |
+| Tạo touchpoint | `createTouchpoint` | `create_touchpoint` | Thêm touchpoint vào chiến dịch |
+| Cập nhật touchpoint | `updateTouchpoint` | `update_touchpoint` | Cập nhật touchpoint |
+| Xóa touchpoint | `deleteTouchpoint` | `delete_touchpoint` | Xóa touchpoint |
+| Xác thực touchpoint | `validateTouchpoint` | `validate_touchpoint` | Xác thực cấu hình touchpoint |
 
 ---
 

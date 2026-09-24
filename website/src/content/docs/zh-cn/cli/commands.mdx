@@ -107,7 +107,7 @@ imbrace ai-agent delete <agentId> [--yes] [--json]
 
 ### 创建 / 更新标志
 
-`create` 和 `update` 接受相同的标志。`update` 通过 PUT-merge 保留未更改的字段。
+`create` 和 `update` 接受相同的行为标志。`update` 通过 PUT-merge 保留未更改的字段。`--id-only` 仅适用于 `create`。
 
 | 标志 | 映射到 | 说明 |
 |---|---|---|
@@ -140,9 +140,8 @@ imbrace ai-agent delete <agentId> [--yes] [--json]
 | `--streaming` | `streaming` | 默认为 true |
 | `--use-memory` | `use_memory` | 默认为 true |
 | **输出** | | |
-| `--yes` / `-y` | — | 跳过删除确认 |
 | `--json` | — | 机器可读输出 |
-| `--id-only` | — | 仅打印新代理的 ID |
+| `--id-only` | — | 仅打印新代理的 ID（仅限 create） |
 
 ### 完整创建示例
 
@@ -451,6 +450,62 @@ claude mcp add imbrace -- imbrace mcp --services dataBoard,workflow
 
 ---
 
+## Profile
+
+管理多个凭证 profile（AWS 风格）。每个 profile 存储凭证、环境预设、组织 ID 以及其他 SDK 设置。解析顺序：`--profile` 参数 > `IMBRACE_PROFILE` 环境变量 > `active_profile` 配置 > `"default"`。
+
+### 创建
+
+创建新的 profile，并向平台验证凭证：
+
+```bash
+imbrace profile create <name> --api-key api_xxx... [--env stable|sandbox|develop|prodv2] [--org-id <orgId>] [--base-url <url>] [--timeout <ms>] [--check-health] [--services '<json>'] [--json] [--force]
+```
+
+`--force` 跳过凭证验证。如果该 profile 已存在，命令会报错。
+
+### 列出
+
+```bash
+imbrace profile list [--json]
+```
+
+显示所有 profile，包括当前激活标记、环境和状态。
+
+### 查看
+
+```bash
+imbrace profile show [<name>] [--json]
+```
+
+默认显示当前激活的 profile。显示所有已存储的字段（凭证预览、登录方式、邮箱、环境、Base URL、组织 ID、超时、服务、健康检查）。
+
+### 切换
+
+切换后续所有命令使用的激活 profile：
+
+```bash
+imbrace profile use <name> [--json]
+```
+
+### 重命名
+
+```bash
+imbrace profile rename <from> <to> [--json]
+```
+
+保留凭证和激活状态。
+
+### 删除
+
+```bash
+imbrace profile delete <name> [--yes] [--json]
+```
+
+不会影响平台上的数据 — 只会删除本地的凭证集。
+
+---
+
 ## 工具
 
 ### 打印 LLM 参考
@@ -482,6 +537,16 @@ imbrace update              # 更新到最新版本
 imbrace update --check      # 检查更新但不安装
 imbrace update --version 0.6.5  # 安装指定版本
 imbrace update --json       # 机器可读的 JSON 输出
+```
+
+`--check` 输出：
+
+```json
+{
+  "current": "0.6.9",
+  "latest": "0.6.9",
+  "up_to_date": true
+}
 ```
 
 <Aside type="note">

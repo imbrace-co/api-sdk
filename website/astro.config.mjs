@@ -26,11 +26,34 @@ function rehypePrefixBase() {
   }
 }
 
+// Translated pages link to docs with root-relative paths copied from the
+// English source (e.g. `[Auth](/sdk/authentication/)`), which drops a
+// zh-TW reader onto the English page. Rewrite those links to stay in the
+// page's own locale; links that already carry a locale prefix are kept.
+const LOCALES = ['vi', 'zh-cn', 'zh-tw']
+const DOC_SECTIONS = ['getting-started', 'install', 'mcp', 'cli', 'sdk', 'reference', 'guides']
+
+function rehypeLocalizeLinks() {
+  return (tree, file) => {
+    const path = (file.history?.[0] ?? file.path ?? '').replace(/\\/g, '/')
+    const locale = LOCALES.find((l) => path.includes(`/content/docs/${l}/`))
+    if (!locale) return
+    visit(tree, 'element', (node) => {
+      if (node.tagName !== 'a' || !node.properties) return
+      const href = node.properties.href
+      if (typeof href !== 'string' || !href.startsWith('/')) return
+      const section = href.split(/[/#?]/)[1]
+      if (!DOC_SECTIONS.includes(section)) return
+      node.properties.href = `/${locale}${href}`
+    })
+  }
+}
+
 export default defineConfig({
   site: 'https://engineer.imbrace.co',
   base,
   markdown: {
-    rehypePlugins: [rehypePrefixBase()],
+    rehypePlugins: [rehypeLocalizeLinks, rehypePrefixBase()],
   },
   integrations: [
     starlight({
@@ -98,12 +121,12 @@ export default defineConfig({
         },
         {
           label: 'CLI',
-          translations: { vi: 'CLI' },
+          translations: { vi: 'CLI', 'zh-CN': 'CLI', 'zh-TW': 'CLI' },
           items: [
-            { label: 'Overview',        link: '/cli/overview/' },
-            { label: 'Installation',    link: '/cli/installation/' },
-            { label: 'Commands',        link: '/cli/commands/' },
-            { label: 'API Reference',   link: '/cli/api-reference/' },
+            { label: 'Overview',        translations: { vi: 'Tổng Quan',             'zh-CN': '概览',       'zh-TW': '概覽'       }, link: '/cli/overview/' },
+            { label: 'Installation',    translations: { vi: 'Cài Đặt',               'zh-CN': '安装',       'zh-TW': '安裝'       }, link: '/cli/installation/' },
+            { label: 'Commands',        translations: { vi: 'Lệnh',                  'zh-CN': '命令',       'zh-TW': '指令'       }, link: '/cli/commands/' },
+            { label: 'API Reference',   translations: { vi: 'Tham Chiếu API',        'zh-CN': 'API 参考',   'zh-TW': 'API 參考'   }, link: '/cli/api-reference/' },
           ],
         },
         {
@@ -116,10 +139,10 @@ export default defineConfig({
             { label: 'Authentication',  translations: { vi: 'Xác Thực',              'zh-CN': '身份验证',   'zh-TW': '身份驗證'   }, link: '/sdk/authentication/' },
             { label: 'Full Flow Guide', translations: { vi: 'Hướng Dẫn Toàn Bộ',    'zh-CN': '完整流程指南', 'zh-TW': '完整流程指南' }, link: '/sdk/full-flow-guide/' },
             { label: 'Resources',       translations: { vi: 'Tài Nguyên',            'zh-CN': '资源参考',   'zh-TW': '資源參考'   }, link: '/sdk/resources/' },
-            { label: 'AI Agent',        link: '/sdk/ai-agent/' },
-            { label: 'Workflows',       link: '/sdk/workflows/' },
-            { label: 'DataBoards',      link: '/sdk/databoard/' },
-            { label: 'Document AI',     link: '/sdk/document-ai/' },
+            { label: 'AI Agent',        translations: { vi: 'AI Agent',              'zh-CN': 'AI 代理',    'zh-TW': 'AI Agent'   }, link: '/sdk/ai-agent/' },
+            { label: 'Workflows',       translations: { vi: 'Workflows',             'zh-CN': '工作流',     'zh-TW': '工作流程'   }, link: '/sdk/workflows/' },
+            { label: 'DataBoards',      translations: { vi: 'Data Boards',           'zh-CN': '数据面板',   'zh-TW': 'Data Boards' }, link: '/sdk/databoard/' },
+            { label: 'Document AI',     translations: { vi: 'Document AI',           'zh-CN': 'Document AI', 'zh-TW': 'Document AI' }, link: '/sdk/document-ai/' },
             { label: 'Error Handling',  translations: { vi: 'Xử Lý Lỗi',            'zh-CN': '错误处理',   'zh-TW': '錯誤處理'   }, link: '/sdk/error-handling/' },
             { label: 'Integrations',    translations: { vi: 'Tích Hợp',             'zh-CN': '集成',       'zh-TW': '整合'       }, link: '/sdk/integrations/' },
             { label: 'Local Testing',   translations: { vi: 'Kiểm Thử Cục Bộ',      'zh-CN': '本地测试',   'zh-TW': '本地測試'   }, link: '/sdk/local-testing/' },
@@ -127,6 +150,7 @@ export default defineConfig({
         },
         {
           label: 'Reference',
+          translations: { vi: 'Tham Chiếu', 'zh-CN': '参考', 'zh-TW': '參考' },
           items: [
             { label: 'AI Agent',      link: '/reference/ai-agent/' },
             { label: 'Workflow',      link: '/reference/workflow/' },

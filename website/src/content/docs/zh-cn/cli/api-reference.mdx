@@ -14,31 +14,70 @@ CLI 通过 `@imbrace/sdk` 直接与 Imbrace 平台通信。本页将每个命令
 | CLI 命令 | SDK 方法 |
 |---|---|
 | `data-board list` | `client.boards.list()` |
-| `data-board get <id>` | `client.boards.get(id)` |
 | `data-board create` | `client.boards.create(body)` |
-| `data-board delete <id>` | `client.boards.delete(id)` |
 | `data-board create-field <boardId>` | `client.boards.createField(boardId, body)` |
-| `data-board list-items` | `client.boards.listItems(boardId, params)` |
 | `data-board create-item <boardId>` | `client.boards.createItem(boardId, body)` |
+| `data-board list-items` | `client.boards.listItems(boardId, params)` 或 `client.boards.search(boardId, { q })` |
 | `data-board update-item <boardId> <itemId>` | `client.boards.updateItem(boardId, itemId, body)` |
 | `data-board delete-item <boardId> <itemId>` | `client.boards.deleteItem(boardId, itemId)` |
 | `data-board export-csv` | `client.boards.exportCsv(boardId)` |
 
 ---
 
-## AI 代理 — `client.chatAi`, `client.ai`
+## AI 代理 — `client.agent`, `client.chatAi`, `client.ai`, `client.boards`
+
+大多数 AI 代理命令使用 `client.agent` 资源（用例管理）。更新操作还会额外使用 `client.chatAi`。
 
 | CLI 命令 | SDK 方法 |
 |---|---|
-| `ai-agent list` | `client.chatAi.listAiAgents()` |
-| `ai-agent get <id>` | `client.chatAi.getAiAgent(id)` |
-| `ai-agent create` | `client.chatAi.createAiAgent(body)` |
-| `ai-agent update <id>` | `client.chatAi.updateAiAgent(id, body)` |
-| `ai-agent delete <id>` | `client.chatAi.deleteAiAgent(id)` |
+| `ai-agent list` | `client.agent.list()` |
+| `ai-agent get <id>` | `client.agent.get(id)` |
+| `ai-agent create` | `client.agent.createUseCase(body)` |
+| `ai-agent update <id>` | `client.agent.updateUseCase(id, body)` + `client.chatAi.updateAiAgent(assistantId, body)` |
+| `ai-agent delete <id>` | `client.agent.delete(id)` |
 | `ai-agent list-providers` | `client.ai.listProviders()` |
-| `ai-agent list-models --provider-id <id>` | `client.ai.listProviders()`（按提供商过滤） |
+| `ai-agent list-models --provider-id <id>` | `client.ai.listProviders()`（在内存中过滤） |
 | `ai-agent list-folders` | `client.boards.searchFolders(query)` |
 | `ai-agent list-files --folder-id <id>` | `client.boards.searchFiles({ folderId })` |
+
+---
+
+## Document AI — `client.documentAi`
+
+| CLI 命令 | SDK 方法 |
+|---|---|
+| `document-ai list` | `client.documentAi.listAgents(params)` |
+| `document-ai get <id>` | `client.documentAi.getAgent(id)` |
+| `document-ai create` | `client.documentAi.createAgent(body)` |
+| `document-ai update <id>` | `client.documentAi.updateAgent(id, body)` |
+| `document-ai delete <id>` | `client.documentAi.deleteAgent(id)` |
+| `document-ai process` | `client.documentAi.process(body)` |
+| `document-ai suggest-schema` | `client.documentAi.suggestSchema(body)` |
+
+---
+
+## 编排器 — `client.agent`, `client.chatAi`
+
+编排器是一种特殊的 AI 代理，`agent_type: "team_lead"`。它使用同样的 `client.agent` 资源，并通过 `client.chatAi` 修补子代理字段。
+
+| CLI 命令 | SDK 方法 |
+|---|---|
+| `orchestrator list` | `client.agent.list()` |
+| `orchestrator get <id>` | `client.agent.get(id)` |
+| `orchestrator create` | `client.agent.createUseCase(body)` + `client.chatAi.updateAiAgent(assistantId, body)` |
+| `orchestrator delete <id>` | `client.agent.delete(id)` |
+
+---
+
+## 安全护栏 — `client.ai`, `client.account`
+
+| CLI 命令 | SDK 方法 |
+|---|---|
+| `guardrail list` | `client.ai.listGuardrails()` |
+| `guardrail get <id>` | `client.ai.getGuardrail(id)` |
+| `guardrail create` | `client.ai.createGuardrail(body)` （+ `client.account.getAccount()` 用于解析组织 ID） |
+| `guardrail update <id>` | `client.ai.updateGuardrail(id, body)` |
+| `guardrail delete <id>` | `client.ai.deleteGuardrail(id)` |
 
 ---
 
@@ -54,19 +93,22 @@ CLI 通过 `@imbrace/sdk` 直接与 Imbrace 平台通信。本页将每个命令
 | `workflow publish <id>` | `client.workflows.applyFlowOperation(id, LOCK_AND_PUBLISH)` |
 | `workflow enable <id>` | `client.workflows.applyFlowOperation(id, CHANGE_STATUS enabled)` |
 | `workflow disable <id>` | `client.workflows.applyFlowOperation(id, CHANGE_STATUS disabled)` |
-| `workflow run <id>` | `client.workflows.triggerFlow(id, payload)` |
+| `workflow run <id>` | `client.workflows.triggerFlow(id, payload)` （使用 `--sync` 时为 `triggerFlowSync`） |
 | `workflow runs` | `client.workflows.listRuns()` |
 | `workflow run-detail <runId>` | `client.workflows.getRun(runId)` |
 | `workflow node list <id>` | `client.workflows.getFlow(id)`（解析后） |
 | `workflow node add <id>` | `client.workflows.applyFlowOperation(id, ADD_ACTION / UPDATE_TRIGGER)` |
 | `workflow node update <id> <node>` | `client.workflows.applyFlowOperation(id, UPDATE_ACTION)` |
 | `workflow node delete <id> <node>` | `client.workflows.applyFlowOperation(id, DELETE_ACTION)` |
+| `workflow node add-raw <id>` | `client.workflows.applyFlowOperation(id, body)` |
 | `workflow piece list` | `client.workflows.listPieces()` |
+| `workflow piece detail <pieceName>` | 直接 HTTP：通过 `gatewayFetch()` 调用 `GET /activepieces/v1/pieces/{pieceName}` |
 | `workflow conn list` | `client.workflows.listConnections()` |
 | `workflow conn get <connId>` | `client.workflows.getConnection(connId)` |
 | `workflow conn create` | `client.workflows.upsertConnection(body)` |
 | `workflow conn delete <id>` | `client.workflows.deleteConnection(id)` |
 | `workflow folder list` | `client.workflows.listFolders()` |
+| `workflow folder get <id>` | `client.workflows.getFolder(id)` |
 | `workflow folder create` | `client.workflows.createFolder(body)` |
 | `workflow folder update <id>` | `client.workflows.updateFolder(id, body)` |
 | `workflow folder delete <id>` | `client.workflows.deleteFolder(id)` |

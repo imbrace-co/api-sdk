@@ -21,6 +21,8 @@ Imbrace SDK 是 Imbrace Gateway 的官方客户端，提供 **TypeScript** 和 *
 
 ### 安装
 
+> **当前版本：** `@imbrace/sdk` `v1.4.0`（npm）· `imbrace` `v1.2.1`（PyPI）
+
 <Tabs syncKey="lang">
   <TabItem label="TypeScript">
     ```bash
@@ -41,7 +43,7 @@ Imbrace SDK 是 Imbrace Gateway 的官方客户端，提供 **TypeScript** 和 *
     ```typescript
     import { ImbraceClient } from "@imbrace/sdk"
 
-    const client = new ImbraceClient({ accessToken: process.env.IMBRACE_ACCESS_TOKEN })
+    const client = new ImbraceClient({ apiKey: "api_your_key" })
     const me = await client.platform.getMe()
     ```
   </TabItem>
@@ -49,7 +51,7 @@ Imbrace SDK 是 Imbrace Gateway 的官方客户端，提供 **TypeScript** 和 *
     ```python
     from imbrace import ImbraceClient
 
-    with ImbraceClient(access_token=os.environ["IMBRACE_ACCESS_TOKEN"]) as client:
+    with ImbraceClient(api_key="api_your_key") as client:
         me = client.platform.get_me()
     ```
   </TabItem>
@@ -64,7 +66,7 @@ Imbrace SDK 是 Imbrace Gateway 的官方客户端，提供 **TypeScript** 和 *
 | `client.aiAgent` / `client.ai_agent` | ai-agent | 流式 AI 聊天、嵌入、parquet、聊天客户端子 API |
 | `client.chatAi` / `client.chat_ai` | ai-service-v2 | AI 代理增删改查（创建/更新/删除/列出） |
 | `client.documentAi` / `client.document_ai` | ai-service-v2 | 文档解析、提取、文件 AI |
-| `client.agent` | marketplace | AI 代理模板 + 用例（通过 `createUseCase` 原子创建 assistant + workflow + channel） |
+| `client.agent` | marketplace | AI 代理**模板** + 用例（通过 `createUseCase` 原子创建 assistant + workflow + channel） |
 | `client.workflows` | workflow-engine | 工作流自动化 — 流程、触发器、运行 |
 | `client.boards` | data-board | CRM 面板 — 增删改查、条目、字段、搜索、分段、CSV；知识中心文件夹和文件 |
 | `client.platform`, `client.organizations`, `client.teams` | platform | 用户、组织、团队、业务单元 |
@@ -94,13 +96,13 @@ const flows  = await client.api.workflow.listFlows();
 
 ### 如何选择凭证
 
-| | API Key | Access Token |
+| | API Key（`api_...`） | Access Token（`eyJ...`） |
 |---|---|---|
-| **Imbrace 是谁的后端？** | Imbrace 是*你*后端中的一个功能 | *Imbrace 就是*你的后端 |
-| **用户是谁的？** | 你的 | Imbrace 的 |
-| **最适合** | 服务器间通信、内部脚本、CRM 集成 | 面向用户的应用，每个终端用户登录使用 |
+| **如何获取** | Imbrace 控制台 → Generate External Token | OTP 登录（`requestOtp` / `loginWithOtp`） |
+| **最适合** | 服务器脚本、后端集成、CI 流水线 | 面向用户的应用，每个终端用户各自登录 |
+| **范围** | 你的组织 — 完整 API 访问权限 | 按用户会话 — 限定在该用户的权限内 |
 
-完整决策树：[认证 →](/zh-cn/sdk/authentication/)。
+完整决策树：[认证 →](/zh-cn/sdk/authentication/) · [获取 API Key →](/zh-cn/guides/api-key/)
 
 ### 下一步
 

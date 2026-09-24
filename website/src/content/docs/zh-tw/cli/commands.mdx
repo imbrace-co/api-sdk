@@ -107,7 +107,7 @@ imbrace ai-agent delete <agentId> [--yes] [--json]
 
 ### 建立 / 更新標誌
 
-`create` 和 `update` 接受相同的標誌。`update` 透過 PUT-merge 保留未變更的欄位。
+`create` 和 `update` 接受相同的標誌。`update` 透過 PUT-merge 保留未變更的欄位。`--id-only` 僅適用於 `create`。
 
 | 標誌 | 對應至 | 備註 |
 |---|---|---|
@@ -140,9 +140,8 @@ imbrace ai-agent delete <agentId> [--yes] [--json]
 | `--streaming` | `streaming` | 預設 true |
 | `--use-memory` | `use_memory` | 預設 true |
 | **輸出** | | |
-| `--yes` / `-y` | — | 刪除時跳過確認 |
 | `--json` | — | 機器可讀輸出 |
-| `--id-only` | — | 僅列印新 agent ID |
+| `--id-only` | — | 僅列印新 agent ID（僅限 create） |
 
 ### 完整建立範例
 
@@ -367,10 +366,10 @@ imbrace workflow folder delete <folderId> [--yes] [--json]
 
 | UI 分類 | API 資料夾名稱 |
 |---|---|
-| Channel Workflow | `Channel Workflow` |
-| Board Automation | `Board Automation` |
-| AI Agent Skills | `AI Agent Capabilities` |
-| Others | `Others` |
+| 頻道工作流程 | `Channel Workflow` |
+| Board 自動化 | `Board Automation` |
+| AI Agent 技能 | `AI Agent Capabilities` |
+| 其他 | `Others` |
 
 ### MCP 伺服器
 
@@ -451,6 +450,62 @@ claude mcp add imbrace -- imbrace mcp --services dataBoard,workflow
 
 ---
 
+## Profile
+
+管理多組憑證 profile（AWS 風格）。每個 profile 會儲存憑證、環境預設、組織 ID 與其他 SDK 設定。解析順序：`--profile` 標誌 > `IMBRACE_PROFILE` 環境變數 > `active_profile` 設定 > `"default"`。
+
+### 建立
+
+建立新的 profile，並向平台驗證憑證：
+
+```bash
+imbrace profile create <name> --api-key api_xxx... [--env stable|sandbox|develop|prodv2] [--org-id <orgId>] [--base-url <url>] [--timeout <ms>] [--check-health] [--services '<json>'] [--json] [--force]
+```
+
+`--force` 會略過憑證驗證。若 profile 已存在，指令會回報錯誤。
+
+### 列出
+
+```bash
+imbrace profile list [--json]
+```
+
+顯示所有 profile，並標示使用中的 profile、環境與狀態。
+
+### 顯示
+
+```bash
+imbrace profile show [<name>] [--json]
+```
+
+預設為使用中的 profile。顯示所有已儲存的欄位（憑證預覽、方式、電子郵件、環境、base URL、組織 ID、逾時、服務、健康檢查）。
+
+### 使用
+
+切換後續所有指令使用的 profile：
+
+```bash
+imbrace profile use <name> [--json]
+```
+
+### 重新命名
+
+```bash
+imbrace profile rename <from> <to> [--json]
+```
+
+保留憑證與使用中狀態。
+
+### 刪除
+
+```bash
+imbrace profile delete <name> [--yes] [--json]
+```
+
+不會影響平台上的資料 — 只會移除本機的憑證組。
+
+---
+
 ## 工具
 
 ### 列印 LLM 參考
@@ -482,6 +537,16 @@ imbrace update              # 更新至最新版本
 imbrace update --check      # 檢查更新但不安裝
 imbrace update --version 0.6.5  # 安裝指定版本
 imbrace update --json       # 機器可讀的 JSON 輸出
+```
+
+`--check` 輸出：
+
+```json
+{
+  "current": "0.6.9",
+  "latest": "0.6.9",
+  "up_to_date": true
+}
 ```
 
 <Aside type="note">

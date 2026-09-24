@@ -7,11 +7,13 @@ import { Aside } from "@astrojs/starlight/components";
 
 Imbrace CLI (`@imbrace/cli`) là một công cụ dòng lệnh để tương tác với nền tảng Imbrace. Các lệnh gọi trực tiếp đến nền tảng Imbrace thông qua gói `@imbrace/sdk`. Nguồn: [imbrace-co/imbrace-cli](https://github.com/imbrace-co/imbrace-cli).
 
+> **Phiên bản hiện tại:** `v0.8.2`
+
 ```
 imbrace (CLI) → https://app-gatewayv2.imbrace.co (Nền tảng Imbrace)
 ```
 
-Ngoài các lệnh resource, CLI còn chạy được như một **MCP server** (`imbrace mcp`), mở toàn bộ API Imbrace thành tool cho AI agent — xem [Commands → MCP Server](/vi/cli/commands/#mcp-server).
+Ngoài các lệnh resource, CLI còn chạy được như một **MCP server** (`imbrace mcp`), mở toàn bộ API Imbrace thành tool cho AI agent — xem [Commands → MCP Server](/cli/commands/#mcp-server).
 
 ## Luồng xác thực
 
@@ -28,7 +30,7 @@ CLI hỗ trợ hai phương thức xác thực:
 
 ### Lưu trữ thông tin xác thực
 
-Thông tin xác thực được lưu qua gói `conf` với `projectName: "imbrace"`.
+Thông tin xác thực và cấu hình theo từng môi trường được lưu trong các **profile** qua gói npm `conf` với `projectName: "imbrace"`.
 
 | Hệ điều hành | Đường dẫn cấu hình |
 |---|---|
@@ -36,14 +38,30 @@ Thông tin xác thực được lưu qua gói `conf` với `projectName: "imbrac
 | Linux | `~/.config/imbrace-nodejs/config.json` |
 | Windows | `%APPDATA%\imbrace-nodejs\Config\config.json` |
 
-Các trường được lưu: `credential`, `method` (`"api-key"` | `"password"`), `email`.
+Mỗi profile lưu:
+
+| Trường | Kiểu | Mô tả |
+|-------|------|-------------|
+| `credential` | string | API key hoặc JWT token |
+| `method` | `"api-key"` \| `"password"` | Phương thức xác thực |
+| `email` | string? | Email (khi xác thực bằng mật khẩu) |
+| `env` | `"stable"` \| `"sandbox"` \| `"develop"` \| `"prodv2"`? | Preset môi trường SDK |
+| `base_url` | string? | Ghi đè base URL của gateway |
+| `organization_id` | string? | ID tổ chức |
+| `timeout` | number? | Thời gian chờ request (ms) |
+| `services` | object? | Ghi đè URL theo từng service |
+| `check_health` | boolean? | Ping health khi khởi tạo client |
+
+Thứ tự ưu tiên khi chọn profile: cờ `--profile` > biến môi trường `IMBRACE_PROFILE` > cấu hình `active_profile` > `"default"`.
 
 ### Tự động đăng nhập
 
-Mọi lệnh CLI (ngoại trừ `login`) đều kế thừa `BaseCommand`, lệnh này gọi `ensureLoggedIn()` khi khởi tạo. Nếu không tìm thấy thông tin xác thực, nó sẽ tương tác yêu cầu người dùng chọn phương thức đăng nhập (API Key hoặc Email + Mật khẩu).
+Các lệnh tài nguyên (ai-agent, data-board, document-ai, guardrail, orchestrator, workflow) kế thừa `BaseCommand`, lệnh này gọi `ensureLoggedIn()` khi khởi tạo. Nếu không tìm thấy thông tin xác thực cho profile đã xác định, nó sẽ tương tác yêu cầu người dùng chọn phương thức đăng nhập (API Key hoặc Email + Mật khẩu). Các lệnh xác thực và quản lý profile (`login`, `logout`, `whoami`, `docs`, `profile/*`) kế thừa trực tiếp `Command` và không tự động yêu cầu đăng nhập.
+
+Mọi lệnh đều chấp nhận cờ toàn cục `--profile` để chọn một profile cụ thể, ghi đè biến môi trường `IMBRACE_PROFILE` và thiết lập `active_profile`.
 
 <Aside type="tip">
-  Tất cả các lệnh đều chấp nhận `--json` để xuất ra dữ liệu máy có thể đọc được và `-h` / `--help` để xem hướng dẫn sử dụng.
+  Hầu hết các lệnh đều chấp nhận `--json` để xuất dữ liệu máy có thể đọc được (ngoại lệ: `login`, `logout`). Mọi lệnh đều chấp nhận `-h` / `--help` để xem hướng dẫn sử dụng.
 </Aside>
 
 ## Cấu trúc dự án
@@ -56,6 +74,7 @@ imbrace-cli/
         ├── config.ts             ← Lưu trữ thông tin xác thực (conf)
         └── commands/
             ├── login.ts / logout.ts / whoami.ts / docs.ts
+            ├── profile/      (6 lệnh: create, delete, list, rename, show, use)
             ├── data-board/    (8 lệnh)
             ├── ai-agent/      (9 lệnh)
             ├── document-ai/   (7 lệnh)

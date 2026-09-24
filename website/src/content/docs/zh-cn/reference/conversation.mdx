@@ -13,7 +13,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ### Conversation
 
-| Field | Type | 说明 |
+| 字段 | 类型 | 说明 |
 |-------|------|------|
 | `object_name` | `"conversation"` | 对象类型标识符 |
 | `id` | string | 唯一对话 ID |
@@ -29,24 +29,24 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ---
 
-## Methods
+## 方法
 
-| Method | TypeScript | Python | 说明 |
+| 方法 | TypeScript | Python | 说明 |
 |--------|-----------|--------|------|
-| List | `list` | `list` | 分页的对话列表 |
-| Get | `get` | `get` | 按内部 ID 获取对话 |
-| Get by conversation ID | `getByConversationId` | — | 按公开对话 ID 获取 |
-| Search | `search` | `search` | 在业务单元内全文搜索 |
-| Get views count | `getViewsCount` | `get_views_count` | 按视图/状态统计对话数量 |
-| Create | `create` | `create` | 创建新对话 |
-| Join | `join` | `join` | 以团队成员身份加入对话 |
-| Leave | `leave` | `leave` | 离开对话 |
-| Update status | `updateStatus` | `update_status` | 更改对话状态 |
-| Update name | `updateName` | — | 重命名对话 |
-| Init video call | `initVideoCall` | — | 在对话中开始视频通话 |
-| Assign team member | `assignTeamMember` | — | 分配团队成员到对话 |
-| Remove team member | `removeTeamMember` | — | 移除团队成员 |
-| Get invitable users | `getInvitableUsers` | — | 列出可邀请的用户 |
+| 列出 | `list` | `list` | 分页的对话列表 |
+| 获取 | `get` | `get` | 按内部 ID 获取对话 |
+| 按对话 ID 获取 | `getByConversationId` | — | 按公开对话 ID 获取 |
+| 搜索 | `search` | `search` | 在业务单元内全文搜索 |
+| 获取视图计数 | `getViewsCount` | `get_views_count` | 按视图/状态统计对话数量 |
+| 创建 | `create` | `create` | 创建新对话 |
+| 加入 | `join` | `join` | 以团队成员身份加入对话 |
+| 离开 | `leave` | `leave` | 离开对话 |
+| 更新状态 | `updateStatus` | `update_status` | 更改对话状态 |
+| 更新名称 | `updateName` | — | 重命名对话 |
+| 发起视频通话 | `initVideoCall` | — | 在对话中开始视频通话 |
+| 分配团队成员 | `assignTeamMember` | — | 分配团队成员到对话 |
+| 移除团队成员 | `removeTeamMember` | — | 移除团队成员 |
+| 获取可邀请用户 | `getInvitableUsers` | — | 列出可邀请的用户 |
 
 ---
 

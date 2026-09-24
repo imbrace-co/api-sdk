@@ -1,9 +1,9 @@
-﻿---
+---
 title: Bắt Đầu Nhanh
 description: Thực hiện lời gọi API Imbrace đầu tiên trong vòng một phút.
 ---
 
-import { Tabs, TabItem } from "@astrojs/starlight/components";
+import { Tabs, TabItem, Aside } from "@astrojs/starlight/components";
 import AuthOnly from "../../../../components/AuthOnly.astro";
 
 ### 1. Khởi tạo client
@@ -68,7 +68,9 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
 </Tabs>
 </AuthOnly>
 
-> Chuyển đổi dropdown **Auth** trong tiêu đề để chuyển đổi giữa các ví dụ API Key và Access Token trên toàn trang. Xem [Xác thực](/sdk/authentication/) để biết nên chọn loại nào.
+<Aside type="tip">
+  Không chắc nên dùng thông tin xác thực nào? Xem [Xác thực →](/sdk/authentication/)
+</Aside>
 
 ---
 
@@ -91,12 +93,13 @@ Boards là các pipeline CRM — khách hàng tiềm năng, giao dịch, nhiệm
     boards = client.boards.list()
 
     for board in boards.get("data", []):
-        print(board["id"], board.get("name"))
+        board_id = board.get("_id") or board.get("id")
+        print(board_id, board.get("name"))
     ```
   </TabItem>
 </Tabs>
 
-Nếu bạn thấy danh sách boards của mình, SDK đã được kết nối và xác thực.
+Nếu bạn thấy danh sách boards của mình, SDK đã được kết nối và xác thực. Danh sách rỗng (`data: []`) chỉ có nghĩa là chưa có board nào — điều đó bình thường, không phải lỗi.
 
 ---
 

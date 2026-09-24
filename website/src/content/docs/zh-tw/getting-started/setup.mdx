@@ -1,11 +1,11 @@
 ---
 title: 設定指南
-description: 安裝 Imbrace SDK、設定憑證、設定環境以及覆蓋服務 URL。
+description: 安裝 Imbrace SDK、設定環境、設定憑證以及覆蓋服務 URL。
 ---
 
 import { Tabs, TabItem, Aside } from "@astrojs/starlight/components";
 
-本指南涵蓋從零到運作 Imbrace SDK 整合所需的一切 — 安裝、憑證、環境和服務 URL 覆蓋。
+本指南涵蓋從零到運作 Imbrace SDK 整合所需的一切 — 安裝、環境、憑證和服務 URL 覆蓋。
 
 ---
 
@@ -92,41 +92,6 @@ print("SDK loaded:", ImbraceClient)
 
 ---
 
-### 設定憑證
-
-#### 建立 `.env` 檔案
-
-SDK 不會自動讀取環境變數 — 您直接在建構函式中傳遞憑證。`.env` 檔案是用於儲存秘密的使用者慣例；請使用 `dotenv` 或您框架的環境變數載入器來讀取它們。
-
-```env
-# 憑證
-IMBRACE_API_KEY=your_api_key_here
-IMBRACE_ACCESS_TOKEN=your_jwt_token_here
-
-# 組織 ID — 隨每個請求傳送
-IMBRACE_ORGANIZATION_ID=your_org_id_here
-
-# 可選：直接覆蓋閘道 URL
-IMBRACE_GATEWAY_URL=https://app-gatewayv2.imbrace.co
-```
-
-#### 取得 API 金鑰
-
-**選項 1 — Imbrace 入口網站：** 登入後前往**設定 → API 金鑰**。
-
-**選項 2 — 透過 API**（需要現有的存取令牌）：
-
-```bash
-curl -X POST https://app-gatewayv2.imbrace.co/private/backend/v1/third_party_token \
-  -H "x-access-token: <your_existing_token>" \
-  -H "Content-Type: application/json" \
-  -d '{"expirationDays": 30}'
-```
-
-您需要的值是 `response.apiKey.apiKey`。
-
----
-
 ### 環境
 
 | 名稱 | 閘道 URL | 使用時機 |
@@ -156,6 +121,30 @@ client = ImbraceClient(env="sandbox")
 
 ---
 
+### 設定憑證
+
+#### 建立 `.env` 檔案
+
+SDK 不會自動讀取環境變數 — 您直接在建構函式中傳遞憑證。`.env` 檔案是用於儲存秘密的使用者慣例；請使用 `dotenv` 或您框架的環境變數載入器來讀取它們。
+
+```env
+# 憑證
+IMBRACE_API_KEY=your_api_key_here
+IMBRACE_ACCESS_TOKEN=your_jwt_token_here
+
+# 組織 ID — 隨每個請求傳送
+IMBRACE_ORGANIZATION_ID=your_org_id_here
+
+# 可選：直接覆蓋閘道 URL
+IMBRACE_GATEWAY_URL=https://app-gatewayv2.imbrace.co
+```
+
+#### 取得 API 金鑰
+
+完整說明請參閱[取得 API 金鑰](/guides/api-key)。
+
+---
+
 ### 初始化客戶端
 
 <Tabs>
@@ -168,13 +157,13 @@ import { ImbraceClient } from "@imbrace/sdk";
 const client = new ImbraceClient({
   apiKey:         process.env.IMBRACE_API_KEY,
   organizationId: process.env.IMBRACE_ORGANIZATION_ID,
-  env: "stable", // 或使用 env: "stable"
+  env:            "stable",
 });
 
 // 客戶端 — 存取令牌（例如來自先前的登入，或你自己儲存的 token）
 const client = new ImbraceClient({
   accessToken: process.env.IMBRACE_ACCESS_TOKEN,
-  env: "stable",
+  env:         "stable",
 });
 
 // 密碼登入（POST /v1/login/sign_in）— 終端使用者應用最常見的方式。
@@ -206,7 +195,7 @@ client = ImbraceClient(
 
 # 客戶端 — 存取令牌
 client = ImbraceClient(
-    access_token=os.environ["IMBRACE_ACCESS_TOKEN"],
+    access_token="eyJhbGci...",
     organization_id="org_xxx",
 )
 
@@ -229,7 +218,7 @@ anon.login_with_otp("user@example.com", "123456")
 from imbrace import AsyncImbraceClient
 
 async def main():
-    async with AsyncImbraceClient(api_key=os.environ["IMBRACE_API_KEY"]) as client:
+    async with AsyncImbraceClient(api_key="api_...") as client:
         me = await client.platform.get_me()
         print(me)
 ```
@@ -250,91 +239,6 @@ imbrace login --api-key api_xxx...
 ```
 
 有關其他安裝方法，請參閱 [CLI 安裝](/cli/installation/)；有關完整的指令參考，請參閱 [CLI 指令](/cli/commands/)。
-
----
-
-## 快速使用範例
-
-<Tabs>
-  <TabItem label="TypeScript">
-
-```typescript
-import { ImbraceClient } from '@imbrace/sdk'
-
-const client = new ImbraceClient({ apiKey: process.env.IMBRACE_API_KEY })
-
-// 取得目前使用者
-const me = await client.platform.getMe()
-
-// 列出頻道
-const channels = await client.channel.list()
-
-// 傳送訊息
-await client.messages.send({ type: 'text', text: 'Hello!' })
-
-// AI 補全
-const result = await client.ai.complete({
-  model: 'gpt-4o',
-  messages: [{ role: 'user', content: 'Summarize this.' }],
-})
-
-// AI 串流
-for await (const chunk of client.ai.stream({ model: 'gpt-4o', messages: [...] })) {
-  process.stdout.write(chunk.choices[0]?.delta?.content ?? '')
-}
-
-// AI Agent — 串流聊天
-const response = await client.aiAgent.streamChat({
-  id: 'chat_id',
-  assistant_id: 'asst_abc',
-  messages: [{ role: 'user', content: 'Hello' }],
-})
-const reader = response.body!.getReader()
-const decoder = new TextDecoder()
-while (true) {
-  const { done, value } = await reader.read()
-  if (done) break
-  console.log(decoder.decode(value))
-}
-```
-
-  </TabItem>
-  <TabItem label="Python">
-
-```python
-from imbrace import ImbraceClient
-from imbrace.types.ai import CompletionInput, CompletionMessage
-
-with ImbraceClient(api_key=os.environ["IMBRACE_API_KEY"]) as client:
-    # 取得目前使用者
-    me = client.platform.get_me()
-
-    # 列出頻道和 boards
-    channels = client.channel.list()
-    boards_res = client.boards.list()
-    boards_data = boards_res.get("data", [])
-    if boards_data:
-        board_id = boards_data[0].get("_id") or boards_data[0]["id"]
-        items = client.boards.list_items(board_id)
-
-    # AI 補全
-    result = client.ai.complete(CompletionInput(
-        model="gpt-4o",
-        messages=[CompletionMessage(role="user", content="Hello")],
-    ))
-
-    # AI Agent — 串流聊天
-    response = client.ai_agent.stream_chat({
-        "id": "chat_id",
-        "assistant_id": "asst_abc",
-        "messages": [{"role": "user", "content": "Hello"}],
-    })
-    for line in response.iter_lines():
-        print(line)
-```
-
-  </TabItem>
-</Tabs>
 
 ---
 
@@ -378,18 +282,18 @@ client = ImbraceClient(
 | Python 金鑰 | TypeScript 金鑰 | 服務 |
 | -------------------- | ------------------- | ----------------------------------- |
 | `gateway`            | `gateway`           | App Gateway                         |
-| `platform`           | `platform`          | Platform service                    |
-| `channel_service`    | `channelService`    | Channel service                     |
+| `platform`           | `platform`          | Platform 服務                       |
+| `channel_service`    | `channelService`    | Channel 服務                        |
 | `data_board`         | `dataBoard`         | Data Board                          |
-| `backend`            | `backend`           | 舊版單體（`/v1/backend`）— 用於身份驗證 signin、模板和少數遺留路由 |
-| `ips`                | `ips`               | IPS service                         |
-| `ai`                 | `ai`                | AI service                          |
-| `marketplaces`       | `marketplaces`      | Marketplace service                 |
-| `file_service`       | `fileService`       | File service                        |
-| `message_suggestion` | `messageSuggestion` | Message Suggestion service          |
-| `predict`            | `predict`           | Predict service                     |
+| `backend`            | `backend`           | 舊版單體（`/v1/backend`）— 用於身分驗證登入、範本，以及少數尚未拆分出去的路由 |
+| `ips`                | `ips`               | IPS 服務                            |
+| `ai`                 | `ai`                | AI 服務                             |
+| `marketplaces`       | `marketplaces`      | Marketplace 服務                    |
+| `file_service`       | `fileService`       | 檔案服務                            |
+| `message_suggestion` | `messageSuggestion` | 訊息建議服務                        |
+| `predict`            | `predict`           | Predict 服務                        |
 | `workflow_engine`    | `workflowEngine`    | Workflows           |
-| `ai_agent`           | `aiAgent`           | AI Agent service                    |
+| `ai_agent`           | `aiAgent`           | AI Agent 服務                       |
 
 ---
 
@@ -420,14 +324,7 @@ cd py && pip install -e ".[dev]"
 
 ##### `401 Unauthorized`
 
-API 金鑰已過期或無效。產生一個新的：
-
-```bash
-curl -X POST https://app-gatewayv2.imbrace.co/private/backend/v1/third_party_token \
-  -H "x-access-token: <your_existing_token>" \
-  -H "Content-Type: application/json" \
-  -d '{"expirationDays": 30}'
-```
+API 金鑰已過期或無效。請從 [Imbrace Dashboard](https://cloud.imbrace.co) 產生新的金鑰，或參閱 [API 金鑰指南](/guides/api-key)。
 
 ##### `UserWarning: ImbraceClient: no credentials provided`
 

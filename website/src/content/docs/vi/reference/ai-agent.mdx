@@ -17,7 +17,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 Tham số để khởi tạo một phiên chat streaming.
 
-| Field | Type | Required | Mô tả |
+| Trường | Kiểu | Bắt buộc | Mô tả |
 |-------|------|----------|-------|
 | `assistant_id` | string | ✓ | ID của AI agent để chat |
 | `messages` | array | ✓ | Lịch sử hội thoại (cặp role + content) |
@@ -26,9 +26,13 @@ Tham số để khởi tạo một phiên chat streaming.
 | `provider_id` | string | | Ghi đè nhà cung cấp LLM mặc định của agent |
 | `user_id` | string | | Định danh người dùng bên ngoài |
 
+:::note
+Định dạng phản hồi phụ thuộc vào trường `streaming` của **agent** (được đặt khi tạo qua `createAiAgent`), không phụ thuộc vào bất kỳ giá trị nào trong body này. Agent được tạo với `streaming: true` trả về `Content-Type: text/event-stream` (SSE — có thể phân tích bằng `streamChatText` / `stream_chat_text`). Agent với `streaming: false` (mặc định cho agent mới tạo) trả về `Content-Type: text/plain` với toàn bộ câu trả lời trong một chuỗi duy nhất.
+:::
+
 ### StreamSubAgentChatBody
 
-| Field | Type | Required | Mô tả |
+| Trường | Kiểu | Bắt buộc | Mô tả |
 |-------|------|----------|-------|
 | `assistant_id` | string | ✓ | ID của AI agent |
 | `session_id` | string | ✓ | ID phiên cha |
@@ -37,65 +41,103 @@ Tham số để khởi tạo một phiên chat streaming.
 
 ---
 
-## Methods
+## Phương thức
 
-| Method | TypeScript | Python | Mô tả |
+| Phương thức | TypeScript | Python | Mô tả |
 |--------|-----------|--------|-------|
-| Stream chat | `streamChat` | `stream_chat` | Bắt đầu phiên chat streaming với AI agent |
-| Stream sub-agent chat | `streamSubAgentChat` | `stream_sub_agent_chat` | Streaming chat trong phạm vi phiên sub-agent |
-| Get sub-agent history | `getSubAgentHistory` | `get_sub_agent_history` | Lấy lịch sử tin nhắn của sub-agent chat |
-| List chats | `listChats` | `list_chats` | Danh sách phiên chat của tổ chức |
-| Get chat | `getChat` | `get_chat` | Lấy một phiên chat |
-| Delete chat | `deleteChat` | `delete_chat` | Xóa một phiên chat |
-| Prompt suggestions | `getAgentPromptSuggestion` | `get_agent_prompt_suggestion` | Lấy gợi ý prompt cho agent |
-| Classify file | `classifyFile` | `classify_file` | Phân loại file vào danh mục |
-| Suggest field types | `suggestFieldTypes` | `suggest_field_types` | Gợi ý JSON schema từ tài liệu mẫu |
-| Process embedding | `processEmbedding` | `process_embedding` | Nhúng file vào kho tri thức |
-| List embedding files | `listEmbeddingFiles` | `list_embedding_files` | Danh sách các file đã nhúng |
-| Get embedding file | `getEmbeddingFile` | `get_embedding_file` | Lấy một file đã nhúng |
-| Preview embedding file | `previewEmbeddingFile` | `preview_embedding_file` | Xem trước nội dung đã nhúng |
-| Update embedding status | `updateEmbeddingFileStatus` | `update_embedding_file_status` | Cập nhật trạng thái nhúng file |
-| Delete embedding file | `deleteEmbeddingFile` | `delete_embedding_file` | Xóa file khỏi kho tri thức |
-| Generate parquet | `generateParquet` | `generate_parquet` | Chuyển đổi mảng dữ liệu thành file parquet |
-| List parquet files | `listParquetFiles` | `list_parquet_files` | Danh sách file parquet đã sinh |
-| Delete parquet file | `deleteParquetFile` | `delete_parquet_file` | Xóa file parquet theo tên |
-| Get traces | `getTraces` | `get_traces` | Truy vấn distributed traces |
-| Get trace | `getTrace` | `get_trace` | Lấy một trace theo ID |
-| Get trace services | `getTraceServices` | `get_trace_services` | Danh sách dịch vụ phát ra traces |
+| Stream chat | `streamChat` | `stream_chat` | Bắt đầu phiên chat streaming với AI agent — trả về `Response` thô |
+| Stream chat (văn bản đã phân tích) | `streamChatText` | `stream_chat_text` | Bao bọc `streamChat` và trả về từng đoạn văn bản thuần được phân tích từ luồng sự kiện SSE (yêu cầu agent có `streaming: true`) |
+| Stream chat sub-agent | `streamSubAgentChat` | `stream_sub_agent_chat` | Streaming chat trong phạm vi phiên sub-agent |
+| Lấy lịch sử sub-agent | `getSubAgentHistory` | `get_sub_agent_history` | Lấy lịch sử tin nhắn của sub-agent chat |
+| Danh sách chat | `listChats` | `list_chats` | Danh sách phiên chat của tổ chức |
+| Lấy chat | `getChat` | `get_chat` | Lấy một phiên chat |
+| Xóa chat | `deleteChat` | `delete_chat` | Xóa một phiên chat |
+| Gợi ý prompt | `getAgentPromptSuggestion` | `get_agent_prompt_suggestion` | Lấy gợi ý prompt cho agent |
+| Phân loại file | `classifyFile` | `classify_file` | Phân loại file vào danh mục |
+| Gợi ý kiểu trường | `suggestFieldTypes` | `suggest_field_types` | Gợi ý JSON schema từ tài liệu mẫu |
+| Xử lý embedding | `processEmbedding` | `process_embedding` | Nhúng file vào kho tri thức |
+| Danh sách file embedding | `listEmbeddingFiles` | `list_embedding_files` | Danh sách các file đã nhúng |
+| Lấy file embedding | `getEmbeddingFile` | `get_embedding_file` | Lấy một file đã nhúng |
+| Xem trước file embedding | `previewEmbeddingFile` | `preview_embedding_file` | Xem trước nội dung đã nhúng |
+| Cập nhật trạng thái embedding | `updateEmbeddingFileStatus` | `update_embedding_file_status` | Cập nhật trạng thái nhúng file |
+| Xóa file embedding | `deleteEmbeddingFile` | `delete_embedding_file` | Xóa file khỏi kho tri thức |
+| Sinh parquet | `generateParquet` | `generate_parquet` | Chuyển đổi mảng dữ liệu thành file parquet |
+| Danh sách file parquet | `listParquetFiles` | `list_parquet_files` | Danh sách file parquet đã sinh |
+| Xóa file parquet | `deleteParquetFile` | `delete_parquet_file` | Xóa file parquet theo tên |
+| Lấy traces | `getTraces` | `get_traces` | Truy vấn distributed traces |
+| Lấy trace | `getTrace` | `get_trace` | Lấy một trace theo ID |
+| Lấy dịch vụ trace | `getTraceServices` | `get_trace_services` | Danh sách dịch vụ phát ra traces |
 
 ---
 
 ## streamChat / stream_chat
 
-Bắt đầu chat streaming với AI agent. Trả về HTTP response thô — lặp qua stream để đọc các SSE chunks.
+Trả về một HTTP `Response` thô. Body có dạng `text/event-stream` (khi agent có `streaming: true`) hoặc `text/plain` (khi `streaming: false`). Với trường hợp SSE, nên dùng helper `streamChatText` bên dưới — nó sẽ phân tích giúp bạn.
 
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">
 ```typescript
-const response = await client.aiAgent.streamChat({
+const res = await client.aiAgent.streamChat({
   assistant_id: "agent_id",
   messages: [{ role: "user", content: "Hello" }],
   user_id: "user_123",
 });
 
-const reader = response.body?.getReader();
-const decoder = new TextDecoder();
-while (reader) {
-  const { done, value } = await reader.read();
-  if (done) break;
-  console.log(decoder.decode(value));
+if ((res.headers.get("content-type") ?? "").includes("text/event-stream")) {
+  const reader = res.body!.getReader();
+  const decoder = new TextDecoder();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    console.log(decoder.decode(value));   // raw SSE bytes
+  }
+} else {
+  console.log(await res.text());          // full reply, plain text
 }
 ```
 </TabItem>
 <TabItem label="Python">
 ```python
-response = client.ai_agent.stream_chat({
+res = client.ai_agent.stream_chat({
     "assistant_id": "agent_id",
     "messages": [{"role": "user", "content": "Hello"}],
     "user_id": "user_123",
 })
-for chunk in response.iter_lines():
-    print(chunk)
+
+if "text/event-stream" in res.headers.get("content-type", ""):
+    for line in res.iter_lines():
+        if line:
+            print(line)
+else:
+    print(res.text)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## streamChatText / stream_chat_text
+
+Wrapper tiện lợi bao quanh `streamChat`. Phân tích Vercel-AI-SDK UI-Message-Stream (`data: {"type":"text-delta","delta":"..."}`) và trả về từng đoạn văn bản dưới dạng chuỗi. Yêu cầu agent đã được tạo với `streaming: true` — nếu không, server trả về `text/plain` (không có dòng `data:`) và generator này trả về **0 chunk**.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+for await (const chunk of client.aiAgent.streamChatText({
+  assistant_id: "agent_id",
+  messages: [{ role: "user", content: "Hello" }],
+})) {
+  process.stdout.write(chunk);
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+for chunk in client.ai_agent.stream_chat_text({
+    "assistant_id": "agent_id",
+    "messages": [{"role": "user", "content": "Hello"}],
+}):
+    print(chunk, end="", flush=True)
 ```
 </TabItem>
 </Tabs>

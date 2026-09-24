@@ -1,0 +1,207 @@
+---
+title: Cài đặt IMBRACE trên Kubernetes (một node)
+description: Khởi tạo CLI imbrace-installer, chuẩn bị máy chủ (k3s + Rancher + Traefik trên :6868) và cài đặt nền tảng IMBRACE chỉ với ba lệnh.
+---
+
+import { Steps, Aside, Tabs, TabItem } from "@astrojs/starlight/components"
+
+## Mục tiêu
+
+Có một bản triển khai IMBRACE hoạt động trên một máy Ubuntu / Debian duy nhất —
+CLI installer trên đĩa, k3s + Rancher đang chạy và chart IMBRACE đã được áp dụng —
+trong khoảng 15–30 phút.
+
+## Chúng ta đang làm gì (nói đơn giản)?
+
+`imbrace-installer` là một CLI đảm nhận hai việc: thiết lập máy chủ
+(k3s + Rancher với Traefik gắn vào cổng `:6868`) rồi cài đặt nền tảng
+IMBRACE lên trên. Bạn cài CLI một lần, chuẩn bị máy chủ một lần, và mọi lần
+nâng cấp sau này đều chỉ là một lệnh `upgrade --install` duy nhất.
+
+## Bạn cần gì
+
+- Máy chủ Ubuntu 22.04+ hoặc Debian 12+ có quyền **root / sudo**
+- Một IP công khai **hoặc** một tên DNS phân giải về máy chủ
+- Kết nối internet ra ngoài để truy cập S3 và ECR (hoặc một private mirror bạn đã đồng bộ sẵn)
+- Khoảng 10 GB đĩa trống, RAM 8+ GB
+- Khoảng 20 phút
+- Các cổng `6868`, `30030`, `30700`, cùng một NodePort Rancher được gán tự động
+  (dải 30000–32767) có thể truy cập trên máy chủ
+- Tùy chọn: GPU NVIDIA nếu bạn định chạy các workload GPU
+
+## Các bước
+
+<Steps>
+
+1. **Cài đặt CLI**
+
+    Script bootstrap tải `imbrace-installer`, đặt sẵn tarball của chart
+    dưới `/opt/imbrace-installer/chart/` và tạo symlink binary vào
+    `/usr/bin/`. Sau bước này, mọi lệnh tiếp theo chỉ đơn giản là
+    `imbrace-installer …` — không cần `./`, không cần đường dẫn.
+
+    Chọn lệnh một dòng cho hệ điều hành của bạn. Lệnh tự phát hiện kiến trúc CPU
+    (Intel `amd64` / ARM `arm64`) và tải binary tương ứng — bạn không cần
+    chọn.
+
+    <Tabs syncKey="os">
+      <TabItem label="Linux (Ubuntu/Debian)">
+        ```bash
+        curl -fsSL https://imbrace-install-tool.s3.ap-east-1.amazonaws.com/install.sh \
+            | sudo bash
+        ```
+      </TabItem>
+      <TabItem label="macOS">
+        ```bash
+        curl -fsSL https://imbrace-install-tool.s3.ap-east-1.amazonaws.com/install-mac \
+            | bash
+        ```
+      </TabItem>
+      <TabItem label="Windows (PowerShell)">
+        ```powershell
+        powershell -c "irm https://imbrace-install-tool.s3.ap-east-1.amazonaws.com/install-win.ps1 | iex"
+        ```
+      </TabItem>
+    </Tabs>
+
+    <Aside type="note">
+    Dùng private mirror? Đặt `IMBRACE_S3_BASE` và `IMBRACE_CLI_BASE`
+    trước lệnh curl, ví dụ
+    `sudo IMBRACE_S3_BASE=https://artifacts.example.com/imbrace ...`.
+    </Aside>
+
+    <Aside type="caution">
+    Các bước bootstrap máy chủ bên dưới (`prepare`, `gpu`) **chỉ** chạy trên
+    máy đích Ubuntu / Debian — chúng cần `apt`, `systemctl` và trình cài đặt
+    k3s. Từ macOS hoặc Windows, CLI vẫn cài đặt bình thường nhưng chỉ dùng được để
+    quản lý một cluster **từ xa** (`version`, `rancher`, `upgrade --install`);
+    hãy chạy `prepare` / `gpu` trực tiếp trên máy Linux (SSH vào trước).
+    </Aside>
+
+2. **Chuẩn bị máy chủ**
+
+    `prepare` là idempotent — chạy lại an toàn. Lệnh chạy năm giai đoạn theo thứ tự:
+    phụ thuộc apt → k3s → Traefik gắn vào cổng máy chủ `:6868` → Rancher →
+    tự động import cluster vào Rancher.
+
+    Xác nhận CLI đã có thể gọi được, sau đó chạy prepare:
+
+    ```bash
+    imbrace-installer --help
+    sudo imbrace-installer prepare
+    ```
+
+    Khi hoàn tất, script in ra URL NodePort của Rancher, mật khẩu admin
+    và đường dẫn kubeconfig (`/etc/rancher/k3s/k3s.yaml`) — hãy sao chép
+    chúng vào nơi an toàn. NodePort HTTPS của Rancher được kube-apiserver
+    gán tự động trong dải 30000–32767; đây **không** phải giá trị cố định,
+    vì vậy luôn dùng URL được in ra ở cuối `prepare`.
+
+    <Aside type="caution">
+    GPU **không** được cấu hình ở bước này. Nếu máy chủ có card NVIDIA, hãy chạy
+    `sudo imbrace-installer gpu <DRIVER_VERSION>` sau bước này
+    (có thể cần khởi động lại máy chủ ở lần cài đặt đầu tiên).
+    </Aside>
+
+3. **Cài đặt ứng dụng IMBRACE**
+
+    Thay `<IP_PUBLIC/DOMAIN_PUBLIC>` bằng IP công khai của máy chủ **hoặc**
+    tên DNS mà bạn muốn dùng để truy cập IMBRACE. Trình cài đặt tạo namespace
+    `imbrace-services`, áp dụng chart và chờ tối đa 30
+    phút để các job khởi tạo DB sau cài đặt (apworkflow / ips / platform)
+    hoàn tất.
+
+    ```bash
+    sudo imbrace-installer upgrade --install imbrace \
+        --set global.publicHost=<IP_PUBLIC/DOMAIN_PUBLIC>
+    ```
+
+    Nếu TLS được kết thúc ở tầng trên (HAProxy / Traefik / cert-manager), hãy truyền thêm
+    `--set global.publicScheme=https`.
+
+</Steps>
+
+## Các cổng dịch vụ
+
+Chart công khai IMBRACE qua **một điểm truy cập hợp nhất duy nhất** trên cổng
+`6868` cùng một số NodePort riêng cho các thành phần không nằm
+sau ingress hợp nhất. Mọi thứ đều gắn với `global.publicHost`, nên
+các URL bên dưới chính là URL mà trình duyệt thực sự truy cập — các cổng
+`ClusterIP` nội bộ trong cluster (Postgres, Kafka, Mongo, Garage S3) vẫn được giữ
+riêng tư.
+
+### Ingress Traefik hợp nhất (luôn bật)
+
+Một IngressRoute phục vụ toàn bộ ứng dụng qua định tuyến theo đường dẫn. Được thiết lập trên
+máy chủ bởi `prepare` (Giai đoạn C — `traefik-config.yaml` vá Traefik thành
+`hostNetwork: true`).
+
+| Cổng  | Scheme | Phục vụ                                                                |
+| ----- | ------ | ---------------------------------------------------------------------- |
+| 6868  | HTTP   | `/` → dashboard SPA, `/api` → api-gateway (bỏ tiền tố), WebSocket      |
+| 8443  | HTTPS  | Cùng các route, kết thúc TLS (khi cấu hình `unifiedIngress.tls`)       |
+
+### NodePort riêng cho ứng dụng (luôn được giữ chỗ)
+
+Hai thành phần đi vòng qua ingress hợp nhất vì chúng có SPA + proxy
+riêng.
+
+| NodePort | Dịch vụ                  | Khóa Helm                            | Phục vụ                                              |
+| -------- | ------------------------ | ------------------------------------ | ---------------------------------------------------- |
+| 30030    | insightIQ chatbot SPA    | `global.insightiqNodePort`           | Giao diện `aisdk-chatbot`                            |
+| 30700    | apworkflow combined proxy| `global.apworkflowProxyNodePort`     | `/` → apworkflow-app SPA, `/api` → apworkflow REST   |
+
+### Giao diện quản trị Rancher
+
+CLI vá Service của Rancher thành `type: NodePort` và để apiserver
+tự động gán cổng trong dải 30000–32767. NodePort HTTPS
+được in ra ở cuối `prepare`.
+
+| Cổng             | Xem ở đâu                                       | Dạng URL                                      |
+| ---------------- | ----------------------------------------------- | --------------------------------------------- |
+| gán tự động      | phần tóm tắt cuối `prepare`, hoặc               | `https://<NODE_IP>:<RANCHER_HTTPS_NODEPORT>`  |
+|                  | `kubectl -n cattle-system get svc rancher`      |                                               |
+
+Mật khẩu admin được lưu tại `/etc/imbrace/rancher-admin-password`.
+
+### URL trình duyệt sau khi cài đặt
+
+Với `--set global.publicHost=<NODE_IP>` (ví dụ):
+
+- **Dashboard:** `http://<NODE_IP>:6868`
+- **API gateway:** `http://<NODE_IP>:6868/api`
+- **WebSocket:** `ws://<NODE_IP>:6868`
+- **apworkflow:** `http://<NODE_IP>:30700` (SPA) · `…:30700/api` (REST)
+- **insightIQ chat:** `http://<NODE_IP>:30030`
+- **Rancher:** `https://<NODE_IP>:<auto-assigned>` (được in ra bởi `prepare`)
+
+<Aside type="note">
+Với các bản triển khai HTTPS, hãy truyền thêm `--set global.publicScheme=https`. Trình duyệt
+từ chối `ws://` từ một trang `https://` (mixed content), nên chart
+tự động viết lại URL WebSocket thành `wss://` khi scheme là `https`.
+</Aside>
+
+## Kiểm tra
+
+```bash
+sudo kubectl get pods -n imbrace-services
+```
+
+Mọi pod đều phải ở trạng thái `Running` hoặc `Completed`. Nếu có pod bị kẹt ở
+`ImagePullBackOff`, nhiều khả năng pull-secret của ECR đã hết hạn — hãy chạy lại bước 3
+với mật khẩu registry mới trong biến môi trường:
+
+```bash
+export IMBRACE_REGISTRY_PASSWORD=<ECR_TOKEN>
+sudo -E imbrace-installer upgrade --install imbrace \
+    --set global.publicHost=<IP_PUBLIC/DOMAIN_PUBLIC>
+```
+
+## Các bước tiếp theo
+
+- **Workload GPU:** `sudo imbrace-installer gpu 590.48.01`
+- **Nâng cấp bản cài đặt hiện có:** chạy lại bước 3 — `upgrade --install` chính là
+  cách cập nhật
+- **Kiểm tra phiên bản chart đã phát hành:** `imbrace-installer version`
+- **Môi trường air-gapped / private mirror:** đặt `IMBRACE_S3_BASE` và
+  `IMBRACE_CLI_BASE` trước bước 1

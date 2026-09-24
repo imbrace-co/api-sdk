@@ -15,7 +15,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ### Flow
 
-| Field | Type | 说明 |
+| 字段 | 类型 | 说明 |
 |-------|------|------|
 | `id` | string | 唯一流程 ID |
 | `created` | string | ISO 8601 创建时间戳 |
@@ -28,7 +28,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ### FlowVersion
 
-| Field | Type | 说明 |
+| 字段 | 类型 | 说明 |
 |-------|------|------|
 | `id` | string | 唯一版本 ID |
 | `created` | string | ISO 8601 创建时间戳 |
@@ -41,7 +41,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ### FlowRun
 
-| Field | Type | 说明 |
+| 字段 | 类型 | 说明 |
 |-------|------|------|
 | `id` | string | 唯一运行 ID |
 | `created` | string | ISO 8601 创建时间戳 |
@@ -58,7 +58,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ### AppConnection
 
-| Field | Type | 说明 |
+| 字段 | 类型 | 说明 |
 |-------|------|------|
 | `id` | string | 唯一连接 ID |
 | `created` | string | ISO 8601 创建时间戳 |
@@ -71,7 +71,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ### McpServer
 
-| Field | Type | 说明 |
+| 字段 | 类型 | 说明 |
 |-------|------|------|
 | `id` | string | 唯一 MCP 服务器 ID |
 | `created` | string | ISO 8601 创建时间戳 |
@@ -81,55 +81,55 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ---
 
-## Methods
+## 方法
 
-### Flows
+### 流程
 
-| Method | TypeScript | Python | 说明 |
+| 方法 | TypeScript | Python | 说明 |
 |--------|-----------|--------|------|
-| List flows | `listFlows` | `list_flows` | 分页的流程列表 |
-| Get flow | `getFlow` | `get_flow` | 按 ID 获取单个流程 |
-| Create flow | `createFlow` | `create_flow` | 创建新流程 |
-| Delete flow | `deleteFlow` | `delete_flow` | 删除流程 |
-| Apply flow operation | `applyFlowOperation` | `apply_flow_operation` | 对流程应用操作（例如发布、启用） |
-| Trigger flow | `triggerFlow` | `trigger_flow` | 异步触发流程 |
-| Trigger flow sync | `triggerFlowSync` | `trigger_flow_sync` | 触发流程并等待结果 |
+| 列出流程 | `listFlows` | `list_flows` | 分页的流程列表 |
+| 获取流程 | `getFlow` | `get_flow` | 按 ID 获取单个流程 |
+| 创建流程 | `createFlow` | `create_flow` | 创建新流程 |
+| 删除流程 | `deleteFlow` | `delete_flow` | 删除流程 |
+| 应用流程操作 | `applyFlowOperation` | `apply_flow_operation` | 对流程应用操作（例如发布、启用） |
+| 触发流程 | `triggerFlow` | `trigger_flow` | 异步触发流程 |
+| 同步触发流程 | `triggerFlowSync` | `trigger_flow_sync` | 触发流程并等待结果 |
 
-### Flow Runs
+### 流程运行
 
-| Method | TypeScript | Python | 说明 |
+| 方法 | TypeScript | Python | 说明 |
 |--------|-----------|--------|------|
-| List runs | `listRuns` | `list_runs` | 列出运行历史 |
-| Get run | `getRun` | `get_run` | 按 ID 获取单个运行 |
+| 列出运行 | `listRuns` | `list_runs` | 列出运行历史 |
+| 获取运行 | `getRun` | `get_run` | 按 ID 获取单个运行 |
 
-### Folders
+### 文件夹
 
-| Method | TypeScript | Python | 说明 |
+| 方法 | TypeScript | Python | 说明 |
 |--------|-----------|--------|------|
-| List folders | `listFolders` | `list_folders` | 列出流程文件夹 |
-| Get folder | `getFolder` | `get_folder` | 按 ID 获取文件夹 |
-| Create folder | `createFolder` | `create_folder` | 创建文件夹 |
-| Update folder | `updateFolder` | `update_folder` | 重命名文件夹 |
-| Delete folder | `deleteFolder` | `delete_folder` | 删除文件夹 |
+| 列出文件夹 | `listFolders` | `list_folders` | 列出流程文件夹 |
+| 获取文件夹 | `getFolder` | `get_folder` | 按 ID 获取文件夹 |
+| 创建文件夹 | `createFolder` | `create_folder` | 创建文件夹 |
+| 更新文件夹 | `updateFolder` | `update_folder` | 重命名文件夹 |
+| 删除文件夹 | `deleteFolder` | `delete_folder` | 删除文件夹 |
 
-### App Connections
+### 应用连接
 
-| Method | TypeScript | Python | 说明 |
+| 方法 | TypeScript | Python | 说明 |
 |--------|-----------|--------|------|
-| List connections | `listConnections` | `list_connections` | 列出应用连接 |
-| Get connection | `getConnection` | `get_connection` | 按 ID 获取连接 |
-| Upsert connection | `upsertConnection` | `upsert_connection` | 创建或更新连接 |
-| Delete connection | `deleteConnection` | `delete_connection` | 移除连接 |
+| 列出连接 | `listConnections` | `list_connections` | 列出应用连接 |
+| 获取连接 | `getConnection` | `get_connection` | 按 ID 获取连接 |
+| 创建或更新连接 | `upsertConnection` | `upsert_connection` | 创建或更新连接 |
+| 删除连接 | `deleteConnection` | `delete_connection` | 移除连接 |
 
-### MCP Servers
+### MCP 服务器
 
-| Method | TypeScript | Python | 说明 |
+| 方法 | TypeScript | Python | 说明 |
 |--------|-----------|--------|------|
-| List MCP servers | `listMcpServers` | `list_mcp_servers` | 列出 MCP 服务器 |
-| Get MCP server | `getMcpServer` | `get_mcp_server` | 按 ID 获取服务器 |
-| Create MCP server | `createMcpServer` | `create_mcp_server` | 注册新的 MCP 服务器 |
-| Delete MCP server | `deleteMcpServer` | `delete_mcp_server` | 移除服务器 |
-| Rotate token | `rotateMcpToken` | `rotate_mcp_token` | 轮换服务器的认证令牌 |
+| 列出 MCP 服务器 | `listMcpServers` | `list_mcp_servers` | 列出 MCP 服务器 |
+| 获取 MCP 服务器 | `getMcpServer` | `get_mcp_server` | 按 ID 获取服务器 |
+| 创建 MCP 服务器 | `createMcpServer` | `create_mcp_server` | 注册新的 MCP 服务器 |
+| 删除 MCP 服务器 | `deleteMcpServer` | `delete_mcp_server` | 移除服务器 |
+| 轮换令牌 | `rotateMcpToken` | `rotate_mcp_token` | 轮换服务器的认证令牌 |
 
 ---
 

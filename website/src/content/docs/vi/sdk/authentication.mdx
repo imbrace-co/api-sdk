@@ -56,8 +56,9 @@ Ngữ cảnh tổ chức được **mã hóa bên trong chính thông tin xác t
     import { ImbraceClient } from "@imbrace/sdk";
 
     const client = new ImbraceClient({
-      apiKey: process.env.IMBRACE_API_KEY,
-      env: "stable",
+      apiKey:         process.env.IMBRACE_API_KEY,
+      organizationId: process.env.IMBRACE_ORGANIZATION_ID,
+      env:            "stable",
     });
     ```
   </TabItem>
@@ -68,6 +69,8 @@ Ngữ cảnh tổ chức được **mã hóa bên trong chính thông tin xác t
 
     client = ImbraceClient(
         api_key=os.environ["IMBRACE_API_KEY"],
+        organization_id=os.environ.get("IMBRACE_ORGANIZATION_ID"),
+        env="stable",
     )
     ```
   </TabItem>
@@ -82,16 +85,22 @@ Nếu bạn đã có token `acc_...`, hãy truyền trực tiếp:
 <Tabs syncKey="lang">
   <TabItem label="TypeScript">
     ```typescript
+    import { ImbraceClient } from "@imbrace/sdk";
+
     const client = new ImbraceClient({
       accessToken: process.env.IMBRACE_ACCESS_TOKEN,
-      env: "stable",
+      env:         "stable",
     });
     ```
   </TabItem>
   <TabItem label="Python">
     ```python
+    import os
+    from imbrace import ImbraceClient
+
     client = ImbraceClient(
         access_token=os.environ["IMBRACE_ACCESS_TOKEN"],
+        env="stable",
     )
     ```
   </TabItem>
@@ -165,8 +174,10 @@ Nếu người dùng chỉ thuộc đúng một tổ chức, bạn có thể b�
     async with AsyncImbraceClient() as client:
         await client.request_otp("user@example.com")
         res = await client.login_with_otp("user@example.com", "123456")
-        chosen = res["organizations"][0]
+        chosen = res["organizations"][0]  # ← thay bằng lựa chọn từ UI của bạn
+
         await client.select_organization(chosen["organization_id"])
+
         me = await client.platform.get_me()
     ```
   </TabItem>
@@ -183,6 +194,8 @@ Nếu người dùng chỉ thuộc đúng một tổ chức, bạn có thể b�
 <Tabs syncKey="lang">
   <TabItem label="TypeScript">
     ```typescript
+    import { ImbraceClient } from "@imbrace/sdk"
+
     const client = new ImbraceClient({ env: "stable" })
 
     // Bước 1: Đăng nhập. Trả về { token: "login_acc_...", organizations: [...] }.
@@ -198,6 +211,8 @@ Nếu người dùng chỉ thuộc đúng một tổ chức, bạn có thể b�
   </TabItem>
   <TabItem label="Python">
     ```python
+    from imbrace import ImbraceClient
+
     client = ImbraceClient()
 
     # Bước 1: Đăng nhập. Trả về { token: "login_acc_...", organizations: [...] }.
@@ -245,6 +260,9 @@ Nếu người dùng chỉ thuộc đúng một tổ chức, bạn có thể b�
 Luôn bao bọc Python client trong context manager để pool kết nối `httpx` bên dưới được đóng sạch sẽ:
 
 ```python
+import os
+from imbrace import ImbraceClient, AsyncImbraceClient
+
 # Đồng bộ
 with ImbraceClient(api_key=os.environ["IMBRACE_API_KEY"]) as client:
     me = client.platform.get_me()
@@ -256,8 +274,8 @@ async with AsyncImbraceClient(api_key=os.environ["IMBRACE_API_KEY"]) as client:
 
 ---
 
-### Next steps
+### Các bước tiếp theo
 
-- [Setup Guide ?](/getting-started/setup/#configure-credentials) � env vars, dotenv, and secrets management
-- [Quick Start ?](/sdk/quick-start/) � first API call using your credential
-- [Integrations ?](/sdk/integrations/) � framework wiring patterns (React, Next.js, FastAPI, Django)
+- [Hướng dẫn thiết lập →](/getting-started/setup/#configure-credentials) — biến môi trường, dotenv và quản lý secrets
+- [Bắt đầu nhanh →](/sdk/quick-start/) — lời gọi API đầu tiên với thông tin xác thực của bạn
+- [Tích hợp →](/sdk/integrations/) — các mẫu kết nối với framework (React, Next.js, FastAPI, Django)

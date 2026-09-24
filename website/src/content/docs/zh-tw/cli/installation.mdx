@@ -23,7 +23,7 @@ cd imbrace-cli
 ./install.sh
 ```
 
-`install.sh` 會依序執行 `npm install`、`npm run build`、`npm link`，然後將 `imbrace` 符號連結至 `/opt/homebrew/bin`（Apple Silicon）或 `/usr/local/bin`（Intel）。
+`install.sh` 會依序執行 `bun install`（若無法使用 Bun 則改用 `npm install`）、`npm run build`、`npm link`，然後將 `imbrace` 符號連結至 `/opt/homebrew/bin`（Apple Silicon）或 `/usr/local/bin`（Intel）。
 
 ### 手動建置
 
@@ -36,7 +36,19 @@ npm link
 
 ## 認證
 
-所有指令（除了 `login`）在未認證時會自動提示登入。
+資源指令（ai-agent、data-board、document-ai、guardrail、orchestrator、workflow）在解析出的 profile 尚未認證時，會自動提示登入。認證與 profile 管理指令（`login`、`logout`、`whoami`、`docs`、`profile`）不會自動提示。
+
+憑證與環境設定儲存在 **profile** 中。解析順序：`--profile` 標誌 > `IMBRACE_PROFILE` 環境變數 > `active_profile` 設定 > `"default"`。
+
+### 互動式登入
+
+不帶任何標誌即可進入互動式提示：
+
+```bash
+imbrace login
+```
+
+系統會請你選擇登入方式（API 金鑰或電子郵件 + 密碼），並可選擇設定 profile 名稱與 SDK 環境。
 
 ### 使用 API 金鑰登入
 
@@ -44,12 +56,17 @@ npm link
 
 ```bash
 imbrace login --api-key api_xxx...
+imbrace login --api-key api_xxx... --profile work
+imbrace login --api-key api_xxx... --profile dev --env sandbox --org-id org_xxx
 ```
+
+其他標誌：`--base-url`、`--timeout`、`--check-health`、`--services`。
 
 ### 使用電子郵件 + 密碼登入
 
 ```bash
 imbrace login --email user@example.com --password mypass
+imbrace login --email user@example.com --password mypass --profile personal
 imbrace login --email user@example.com --password mypass --org-id org_xxx
 ```
 
@@ -60,13 +77,18 @@ imbrace login --email user@example.com --password mypass --org-id org_xxx
 ### 檢查目前登入狀態
 
 ```bash
-imbrace whoami [--json]
+imbrace whoami
+imbrace whoami --json
+imbrace whoami --profile work
 ```
 
 ### 登出
 
+清除使用中（或指定名稱）profile 的憑證：
+
 ```bash
 imbrace logout
+imbrace logout --profile work
 ```
 
 <Aside type="tip">

@@ -9,11 +9,11 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ---
 
-## Schema
+## 結構定義
 
 ### Campaign
 
-| Field | Type | 說明 |
+| 欄位 | 類型 | 說明 |
 |-------|------|------|
 | `_id` | string | 唯一活動 ID |
 | `name` | string | 活動顯示名稱 |
@@ -24,7 +24,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ### Touchpoint
 
-| Field | Type | 說明 |
+| 欄位 | 類型 | 說明 |
 |-------|------|------|
 | `_id` | string | 唯一接觸點 ID |
 | `name` | string? | 接觸點顯示名稱 |
@@ -34,14 +34,14 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ### CreateCampaignInput
 
-| Field | Type | Required | 說明 |
+| 欄位 | 類型 | 必填 | 說明 |
 |-------|------|----------|------|
 | `name` | string | ✓ | 活動名稱 |
 | `channel_type` | string | | 頻道類型（例如 `whatsapp`、`email`） |
 
 ### CreateTouchpointInput
 
-| Field | Type | Required | 說明 |
+| 欄位 | 類型 | 必填 | 說明 |
 |-------|------|----------|------|
 | `name` | string | | 接觸點名稱 |
 | `type` | string | | 接觸點類型 |
@@ -50,27 +50,27 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ---
 
-## Methods
+## 方法
 
-### Campaign
+### 行銷活動
 
-| Method | TypeScript | Python | 說明 |
+| 方法 | TypeScript | Python | 說明 |
 |--------|-----------|--------|------|
-| List campaigns | `list` | `list` | 列出所有活動 |
-| Get campaign | `get` | `get` | 依 ID 取得活動 |
-| Create campaign | `create` | `create` | 建立新活動 |
-| Delete campaign | `delete` | `delete` | 刪除活動 |
+| 列出行銷活動 | `list` | `list` | 列出所有活動 |
+| 取得行銷活動 | `get` | `get` | 依 ID 取得活動 |
+| 建立行銷活動 | `create` | `create` | 建立新活動 |
+| 刪除行銷活動 | `delete` | `delete` | 刪除活動 |
 
-### Touchpoint
+### 接觸點
 
-| Method | TypeScript | Python | 說明 |
+| 方法 | TypeScript | Python | 說明 |
 |--------|-----------|--------|------|
-| List touchpoints | `listTouchpoints` | `list_touchpoints` | 列出所有接觸點 |
-| Get touchpoint | `getTouchpoint` | `get_touchpoint` | 依 ID 取得接觸點 |
-| Create touchpoint | `createTouchpoint` | `create_touchpoint` | 向活動新增接觸點 |
-| Update touchpoint | `updateTouchpoint` | `update_touchpoint` | 更新接觸點 |
-| Delete touchpoint | `deleteTouchpoint` | `delete_touchpoint` | 移除接觸點 |
-| Validate touchpoint | `validateTouchpoint` | `validate_touchpoint` | 驗證接觸點配置 |
+| 列出接觸點 | `listTouchpoints` | `list_touchpoints` | 列出所有接觸點 |
+| 取得接觸點 | `getTouchpoint` | `get_touchpoint` | 依 ID 取得接觸點 |
+| 建立接觸點 | `createTouchpoint` | `create_touchpoint` | 向活動新增接觸點 |
+| 更新接觸點 | `updateTouchpoint` | `update_touchpoint` | 更新接觸點 |
+| 刪除接觸點 | `deleteTouchpoint` | `delete_touchpoint` | 移除接觸點 |
+| 驗證接觸點 | `validateTouchpoint` | `validate_touchpoint` | 驗證接觸點配置 |
 
 ---
 

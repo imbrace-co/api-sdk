@@ -13,7 +13,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ### Channel
 
-| Field | Type | 说明 |
+| 字段 | 类型 | 说明 |
 |-------|------|------|
 | `object_name` | string? | 对象类型标识符 |
 | `id` | string | 唯一渠道 ID |
@@ -28,7 +28,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ### ChannelCredential
 
-| Field | Type | 说明 |
+| 字段 | 类型 | 说明 |
 |-------|------|------|
 | `_id` | string | 唯一凭证 ID |
 | `type` | string? | 凭证类型（例如 `facebook`、`whatsapp`） |
@@ -36,50 +36,50 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ---
 
-## Methods
+## 方法
 
-### Core CRUD
+### 核心增删改查
 
-| Method | TypeScript | Python | 说明 |
+| 方法 | TypeScript | Python | 说明 |
 |--------|-----------|--------|------|
-| List channels | `list` | `list` | 列出所有渠道，可按类型筛选 |
-| Get channel | `get` | `get` | 按 ID 获取渠道 |
-| Create channel | `create` | `create` | 通用渠道创建 |
-| Update channel | `update` | `update` | 切换启用状态或更新配置 |
-| Delete channel | `delete` / `deleteV3` | `delete` / `delete_v3` | 删除渠道 |
-| Get count | `getCount` | `get_count` | 渠道总数 |
+| 列出渠道 | `list` | `list` | 列出所有渠道，可按类型筛选 |
+| 获取渠道 | `get` | `get` | 按 ID 获取渠道 |
+| 创建渠道 | `create` | `create` | 通用渠道创建 |
+| 更新渠道 | `update` | `update` | 切换启用状态或更新配置 |
+| 删除渠道 | `delete` / `deleteV3` | `delete` / `delete_v3` | 删除渠道 |
+| 获取数量 | `getCount` | `get_count` | 渠道总数 |
 
-### Per-type Creation
+### 按类型创建
 
-| Method | TypeScript | Python | 说明 |
+| 方法 | TypeScript | Python | 说明 |
 |--------|-----------|--------|------|
-| Create Web | `createWeb` | `create_web` | Web 聊天渠道 |
-| Create Facebook | `createFacebook` | `create_facebook` | Facebook Messenger 渠道 |
-| Update Facebook | `updateFacebook` | `update_facebook` | 更新 Facebook 渠道配置 |
-| Create Instagram | `createInstagram` | `create_instagram` | Instagram 渠道 |
-| Create Email | `createEmail` | `create_email` | Email 渠道 |
-| Create WeChat | `createWechat` | `create_wechat` | WeChat 渠道 |
-| Create LINE | `createLine` | `create_line` | LINE 渠道 |
-| Create WhatsApp | `createWhatsApp` | `create_whatsapp` | WhatsApp 渠道 |
-| Update WhatsApp | `updateWhatsApp` | `update_whatsapp` | 更新 WhatsApp 配置 |
+| 创建 Web | `createWeb` | `create_web` | Web 聊天渠道 |
+| 创建 Facebook | `createFacebook` | `create_facebook` | Facebook Messenger 渠道 |
+| 更新 Facebook | `updateFacebook` | `update_facebook` | 更新 Facebook 渠道配置 |
+| 创建 Instagram | `createInstagram` | `create_instagram` | Instagram 渠道 |
+| 创建 Email | `createEmail` | `create_email` | Email 渠道 |
+| 创建 WeChat | `createWechat` | `create_wechat` | WeChat 渠道 |
+| 创建 LINE | `createLine` | `create_line` | LINE 渠道 |
+| 创建 WhatsApp | `createWhatsApp` | `create_whatsapp` | WhatsApp 渠道 |
+| 更新 WhatsApp | `updateWhatsApp` | `update_whatsapp` | 更新 WhatsApp 配置 |
 
-### Credentials
+### 凭证
 
-| Method | TypeScript | Python | 说明 |
+| 方法 | TypeScript | Python | 说明 |
 |--------|-----------|--------|------|
-| Get Facebook pages | `getFacebookPages` | `get_facebook_pages` | 列出凭证的 Facebook 主页 |
-| Get credential | `getCredential` | `get_credential` | 获取已存储的凭证 |
-| Update credential | `updateCredential` | `update_credential` | 更新凭证 |
-| Delete credential | `deleteCredential` | `delete_credential` | 移除凭证 |
+| 获取 Facebook 主页 | `getFacebookPages` | `get_facebook_pages` | 列出凭证的 Facebook 主页 |
+| 获取凭证 | `getCredential` | `get_credential` | 获取已存储的凭证 |
+| 更新凭证 | `updateCredential` | `update_credential` | 更新凭证 |
+| 删除凭证 | `deleteCredential` | `delete_credential` | 移除凭证 |
 
-### Workflow & Teams
+### Workflow 与团队
 
-| Method | TypeScript | Python | 说明 |
+| 方法 | TypeScript | Python | 说明 |
 |--------|-----------|--------|------|
-| Update channel workflow | `updateChannelWorkflow` | `update_channel_workflow` | 将 workflow 附加到渠道 |
-| Delete channel workflow | `deleteChannelWorkflow` | `delete_channel_workflow` | 卸除 workflow |
-| List assignable teams | `listAssignableTeams` | `list_assignable_teams` | 可指派到此渠道的团队 |
-| List team observers | `listTeamObservers` | `list_team_observers` | 团队的观察者 |
+| 更新渠道 workflow | `updateChannelWorkflow` | `update_channel_workflow` | 将 workflow 附加到渠道 |
+| 删除渠道 workflow | `deleteChannelWorkflow` | `delete_channel_workflow` | 卸除 workflow |
+| 列出可指派团队 | `listAssignableTeams` | `list_assignable_teams` | 可指派到此渠道的团队 |
+| 列出团队观察者 | `listTeamObservers` | `list_team_observers` | 团队的观察者 |
 
 ---
 

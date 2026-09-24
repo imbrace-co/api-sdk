@@ -14,7 +14,7 @@ Bạn chỉ cần hai thứ:
 
 ### Bước 1 — Lấy API key
 
-Tạo external token trong Imbrace Dashboard (xem [Lấy API Key](/vi/guides/api-key/)). Key có dạng `api_...`.
+Tạo external token trong Imbrace Dashboard (xem [Lấy API Key](/guides/api-key/)). Key có dạng `api_...`.
 
 ### Bước 2 — Kết nối công cụ của bạn
 
@@ -136,7 +136,7 @@ Service: `dataBoard`, `channel`, `platform`, `marketplace`, `workflow`. Agent g�
 
 ### Cách hoạt động
 
-Mỗi lần gọi tool được phát lại qua chính các route API của gateway với token **của bạn**, nên phạm vi tổ chức, quyền hạn và kiểm tra license áp dụng đúng như khi bạn tự gọi API. Tool chính là bộ operation `agent-tools` được tuyển chọn, cùng nguồn với bề mặt [`client.api`](/vi/sdk/overview/) của SDK. Endpoint là JSON-RPC stateless qua HTTP `POST` — không phải quản lý session.
+Mỗi lần gọi tool được phát lại qua chính các route API của gateway với token **của bạn**, nên phạm vi tổ chức, quyền hạn và kiểm tra license áp dụng đúng như khi bạn tự gọi API. Tool chính là bộ operation `agent-tools` được tuyển chọn, cùng nguồn với bề mặt [`client.api`](/sdk/overview/) của SDK. Endpoint là JSON-RPC stateless qua HTTP `POST` — không phải quản lý session.
 
 ### Không dùng MCP? OpenAPI hợp nhất
 
@@ -144,4 +144,4 @@ Nền tảng dùng spec OpenAPI thay vì MCP (ví dụ Open WebUI) có thể tr�
 
 ### Lựa chọn local — CLI
 
-Muốn một stdio server chạy local (credential lấy từ profile CLI, không cấu hình URL)? CLI có sẵn cùng bộ registry tool: [`imbrace mcp`](/vi/cli/commands/#mcp-server).
+Muốn một stdio server chạy local (credential lấy từ profile CLI, không cấu hình URL)? CLI có sẵn cùng bộ registry tool: [`imbrace mcp`](/cli/commands/#mcp-server).
