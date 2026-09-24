@@ -1,4 +1,4 @@
-﻿---
+---
 title: AI 代理
 description: chatAi / chat_ai（AI 代理管理）、aiAgent / ai_agent（流式聊天、嵌入、parquet、追踪）以及兼容 OpenAI 的 client.ai 服务的参考文档。
 ---
@@ -86,13 +86,18 @@ const subAgents = await client.chatAi.listAiAgentSubAgents();
 // 获取单个 AI 代理
 const agent = await client.chatAi.getAiAgent("9f77692f-33d0-436a-8138-2efb268838e6");
 
-// 创建 — provider_id 和 model_id 是必填项
+// 创建。省略时 SDK 会自动填充 { provider_id: "system", model_id: "Default" }；
+// "Default" 会路由到该组织配置的默认模型，可跨组织通用。像 "gpt-4o" 这样的
+// 具体名称只有在该组织的 system 提供商确实公开它时才有效 —
+// `client.ai.listModels()` 可以查看有哪些可用模型。传入 `streaming: true`，
+// 这样 /v2/chat 会发出 text-delta SSE 事件，供 `streamChatText`（见下文）解析；
+// 否则服务器会以单个 text/plain 响应返回完整回复，SSE 解析器将得不到任何内容。
 const created = await client.chatAi.createAiAgent({
   name: "Support Bot",
   workflow_name: "support_bot_v1",
   provider_id: "system",
-  model_id: "Default",   // 跨组织通用；"gpt-4o" 只在该组织的 system 提供商公开它时才有效
-  streaming: true,       // 必须开启才能让聊天 UI 收到 text-delta SSE 事件
+  model_id: "Default",
+  streaming: true,
   description: "Handles tier-1 support queries",
 });
 
@@ -122,13 +127,18 @@ sub_agents = client.chat_ai.list_ai_agent_sub_agents()
 # 获取单个 AI 代理
 agent = client.chat_ai.get_ai_agent("9f77692f-33d0-436a-8138-2efb268838e6")
 
-# 创建 — provider_id 和 model_id 是必填项
+# 创建。省略时 SDK 会自动填充 {"provider_id": "system", "model_id": "Default"}；
+# "Default" 会路由到该组织配置的默认模型，可跨组织通用。像 "gpt-4o" 这样的
+# 具体名称只有在该组织的 system 提供商确实公开它时才有效 —
+# `client.ai.list_models()` 可以查看有哪些可用模型。传入 `streaming: True`，
+# 这样 /v2/chat 会发出 text-delta SSE 事件，供 `stream_chat_text`（见下文）解析；
+# 否则服务器会以单个 text/plain 响应返回完整回复，SSE 解析器将得不到任何内容。
 created = client.chat_ai.create_ai_agent({
     "name":          "Support Bot",
     "workflow_name": "support_bot_v1",
     "provider_id":   "system",
-    "model_id":      "Default",   # 跨组织通用；"gpt-4o" 只在该组织的 system 提供商公开它时才有效
-    "streaming":     True,        # 必须开启才能让聊天 UI 收到 text-delta SSE 事件
+    "model_id":      "Default",
+    "streaming":     True,
     "description":   "Handles tier-1 support queries",
 })
 
@@ -673,37 +683,95 @@ if result["success"]:
 
 ## Chat v2 — 流式传输（SSE）
 
-返回原始响应。将响应体作为服务器发送事件流消费。
+`streamChat` / `stream_chat` 通过 `POST /ai-agent/v2/chat` 返回原始 `Response`。响应体的格式取决于代理的 `streaming` 标志：
+
+| 代理 `streaming` | `Content-Type` | 响应体 |
+|---|---|---|
+| `true`（推荐） | `text/event-stream` | Vercel-AI-SDK UI-Message-Stream：`data: {"type":"text-delta","delta":"..."}` 事件 |
+| `false`（新建代理的默认值） | `text/plain` | 以单个字符串返回的完整回复 — 没有 SSE 帧 |
+
+### 推荐：`streamChatText` / `stream_chat_text`
+
+这些便捷辅助方法封装了 `streamChat`，解析 SSE 事件流，并逐个产出纯文本增量。它们假定代理在创建时设置了 `streaming: true`。
 
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">
 ```typescript
-const response = await client.aiAgent.streamChat({
+for await (const chunk of client.aiAgent.streamChatText({
   id: "chat_id",
   assistant_id: "asst_abc",
   messages: [{ role: "user", content: "What can you do?" }],
-});
-
-const reader = response.body!.getReader();
-const decoder = new TextDecoder();
-while (true) {
-  const { done, value } = await reader.read();
-  if (done) break;
-  process.stdout.write(decoder.decode(value));
+})) {
+  process.stdout.write(chunk);
 }
 ```
 </TabItem>
 <TabItem label="Python">
 ```python
-response = client.ai_agent.stream_chat({
+for chunk in client.ai_agent.stream_chat_text({
     "id": "chat_id",
     "assistant_id": "asst_abc",
     "messages": [{"role": "user", "content": "What can you do?"}],
-})
+}):
+    print(chunk, end="", flush=True)
+```
+</TabItem>
+</Tabs>
 
-for line in response.iter_lines():
-    if line:
-        print(line)
+<Aside type="caution" title="回复为空？请检查代理的 streaming 标志。">
+  如果服务器返回 200 OK，但 `streamChatText` / `stream_chat_text` 产出 **0 个 chunk**，那么几乎可以肯定该代理设置了 `streaming: false`。此时响应是 `text/plain`，不包含任何 `data:` 行，SSE 解析器会静默地什么也不输出。解决方法：在创建时设置 `streaming: true`（或通过 `updateAiAgent(id, { streaming: true })` 设置），或者使用下方能识别 content-type 的模式来同时处理两种格式。
+</Aside>
+
+### 同时处理流式和非流式代理
+
+当你无法控制代理的创建方式时，请根据 `Content-Type` 分支处理：
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const body = {
+  id: "chat_id",
+  assistant_id: "asst_abc",
+  messages: [{ role: "user", content: "What can you do?" }],
+};
+
+const res = await client.aiAgent.streamChat(body);
+if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+
+const contentType = res.headers.get("content-type") ?? "";
+let reply = "";
+
+if (contentType.includes("text/event-stream")) {
+  // 流式代理 — 通过 SDK 辅助方法重新解析
+  for await (const chunk of client.aiAgent.streamChatText(body)) {
+    reply += chunk;
+    process.stdout.write(chunk);   // 边接收边渲染
+  }
+} else {
+  // 非流式代理 — 响应体即完整回复
+  reply = await res.text();
+  process.stdout.write(reply);
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+body = {
+    "id": "chat_id",
+    "assistant_id": "asst_abc",
+    "messages": [{"role": "user", "content": "What can you do?"}],
+}
+
+res = client.ai_agent.stream_chat(body)
+res.raise_for_status()
+
+if "text/event-stream" in res.headers.get("content-type", ""):
+    # 流式代理 — 通过 SDK 辅助方法重新解析
+    for chunk in client.ai_agent.stream_chat_text(body):
+        print(chunk, end="", flush=True)
+else:
+    # 非流式代理 — 响应体即完整回复
+    print(res.text)
 ```
 
 **异步：**
@@ -714,12 +782,13 @@ from imbrace import AsyncImbraceClient
 
 async def main():
     async with AsyncImbraceClient() as client:
-        response = await client.ai_agent.stream_chat({
+        res = await client.ai_agent.stream_chat({
             "id": "chat_id",
             "assistant_id": "asst_abc",
             "messages": [{"role": "user", "content": "Hello"}],
         })
-        async for line in response.aiter_lines():
+        res.raise_for_status()
+        async for line in res.aiter_lines():
             if line:
                 print(line)
 
@@ -838,16 +907,15 @@ classification = client.ai_agent.classify_file(file_id="file_abc")
 
 ## 数据面板
 
-用于结构化数据集的 AI 辅助字段类型建议。
+分析示例文档（PDF/图片），为 Document AI 代理建议合适的 JSON schema。
 
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">
 ```typescript
 const result = await client.aiAgent.suggestFieldTypes({
-  fields: [
-    { name: "created_at", samples: ["2024-01-01", "2024-02-15"] },
-    { name: "amount",     samples: [100, 200.5, 999] },
-    { name: "is_active",  samples: [true, false, true] },
+  fileUrls: [
+    "https://cdn.imbrace.co/docs/invoice-1.pdf",
+    "https://cdn.imbrace.co/docs/invoice-2.pdf",
   ],
 });
 // result.fields[i].suggestedType → "datetime" | "number" | "boolean" | ...
@@ -855,11 +923,12 @@ const result = await client.aiAgent.suggestFieldTypes({
 </TabItem>
 <TabItem label="Python">
 ```python
-result = client.ai_agent.suggest_field_types(fields=[
-    {"name": "created_at", "samples": ["2024-01-01", "2024-02-15"]},
-    {"name": "amount",     "samples": [100, 200.5, 999]},
-    {"name": "is_active",  "samples": [True, False, True]},
-])
+result = client.ai_agent.suggest_field_types(
+    file_urls=[
+        "https://cdn.imbrace.co/docs/invoice-1.pdf",
+        "https://cdn.imbrace.co/docs/invoice-2.pdf",
+    ],
+)
 # result["fields"][i]["suggestedType"] → "datetime" | "number" | "boolean" | ...
 ```
 </TabItem>

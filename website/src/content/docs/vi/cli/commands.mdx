@@ -107,7 +107,7 @@ imbrace ai-agent delete <agentId> [--yes] [--json]
 
 ### Cờ Tạo / Cập nhật
 
-`create` và `update` chấp nhận cùng các cờ. `update` giữ nguyên các trường không thay đổi thông qua PUT-merge.
+`create` và `update` chấp nhận cùng các cờ. `update` giữ nguyên các trường không thay đổi thông qua PUT-merge. `--id-only` chỉ có trên `create`.
 
 | Cờ | Ánh xạ tới | Ghi chú |
 |---|---|---|
@@ -140,9 +140,8 @@ imbrace ai-agent delete <agentId> [--yes] [--json]
 | `--streaming` | `streaming` | Mặc định true |
 | `--use-memory` | `use_memory` | Mặc định true |
 | **Đầu ra** | | |
-| `--yes` / `-y` | — | Bỏ qua xác nhận khi xóa |
 | `--json` | — | Đầu ra máy có thể đọc được |
-| `--id-only` | — | Chỉ in ID agent mới |
+| `--id-only` | — | Chỉ in ID agent mới (chỉ khi tạo) |
 
 ### Ví dụ tạo đầy đủ
 
@@ -406,9 +405,9 @@ imbrace workflow run-detail <runId> [--json]
 
 ## MCP Server
 
-> `@imbrace/cli` `v0.8.0`+. Đừng nhầm với `imbrace workflow mcp ...` ở trên — nhóm lệnh đó quản lý tài nguyên MCP-server của chính workflow engine. Muốn không phải cài gì? Gateway host sẵn cùng bộ tool này qua HTTP — xem [MCP Server](/vi/mcp/overview/).
+> `@imbrace/cli` `v0.8.0`+. Đừng nhầm với `imbrace workflow mcp ...` ở trên — nhóm lệnh đó quản lý tài nguyên MCP-server của chính workflow engine. Muốn không phải cài gì? Gateway host sẵn cùng bộ tool này qua HTTP — xem [MCP Server](/mcp/overview/).
 
-`imbrace mcp` chạy một server [Model Context Protocol](https://modelcontextprotocol.io) qua **stdio**, mở API Imbrace thành tool cho AI agent (Claude Code, Claude Desktop, Cursor, …). Tool được sinh từ cùng bộ spec OpenAPI `agent-tools` với bề mặt [`client.api`](/vi/sdk/overview/) của SDK — 272 operation trên 5 service — và đặt tên dạng `<service>_<operationId>`, ví dụ `dataBoard_listBoards`, `workflow_listFlows`.
+`imbrace mcp` chạy một server [Model Context Protocol](https://modelcontextprotocol.io) qua **stdio**, mở API Imbrace thành tool cho AI agent (Claude Code, Claude Desktop, Cursor, …). Tool được sinh từ cùng bộ spec OpenAPI `agent-tools` với bề mặt [`client.api`](/sdk/overview/#the-full-api-surface--clientapi-typescript) của SDK — 272 operation trên 5 service — và đặt tên dạng `<service>_<operationId>`, ví dụ `dataBoard_listBoards`, `workflow_listFlows`.
 
 ```bash
 imbrace mcp                                     # tool chỉ đọc (mặc định)
@@ -451,6 +450,62 @@ Hoặc cấu hình cho bất kỳ MCP client nào qua JSON:
 
 ---
 
+## Profile
+
+Quản lý nhiều profile thông tin xác thực (theo kiểu AWS). Mỗi profile lưu thông tin xác thực, preset môi trường, ID tổ chức và các thiết lập SDK khác. Thứ tự ưu tiên: cờ `--profile` > biến môi trường `IMBRACE_PROFILE` > cấu hình `active_profile` > `"default"`.
+
+### Tạo
+
+Tạo một profile mới và xác minh thông tin xác thực với nền tảng:
+
+```bash
+imbrace profile create <name> --api-key api_xxx... [--env stable|sandbox|develop|prodv2] [--org-id <orgId>] [--base-url <url>] [--timeout <ms>] [--check-health] [--services '<json>'] [--json] [--force]
+```
+
+`--force` bỏ qua bước xác minh thông tin xác thực. Nếu profile đã tồn tại, lệnh sẽ báo lỗi.
+
+### Danh sách
+
+```bash
+imbrace profile list [--json]
+```
+
+Hiển thị tất cả profile kèm dấu đánh dấu profile đang hoạt động, môi trường và trạng thái.
+
+### Xem
+
+```bash
+imbrace profile show [<name>] [--json]
+```
+
+Mặc định là profile đang hoạt động. Hiển thị tất cả các trường đã lưu (bản xem trước credential, phương thức, email, môi trường, base URL, ID tổ chức, timeout, services, health check).
+
+### Sử dụng
+
+Chuyển profile đang hoạt động cho tất cả các lệnh tiếp theo:
+
+```bash
+imbrace profile use <name> [--json]
+```
+
+### Đổi tên
+
+```bash
+imbrace profile rename <from> <to> [--json]
+```
+
+Giữ nguyên thông tin xác thực và trạng thái hoạt động.
+
+### Xóa
+
+```bash
+imbrace profile delete <name> [--yes] [--json]
+```
+
+Không ảnh hưởng đến dữ liệu trên nền tảng — chỉ xóa bộ thông tin xác thực cục bộ.
+
+---
+
 ## Tiện ích
 
 ### In Tài liệu Tham khảo LLM
@@ -482,6 +537,16 @@ imbrace update              # cập nhật lên phiên bản mới nhất
 imbrace update --check      # kiểm tra cập nhật mà không cài đặt
 imbrace update --version 0.6.5  # cài đặt phiên bản cụ thể
 imbrace update --json       # đầu ra dạng JSON
+```
+
+Đầu ra của `--check`:
+
+```json
+{
+  "current": "0.6.9",
+  "latest": "0.6.9",
+  "up_to_date": true
+}
 ```
 
 <Aside type="note">

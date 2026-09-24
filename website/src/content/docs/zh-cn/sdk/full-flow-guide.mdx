@@ -1,4 +1,4 @@
-﻿---
+---
 title: 完整流程指南
 description: 端到端演练 — 从客户端设置到 AI 代理、工作流、知识中心和数据面板。TypeScript 和 Python。
 ---
@@ -22,21 +22,21 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
        ```typescript
        import { ImbraceClient } from "@imbrace/sdk"
 
-        const client = new ImbraceClient({
-          accessToken: process.env.IMBRACE_ACCESS_TOKEN,
-          env: "stable",
-        })
+       const client = new ImbraceClient({
+         accessToken: process.env.IMBRACE_ACCESS_TOKEN,
+         env: "stable",
+       })
        ```
      </TabItem>
      <TabItem label="Python">
-        ```python
-        import os
-        from imbrace import ImbraceClient
+       ```python
+       import os
+       from imbrace import ImbraceClient
 
-        client = ImbraceClient(
-            access_token=os.environ["IMBRACE_ACCESS_TOKEN"],
-            env="stable",
-        )
+       client = ImbraceClient(
+           access_token=os.environ["IMBRACE_ACCESS_TOKEN"],
+           env="stable",
+       )
        ```
      </TabItem>
    </Tabs>
@@ -48,23 +48,23 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
        ```typescript
        import { ImbraceClient } from "@imbrace/sdk"
 
-        const client = new ImbraceClient({
-          apiKey:         process.env.IMBRACE_API_KEY,
-          organizationId: process.env.IMBRACE_ORGANIZATION_ID,
-          env:            "stable",
-        })
+       const client = new ImbraceClient({
+         apiKey:         process.env.IMBRACE_API_KEY,
+         organizationId: process.env.IMBRACE_ORGANIZATION_ID,
+         env:            "stable",
+       })
        ```
      </TabItem>
      <TabItem label="Python">
-        ```python
-        import os
-        from imbrace import ImbraceClient
+       ```python
+       import os
+       from imbrace import ImbraceClient
 
-        client = ImbraceClient(
-            api_key=os.environ["IMBRACE_API_KEY"],
-            organization_id=os.environ.get("IMBRACE_ORGANIZATION_ID"),
-            env="stable",
-        )
+       client = ImbraceClient(
+           api_key=os.environ["IMBRACE_API_KEY"],
+           organization_id=os.environ.get("IMBRACE_ORGANIZATION_ID"),
+           env="stable",
+       )
        ```
      </TabItem>
    </Tabs>
@@ -87,7 +87,8 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
          description: "Handles tier-1 customer support queries",
          instructions: "You are a helpful support agent. Be concise and friendly.",
          provider_id: "system",   // 使用组织的默认 LLM 提供商
-         model_id: "Default",     // 路由到组织配置的默认模型（跨组织通用）
+         model_id: "Default",     // 路由到组织配置的默认模型
+         streaming: true,         // 发出 text-delta SSE 事件（见下方提示框）
        })
 
        const aiAgentId = agent.id  // UUID — 用于所有后续调用
@@ -102,75 +103,92 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
            "description": "Handles tier-1 customer support queries",
            "instructions": "You are a helpful support agent. Be concise and friendly.",
            "provider_id": "system",   # 使用组织的默认 LLM 提供商
-           "model_id": "Default",     # 路由到组织配置的默认模型（跨组织通用）
+           "model_id": "Default",     # 路由到组织配置的默认模型
+           "streaming": True,         # 发出 text-delta SSE 事件（见下方提示框）
        })
 
        ai_agent_id = agent["id"]
-        print("AI agent created:", ai_agent_id)
+       print("AI agent created:", ai_agent_id)
        ```
      </TabItem>
    </Tabs>
 
-   `provider_id` 和 `model_id` 是可选项 — 省略时 SDK 自动填充 `{ provider_id: "system", model_id: "Default" }`。`"Default"` 路由到组织配置的系统默认模型,是跨组织通用的选择。需要覆盖时显式传入:`provider_id: "<uuid>"` 用于指定自定义 LLM 提供商,或 `model_id: "gpt-4o"` 等 — 但具体模型名称只在该组织的 `system` 提供商实际公开它时才有效。在硬编码前,使用 `client.ai.listModels()` (TypeScript) / `client.ai.list_models()` (Python) 列出组织的可用模型。
+   `provider_id` 和 `model_id` 是可选项 — 省略时 SDK 自动填充 `{ provider_id: "system", model_id: "Default" }`。`"Default"` 路由到组织配置的系统默认模型，是跨组织通用的选择。需要覆盖时显式传入：`provider_id: "<uuid>"` 用于指定自定义 LLM 提供商，或 `model_id: "gpt-4o"` 等 — 但具体模型名称只在该组织的 `system` 提供商实际公开它时才有效。在硬编码前，使用 `client.ai.listModels()`（TypeScript）/ `client.ai.list_models()`（Python）列出组织的可用模型。
+
+   <Aside type="caution" title="聊天 UI 请始终传入 streaming: true">
+     新创建的代理在服务器端默认为 **`streaming: false`**。在该默认值下，`streamChat` 会以单个 `text/plain` 响应返回完整回复 — 没有 `text-delta` 事件 — 因此 `streamChatText` 辅助方法（以及任何其他 SSE 解析器）会产出 **0 个 chunk**，聊天 UI 什么也不显示。在创建时传入 `streaming: true`，服务器就会发出 Vercel-AI-SDK UI-Message-Stream（`Content-Type: text/event-stream`），这正是 `streamChatText` 设计用来解析的格式。你也可以稍后通过 `updateAiAgent(id, { streaming: true })` 修改。
+   </Aside>
+
 
 3. **使用 AI 代理流式聊天**
+
+   使用 `streamChatText` / `stream_chat_text` — 它封装了 `streamChat`，解析 SSE 事件流，并逐个产出纯文本 chunk。前提是代理在创建时设置了 `streaming: true`（参见步骤 2 中的提示框）。
 
    <Tabs syncKey="lang">
      <TabItem label="TypeScript">
        ```typescript
-       const response = await client.aiAgent.streamChat({
+       for await (const chunk of client.aiAgent.streamChatText({
          assistant_id: aiAgentId,
          messages: [{ role: "user", content: "How do I reset my password?" }],
-         // id 是会话 UUID — 重复使用以保持对话历史
-         // 如果省略，每次调用会自动生成新的 UUID
-       })
-
-       const reader = response.body!.getReader()
-       const decoder = new TextDecoder()
-
-       while (true) {
-         const { done, value } = await reader.read()
-         if (done) break
-         const text = decoder.decode(value)
-         for (const line of text.split("\n")) {
-           if (line.startsWith("data: ")) {
-             const data = line.slice(6).trim()
-             if (data && data !== "[DONE]") {
-               try {
-                 const chunk = JSON.parse(data)
-                 process.stdout.write(chunk.delta ?? chunk.content ?? "")
-               } catch {}
-             }
-           }
-         }
+         // id 是会话 UUID — 重复使用以保持对话历史。
+         // 如果省略，每次调用会自动生成新的 UUID。
+       })) {
+         process.stdout.write(chunk)
        }
        ```
      </TabItem>
      <TabItem label="Python">
        ```python
-       response = client.ai_agent.stream_chat({
+       for chunk in client.ai_agent.stream_chat_text({
            "assistant_id": ai_agent_id,
            "messages": [{"role": "user", "content": "How do I reset my password?"}],
            # id 是会话 UUID — 重复使用以保持对话历史。
            # 如果省略，每次调用会自动生成新的 UUID。
-       })
-
-       import json
-       for line in response.iter_lines():
-           if isinstance(line, bytes):
-               line = line.decode()
-           if not line.startswith("data: "):
-               continue
-           data = line[6:].strip()
-           if data and data != "[DONE]":
-               try:
-                   chunk = json.loads(data)
-                   print(chunk.get("delta") or chunk.get("content") or "", end="")
-               except Exception:
-                   pass
+       }):
+           print(chunk, end="", flush=True)
        ```
      </TabItem>
    </Tabs>
+
+   <Aside type="tip" title="使用非流式代理？">
+     如果代理设置了 `streaming: false`，服务器会以单个 `text/plain` 响应返回完整回复 — 没有可供 `streamChatText` 解析的 `text-delta` 事件，因此它什么也不产出。下面的模式通过根据 `Content-Type` 分支来同时处理两种格式：
+
+     <Tabs syncKey="lang">
+       <TabItem label="TypeScript">
+         ```typescript
+         const res = await client.aiAgent.streamChat({
+           assistant_id: aiAgentId,
+           messages: [{ role: "user", content: "How do I reset my password?" }],
+         })
+         if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`)
+
+         if ((res.headers.get("content-type") ?? "").includes("text/event-stream")) {
+           // 流式代理 — 通过 SDK 辅助方法重新解析
+           for await (const chunk of client.aiAgent.streamChatText({ /* 相同的请求体 */ })) {
+             process.stdout.write(chunk)
+           }
+         } else {
+           process.stdout.write(await res.text())   // 非流式代理
+         }
+         ```
+       </TabItem>
+       <TabItem label="Python">
+         ```python
+         res = client.ai_agent.stream_chat({
+             "assistant_id": ai_agent_id,
+             "messages": [{"role": "user", "content": "How do I reset my password?"}],
+         })
+         res.raise_for_status()
+
+         if "text/event-stream" in res.headers.get("content-type", ""):
+             for chunk in client.ai_agent.stream_chat_text({ "assistant_id": ai_agent_id, "messages": [...] }):
+                 print(chunk, end="", flush=True)
+         else:
+             print(res.text)
+         ```
+       </TabItem>
+     </Tabs>
+   </Aside>
 
 4. **维护对话历史（会话 ID）**
 
@@ -190,12 +208,12 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
          messages: [{ role: "user", content: "What's your refund policy?" }],
        })
 
-        // 后续 — 相同会话，AI 代理记得上下文
-        await client.aiAgent.streamChat({
-          assistant_id: aiAgentId,
-          id: sessionId,
-          messages: [{ role: "user", content: "How long does it take?" }],
-        })
+       // 后续 — 相同会话，AI 代理记得上下文
+       await client.aiAgent.streamChat({
+         assistant_id: aiAgentId,
+         id: sessionId,
+         messages: [{ role: "user", content: "How long does it take?" }],
+       })
         ```
       </TabItem>
       <TabItem label="Python">
@@ -212,11 +230,11 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
         })
 
         # 后续 — 相同会话，AI 代理记得上下文
-       client.ai_agent.stream_chat({
-           "assistant_id": ai_agent_id,
-           "id": session_id,
-           "messages": [{"role": "user", "content": "How long does it take?"}],
-       })
+        client.ai_agent.stream_chat({
+            "assistant_id": ai_agent_id,
+            "id": session_id,
+            "messages": [{"role": "user", "content": "How long does it take?"}],
+        })
        ```
      </TabItem>
    </Tabs>
@@ -229,22 +247,27 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
 
 <Steps>
 
-1. **列出已有流程以找到你的项目 ID**
+1. **获取你的项目 ID**
+
+   从 Imbrace 控制台 → Workflows 复制你的 Project ID；如果你的组织已有流程，也可以通过代码解析：
 
    <Tabs syncKey="lang">
      <TabItem label="TypeScript">
        ```typescript
-       const { data: flows } = await client.workflows.listFlows({ limit: 5 })
-       const projectId = flows[0]?.projectId
-       console.log("Project ID:", projectId)
+       // 方案 A — 从控制台复制后硬编码（推荐新组织使用）
+       const projectId = "your_project_id"
+
+       // 方案 B — 从已有流程解析（如果组织还没有任何流程则抛出异常）
+       const projectId = await client.workflows.resolveProjectId()
        ```
      </TabItem>
      <TabItem label="Python">
        ```python
-       res = client.workflows.list_flows(limit=5)
-       flows = res.get("data", [])
-       project_id = flows[0]["projectId"] if flows else None
-       print("Project ID:", project_id)
+       # 方案 A — 从控制台复制后硬编码（推荐新组织使用）
+       project_id = "your_project_id"
+
+       # 方案 B — 从已有流程解析（如果组织还没有任何流程则抛出异常）
+       project_id = client.workflows.resolve_project_id()
        ```
      </TabItem>
    </Tabs>
@@ -443,7 +466,7 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
        ```typescript
        const folder = await client.boards.createFolder({
          name: "Product Documentation",
-          organization_id: process.env.IMBRACE_ORGANIZATION_ID,
+         organization_id: process.env.IMBRACE_ORGANIZATION_ID,
          parent_id: "root",
        })
        console.log("Folder ID:", folder._id)
@@ -453,7 +476,7 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
        ```python
        folder = client.boards.create_folder({
            "name": "Product Documentation",
-            "organization_id": os.environ.get("IMBRACE_ORGANIZATION_ID"),
+           "organization_id": os.environ.get("IMBRACE_ORGANIZATION_ID"),
            "parent_id": "root",
        })
        print("Folder ID:", folder["_id"])
@@ -472,7 +495,7 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
        const formData = new FormData()
        formData.append("file", new Blob([fileBuffer], { type: "application/pdf" }), "faq.pdf")
        formData.append("folder_id", folder._id)
-        formData.append("organization_id", process.env.IMBRACE_ORGANIZATION_ID ?? "")
+       formData.append("organization_id", process.env.IMBRACE_ORGANIZATION_ID ?? "")
 
        const uploaded = await client.boards.uploadFile(formData)
        console.log("File uploaded:", uploaded.file_id)
@@ -486,7 +509,7 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
        files = {
            "file": (path.name, path.read_bytes(), "application/pdf"),
            "folder_id": (None, folder["_id"]),
-            "organization_id": (None, os.environ.get("IMBRACE_ORGANIZATION_ID")),
+           "organization_id": (None, os.environ.get("IMBRACE_ORGANIZATION_ID")),
        }
        uploaded = client.boards.upload_file(files)
        print("File uploaded:", uploaded.get("file_id") or uploaded.get("_id"))
@@ -599,26 +622,31 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
 
 2. **添加自定义字段**
 
-   字段类型包括 `ShortText`、`LongText`、`Number`、`Dropdown`、`Date`、`Checkbox` 等。`createField` 返回更新后的面板 — 在 `board.fields` 中找到你的新字段。
+   字段类型包括 `ShortText`、`LongText`、`Number`、`Dropdown`、`Date`、`Checkbox` 等。`createField` 返回新创建的字段。要查看面板上的所有字段，请另外获取该面板。
 
    <Tabs syncKey="lang">
      <TabItem label="TypeScript">
        ```typescript
-       const updated = await client.boards.createField(board._id, {
+       await client.boards.createField(board._id, {
          name: "Company",
          type: "ShortText",
        })
-       // 找到标识符字段（每个面板自动创建）
-       const identifierField = updated.fields.find(f => f.is_identifier)
+
+       // 面板会自动创建一个标识符字段 — 获取面板以查看所有字段
+       const boardWithFields = await client.boards.get(board._id) as any
+       const identifierField = boardWithFields.fields?.find((f: any) => f.is_identifier)
        ```
      </TabItem>
      <TabItem label="Python">
        ```python
-       updated = client.boards.create_field(board["_id"], {
+       client.boards.create_field(board["_id"], {
            "name": "Company",
            "type": "ShortText",
        })
-       identifier_field = next(f for f in updated["fields"] if f.get("is_identifier"))
+
+       # 获取面板以查看所有字段（包括自动创建的标识符字段）
+       board_with_fields = client.boards.get(board["_id"])
+       identifier_field = next(f for f in board_with_fields.get("fields", []) if f.get("is_identifier"))
        ```
      </TabItem>
    </Tabs>
@@ -719,3 +747,13 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
    </Tabs>
 
 </Steps>
+
+---
+
+### 下一步
+
+- [资源 →](/sdk/resources/) — 覆盖全部四个工作流的按命名空间方法参考
+- [AI 代理 →](/sdk/ai-agent/) — 深入了解 `streamChat`、嵌入和 parquet
+- [工作流 →](/sdk/workflows/) — 流程操作、MCP 服务器和运行历史
+- [Document AI →](/sdk/document-ai/) — AI 驱动的文档解析和提取
+- [数据面板 →](/sdk/databoard/) — 面板字段、条目、搜索、分段和 CSV

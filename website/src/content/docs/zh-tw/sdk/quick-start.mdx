@@ -1,9 +1,9 @@
-﻿---
+---
 title: 快速入門
 description: 在一分鐘內完成你的第一個 Imbrace API 呼叫。
 ---
 
-import { Tabs, TabItem } from "@astrojs/starlight/components";
+import { Tabs, TabItem, Aside } from "@astrojs/starlight/components";
 import AuthOnly from "../../../../components/AuthOnly.astro";
 
 ### 1. 初始化客戶端
@@ -68,7 +68,9 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
 </Tabs>
 </AuthOnly>
 
-> 切換頁首的**認證**下拉選單可以在整個網站範圍內切換 API 金鑰和存取令牌範例。請參閱[認證](/sdk/authentication/)以了解如何選擇。
+<Aside type="tip">
+  不確定該使用哪種憑證？請參閱[認證 →](/sdk/authentication/)
+</Aside>
 
 ---
 
@@ -91,12 +93,13 @@ Boards 是 CRM 管道 — 潛在客戶、交易、任務或任何結構化資料
     boards = client.boards.list()
 
     for board in boards.get("data", []):
-        print(board["id"], board.get("name"))
+        board_id = board.get("_id") or board.get("id")
+        print(board_id, board.get("name"))
     ```
   </TabItem>
 </Tabs>
 
-如果您看到您的 boards 列出，表示 SDK 已連線並通過認證。
+如果您看到您的 boards 列出，表示 SDK 已連線並通過認證。空清單（`data: []`）只代表目前還沒有任何 board — 這是正常的，並非錯誤。
 
 ---
 

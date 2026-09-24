@@ -1,9 +1,9 @@
-﻿---
+---
 title: 快速入门
 description: 在一分钟内完成你的第一个 Imbrace API 调用。
 ---
 
-import { Tabs, TabItem } from "@astrojs/starlight/components";
+import { Tabs, TabItem, Aside } from "@astrojs/starlight/components";
 import AuthOnly from "../../../../components/AuthOnly.astro";
 
 ### 1. 初始化客户端
@@ -68,7 +68,9 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
 </Tabs>
 </AuthOnly>
 
-> 切换页眉中的**认证**下拉菜单可在整个网站范围内切换 API Key 和 Access Token 示例。请参见[认证](/zh-cn/sdk/authentication/)了解如何选择。
+<Aside type="tip">
+  不确定该用哪种凭证？请参见[认证 →](/zh-cn/sdk/authentication/)
+</Aside>
 
 ---
 
@@ -91,12 +93,13 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
     boards = client.boards.list()
 
     for board in boards.get("data", []):
-        print(board["id"], board.get("name"))
+        board_id = board.get("_id") or board.get("id")
+        print(board_id, board.get("name"))
     ```
   </TabItem>
 </Tabs>
 
-如果你看到了面板列表，说明 SDK 已连接并认证通过。
+如果你看到了面板列表，说明 SDK 已连接并认证通过。空列表（`data: []`）只是表示还没有任何面板 — 这没问题，不是错误。
 
 ---
 

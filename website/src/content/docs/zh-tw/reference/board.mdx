@@ -11,11 +11,11 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ---
 
-## Schema
+## 結構定義
 
 ### Board
 
-| Field | Type | 說明 |
+| 欄位 | 類型 | 說明 |
 |-------|------|------|
 | `object_name` | string? | 物件類型識別碼 |
 | `id` | string | 唯一的 board ID |
@@ -30,7 +30,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ### BoardField
 
-| Field | Type | 說明 |
+| 欄位 | 類型 | 說明 |
 |-------|------|------|
 | `_id` | string | 唯一的欄位 ID |
 | `name` | string | 欄位顯示名稱 |
@@ -40,7 +40,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ### CreateBoardInput
 
-| Field | Type | Required | 說明 |
+| 欄位 | 類型 | 必填 | 說明 |
 |-------|------|----------|------|
 | `name` | string | ✓ | Board 名稱 |
 | `description` | string | | 選用說明 |
@@ -51,60 +51,60 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ---
 
-## Methods
+## 方法
 
 ### Board CRUD
 
-| Method | TypeScript | Python | 說明 |
+| 方法 | TypeScript | Python | 說明 |
 |--------|-----------|--------|------|
-| List boards | `list` | `list` | 列出所有 board |
-| Get board | `get` | `get` | 依 ID 取得 board |
-| Create board | `create` | `create` | 建立新 board |
-| Update board | `update` | `update` | 更新 board 名稱/說明 |
-| Delete board | `delete` | `delete` | 刪除 board |
-| Reorder boards | `reorder` | `reorder` | 變更顯示順序 |
+| 列出 boards | `list` | `list` | 列出所有 board |
+| 取得 board | `get` | `get` | 依 ID 取得 board |
+| 建立 board | `create` | `create` | 建立新 board |
+| 更新 board | `update` | `update` | 更新 board 名稱/說明 |
+| 刪除 board | `delete` | `delete` | 刪除 board |
+| 重新排序 boards | `reorder` | `reorder` | 變更顯示順序 |
 
 ### Import / Export
 
-| Method | TypeScript | Python | 說明 |
+| 方法 | TypeScript | Python | 說明 |
 |--------|-----------|--------|------|
-| Export CSV | `exportCsv` | `export_csv` | 將所有項目匯出為 CSV |
-| Import CSV | `importCsv` | `import_csv` | 從 CSV 檔案匯入項目 |
-| Import Excel | `importExcel` | `import_excel` | 從 Excel 檔案匯入項目 |
-| Get import progress | `getImportProgress` | `get_import_progress` | 輪詢進行中匯入的狀態 |
+| 匯出 CSV | `exportCsv` | `export_csv` | 將所有項目匯出為 CSV |
+| 匯入 CSV | `importCsv` | `import_csv` | 從 CSV 檔案匯入項目 |
+| 匯入 Excel | `importExcel` | `import_excel` | 從 Excel 檔案匯入項目 |
+| 取得匯入進度 | `getImportProgress` | `get_import_progress` | 輪詢進行中匯入的狀態 |
 
-### Fields
+### 欄位
 
-| Method | TypeScript | Python | 說明 |
+| 方法 | TypeScript | Python | 說明 |
 |--------|-----------|--------|------|
-| Create field | `createField` | `create_field` | 向 board 新增欄位 |
-| Update field | `updateField` | `update_field` | 修改欄位配置 |
-| Delete field | `deleteField` | `delete_field` | 移除欄位 |
-| Reorder fields | `reorderFields` | `reorder_fields` | 變更欄位順序 |
-| Bulk update fields | `bulkUpdateFields` | `bulk_update_fields` | 同時更新多個欄位 |
+| 建立欄位 | `createField` | `create_field` | 向 board 新增欄位 |
+| 更新欄位 | `updateField` | `update_field` | 修改欄位配置 |
+| 刪除欄位 | `deleteField` | `delete_field` | 移除欄位 |
+| 重新排序欄位 | `reorderFields` | `reorder_fields` | 變更欄位順序 |
+| 批次更新欄位 | `bulkUpdateFields` | `bulk_update_fields` | 同時更新多個欄位 |
 
-### Items
+### 項目
 
-| Method | TypeScript | Python | 說明 |
+| 方法 | TypeScript | Python | 說明 |
 |--------|-----------|--------|------|
-| List items | `listItems` | `list_items` | 分頁的 board 項目列表 |
-| Get item | `getItem` | `get_item` | 取得單一項目 |
-| Create item | `createItem` | `create_item` | 向 board 新增項目 |
-| Update item | `updateItem` | `update_item` | 更新項目欄位值 |
-| Delete item | `deleteItem` | `delete_item` | 移除項目 |
-| Bulk delete | `bulkDeleteItems` | `bulk_delete_items` | 依 ID 刪除多個項目 |
-| Search | `search` | `search` | 在 board 內進行全文搜尋 |
-| Link items | `linkItems` | `link_items` | 將項目連結到相關 board 項目 |
-| Unlink items | `unlinkItems` | `unlink_items` | 移除項目間的連結 |
+| 列出項目 | `listItems` | `list_items` | 分頁的 board 項目列表 |
+| 取得項目 | `getItem` | `get_item` | 取得單一項目 |
+| 建立項目 | `createItem` | `create_item` | 向 board 新增項目 |
+| 更新項目 | `updateItem` | `update_item` | 更新項目欄位值 |
+| 刪除項目 | `deleteItem` | `delete_item` | 移除項目 |
+| 批次刪除 | `bulkDeleteItems` | `bulk_delete_items` | 依 ID 刪除多個項目 |
+| 搜尋 | `search` | `search` | 在 board 內進行全文搜尋 |
+| 連結項目 | `linkItems` | `link_items` | 將項目連結到相關 board 項目 |
+| 取消連結項目 | `unlinkItems` | `unlink_items` | 移除項目間的連結 |
 
-### Segments
+### 區隔
 
-| Method | TypeScript | Python | 說明 |
+| 方法 | TypeScript | Python | 說明 |
 |--------|-----------|--------|------|
-| List segments | `listSegments` | `list_segments` | 列出已儲存的篩選檢視 |
-| Create segment | `createSegment` | `create_segment` | 將篩選儲存為區段 |
-| Update segment | `updateSegment` | `update_segment` | 更新區段的篩選條件 |
-| Delete segment | `deleteSegment` | `delete_segment` | 移除區段 |
+| 列出區隔 | `listSegments` | `list_segments` | 列出已儲存的篩選檢視 |
+| 建立區隔 | `createSegment` | `create_segment` | 將篩選儲存為區段 |
+| 更新區隔 | `updateSegment` | `update_segment` | 更新區段的篩選條件 |
+| 刪除區隔 | `deleteSegment` | `delete_segment` | 移除區段 |
 
 ---
 

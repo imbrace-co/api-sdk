@@ -1,4 +1,4 @@
-﻿---
+---
 title: AI Agent
 description: Tài liệu tham khảo cho chatAi / chat_ai (quản lý AI agent), aiAgent / ai_agent (streaming chat, embeddings, parquet, tracing), và dịch vụ client.ai tương thích OpenAI.
 ---
@@ -86,13 +86,19 @@ const subAgents = await client.chatAi.listAiAgentSubAgents();
 // Lấy một AI agent
 const agent = await client.chatAi.getAiAgent("9f77692f-33d0-436a-8138-2efb268838e6");
 
-// Tạo — provider_id và model_id là bắt buộc
+// Tạo. SDK tự điền { provider_id: "system", model_id: "Default" }
+// khi bị bỏ trống; "Default" định tuyến tới model mặc định đã cấu hình của tổ chức
+// và dùng được ở mọi tổ chức. Tên cụ thể như "gpt-4o" chỉ hoạt động nếu
+// nhà cung cấp system của tổ chức thực sự có model đó — `client.ai.listModels()` cho biết
+// model nào có sẵn. Truyền `streaming: true` để /v2/chat phát các sự kiện SSE text-delta
+// mà `streamChatText` (bên dưới) có thể phân tích; nếu không, server trả về
+// toàn bộ câu trả lời trong một response text/plain và các parser SSE không nhận được gì.
 const created = await client.chatAi.createAiAgent({
   name: "Support Bot",
   workflow_name: "support_bot_v1",
   provider_id: "system",
-  model_id: "Default",   // tên model cụ thể như "gpt-4o" chỉ hoạt động nếu nhà cung cấp system của tổ chức có model đó
-  streaming: true,       // phải bật để chat UI nhận text-delta SSE events
+  model_id: "Default",
+  streaming: true,
   description: "Handles tier-1 support queries",
 });
 
@@ -122,13 +128,19 @@ sub_agents = client.chat_ai.list_ai_agent_sub_agents()
 # Lấy một AI agent
 agent = client.chat_ai.get_ai_agent("9f77692f-33d0-436a-8138-2efb268838e6")
 
-# Tạo — provider_id và model_id là bắt buộc
+# Tạo. SDK tự điền {"provider_id": "system", "model_id": "Default"}
+# khi bị bỏ trống; "Default" định tuyến tới model mặc định đã cấu hình của tổ chức và
+# dùng được ở mọi tổ chức. Tên cụ thể như "gpt-4o" chỉ hoạt động nếu nhà cung cấp
+# system của tổ chức thực sự có model đó — `client.ai.list_models()` cho biết model nào
+# có sẵn. Truyền `streaming: True` để /v2/chat phát các sự kiện SSE text-delta
+# mà `stream_chat_text` (bên dưới) có thể phân tích; nếu không, server trả về
+# toàn bộ câu trả lời trong một response text/plain và các parser SSE không nhận được gì.
 created = client.chat_ai.create_ai_agent({
     "name":          "Support Bot",
     "workflow_name": "support_bot_v1",
     "provider_id":   "system",
-    "model_id":      "Default",   # tên model cụ thể như "gpt-4o" chỉ hoạt động nếu nhà cung cấp system của tổ chức có model đó
-    "streaming":     True,        # phải bật để chat UI nhận text-delta SSE events
+    "model_id":      "Default",
+    "streaming":     True,
     "description":   "Handles tier-1 support queries",
 })
 
@@ -151,7 +163,7 @@ client.chat_ai.delete_ai_agent(created["id"])
 
 ### Completions (qua `client.ai`)
 
-Chat completions tương thích OpenAI có sẵn trên namespace `client.ai` cho cả TypeScript và Python. Xem phần [Dịch vụ AI tương thích OpenAI](#openai-compatible-ai-service--clientai) bên dưới để biết chi tiết.
+Chat completions tương thích OpenAI có sẵn trên namespace `client.ai` cho cả TypeScript và Python. Xem phần [Dịch vụ AI tương thích OpenAI](#dịch-vụ-ai-tương-thích-openai--clientai) bên dưới để biết chi tiết.
 
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">
@@ -230,7 +242,7 @@ extracted = client.chat_ai.extract_file(files={"file": open("report.pdf", "rb")}
 
 ### Phiên Chat v1
 
-Các endpoint REST chat cũ để duy trì lịch sử hội thoại. Có sẵn trên `client.ai_agent` cho cả TypeScript và Python. Xem [Legacy v1 chat](#legacy-v1-chat) bên dưới.
+Các endpoint REST chat cũ để duy trì lịch sử hội thoại. Có sẵn trên `client.ai_agent` cho cả TypeScript và Python. Xem [Legacy v1 chat](#chat-v1-cũ) bên dưới.
 
 ### Knowledge Hub — thư mục & knowledge bases
 
@@ -673,37 +685,95 @@ if result["success"]:
 
 ## Chat v2 — Streaming (SSE)
 
-Trả về phản hồi thô. Tiêu thụ body dưới dạng luồng Server-Sent Events.
+`streamChat` / `stream_chat` trả về một `Response` thô qua `POST /ai-agent/v2/chat`. Định dạng body phụ thuộc vào cờ `streaming` của agent:
+
+| `streaming` của agent | `Content-Type` | Body |
+|---|---|---|
+| `true` (khuyến nghị) | `text/event-stream` | Vercel-AI-SDK UI-Message-Stream: các sự kiện `data: {"type":"text-delta","delta":"..."}` |
+| `false` (mặc định cho agent mới tạo) | `text/plain` | Toàn bộ câu trả lời trong một chuỗi duy nhất — không có định dạng SSE |
+
+### Khuyến nghị: `streamChatText` / `stream_chat_text`
+
+Các helper tiện lợi này bao bọc `streamChat`, phân tích luồng sự kiện SSE và trả về từng đoạn văn bản thuần. Chúng giả định agent đã được tạo với `streaming: true`.
 
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">
 ```typescript
-const response = await client.aiAgent.streamChat({
+for await (const chunk of client.aiAgent.streamChatText({
   id: "chat_id",
   assistant_id: "asst_abc",
   messages: [{ role: "user", content: "What can you do?" }],
-});
-
-const reader = response.body!.getReader();
-const decoder = new TextDecoder();
-while (true) {
-  const { done, value } = await reader.read();
-  if (done) break;
-  process.stdout.write(decoder.decode(value));
+})) {
+  process.stdout.write(chunk);
 }
 ```
 </TabItem>
 <TabItem label="Python">
 ```python
-response = client.ai_agent.stream_chat({
+for chunk in client.ai_agent.stream_chat_text({
     "id": "chat_id",
     "assistant_id": "asst_abc",
     "messages": [{"role": "user", "content": "What can you do?"}],
-})
+}):
+    print(chunk, end="", flush=True)
+```
+</TabItem>
+</Tabs>
 
-for line in response.iter_lines():
-    if line:
-        print(line)
+<Aside type="caution" title="Câu trả lời rỗng? Hãy kiểm tra cờ streaming của agent.">
+  Nếu `streamChatText` / `stream_chat_text` trả về **0 chunk** dù server phản hồi 200 OK, gần như chắc chắn agent đang có `streaming: false`. Response khi đó là `text/plain`, không chứa dòng `data:` nào, và parser SSE âm thầm không phát ra gì. Khắc phục bằng cách đặt `streaming: true` khi tạo (hoặc qua `updateAiAgent(id, { streaming: true })`), hoặc dùng mẫu xử lý theo content-type bên dưới để hỗ trợ cả hai định dạng.
+</Aside>
+
+### Xử lý cả agent streaming và non-streaming
+
+Khi bạn không kiểm soát cách agent được tạo, hãy rẽ nhánh theo `Content-Type`:
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const body = {
+  id: "chat_id",
+  assistant_id: "asst_abc",
+  messages: [{ role: "user", content: "What can you do?" }],
+};
+
+const res = await client.aiAgent.streamChat(body);
+if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+
+const contentType = res.headers.get("content-type") ?? "";
+let reply = "";
+
+if (contentType.includes("text/event-stream")) {
+  // agent streaming — phân tích lại qua helper của SDK
+  for await (const chunk of client.aiAgent.streamChatText(body)) {
+    reply += chunk;
+    process.stdout.write(chunk);   // hiển thị ngay khi nhận được
+  }
+} else {
+  // agent non-streaming — body là toàn bộ câu trả lời
+  reply = await res.text();
+  process.stdout.write(reply);
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+body = {
+    "id": "chat_id",
+    "assistant_id": "asst_abc",
+    "messages": [{"role": "user", "content": "What can you do?"}],
+}
+
+res = client.ai_agent.stream_chat(body)
+res.raise_for_status()
+
+if "text/event-stream" in res.headers.get("content-type", ""):
+    # agent streaming — phân tích lại qua helper của SDK
+    for chunk in client.ai_agent.stream_chat_text(body):
+        print(chunk, end="", flush=True)
+else:
+    # agent non-streaming — body là toàn bộ câu trả lời
+    print(res.text)
 ```
 
 **Bất đồng bộ:**
@@ -714,12 +784,13 @@ from imbrace import AsyncImbraceClient
 
 async def main():
     async with AsyncImbraceClient() as client:
-        response = await client.ai_agent.stream_chat({
+        res = await client.ai_agent.stream_chat({
             "id": "chat_id",
             "assistant_id": "asst_abc",
             "messages": [{"role": "user", "content": "Hello"}],
         })
-        async for line in response.aiter_lines():
+        res.raise_for_status()
+        async for line in res.aiter_lines():
             if line:
                 print(line)
 
@@ -838,16 +909,15 @@ classification = client.ai_agent.classify_file(file_id="file_abc")
 
 ## Data Board
 
-Đề xuất loại trường có hỗ trợ AI cho các tập dữ liệu có cấu trúc.
+Phân tích tài liệu mẫu (PDF/hình ảnh) để đề xuất JSON schema phù hợp cho các agent Document AI.
 
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">
 ```typescript
 const result = await client.aiAgent.suggestFieldTypes({
-  fields: [
-    { name: "created_at", samples: ["2024-01-01", "2024-02-15"] },
-    { name: "amount",     samples: [100, 200.5, 999] },
-    { name: "is_active",  samples: [true, false, true] },
+  fileUrls: [
+    "https://cdn.imbrace.co/docs/invoice-1.pdf",
+    "https://cdn.imbrace.co/docs/invoice-2.pdf",
   ],
 });
 // result.fields[i].suggestedType → "datetime" | "number" | "boolean" | ...
@@ -855,11 +925,12 @@ const result = await client.aiAgent.suggestFieldTypes({
 </TabItem>
 <TabItem label="Python">
 ```python
-result = client.ai_agent.suggest_field_types(fields=[
-    {"name": "created_at", "samples": ["2024-01-01", "2024-02-15"]},
-    {"name": "amount",     "samples": [100, 200.5, 999]},
-    {"name": "is_active",  "samples": [True, False, True]},
-])
+result = client.ai_agent.suggest_field_types(
+    file_urls=[
+        "https://cdn.imbrace.co/docs/invoice-1.pdf",
+        "https://cdn.imbrace.co/docs/invoice-2.pdf",
+    ],
+)
 # result["fields"][i]["suggestedType"] → "datetime" | "number" | "boolean" | ...
 ```
 </TabItem>

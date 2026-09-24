@@ -11,13 +11,13 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ---
 
-## Schema
+## 結構定義
 
 ### StreamChatBody
 
 初始化串流聊天會話的參數。
 
-| Field | Type | Required | 說明 |
+| 欄位 | 類型 | 必填 | 說明 |
 |-------|------|----------|------|
 | `assistant_id` | string | ✓ | 要聊天的 AI 代理 ID |
 | `messages` | array | ✓ | 對話歷史記錄（role + content 成對） |
@@ -26,9 +26,13 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 | `provider_id` | string | | 覆寫代理的預設 LLM 提供者 |
 | `user_id` | string | | 外部使用者識別碼 |
 
+:::note
+回應格式取決於**代理**的 `streaming` 欄位（在建立時透過 `createAiAgent` 設定），而非此 body 中的任何內容。以 `streaming: true` 建立的代理會回傳 `Content-Type: text/event-stream`（SSE — 可由 `streamChatText` / `stream_chat_text` 解析）。`streaming: false` 的代理（新建立代理的預設值）會回傳 `Content-Type: text/plain`，完整回覆為單一字串。
+:::
+
 ### StreamSubAgentChatBody
 
-| Field | Type | Required | 說明 |
+| 欄位 | 類型 | 必填 | 說明 |
 |-------|------|----------|------|
 | `assistant_id` | string | ✓ | AI 代理 ID |
 | `session_id` | string | ✓ | 父會話 ID |
@@ -37,65 +41,103 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ---
 
-## Methods
+## 方法
 
-| Method | TypeScript | Python | 說明 |
+| 方法 | TypeScript | Python | 說明 |
 |--------|-----------|--------|------|
-| Stream chat | `streamChat` | `stream_chat` | 與 AI 代理開始串流聊天會話 |
-| Stream sub-agent chat | `streamSubAgentChat` | `stream_sub_agent_chat` | 在子代理會話範圍內進行串流聊天 |
-| Get sub-agent history | `getSubAgentHistory` | `get_sub_agent_history` | 擷取子代理聊天的訊息歷史 |
-| List chats | `listChats` | `list_chats` | 列出組織的聊天會話 |
-| Get chat | `getChat` | `get_chat` | 取得單一聊天會話 |
-| Delete chat | `deleteChat` | `delete_chat` | 刪除聊天會話 |
-| Prompt suggestions | `getAgentPromptSuggestion` | `get_agent_prompt_suggestion` | 取得代理的建議提示 |
-| Classify file | `classifyFile` | `classify_file` | 將檔案分類至類別 |
-| Suggest field types | `suggestFieldTypes` | `suggest_field_types` | 從範例文件建議 JSON 結構 |
-| Process embedding | `processEmbedding` | `process_embedding` | 將檔案嵌入知識庫 |
-| List embedding files | `listEmbeddingFiles` | `list_embedding_files` | 列出所有已嵌入的檔案 |
-| Get embedding file | `getEmbeddingFile` | `get_embedding_file` | 取得單一已嵌入的檔案 |
-| Preview embedding file | `previewEmbeddingFile` | `preview_embedding_file` | 預覽已嵌入的內容 |
-| Update embedding status | `updateEmbeddingFileStatus` | `update_embedding_file_status` | 更新檔案嵌入狀態 |
-| Delete embedding file | `deleteEmbeddingFile` | `delete_embedding_file` | 從知識庫移除檔案 |
-| Generate parquet | `generateParquet` | `generate_parquet` | 將資料陣列轉換為 parquet 檔案 |
-| List parquet files | `listParquetFiles` | `list_parquet_files` | 列出已生成的 parquet 檔案 |
-| Delete parquet file | `deleteParquetFile` | `delete_parquet_file` | 依名稱刪除 parquet 檔案 |
-| Get traces | `getTraces` | `get_traces` | 查詢分散式追蹤 |
-| Get trace | `getTrace` | `get_trace` | 依 ID 取得單一追蹤 |
-| Get trace services | `getTraceServices` | `get_trace_services` | 列出發出追蹤的服務 |
+| 串流聊天 | `streamChat` | `stream_chat` | 與 AI 代理開始串流聊天會話 — 傳回原始 `Response` |
+| 串流聊天（解析後文字） | `streamChatText` | `stream_chat_text` | 包裝 `streamChat`，並逐一產出從 SSE 事件串流解析出的純文字片段（需要代理設定 `streaming: true`） |
+| 串流子代理聊天 | `streamSubAgentChat` | `stream_sub_agent_chat` | 在子代理會話範圍內進行串流聊天 |
+| 取得子代理歷史 | `getSubAgentHistory` | `get_sub_agent_history` | 擷取子代理聊天的訊息歷史 |
+| 列出聊天 | `listChats` | `list_chats` | 列出組織的聊天會話 |
+| 取得聊天 | `getChat` | `get_chat` | 取得單一聊天會話 |
+| 刪除聊天 | `deleteChat` | `delete_chat` | 刪除聊天會話 |
+| 提示建議 | `getAgentPromptSuggestion` | `get_agent_prompt_suggestion` | 取得代理的建議提示 |
+| 分類檔案 | `classifyFile` | `classify_file` | 將檔案分類至類別 |
+| 建議欄位類型 | `suggestFieldTypes` | `suggest_field_types` | 從範例文件建議 JSON 結構 |
+| 處理嵌入 | `processEmbedding` | `process_embedding` | 將檔案嵌入知識庫 |
+| 列出嵌入檔案 | `listEmbeddingFiles` | `list_embedding_files` | 列出所有已嵌入的檔案 |
+| 取得嵌入檔案 | `getEmbeddingFile` | `get_embedding_file` | 取得單一已嵌入的檔案 |
+| 預覽嵌入檔案 | `previewEmbeddingFile` | `preview_embedding_file` | 預覽已嵌入的內容 |
+| 更新嵌入狀態 | `updateEmbeddingFileStatus` | `update_embedding_file_status` | 更新檔案嵌入狀態 |
+| 刪除嵌入檔案 | `deleteEmbeddingFile` | `delete_embedding_file` | 從知識庫移除檔案 |
+| 產生 parquet | `generateParquet` | `generate_parquet` | 將資料陣列轉換為 parquet 檔案 |
+| 列出 parquet 檔案 | `listParquetFiles` | `list_parquet_files` | 列出已生成的 parquet 檔案 |
+| 刪除 parquet 檔案 | `deleteParquetFile` | `delete_parquet_file` | 依名稱刪除 parquet 檔案 |
+| 取得追蹤清單 | `getTraces` | `get_traces` | 查詢分散式追蹤 |
+| 取得追蹤 | `getTrace` | `get_trace` | 依 ID 取得單一追蹤 |
+| 取得追蹤服務 | `getTraceServices` | `get_trace_services` | 列出發出追蹤的服務 |
 
 ---
 
 ## streamChat / stream_chat
 
-與 AI 代理開始串流聊天。傳回原始 HTTP 回應 — 迭代串流以讀取 SSE chunks。
+傳回原始 HTTP `Response`。其 body 為 `text/event-stream`（當代理設定 `streaming: true` 時）或 `text/plain`（當 `streaming: false` 時）。SSE 的情況建議改用下方的 `streamChatText` 輔助方法 — 它會替你完成解析。
 
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">
 ```typescript
-const response = await client.aiAgent.streamChat({
+const res = await client.aiAgent.streamChat({
   assistant_id: "agent_id",
   messages: [{ role: "user", content: "Hello" }],
   user_id: "user_123",
 });
 
-const reader = response.body?.getReader();
-const decoder = new TextDecoder();
-while (reader) {
-  const { done, value } = await reader.read();
-  if (done) break;
-  console.log(decoder.decode(value));
+if ((res.headers.get("content-type") ?? "").includes("text/event-stream")) {
+  const reader = res.body!.getReader();
+  const decoder = new TextDecoder();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    console.log(decoder.decode(value));   // 原始 SSE 位元組
+  }
+} else {
+  console.log(await res.text());          // 完整回覆，純文字
 }
 ```
 </TabItem>
 <TabItem label="Python">
 ```python
-response = client.ai_agent.stream_chat({
+res = client.ai_agent.stream_chat({
     "assistant_id": "agent_id",
     "messages": [{"role": "user", "content": "Hello"}],
     "user_id": "user_123",
 })
-for chunk in response.iter_lines():
-    print(chunk)
+
+if "text/event-stream" in res.headers.get("content-type", ""):
+    for line in res.iter_lines():
+        if line:
+            print(line)
+else:
+    print(res.text)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## streamChatText / stream_chat_text
+
+`streamChat` 的便利包裝。它會解析 Vercel-AI-SDK UI-Message-Stream（`data: {"type":"text-delta","delta":"..."}`），並將每個文字片段以字串形式逐一產出。需要代理以 `streaming: true` 建立 — 否則伺服器會回傳 `text/plain`（沒有 `data:` 行），此產生器將產出 **0 個片段**。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+for await (const chunk of client.aiAgent.streamChatText({
+  assistant_id: "agent_id",
+  messages: [{ role: "user", content: "Hello" }],
+})) {
+  process.stdout.write(chunk);
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+for chunk in client.ai_agent.stream_chat_text({
+    "assistant_id": "agent_id",
+    "messages": [{"role": "user", "content": "Hello"}],
+}):
+    print(chunk, end="", flush=True)
 ```
 </TabItem>
 </Tabs>

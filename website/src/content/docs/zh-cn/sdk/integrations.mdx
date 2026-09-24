@@ -130,7 +130,9 @@ export default async function ContactsPage() {
 import { ImbraceClient } from "@imbrace/sdk";
 import { writeFileSync } from "fs";
 
-const client = new ImbraceClient();
+const client = new ImbraceClient({
+  apiKey: process.env.IMBRACE_API_KEY,
+});
 
 async function exportContacts() {
   const { data: contacts } = await client.contacts.list({ limit: 1000 });
@@ -317,7 +319,9 @@ def sync_contacts(self):
         raise self.retry(exc=exc, countdown=2 ** self.request.retries)
 ```
 
-<Aside type="tip">`n不要跨 Celery 工作器共享单个 `ImbraceClient` 实例 — 使用上下文管理器在每个任务调用中创建一个。httpx 连接池不适合跨进程共享。`n</Aside>
+<Aside type="tip">
+  不要跨 Celery 工作器共享单个 `ImbraceClient` 实例 — 使用上下文管理器在每个任务调用中创建一个。httpx 连接池不适合跨进程共享。
+</Aside>
 
 ---
 
@@ -385,17 +389,26 @@ class OtpVerify(BaseModel):
 @app.post("/auth/request-otp")
 async def request_otp(body: OtpRequest):
     async with AsyncImbraceClient() as client:
-        await client.auth.request_otp(body.email)
+        await client.request_otp(body.email)
     return {"message": "OTP 已发送"}
 
 @app.post("/auth/verify-otp")
 async def verify_otp(body: OtpVerify):
     async with AsyncImbraceClient() as client:
         try:
-            result = await client.auth.login_with_otp(body.email, body.otp)
-            return {"access_token": result["token"]}
+            result = await client.login_with_otp(body.email, body.otp)
+            token = result.get("accessToken") or result.get("token")
+            return {"access_token": token}
         except AuthError:
             raise HTTPException(status_code=401, detail="无效的 OTP")
 ```
 </TabItem>
 </Tabs>
+
+---
+
+### 下一步
+
+- [认证 →](/sdk/authentication/) — OTP 登录流程、凭证生命周期和令牌存储
+- [错误处理 →](/sdk/error-handling/) — `AuthError`、`ApiError` 和 `NetworkError` 如何呈现
+- [快速入门 →](/sdk/quick-start/) — 添加框架接入之前的最小可运行示例

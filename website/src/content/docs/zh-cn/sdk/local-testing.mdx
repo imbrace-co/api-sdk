@@ -154,13 +154,13 @@ IMBRACE_GATEWAY_URL=https://app-gateway.sandbox.imbrace.co python -m pytest test
 **`Cannot find package '@imbrace/sdk'`** (TypeScript)
 在 `test/test-local-pkg/ts` 中再次运行 `npm install`。它会从 `ts/` 构建出的 `.tgz` 解析 `@imbrace/sdk` — 若该文件缺失或过期，请在 `ts/` 重新运行 `npm pack`。
 
-**`ERR_MODULE_NOT_FOUND for a dist file`** (TypeScript)
+**dist 文件报 `ERR_MODULE_NOT_FOUND`**（TypeScript）
 构建还未运行，或者添加了源文件但没有重新构建。在 `ts/` 中运行 `npm run build`。
 
 **`ModuleNotFoundError: No module named 'imbrace'`** (Python)
 包未安装在当前虚拟环境中。重新运行 `pip install -e .`（editable）或 `pip install dist/imbrace-*.whl`。
 
-**401 / 403 on live calls**
+**实时调用返回 401 / 403**
 你的凭证已过期、被撤销或错误。对于 API Key，生成一个新的：
 
 ```bash
@@ -171,3 +171,11 @@ curl -X POST https://app-gateway.dev.imbrace.co/private/backend/v1/third_party_t
 ```
 
 对于其他运行时错误，请参见[错误处理](/zh-cn/sdk/error-handling/)和[故障排除](/zh-cn/guides/troubleshooting/)。
+
+---
+
+### 下一步
+
+- [测试指南 →](/guides/testing/) — SDK 源码的单元测试、集成测试、代码检查和类型检查
+- [错误处理 →](/sdk/error-handling/) — SDK 如何呈现错误和进行重试
+- [完整流程指南 →](/sdk/full-flow-guide/) — 回归测试所对应的端到端演练

@@ -8,26 +8,69 @@
 // hide content blocks marked with <AuthOnly mode="..."> and
 // <VersionOnly version="...">.
 
+interface Props {
+  /** BCP-47 tag of the page being rendered, e.g. `zh-TW`; falls back to English. */
+  lang?: string
+}
+
+const strings = {
+  en: {
+    auth: 'Auth',
+    version: 'Version',
+    accessToken: 'Access Token',
+    accessTokenDesc: 'Imbrace IS your backend — end-users log in via OTP.',
+    apiKey: 'API Key',
+    apiKeyDesc: 'Wrap Imbrace inside your own backend — server-to-server.',
+    latest: 'v1.4.0 (latest)',
+    latestDesc: 'Released July 2026 — current stable.',
+    panel: 'Documentation preferences',
+  },
+  vi: {
+    auth: 'Xác thực',
+    version: 'Phiên bản',
+    accessToken: 'Access Token',
+    accessTokenDesc: 'Imbrace LÀ backend của bạn — người dùng cuối đăng nhập qua OTP.',
+    apiKey: 'API Key',
+    apiKeyDesc: 'Đặt Imbrace sau backend của bạn — gọi server-to-server.',
+    latest: 'v1.4.0 (mới nhất)',
+    latestDesc: 'Phát hành tháng 7/2026 — bản ổn định hiện tại.',
+    panel: 'Tùy chọn tài liệu',
+  },
+  'zh-CN': {
+    auth: '认证',
+    version: '版本',
+    accessToken: 'Access Token',
+    accessTokenDesc: 'Imbrace 就是你的后端 — 终端用户通过 OTP 登录。',
+    apiKey: 'API Key',
+    apiKeyDesc: '把 Imbrace 包在你自己的后端内 — 服务器对服务器调用。',
+    latest: 'v1.4.0（最新）',
+    latestDesc: '2026 年 7 月发布 — 当前稳定版。',
+    panel: '文档偏好设置',
+  },
+  'zh-TW': {
+    auth: '認證',
+    version: '版本',
+    accessToken: 'Access Token',
+    accessTokenDesc: 'Imbrace 就是你的後端 — 終端使用者透過 OTP 登入。',
+    apiKey: 'API Key',
+    apiKeyDesc: '把 Imbrace 包在你自己的後端內 — 伺服器對伺服器呼叫。',
+    latest: 'v1.4.0（最新）',
+    latestDesc: '2026 年 7 月發布 — 目前穩定版。',
+    panel: '文件偏好設定',
+  },
+} as const
+
+const { lang = 'en' } = Astro.props
+const t = strings[lang as keyof typeof strings] ?? strings.en
+
 const authOptions = [
-  {
-    value: 'access-token',
-    label: 'Access Token',
-    desc: 'Imbrace IS your backend — end-users log in via OTP.',
-  },
-  {
-    value: 'api-key',
-    label: 'API Key',
-    desc: 'Wrap Imbrace inside your own backend — server-to-server.',
-  },
-] as const
+  { value: 'access-token', label: t.accessToken, desc: t.accessTokenDesc },
+  { value: 'api-key', label: t.apiKey, desc: t.apiKeyDesc },
+]
 
 const versionOptions = [
-  {
-    value: '1.4.0',
-    label: 'v1.4.0 (latest)',
-    desc: 'Released July 2026 — current stable.',
-  },
-] as const
+  { value: '1.4.0', label: t.latest, desc: t.latestDesc },
+]
 
 const defaultAuth = 'access-token'
 const defaultVersion = '1.4.0'
@@ -40,9 +83,9 @@ const versionJson = JSON.stringify(
 )
 ---
 
-<aside class="docs-controls" aria-label="Documentation preferences">
+<aside class="docs-controls" aria-label={t.panel}>
   <div class="docs-controls__field">
-    <div class="docs-controls__label">Auth</div>
+    <div class="docs-controls__label">{t.auth}</div>
     <select class="docs-auth-select" data-default={defaultAuth}>
       {authOptions.map((opt) => (
         <option value={opt.value} selected={opt.value === defaultAuth}>{opt.label}</option>
@@ -54,7 +97,7 @@ const versionJson = JSON.stringify(
   </div>
 
   <div class="docs-controls__field">
-    <div class="docs-controls__label">Version</div>
+    <div class="docs-controls__label">{t.version}</div>
     <select class="docs-version-select" data-default={defaultVersion}>
       {versionOptions.map((opt) => (
         <option value={opt.value} selected={opt.value === defaultVersion}>{opt.label}</option>

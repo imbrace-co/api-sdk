@@ -56,8 +56,9 @@ Imbrace 是你的后端。你的终端用户登录 Imbrace（通过 OTP 或密�
     import { ImbraceClient } from "@imbrace/sdk";
 
     const client = new ImbraceClient({
-      apiKey: process.env.IMBRACE_API_KEY,
-      env: "stable",
+      apiKey:         process.env.IMBRACE_API_KEY,
+      organizationId: process.env.IMBRACE_ORGANIZATION_ID,
+      env:            "stable",
     });
     ```
   </TabItem>
@@ -68,6 +69,8 @@ Imbrace 是你的后端。你的终端用户登录 Imbrace（通过 OTP 或密�
 
     client = ImbraceClient(
         api_key=os.environ["IMBRACE_API_KEY"],
+        organization_id=os.environ.get("IMBRACE_ORGANIZATION_ID"),
+        env="stable",
     )
     ```
   </TabItem>
@@ -82,16 +85,22 @@ Imbrace 是你的后端。你的终端用户登录 Imbrace（通过 OTP 或密�
 <Tabs syncKey="lang">
   <TabItem label="TypeScript">
     ```typescript
+    import { ImbraceClient } from "@imbrace/sdk";
+
     const client = new ImbraceClient({
       accessToken: process.env.IMBRACE_ACCESS_TOKEN,
-      env: "stable",
+      env:         "stable",
     });
     ```
   </TabItem>
   <TabItem label="Python">
     ```python
+    import os
+    from imbrace import ImbraceClient
+
     client = ImbraceClient(
         access_token=os.environ["IMBRACE_ACCESS_TOKEN"],
+        env="stable",
     )
     ```
   </TabItem>
@@ -122,7 +131,7 @@ Imbrace 是你的后端。你的终端用户登录 Imbrace（通过 OTP 或密�
     // 步骤 1：向用户邮箱发送 OTP
     await client.requestOtp("user@example.com")
 
-    // 步骤 2：用户提交收到的 OTP。SDK 会存储短期 login_acc_... 令牌,
+    // 步骤 2：用户提交收到的 OTP。SDK 会存储短期 login_acc_... 令牌，
     //         并在同一次调用中获取用户的组织列表。
     const { organizations } = await client.loginWithOtp("user@example.com", "ABC123")
     const chosen = organizations[0]  // ← 由您的 UI 选择
@@ -165,24 +174,28 @@ Imbrace 是你的后端。你的终端用户登录 Imbrace（通过 OTP 或密�
     async with AsyncImbraceClient() as client:
         await client.request_otp("user@example.com")
         res = await client.login_with_otp("user@example.com", "123456")
-        chosen = res["organizations"][0]
+        chosen = res["organizations"][0]  # ← 由您的 UI 选择
+
         await client.select_organization(chosen["organization_id"])
+
         me = await client.platform.get_me()
     ```
   </TabItem>
 </Tabs>
 
-> **单组织捷径。** 如果已预先知道组织 id（例如存储在 `IMBRACE_ORGANIZATION_ID`）,可以跳过挑选步骤,直接传给 `selectOrganization`。挑选步骤仅在用户属于多个组织时才需要。
+> **单组织捷径。** 如果已预先知道组织 id（例如存储在 `IMBRACE_ORGANIZATION_ID`），可以跳过挑选步骤，直接传给 `selectOrganization`。挑选步骤仅在用户属于多个组织时才需要。
 
 ---
 
 ### 密码登录
 
-`login()` 在单次调用中同时返回登录令牌和用户的组织列表。使用 `selectOrganization()` 选择其中一个,SDK 会为您交换令牌和组织标头。
+`login()` 在单次调用中同时返回登录令牌和用户的组织列表。使用 `selectOrganization()` 选择其中一个，SDK 会为您交换令牌和组织标头。
 
 <Tabs syncKey="lang">
   <TabItem label="TypeScript">
     ```typescript
+    import { ImbraceClient } from "@imbrace/sdk"
+
     const client = new ImbraceClient({ env: "stable" })
 
     // 步骤 1：登录。返回 { token: "login_acc_...", organizations: [...] }。
@@ -198,6 +211,8 @@ Imbrace 是你的后端。你的终端用户登录 Imbrace（通过 OTP 或密�
   </TabItem>
   <TabItem label="Python">
     ```python
+    from imbrace import ImbraceClient
+
     client = ImbraceClient()
 
     # 步骤 1：登录。返回 { token: "login_acc_...", organizations: [...] }。
@@ -245,6 +260,9 @@ Imbrace 是你的后端。你的终端用户登录 Imbrace（通过 OTP 或密�
 始终将 Python 客户端包装在上下文管理器中，以便底层的 `httpx` 连接池被正确关闭：
 
 ```python
+import os
+from imbrace import ImbraceClient, AsyncImbraceClient
+
 # 同步
 with ImbraceClient(api_key=os.environ["IMBRACE_API_KEY"]) as client:
     me = client.platform.get_me()
@@ -256,8 +274,8 @@ async with AsyncImbraceClient(api_key=os.environ["IMBRACE_API_KEY"]) as client:
 
 ---
 
-### Next steps
+### 下一步
 
-- [Setup Guide ?](/getting-started/setup/#configure-credentials) � env vars, dotenv, and secrets management
-- [Quick Start ?](/sdk/quick-start/) � first API call using your credential
-- [Integrations ?](/sdk/integrations/) � framework wiring patterns (React, Next.js, FastAPI, Django)
+- [设置指南 →](/getting-started/setup/#configure-credentials) — 环境变量、dotenv 和密钥管理
+- [快速入门 →](/sdk/quick-start/) — 使用你的凭证发起第一个 API 调用
+- [集成 →](/sdk/integrations/) — 框架接入模式（React、Next.js、FastAPI、Django）

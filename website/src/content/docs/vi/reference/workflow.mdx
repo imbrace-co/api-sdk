@@ -15,7 +15,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ### Flow
 
-| Field | Type | Mô tả |
+| Trường | Kiểu | Mô tả |
 |-------|------|-------|
 | `id` | string | ID duy nhất của flow |
 | `created` | string | ISO 8601 thời gian tạo |
@@ -28,7 +28,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ### FlowVersion
 
-| Field | Type | Mô tả |
+| Trường | Kiểu | Mô tả |
 |-------|------|-------|
 | `id` | string | ID duy nhất của phiên bản |
 | `created` | string | ISO 8601 thời gian tạo |
@@ -41,7 +41,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ### FlowRun
 
-| Field | Type | Mô tả |
+| Trường | Kiểu | Mô tả |
 |-------|------|-------|
 | `id` | string | ID duy nhất của run |
 | `created` | string | ISO 8601 thời gian tạo |
@@ -58,7 +58,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ### AppConnection
 
-| Field | Type | Mô tả |
+| Trường | Kiểu | Mô tả |
 |-------|------|-------|
 | `id` | string | ID duy nhất của kết nối |
 | `created` | string | ISO 8601 thời gian tạo |
@@ -71,7 +71,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ### McpServer
 
-| Field | Type | Mô tả |
+| Trường | Kiểu | Mô tả |
 |-------|------|-------|
 | `id` | string | ID duy nhất của MCP server |
 | `created` | string | ISO 8601 thời gian tạo |
@@ -81,55 +81,55 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ---
 
-## Methods
+## Phương thức
 
 ### Flows
 
-| Method | TypeScript | Python | Mô tả |
+| Phương thức | TypeScript | Python | Mô tả |
 |--------|-----------|--------|-------|
-| List flows | `listFlows` | `list_flows` | Danh sách flows có phân trang |
-| Get flow | `getFlow` | `get_flow` | Lấy một flow theo ID |
-| Create flow | `createFlow` | `create_flow` | Tạo flow mới |
-| Delete flow | `deleteFlow` | `delete_flow` | Xóa flow |
-| Apply flow operation | `applyFlowOperation` | `apply_flow_operation` | Áp dụng thao tác (vd: publish, enable) cho flow |
-| Trigger flow | `triggerFlow` | `trigger_flow` | Kích hoạt flow bất đồng bộ |
-| Trigger flow sync | `triggerFlowSync` | `trigger_flow_sync` | Kích hoạt flow và chờ kết quả |
+| Danh sách flow | `listFlows` | `list_flows` | Danh sách flows có phân trang |
+| Lấy flow | `getFlow` | `get_flow` | Lấy một flow theo ID |
+| Tạo flow | `createFlow` | `create_flow` | Tạo flow mới |
+| Xóa flow | `deleteFlow` | `delete_flow` | Xóa flow |
+| Áp dụng thao tác flow | `applyFlowOperation` | `apply_flow_operation` | Áp dụng thao tác (vd: publish, enable) cho flow |
+| Kích hoạt flow | `triggerFlow` | `trigger_flow` | Kích hoạt flow bất đồng bộ |
+| Kích hoạt flow đồng bộ | `triggerFlowSync` | `trigger_flow_sync` | Kích hoạt flow và chờ kết quả |
 
-### Flow Runs
+### Lượt chạy flow
 
-| Method | TypeScript | Python | Mô tả |
+| Phương thức | TypeScript | Python | Mô tả |
 |--------|-----------|--------|-------|
-| List runs | `listRuns` | `list_runs` | Danh sách lịch sử chạy |
-| Get run | `getRun` | `get_run` | Lấy một run theo ID |
+| Danh sách run | `listRuns` | `list_runs` | Danh sách lịch sử chạy |
+| Lấy run | `getRun` | `get_run` | Lấy một run theo ID |
 
-### Folders
+### Thư mục
 
-| Method | TypeScript | Python | Mô tả |
+| Phương thức | TypeScript | Python | Mô tả |
 |--------|-----------|--------|-------|
-| List folders | `listFolders` | `list_folders` | Danh sách thư mục flow |
-| Get folder | `getFolder` | `get_folder` | Lấy thư mục theo ID |
-| Create folder | `createFolder` | `create_folder` | Tạo thư mục |
-| Update folder | `updateFolder` | `update_folder` | Đổi tên thư mục |
-| Delete folder | `deleteFolder` | `delete_folder` | Xóa thư mục |
+| Danh sách thư mục | `listFolders` | `list_folders` | Danh sách thư mục flow |
+| Lấy thư mục | `getFolder` | `get_folder` | Lấy thư mục theo ID |
+| Tạo thư mục | `createFolder` | `create_folder` | Tạo thư mục |
+| Cập nhật thư mục | `updateFolder` | `update_folder` | Đổi tên thư mục |
+| Xóa thư mục | `deleteFolder` | `delete_folder` | Xóa thư mục |
 
-### App Connections
+### Kết nối ứng dụng
 
-| Method | TypeScript | Python | Mô tả |
+| Phương thức | TypeScript | Python | Mô tả |
 |--------|-----------|--------|-------|
-| List connections | `listConnections` | `list_connections` | Danh sách app connections |
-| Get connection | `getConnection` | `get_connection` | Lấy kết nối theo ID |
-| Upsert connection | `upsertConnection` | `upsert_connection` | Tạo hoặc cập nhật kết nối |
-| Delete connection | `deleteConnection` | `delete_connection` | Xóa kết nối |
+| Danh sách kết nối | `listConnections` | `list_connections` | Danh sách app connections |
+| Lấy kết nối | `getConnection` | `get_connection` | Lấy kết nối theo ID |
+| Upsert kết nối | `upsertConnection` | `upsert_connection` | Tạo hoặc cập nhật kết nối |
+| Xóa kết nối | `deleteConnection` | `delete_connection` | Xóa kết nối |
 
 ### MCP Servers
 
-| Method | TypeScript | Python | Mô tả |
+| Phương thức | TypeScript | Python | Mô tả |
 |--------|-----------|--------|-------|
-| List MCP servers | `listMcpServers` | `list_mcp_servers` | Danh sách MCP servers |
-| Get MCP server | `getMcpServer` | `get_mcp_server` | Lấy server theo ID |
-| Create MCP server | `createMcpServer` | `create_mcp_server` | Đăng ký MCP server mới |
-| Delete MCP server | `deleteMcpServer` | `delete_mcp_server` | Xóa server |
-| Rotate token | `rotateMcpToken` | `rotate_mcp_token` | Xoay token xác thực của server |
+| Danh sách MCP server | `listMcpServers` | `list_mcp_servers` | Danh sách MCP servers |
+| Lấy MCP server | `getMcpServer` | `get_mcp_server` | Lấy server theo ID |
+| Tạo MCP server | `createMcpServer` | `create_mcp_server` | Đăng ký MCP server mới |
+| Xóa MCP server | `deleteMcpServer` | `delete_mcp_server` | Xóa server |
+| Xoay token | `rotateMcpToken` | `rotate_mcp_token` | Xoay token xác thực của server |
 
 ---
 

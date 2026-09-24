@@ -7,6 +7,8 @@ import { Aside } from "@astrojs/starlight/components";
 
 Imbrace CLI（`@imbrace/cli`）是一個用於與 Imbrace 平台互動的終端工具。指令透過 `@imbrace/sdk` 套件直接呼叫 Imbrace 平台。原始碼：[imbrace-co/imbrace-cli](https://github.com/imbrace-co/imbrace-cli)。
 
+> **目前版本：** `v0.8.2`
+
 ```
 imbrace (CLI) → https://app-gatewayv2.imbrace.co (Imbrace Platform)
 ```
@@ -28,7 +30,7 @@ CLI 支援兩種認證方式：
 
 ### 憑證儲存
 
-憑證透過 `conf` npm 套件以 `projectName: "imbrace"` 儲存。
+憑證與各環境設定透過 `conf` npm 套件（`projectName: "imbrace"`）儲存在 **profile** 中。
 
 | 作業系統 | 設定檔路徑 |
 |---|---|
@@ -36,14 +38,30 @@ CLI 支援兩種認證方式：
 | Linux | `~/.config/imbrace-nodejs/config.json` |
 | Windows | `%APPDATA%\imbrace-nodejs\Config\config.json` |
 
-儲存的欄位：`credential`、`method`（`"api-key"` | `"password"`）、`email`。
+每個 profile 儲存：
+
+| 欄位 | 類型 | 說明 |
+|-------|------|-------------|
+| `credential` | string | API 金鑰或 JWT 令牌 |
+| `method` | `"api-key"` \| `"password"` | 認證方式 |
+| `email` | string? | 電子郵件（密碼認證用） |
+| `env` | `"stable"` \| `"sandbox"` \| `"develop"` \| `"prodv2"`? | SDK 環境預設 |
+| `base_url` | string? | 覆寫閘道 base URL |
+| `organization_id` | string? | 組織 ID |
+| `timeout` | number? | 請求逾時（毫秒） |
+| `services` | object? | 各服務的 URL 覆寫 |
+| `check_health` | boolean? | 用戶端初始化時 ping 健康檢查 |
+
+選擇 profile 的解析順序：`--profile` 標誌 > `IMBRACE_PROFILE` 環境變數 > `active_profile` 設定 > `"default"`。
 
 ### 自動登入
 
-每個 CLI 指令（除了 `login`）都繼承 `BaseCommand`，其在初始化時會呼叫 `ensureLoggedIn()`。如果找不到憑證，它會以互動方式提示使用者選擇登入方式（API 金鑰或電子郵件 + 密碼）。
+資源指令（ai-agent、data-board、document-ai、guardrail、orchestrator、workflow）繼承 `BaseCommand`，其在初始化時會呼叫 `ensureLoggedIn()`。如果解析出的 profile 找不到憑證，它會以互動方式提示使用者選擇登入方式（API 金鑰或電子郵件 + 密碼）。認證與 profile 管理指令（`login`、`logout`、`whoami`、`docs`、`profile/*`）直接繼承 `Command`，不會自動提示。
+
+所有指令都接受全域 `--profile` 標誌以指定特定 profile，其優先於 `IMBRACE_PROFILE` 環境變數與 `active_profile` 設定。
 
 <Aside type="tip">
-  所有指令都接受 `--json` 以輸出機器可讀的結果，以及 `-h` / `--help` 檢視使用說明。
+  大多數指令都接受 `--json` 以輸出機器可讀的結果（例外：`login`、`logout`）。所有指令都接受 `-h` / `--help` 檢視使用說明。
 </Aside>
 
 ## 專案結構
@@ -56,6 +74,7 @@ imbrace-cli/
         ├── config.ts             ← 憑證儲存 (conf)
         └── commands/
             ├── login.ts / logout.ts / whoami.ts / docs.ts
+            ├── profile/      (6 個指令：create、delete、list、rename、show、use)
             ├── data-board/    (8 個指令)
             ├── ai-agent/      (9 個指令)
             ├── document-ai/   (7 個指令)

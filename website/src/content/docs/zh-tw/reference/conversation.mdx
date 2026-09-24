@@ -9,11 +9,11 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ---
 
-## Schema
+## 結構定義
 
 ### Conversation
 
-| Field | Type | 說明 |
+| 欄位 | 類型 | 說明 |
 |-------|------|------|
 | `object_name` | `"conversation"` | 物件類型辨識符 |
 | `id` | string | 唯一對話 ID |
@@ -29,24 +29,24 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ---
 
-## Methods
+## 方法
 
-| Method | TypeScript | Python | 說明 |
+| 方法 | TypeScript | Python | 說明 |
 |--------|-----------|--------|------|
-| List | `list` | `list` | 分頁的對話列表 |
-| Get | `get` | `get` | 依內部 ID 取得對話 |
-| Get by conversation ID | `getByConversationId` | — | 依公開對話 ID 取得 |
-| Search | `search` | `search` | 在業務單位內全文搜尋 |
-| Get views count | `getViewsCount` | `get_views_count` | 依檢視/狀態計算對話數量 |
-| Create | `create` | `create` | 建立新對話 |
-| Join | `join` | `join` | 以團隊成員身份加入對話 |
-| Leave | `leave` | `leave` | 離開對話 |
-| Update status | `updateStatus` | `update_status` | 變更對話狀態 |
-| Update name | `updateName` | — | 重新命名對話 |
-| Init video call | `initVideoCall` | — | 在對話中開始視訊通話 |
-| Assign team member | `assignTeamMember` | — | 指派團隊成員到對話 |
-| Remove team member | `removeTeamMember` | — | 移除團隊成員 |
-| Get invitable users | `getInvitableUsers` | — | 列出可邀請的使用者 |
+| 列出 | `list` | `list` | 分頁的對話列表 |
+| 取得 | `get` | `get` | 依內部 ID 取得對話 |
+| 依對話 ID 取得 | `getByConversationId` | — | 依公開對話 ID 取得 |
+| 搜尋 | `search` | `search` | 在業務單位內全文搜尋 |
+| 取得檢視數量 | `getViewsCount` | `get_views_count` | 依檢視/狀態計算對話數量 |
+| 建立 | `create` | `create` | 建立新對話 |
+| 加入 | `join` | `join` | 以團隊成員身份加入對話 |
+| 離開 | `leave` | `leave` | 離開對話 |
+| 更新狀態 | `updateStatus` | `update_status` | 變更對話狀態 |
+| 更新名稱 | `updateName` | — | 重新命名對話 |
+| 發起視訊通話 | `initVideoCall` | — | 在對話中開始視訊通話 |
+| 指派團隊成員 | `assignTeamMember` | — | 指派團隊成員到對話 |
+| 移除團隊成員 | `removeTeamMember` | — | 移除團隊成員 |
+| 取得可邀請的使用者 | `getInvitableUsers` | — | 列出可邀請的使用者 |
 
 ---
 

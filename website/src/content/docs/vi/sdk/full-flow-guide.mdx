@@ -1,4 +1,4 @@
-﻿---
+---
 title: Hướng dẫn toàn diện
 description: Hướng dẫn từ đầu đến cuối — từ thiết lập client đến AI agents, workflows, knowledge hubs, và data boards. TypeScript và Python.
 ---
@@ -87,7 +87,8 @@ Hướng dẫn này đi qua bốn quy trình làm việc chính trong Imbrace SD
          description: "Handles tier-1 customer support queries",
          instructions: "You are a helpful support agent. Be concise and friendly.",
          provider_id: "system",   // sử dụng nhà cung cấp LLM mặc định của tổ chức
-         model_id: "Default",     // gắn với model mặc định của tổ chức (an toàn cho mọi tổ chức)
+         model_id: "Default",     // định tuyến tới model mặc định đã cấu hình của tổ chức
+         streaming: true,         // phát các sự kiện SSE text-delta (xem Aside bên dưới)
        })
 
        const aiAgentId = agent.id  // UUID — sử dụng cho tất cả các lời gọi tiếp theo
@@ -102,7 +103,8 @@ Hướng dẫn này đi qua bốn quy trình làm việc chính trong Imbrace SD
            "description": "Handles tier-1 customer support queries",
            "instructions": "You are a helpful support agent. Be concise and friendly.",
            "provider_id": "system",   # sử dụng nhà cung cấp LLM mặc định của tổ chức
-           "model_id": "Default",     # gắn với model mặc định của tổ chức (an toàn cho mọi tổ chức)
+           "model_id": "Default",     # định tuyến tới model mặc định đã cấu hình của tổ chức
+           "streaming": True,         # phát các sự kiện SSE text-delta (xem Aside bên dưới)
        })
 
        ai_agent_id = agent["id"]
@@ -113,64 +115,80 @@ Hướng dẫn này đi qua bốn quy trình làm việc chính trong Imbrace SD
 
    `provider_id` và `model_id` là tùy chọn — SDK tự điền `{ provider_id: "system", model_id: "Default" }` khi bỏ trống. `"Default"` gắn với bất kỳ model nào mà tổ chức cấu hình làm mặc định và là lựa chọn an toàn cho mọi tổ chức. Truyền tường minh để ghi đè: `provider_id: "<uuid>"` để gắn nhà cung cấp LLM tùy chỉnh, hoặc `model_id: "gpt-4o"` v.v. — nhưng tên model cụ thể chỉ hoạt động nếu nhà cung cấp `system` của tổ chức thực sự có model đó. Liệt kê các model của tổ chức bằng `client.ai.listModels()` (TypeScript) / `client.ai.list_models()` (Python) trước khi hardcode.
 
+   <Aside type="caution" title="Luôn truyền streaming: true cho giao diện chat">
+     Agent mới tạo mặc định là **`streaming: false`** trên server. Với mặc định đó, `streamChat` trả về toàn bộ câu trả lời trong một response `text/plain` duy nhất — không có sự kiện `text-delta` — nên helper `streamChatText` (và bất kỳ parser SSE nào khác) trả về **0 chunk** và giao diện chat không hiển thị gì. Truyền `streaming: true` khi tạo sẽ khiến server phát Vercel-AI-SDK UI-Message-Stream (`Content-Type: text/event-stream`) mà `streamChatText` được thiết kế để phân tích. Bạn cũng có thể bật sau qua `updateAiAgent(id, { streaming: true })`.
+   </Aside>
+
+
 3. **Stream phản hồi chat bằng AI agent**
+
+   Dùng `streamChatText` / `stream_chat_text` — helper này bao bọc `streamChat`, phân tích luồng sự kiện SSE và trả về từng đoạn văn bản thuần. Giả định agent đã được tạo với `streaming: true` (xem Aside ở bước 2).
 
    <Tabs syncKey="lang">
      <TabItem label="TypeScript">
        ```typescript
-       const response = await client.aiAgent.streamChat({
+       for await (const chunk of client.aiAgent.streamChatText({
          assistant_id: aiAgentId,
          messages: [{ role: "user", content: "How do I reset my password?" }],
-         // id là UUID phiên — tái sử dụng để duy trì lịch sử hội thoại
-         // Nếu bỏ qua, UUID mới sẽ được tự động tạo mỗi lần gọi
-       })
-
-       const reader = response.body!.getReader()
-       const decoder = new TextDecoder()
-
-       while (true) {
-         const { done, value } = await reader.read()
-         if (done) break
-         const text = decoder.decode(value)
-         for (const line of text.split("\n")) {
-           if (line.startsWith("data: ")) {
-             const data = line.slice(6).trim()
-             if (data && data !== "[DONE]") {
-               try {
-                 const chunk = JSON.parse(data)
-                 process.stdout.write(chunk.delta ?? chunk.content ?? "")
-               } catch {}
-             }
-           }
-         }
+         // id là UUID phiên — tái sử dụng để duy trì lịch sử hội thoại.
+         // Nếu bỏ qua, UUID mới sẽ được tự động tạo mỗi lần gọi.
+       })) {
+         process.stdout.write(chunk)
        }
        ```
      </TabItem>
      <TabItem label="Python">
        ```python
-       response = client.ai_agent.stream_chat({
+       for chunk in client.ai_agent.stream_chat_text({
            "assistant_id": ai_agent_id,
            "messages": [{"role": "user", "content": "How do I reset my password?"}],
            # id là UUID phiên — tái sử dụng để duy trì lịch sử hội thoại.
            # Nếu bỏ qua, UUID mới sẽ được tự động tạo mỗi lần gọi.
-       })
-
-       import json
-       for line in response.iter_lines():
-           if isinstance(line, bytes):
-               line = line.decode()
-           if not line.startswith("data: "):
-               continue
-           data = line[6:].strip()
-           if data and data != "[DONE]":
-               try:
-                   chunk = json.loads(data)
-                   print(chunk.get("delta") or chunk.get("content") or "", end="")
-               except Exception:
-                   pass
+       }):
+           print(chunk, end="", flush=True)
        ```
      </TabItem>
    </Tabs>
+
+   <Aside type="tip" title="Đang dùng agent non-streaming?">
+     Nếu agent có `streaming: false`, server trả về toàn bộ câu trả lời trong một response `text/plain` — không có sự kiện `text-delta` nào để `streamChatText` phân tích, nên nó không trả về gì. Mẫu bên dưới xử lý cả hai định dạng bằng cách rẽ nhánh theo `Content-Type`:
+
+     <Tabs syncKey="lang">
+       <TabItem label="TypeScript">
+         ```typescript
+         const res = await client.aiAgent.streamChat({
+           assistant_id: aiAgentId,
+           messages: [{ role: "user", content: "How do I reset my password?" }],
+         })
+         if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`)
+
+         if ((res.headers.get("content-type") ?? "").includes("text/event-stream")) {
+           // agent streaming — phân tích lại qua helper của SDK
+           for await (const chunk of client.aiAgent.streamChatText({ /* same body */ })) {
+             process.stdout.write(chunk)
+           }
+         } else {
+           process.stdout.write(await res.text())   // agent non-streaming
+         }
+         ```
+       </TabItem>
+       <TabItem label="Python">
+         ```python
+         res = client.ai_agent.stream_chat({
+             "assistant_id": ai_agent_id,
+             "messages": [{"role": "user", "content": "How do I reset my password?"}],
+         })
+         res.raise_for_status()
+
+         if "text/event-stream" in res.headers.get("content-type", ""):
+             for chunk in client.ai_agent.stream_chat_text({ "assistant_id": ai_agent_id, "messages": [...] }):
+                 print(chunk, end="", flush=True)
+         else:
+             print(res.text)
+         ```
+       </TabItem>
+     </Tabs>
+   </Aside>
 
 4. **Duy trì lịch sử hội thoại (session ID)**
 
@@ -229,22 +247,27 @@ Hướng dẫn này đi qua bốn quy trình làm việc chính trong Imbrace SD
 
 <Steps>
 
-1. **Liệt kê các flow hiện có để tìm project ID của bạn**
+1. **Lấy project ID của bạn**
+
+   Sao chép Project ID từ Imbrace Dashboard → Workflows, hoặc lấy bằng code nếu tổ chức của bạn đã có flow:
 
    <Tabs syncKey="lang">
      <TabItem label="TypeScript">
        ```typescript
-       const { data: flows } = await client.workflows.listFlows({ limit: 5 })
-       const projectId = flows[0]?.projectId
-       console.log("Project ID:", projectId)
+       // Cách A — hardcode từ Dashboard (khuyến nghị cho tổ chức mới)
+       const projectId = "your_project_id"
+
+       // Cách B — lấy từ một flow có sẵn (báo lỗi nếu tổ chức chưa có flow nào)
+       const projectId = await client.workflows.resolveProjectId()
        ```
      </TabItem>
      <TabItem label="Python">
        ```python
-       res = client.workflows.list_flows(limit=5)
-       flows = res.get("data", [])
-       project_id = flows[0]["projectId"] if flows else None
-       print("Project ID:", project_id)
+       # Cách A — hardcode từ Dashboard (khuyến nghị cho tổ chức mới)
+       project_id = "your_project_id"
+
+       # Cách B — lấy từ một flow có sẵn (báo lỗi nếu tổ chức chưa có flow nào)
+       project_id = client.workflows.resolve_project_id()
        ```
      </TabItem>
    </Tabs>
@@ -599,26 +622,31 @@ Các tệp và thư mục Knowledge Hub nằm trong dịch vụ **data-board** (
 
 2. **Thêm trường tùy chỉnh**
 
-   Các loại trường là `ShortText`, `LongText`, `Number`, `Dropdown`, `Date`, `Checkbox`, v.v. `createField` trả về board đã cập nhật — tìm trường mới của bạn bên trong `board.fields`.
+   Các loại trường là `ShortText`, `LongText`, `Number`, `Dropdown`, `Date`, `Checkbox`, v.v. `createField` trả về trường vừa được tạo. Để xem tất cả các trường trên board, hãy lấy board riêng.
 
    <Tabs syncKey="lang">
      <TabItem label="TypeScript">
        ```typescript
-       const updated = await client.boards.createField(board._id, {
+       await client.boards.createField(board._id, {
          name: "Company",
          type: "ShortText",
        })
-       // Tìm trường định danh (tự động tạo với mọi board)
-       const identifierField = updated.fields.find(f => f.is_identifier)
+
+       // Board tự động tạo một trường định danh — lấy board để xem tất cả các trường
+       const boardWithFields = await client.boards.get(board._id) as any
+       const identifierField = boardWithFields.fields?.find((f: any) => f.is_identifier)
        ```
      </TabItem>
      <TabItem label="Python">
        ```python
-       updated = client.boards.create_field(board["_id"], {
+       client.boards.create_field(board["_id"], {
            "name": "Company",
            "type": "ShortText",
        })
-       identifier_field = next(f for f in updated["fields"] if f.get("is_identifier"))
+
+       # Lấy board để xem tất cả các trường (bao gồm trường định danh được tạo tự động)
+       board_with_fields = client.boards.get(board["_id"])
+       identifier_field = next(f for f in board_with_fields.get("fields", []) if f.get("is_identifier"))
        ```
      </TabItem>
    </Tabs>
@@ -719,3 +747,13 @@ Các tệp và thư mục Knowledge Hub nằm trong dịch vụ **data-board** (
    </Tabs>
 
 </Steps>
+
+---
+
+### Các bước tiếp theo
+
+- [Resources →](/sdk/resources/) — tham chiếu method theo từng namespace cho cả bốn quy trình
+- [AI Agent →](/sdk/ai-agent/) — tìm hiểu sâu hơn về `streamChat`, embeddings và parquet
+- [Workflows →](/sdk/workflows/) — thao tác flow, MCP server và lịch sử chạy
+- [Document AI →](/sdk/document-ai/) — phân tích và trích xuất tài liệu bằng AI
+- [Data Board →](/sdk/databoard/) — trường, item, tìm kiếm, segment và CSV của board

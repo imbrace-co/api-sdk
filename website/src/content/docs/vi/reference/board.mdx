@@ -15,7 +15,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ### Board
 
-| Field | Type | Mô tả |
+| Trường | Kiểu | Mô tả |
 |-------|------|-------|
 | `object_name` | string? | Định danh loại đối tượng |
 | `id` | string | ID duy nhất của board |
@@ -30,7 +30,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ### BoardField
 
-| Field | Type | Mô tả |
+| Trường | Kiểu | Mô tả |
 |-------|------|-------|
 | `_id` | string | ID duy nhất của trường |
 | `name` | string | Tên hiển thị của trường |
@@ -40,7 +40,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ### CreateBoardInput
 
-| Field | Type | Required | Mô tả |
+| Trường | Kiểu | Bắt buộc | Mô tả |
 |-------|------|----------|-------|
 | `name` | string | ✓ | Tên board |
 | `description` | string | | Mô tả tùy chọn |
@@ -51,60 +51,60 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ---
 
-## Methods
+## Phương thức
 
-### Board CRUD
+### CRUD Board
 
-| Method | TypeScript | Python | Mô tả |
+| Phương thức | TypeScript | Python | Mô tả |
 |--------|-----------|--------|-------|
-| List boards | `list` | `list` | Danh sách tất cả board |
-| Get board | `get` | `get` | Lấy board theo ID |
-| Create board | `create` | `create` | Tạo board mới |
-| Update board | `update` | `update` | Cập nhật tên/mô tả board |
-| Delete board | `delete` | `delete` | Xóa board |
-| Reorder boards | `reorder` | `reorder` | Thay đổi thứ tự hiển thị |
+| Danh sách board | `list` | `list` | Danh sách tất cả board |
+| Lấy board | `get` | `get` | Lấy board theo ID |
+| Tạo board | `create` | `create` | Tạo board mới |
+| Cập nhật board | `update` | `update` | Cập nhật tên/mô tả board |
+| Xóa board | `delete` | `delete` | Xóa board |
+| Sắp xếp lại board | `reorder` | `reorder` | Thay đổi thứ tự hiển thị |
 
-### Import / Export
+### Nhập / Xuất
 
-| Method | TypeScript | Python | Mô tả |
+| Phương thức | TypeScript | Python | Mô tả |
 |--------|-----------|--------|-------|
-| Export CSV | `exportCsv` | `export_csv` | Xuất tất cả items dưới dạng CSV |
-| Import CSV | `importCsv` | `import_csv` | Nhập items từ file CSV |
-| Import Excel | `importExcel` | `import_excel` | Nhập items từ file Excel |
-| Get import progress | `getImportProgress` | `get_import_progress` | Kiểm tra trạng thái import đang chạy |
+| Xuất CSV | `exportCsv` | `export_csv` | Xuất tất cả items dưới dạng CSV |
+| Nhập CSV | `importCsv` | `import_csv` | Nhập items từ file CSV |
+| Nhập Excel | `importExcel` | `import_excel` | Nhập items từ file Excel |
+| Lấy tiến độ import | `getImportProgress` | `get_import_progress` | Kiểm tra trạng thái import đang chạy |
 
-### Fields
+### Trường
 
-| Method | TypeScript | Python | Mô tả |
+| Phương thức | TypeScript | Python | Mô tả |
 |--------|-----------|--------|-------|
-| Create field | `createField` | `create_field` | Thêm cột vào board |
-| Update field | `updateField` | `update_field` | Sửa cấu hình trường |
-| Delete field | `deleteField` | `delete_field` | Xóa trường |
-| Reorder fields | `reorderFields` | `reorder_fields` | Thay đổi thứ tự cột |
-| Bulk update fields | `bulkUpdateFields` | `bulk_update_fields` | Cập nhật nhiều trường cùng lúc |
+| Tạo trường | `createField` | `create_field` | Thêm cột vào board |
+| Cập nhật trường | `updateField` | `update_field` | Sửa cấu hình trường |
+| Xóa trường | `deleteField` | `delete_field` | Xóa trường |
+| Sắp xếp lại trường | `reorderFields` | `reorder_fields` | Thay đổi thứ tự cột |
+| Cập nhật hàng loạt trường | `bulkUpdateFields` | `bulk_update_fields` | Cập nhật nhiều trường cùng lúc |
 
-### Items
+### Item
 
-| Method | TypeScript | Python | Mô tả |
+| Phương thức | TypeScript | Python | Mô tả |
 |--------|-----------|--------|-------|
-| List items | `listItems` | `list_items` | Danh sách items có phân trang |
-| Get item | `getItem` | `get_item` | Lấy một item |
-| Create item | `createItem` | `create_item` | Thêm item vào board |
-| Update item | `updateItem` | `update_item` | Cập nhật giá trị trường của item |
-| Delete item | `deleteItem` | `delete_item` | Xóa item |
-| Bulk delete | `bulkDeleteItems` | `bulk_delete_items` | Xóa nhiều items theo ID |
-| Search | `search` | `search` | Tìm kiếm toàn văn trong board |
-| Link items | `linkItems` | `link_items` | Liên kết item với item board khác |
-| Unlink items | `unlinkItems` | `unlink_items` | Xóa liên kết giữa các items |
+| Danh sách item | `listItems` | `list_items` | Danh sách items có phân trang |
+| Lấy item | `getItem` | `get_item` | Lấy một item |
+| Tạo item | `createItem` | `create_item` | Thêm item vào board |
+| Cập nhật item | `updateItem` | `update_item` | Cập nhật giá trị trường của item |
+| Xóa item | `deleteItem` | `delete_item` | Xóa item |
+| Xóa hàng loạt | `bulkDeleteItems` | `bulk_delete_items` | Xóa nhiều items theo ID |
+| Tìm kiếm | `search` | `search` | Tìm kiếm toàn văn trong board |
+| Liên kết item | `linkItems` | `link_items` | Liên kết item với item board khác |
+| Hủy liên kết item | `unlinkItems` | `unlink_items` | Xóa liên kết giữa các items |
 
 ### Segments
 
-| Method | TypeScript | Python | Mô tả |
+| Phương thức | TypeScript | Python | Mô tả |
 |--------|-----------|--------|-------|
-| List segments | `listSegments` | `list_segments` | Danh sách các view filter đã lưu |
-| Create segment | `createSegment` | `create_segment` | Lưu filter thành segment |
-| Update segment | `updateSegment` | `update_segment` | Cập nhật filter của segment |
-| Delete segment | `deleteSegment` | `delete_segment` | Xóa segment |
+| Danh sách segment | `listSegments` | `list_segments` | Danh sách các view filter đã lưu |
+| Tạo segment | `createSegment` | `create_segment` | Lưu filter thành segment |
+| Cập nhật segment | `updateSegment` | `update_segment` | Cập nhật filter của segment |
+| Xóa segment | `deleteSegment` | `delete_segment` | Xóa segment |
 
 ---
 

@@ -1,0 +1,192 @@
+---
+title: 在 Kubernetes 上安裝 IMBRACE（單節點）
+description: 安裝 imbrace-installer CLI、準備主機（k3s + Rancher + 綁定 :6868 的 Traefik），並以三個指令安裝 IMBRACE 平台。
+---
+
+import { Steps, Aside, Tabs, TabItem } from "@astrojs/starlight/components"
+
+## 目標
+
+在單台 Ubuntu / Debian 主機上完成可運作的 IMBRACE 部署——安裝好 installer
+CLI、執行中的 k3s + Rancher，並套用 IMBRACE chart——大約需要 15–30 分鐘。
+
+## 我們要做什麼（簡單說明）？
+
+`imbrace-installer` 是一個同時負責兩件事的 CLI：先設定主機
+（k3s + Rancher，並將 Traefik 綁定到連接埠 `:6868`），再於其上安裝
+IMBRACE 平台。CLI 只需安裝一次、主機只需準備一次，之後每次升級都是同一個
+`upgrade --install` 指令。
+
+## 需要準備
+
+- 具備 **root / sudo** 權限的 Ubuntu 22.04+ 或 Debian 12+ 主機
+- 公開 IP **或**可解析到該主機的 DNS 名稱
+- 可連出網際網路以存取 S3 與 ECR（或已備妥的私有鏡像）
+- 約 10 GB 可用磁碟空間、8 GB 以上記憶體
+- 約 20 分鐘
+- 主機上可存取的連接埠 `6868`、`30030`、`30700`，以及一個自動分配的 Rancher NodePort
+  （30000–32767 範圍）
+- 選用：若打算執行 GPU 工作負載，需要 NVIDIA GPU
+
+## 步驟
+
+<Steps>
+
+1. **安裝 CLI**
+
+    啟動腳本會下載 `imbrace-installer`、預先將 chart 壓縮檔放到
+    `/opt/imbrace-installer/chart/`，並將執行檔符號連結至 `/usr/bin/`。
+    完成此步驟後，後續每個指令都只要輸入 `imbrace-installer …`——
+    不需要 `./`，也不需要路徑。
+
+    依你的作業系統選擇對應的一行指令。它會自動偵測 CPU 架構
+    （Intel `amd64` / ARM `arm64`）並下載相符的執行檔——你不需要自行選擇。
+
+    <Tabs syncKey="os">
+      <TabItem label="Linux (Ubuntu/Debian)">
+        ```bash
+        curl -fsSL https://imbrace-install-tool.s3.ap-east-1.amazonaws.com/install.sh \
+            | sudo bash
+        ```
+      </TabItem>
+      <TabItem label="macOS">
+        ```bash
+        curl -fsSL https://imbrace-install-tool.s3.ap-east-1.amazonaws.com/install-mac \
+            | bash
+        ```
+      </TabItem>
+      <TabItem label="Windows (PowerShell)">
+        ```powershell
+        powershell -c "irm https://imbrace-install-tool.s3.ap-east-1.amazonaws.com/install-win.ps1 | iex"
+        ```
+      </TabItem>
+    </Tabs>
+
+    <Aside type="note">
+    使用私有鏡像？請在執行 curl 前設定 `IMBRACE_S3_BASE` 與 `IMBRACE_CLI_BASE`，例如
+    `sudo IMBRACE_S3_BASE=https://artifacts.example.com/imbrace ...`。
+    </Aside>
+
+    <Aside type="caution">
+    以下的主機啟動步驟（`prepare`、`gpu`）**只**能在 Ubuntu / Debian 目標主機上執行——
+    它們需要 `apt`、`systemctl` 與 k3s 安裝程式。在 macOS 或 Windows 上 CLI 可以正常安裝，
+    但僅限於管理**遠端**叢集（`version`、`rancher`、`upgrade --install`）；
+    請在 Linux 主機本身執行 `prepare` / `gpu`（先以 SSH 登入）。
+    </Aside>
+
+2. **準備主機**
+
+    `prepare` 具冪等性——可安全地重複執行。它會依序執行五個階段：
+    apt 相依套件 → k3s → 將 Traefik 綁定到主機連接埠 `:6868` → Rancher →
+    自動將叢集匯入 Rancher。
+
+    確認可以執行 CLI，然後執行 prepare：
+
+    ```bash
+    imbrace-installer --help
+    sudo imbrace-installer prepare
+    ```
+
+    完成後，腳本會印出 Rancher NodePort URL、管理員密碼，以及 kubeconfig 路徑
+    （`/etc/rancher/k3s/k3s.yaml`）——請將這些資訊妥善保存。Rancher HTTPS NodePort
+    由 kube-apiserver 從 30000–32767 範圍中自動分配；它**不是**固定值，
+    因此請一律使用 `prepare` 結束時印出的 URL。
+
+    <Aside type="caution">
+    此步驟**不會**設定 GPU。若主機有 NVIDIA 顯示卡，請在此步驟之後執行
+    `sudo imbrace-installer gpu <DRIVER_VERSION>`（首次安裝可能需要重新開機）。
+    </Aside>
+
+3. **安裝 IMBRACE 應用程式**
+
+    將 `<IP_PUBLIC/DOMAIN_PUBLIC>` 替換為主機的公開 IP **或**你希望用來存取 IMBRACE 的
+    DNS 名稱。安裝程式會建立 `imbrace-services` 命名空間、套用 chart，並最多等待 30 分鐘
+    讓安裝後的資料庫初始化工作（apworkflow / ips / platform）完成。
+
+    ```bash
+    sudo imbrace-installer upgrade --install imbrace \
+        --set global.publicHost=<IP_PUBLIC/DOMAIN_PUBLIC>
+    ```
+
+    若 TLS 在上游終止（HAProxy / Traefik / cert-manager），請一併傳入
+    `--set global.publicScheme=https`。
+
+</Steps>
+
+## 服務連接埠
+
+此 chart 透過連接埠 `6868` 上的**單一統一入口**對外提供 IMBRACE，另外還有少數專用
+NodePort，供不經過統一 ingress 的介面使用。所有項目都綁定到 `global.publicHost`，因此
+下列 URL 就是瀏覽器實際存取的位址——叢集內的 `ClusterIP` 連接埠（Postgres、Kafka、
+Mongo、Garage S3）則保持私有。
+
+### 統一 Traefik ingress（一律啟用）
+
+一個 IngressRoute 透過路徑路由提供整個應用程式。由 `prepare` 在主機上設定
+（Phase C——`traefik-config.yaml` 會將 Traefik 修補為 `hostNetwork: true`）。
+
+| 連接埠 | 協定  | 提供的內容                                                              |
+| ------ | ----- | ----------------------------------------------------------------------- |
+| 6868   | HTTP  | `/` → 儀表板 SPA，`/api` → api-gateway（去除前綴），WebSocket           |
+| 8443   | HTTPS | 相同路由，於此終止 TLS（當已設定 `unifiedIngress.tls` 時）              |
+
+### 專用應用程式 NodePort（一律保留）
+
+有兩個介面會繞過統一 ingress，因為它們自帶 SPA + 代理。
+
+| NodePort | 服務                     | Helm 鍵                              | 提供的內容                                           |
+| -------- | ------------------------ | ------------------------------------ | ---------------------------------------------------- |
+| 30030    | insightIQ 聊天機器人 SPA | `global.insightiqNodePort`           | `aisdk-chatbot` UI                                   |
+| 30700    | apworkflow 合併代理      | `global.apworkflowProxyNodePort`     | `/` → apworkflow-app SPA，`/api` → apworkflow REST   |
+
+### Rancher 管理 UI
+
+CLI 會將 Rancher Service 修補為 `type: NodePort`，並讓 apiserver 從 30000–32767 範圍
+自動分配連接埠。HTTPS NodePort 會在 `prepare` 結束時印出。
+
+| 連接埠           | 查看位置                                        | URL 格式                                      |
+| ---------------- | ----------------------------------------------- | --------------------------------------------- |
+| 自動分配         | `prepare` 結束時的摘要，或                      | `https://<NODE_IP>:<RANCHER_HTTPS_NODEPORT>`  |
+|                  | `kubectl -n cattle-system get svc rancher`      |                                               |
+
+管理員密碼儲存在 `/etc/imbrace/rancher-admin-password`。
+
+### 安裝後的瀏覽器 URL
+
+以 `--set global.publicHost=<NODE_IP>` 為例：
+
+- **儀表板：** `http://<NODE_IP>:6868`
+- **API 閘道：** `http://<NODE_IP>:6868/api`
+- **WebSocket：** `ws://<NODE_IP>:6868`
+- **apworkflow：** `http://<NODE_IP>:30700`（SPA）· `…:30700/api`（REST）
+- **insightIQ 聊天：** `http://<NODE_IP>:30030`
+- **Rancher：** `https://<NODE_IP>:<auto-assigned>`（由 `prepare` 印出）
+
+<Aside type="note">
+在 HTTPS 部署中，也請傳入 `--set global.publicScheme=https`。瀏覽器會拒絕從
+`https://` 頁面發出的 `ws://` 連線（混合內容），因此當協定為 `https` 時，chart 會自動將
+WebSocket URL 改寫為 `wss://`。
+</Aside>
+
+## 驗證
+
+```bash
+sudo kubectl get pods -n imbrace-services
+```
+
+每個 pod 都應為 `Running` 或 `Completed`。若有任何 pod 卡在 `ImagePullBackOff`，
+可能是 ECR pull-secret 已過期——請在環境變數中提供新的 registry 密碼後重新執行步驟 3：
+
+```bash
+export IMBRACE_REGISTRY_PASSWORD=<ECR_TOKEN>
+sudo -E imbrace-installer upgrade --install imbrace \
+    --set global.publicHost=<IP_PUBLIC/DOMAIN_PUBLIC>
+```
+
+## 下一步
+
+- **GPU 工作負載：** `sudo imbrace-installer gpu 590.48.01`
+- **升級現有安裝：** 重新執行步驟 3——`upgrade --install` 就是更新途徑
+- **查看已發布的 chart 版本：** `imbrace-installer version`
+- **離線環境 / 私有鏡像：** 在步驟 1 之前設定 `IMBRACE_S3_BASE` 與
+  `IMBRACE_CLI_BASE`

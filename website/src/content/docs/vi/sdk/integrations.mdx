@@ -130,7 +130,9 @@ Cho các script chạy một lần (xuất dữ liệu, backfill, truy vấn đ�
 import { ImbraceClient } from "@imbrace/sdk";
 import { writeFileSync } from "fs";
 
-const client = new ImbraceClient();
+const client = new ImbraceClient({
+  apiKey: process.env.IMBRACE_API_KEY,
+});
 
 async function exportContacts() {
   const { data: contacts } = await client.contacts.list({ limit: 1000 });
@@ -317,7 +319,9 @@ def sync_contacts(self):
         raise self.retry(exc=exc, countdown=2 ** self.request.retries)
 ```
 
-<Aside type="tip">`nĐừng chia sẻ một instance `ImbraceClient` duy nhất giữa các Celery worker — hãy tạo một client mới cho mỗi lần gọi tác vụ bằng context manager. Pool kết nối httpx không an toàn để chia sẻ giữa các tiến trình.`n</Aside>
+<Aside type="tip">
+  Đừng chia sẻ một instance `ImbraceClient` duy nhất giữa các Celery worker — hãy tạo một client mới cho mỗi lần gọi tác vụ bằng context manager. Pool kết nối httpx không an toàn để chia sẻ giữa các tiến trình.
+</Aside>
 
 ---
 
@@ -385,17 +389,26 @@ class OtpVerify(BaseModel):
 @app.post("/auth/request-otp")
 async def request_otp(body: OtpRequest):
     async with AsyncImbraceClient() as client:
-        await client.auth.request_otp(body.email)
+        await client.request_otp(body.email)
     return {"message": "OTP đã được gửi"}
 
 @app.post("/auth/verify-otp")
 async def verify_otp(body: OtpVerify):
     async with AsyncImbraceClient() as client:
         try:
-            result = await client.auth.login_with_otp(body.email, body.otp)
-            return {"access_token": result["token"]}
+            result = await client.login_with_otp(body.email, body.otp)
+            token = result.get("accessToken") or result.get("token")
+            return {"access_token": token}
         except AuthError:
             raise HTTPException(status_code=401, detail="OTP không hợp lệ")
 ```
 </TabItem>
 </Tabs>
+
+---
+
+### Các bước tiếp theo
+
+- [Xác thực →](/sdk/authentication/) — luồng đăng nhập OTP, vòng đời thông tin xác thực và lưu trữ token
+- [Xử lý lỗi →](/sdk/error-handling/) — cách `AuthError`, `ApiError` và `NetworkError` được phát sinh
+- [Bắt đầu nhanh →](/sdk/quick-start/) — ví dụ tối thiểu chạy được trước khi kết nối với framework

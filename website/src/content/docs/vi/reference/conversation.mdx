@@ -13,7 +13,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ### Conversation
 
-| Field | Type | Mô tả |
+| Trường | Kiểu | Mô tả |
 |-------|------|-------|
 | `object_name` | `"conversation"` | Bộ phân biệt loại đối tượng |
 | `id` | string | ID duy nhất của hội thoại |
@@ -29,24 +29,24 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ---
 
-## Methods
+## Phương thức
 
-| Method | TypeScript | Python | Mô tả |
+| Phương thức | TypeScript | Python | Mô tả |
 |--------|-----------|--------|-------|
-| List | `list` | `list` | Danh sách hội thoại có phân trang |
-| Get | `get` | `get` | Lấy hội thoại theo ID nội bộ |
-| Get by conversation ID | `getByConversationId` | — | Lấy theo ID hội thoại công khai |
-| Search | `search` | `search` | Tìm kiếm toàn văn trong đơn vị kinh doanh |
-| Get views count | `getViewsCount` | `get_views_count` | Đếm hội thoại theo view/trạng thái |
-| Create | `create` | `create` | Tạo hội thoại mới |
-| Join | `join` | `join` | Tham gia hội thoại với tư cách thành viên nhóm |
-| Leave | `leave` | `leave` | Rời khỏi hội thoại |
-| Update status | `updateStatus` | `update_status` | Thay đổi trạng thái hội thoại |
-| Update name | `updateName` | — | Đổi tên hội thoại |
-| Init video call | `initVideoCall` | — | Bắt đầu cuộc gọi video trong hội thoại |
-| Assign team member | `assignTeamMember` | — | Gán thành viên nhóm vào hội thoại |
-| Remove team member | `removeTeamMember` | — | Xóa thành viên nhóm |
-| Get invitable users | `getInvitableUsers` | — | Danh sách người dùng có thể mời |
+| Danh sách | `list` | `list` | Danh sách hội thoại có phân trang |
+| Lấy | `get` | `get` | Lấy hội thoại theo ID nội bộ |
+| Lấy theo ID hội thoại | `getByConversationId` | — | Lấy theo ID hội thoại công khai |
+| Tìm kiếm | `search` | `search` | Tìm kiếm toàn văn trong đơn vị kinh doanh |
+| Đếm theo view | `getViewsCount` | `get_views_count` | Đếm hội thoại theo view/trạng thái |
+| Tạo | `create` | `create` | Tạo hội thoại mới |
+| Tham gia | `join` | `join` | Tham gia hội thoại với tư cách thành viên nhóm |
+| Rời | `leave` | `leave` | Rời khỏi hội thoại |
+| Cập nhật trạng thái | `updateStatus` | `update_status` | Thay đổi trạng thái hội thoại |
+| Cập nhật tên | `updateName` | — | Đổi tên hội thoại |
+| Bắt đầu cuộc gọi video | `initVideoCall` | — | Bắt đầu cuộc gọi video trong hội thoại |
+| Gán thành viên nhóm | `assignTeamMember` | — | Gán thành viên nhóm vào hội thoại |
+| Xóa thành viên nhóm | `removeTeamMember` | — | Xóa thành viên nhóm |
+| Lấy người dùng có thể mời | `getInvitableUsers` | — | Danh sách người dùng có thể mời |
 
 ---
 

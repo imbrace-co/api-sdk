@@ -13,7 +13,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ### Channel
 
-| Field | Type | Mô tả |
+| Trường | Kiểu | Mô tả |
 |-------|------|-------|
 | `object_name` | string? | Định danh loại đối tượng |
 | `id` | string | ID duy nhất của kênh |
@@ -28,7 +28,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ### ChannelCredential
 
-| Field | Type | Mô tả |
+| Trường | Kiểu | Mô tả |
 |-------|------|-------|
 | `_id` | string | ID duy nhất của credential |
 | `type` | string? | Loại credential (vd: `facebook`, `whatsapp`) |
@@ -36,50 +36,50 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ---
 
-## Methods
+## Phương thức
 
-### Core CRUD
+### CRUD cơ bản
 
-| Method | TypeScript | Python | Mô tả |
+| Phương thức | TypeScript | Python | Mô tả |
 |--------|-----------|--------|-------|
-| List channels | `list` | `list` | Danh sách tất cả kênh, có thể lọc theo loại |
-| Get channel | `get` | `get` | Lấy kênh theo ID |
-| Create channel | `create` | `create` | Tạo kênh tổng quát |
-| Update channel | `update` | `update` | Bật/tắt trạng thái hoặc cập nhật cấu hình |
-| Delete channel | `delete` / `deleteV3` | `delete` / `delete_v3` | Xóa kênh |
-| Get count | `getCount` | `get_count` | Tổng số kênh |
+| Danh sách kênh | `list` | `list` | Danh sách tất cả kênh, có thể lọc theo loại |
+| Lấy kênh | `get` | `get` | Lấy kênh theo ID |
+| Tạo kênh | `create` | `create` | Tạo kênh tổng quát |
+| Cập nhật kênh | `update` | `update` | Bật/tắt trạng thái hoặc cập nhật cấu hình |
+| Xóa kênh | `delete` / `deleteV3` | `delete` / `delete_v3` | Xóa kênh |
+| Lấy số lượng | `getCount` | `get_count` | Tổng số kênh |
 
-### Per-type Creation
+### Tạo theo loại
 
-| Method | TypeScript | Python | Mô tả |
+| Phương thức | TypeScript | Python | Mô tả |
 |--------|-----------|--------|-------|
-| Create Web | `createWeb` | `create_web` | Kênh chat Web |
-| Create Facebook | `createFacebook` | `create_facebook` | Kênh Facebook Messenger |
-| Update Facebook | `updateFacebook` | `update_facebook` | Cập nhật cấu hình Facebook |
-| Create Instagram | `createInstagram` | `create_instagram` | Kênh Instagram |
-| Create Email | `createEmail` | `create_email` | Kênh Email |
-| Create WeChat | `createWechat` | `create_wechat` | Kênh WeChat |
-| Create LINE | `createLine` | `create_line` | Kênh LINE |
-| Create WhatsApp | `createWhatsApp` | `create_whatsapp` | Kênh WhatsApp |
-| Update WhatsApp | `updateWhatsApp` | `update_whatsapp` | Cập nhật cấu hình WhatsApp |
+| Tạo Web | `createWeb` | `create_web` | Kênh chat Web |
+| Tạo Facebook | `createFacebook` | `create_facebook` | Kênh Facebook Messenger |
+| Cập nhật Facebook | `updateFacebook` | `update_facebook` | Cập nhật cấu hình Facebook |
+| Tạo Instagram | `createInstagram` | `create_instagram` | Kênh Instagram |
+| Tạo Email | `createEmail` | `create_email` | Kênh Email |
+| Tạo WeChat | `createWechat` | `create_wechat` | Kênh WeChat |
+| Tạo LINE | `createLine` | `create_line` | Kênh LINE |
+| Tạo WhatsApp | `createWhatsApp` | `create_whatsapp` | Kênh WhatsApp |
+| Cập nhật WhatsApp | `updateWhatsApp` | `update_whatsapp` | Cập nhật cấu hình WhatsApp |
 
-### Credentials
+### Thông tin xác thực
 
-| Method | TypeScript | Python | Mô tả |
+| Phương thức | TypeScript | Python | Mô tả |
 |--------|-----------|--------|-------|
-| Get Facebook pages | `getFacebookPages` | `get_facebook_pages` | Danh sách Facebook pages cho credential |
-| Get credential | `getCredential` | `get_credential` | Lấy credential đã lưu |
-| Update credential | `updateCredential` | `update_credential` | Cập nhật credential |
-| Delete credential | `deleteCredential` | `delete_credential` | Xóa credential |
+| Lấy Facebook pages | `getFacebookPages` | `get_facebook_pages` | Danh sách Facebook pages cho credential |
+| Lấy credential | `getCredential` | `get_credential` | Lấy credential đã lưu |
+| Cập nhật credential | `updateCredential` | `update_credential` | Cập nhật credential |
+| Xóa credential | `deleteCredential` | `delete_credential` | Xóa credential |
 
-### Workflow & Teams
+### Workflow & Nhóm
 
-| Method | TypeScript | Python | Mô tả |
+| Phương thức | TypeScript | Python | Mô tả |
 |--------|-----------|--------|-------|
-| Update channel workflow | `updateChannelWorkflow` | `update_channel_workflow` | Gắn workflow vào kênh |
-| Delete channel workflow | `deleteChannelWorkflow` | `delete_channel_workflow` | Gỡ workflow |
-| List assignable teams | `listAssignableTeams` | `list_assignable_teams` | Nhóm có thể được gán vào kênh này |
-| List team observers | `listTeamObservers` | `list_team_observers` | Người quan sát của một nhóm |
+| Cập nhật workflow của kênh | `updateChannelWorkflow` | `update_channel_workflow` | Gắn workflow vào kênh |
+| Xóa workflow của kênh | `deleteChannelWorkflow` | `delete_channel_workflow` | Gỡ workflow |
+| Danh sách nhóm có thể gán | `listAssignableTeams` | `list_assignable_teams` | Nhóm có thể được gán vào kênh này |
+| Danh sách người quan sát nhóm | `listTeamObservers` | `list_team_observers` | Người quan sát của một nhóm |
 
 ---
 

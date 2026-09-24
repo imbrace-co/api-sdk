@@ -13,7 +13,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ### Contact
 
-| Field | Type | Mô tả |
+| Trường | Kiểu | Mô tả |
 |-------|------|-------|
 | `object_name` | string? | Định danh loại đối tượng |
 | `id` | string | ID duy nhất của contact |
@@ -27,7 +27,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ### UpdateContactInput
 
-| Field | Type | Required | Mô tả |
+| Trường | Kiểu | Bắt buộc | Mô tả |
 |-------|------|----------|-------|
 | `name` | string | | Cập nhật tên hiển thị |
 | `email` | string | | Cập nhật địa chỉ email |
@@ -35,7 +35,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ### ContactComment
 
-| Field | Type | Mô tả |
+| Trường | Kiểu | Mô tả |
 |-------|------|-------|
 | `_id` | string | ID duy nhất của comment |
 | `text` | string? | Nội dung comment |
@@ -43,7 +43,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ### ContactFile
 
-| Field | Type | Mô tả |
+| Trường | Kiểu | Mô tả |
 |-------|------|-------|
 | `_id` | string | ID duy nhất của file |
 | `name` | string? | Tên file |
@@ -52,24 +52,24 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ---
 
-## Methods
+## Phương thức
 
-| Method | TypeScript | Python | Mô tả |
+| Phương thức | TypeScript | Python | Mô tả |
 |--------|-----------|--------|-------|
-| List | `list` | `list` | Danh sách contacts có phân trang |
-| Get | `get` | `get` | Lấy contact theo ID |
-| Update | `update` | `update` | Cập nhật trường contact |
-| Search | `search` | `search` | Tìm kiếm toàn văn contacts |
-| Export CSV | `exportCsv` | `export_csv` | Tải xuống tất cả contacts dưới dạng CSV |
-| Get conversations | `getConversations` | `get_conversations` | Danh sách hội thoại của contact |
-| Get comments | `getComments` | `get_comments` | Danh sách comments nội bộ trên contact |
-| Get files | `getFiles` | `get_files` | Danh sách files đính kèm với contact |
-| Get activities | `getActivities` | `get_activities` | Nhật ký hoạt động hội thoại |
-| Upload avatar | `uploadAvatar` | `upload_contacts` | Tải lên file cho contacts (avatar / import file) |
-| List notifications | `listNotifications` | `list_notifications` | Danh sách thông báo cho người dùng hiện tại |
-| Mark notifications read | `markNotificationsRead` | `mark_notifications_read` | Đánh dấu thông báo đã đọc |
-| Dismiss notification | `dismissNotification` | `dismiss_notification` | Bỏ qua một thông báo |
-| Dismiss all notifications | `dismissAllNotifications` | `dismiss_all_notifications` | Xóa tất cả thông báo |
+| Danh sách | `list` | `list` | Danh sách contacts có phân trang |
+| Lấy | `get` | `get` | Lấy contact theo ID |
+| Cập nhật | `update` | `update` | Cập nhật trường contact |
+| Tìm kiếm | `search` | `search` | Tìm kiếm toàn văn contacts |
+| Xuất CSV | `exportCsv` | `export_csv` | Tải xuống tất cả contacts dưới dạng CSV |
+| Lấy hội thoại | `getConversations` | `get_conversations` | Danh sách hội thoại của contact |
+| Lấy comment | `getComments` | `get_comments` | Danh sách comments nội bộ trên contact |
+| Lấy file | `getFiles` | `get_files` | Danh sách files đính kèm với contact |
+| Lấy hoạt động | `getActivities` | `get_activities` | Nhật ký hoạt động hội thoại |
+| Tải lên avatar | `uploadAvatar` | `upload_contacts` | Tải lên file cho contacts (avatar / import file) |
+| Danh sách thông báo | `listNotifications` | `list_notifications` | Danh sách thông báo cho người dùng hiện tại |
+| Đánh dấu thông báo đã đọc | `markNotificationsRead` | `mark_notifications_read` | Đánh dấu thông báo đã đọc |
+| Bỏ qua thông báo | `dismissNotification` | `dismiss_notification` | Bỏ qua một thông báo |
+| Bỏ qua tất cả thông báo | `dismissAllNotifications` | `dismiss_all_notifications` | Xóa tất cả thông báo |
 
 ---
 

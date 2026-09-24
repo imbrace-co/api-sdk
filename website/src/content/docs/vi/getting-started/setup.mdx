@@ -1,11 +1,11 @@
 ---
 title: Hướng dẫn Thiết lập
-description: Cài đặt Imbrace SDK, cấu hình thông tin xác thực, thiết lập môi trường và ghi đè URL dịch vụ.
+description: Cài đặt Imbrace SDK, thiết lập môi trường, cấu hình thông tin xác thực và ghi đè URL dịch vụ.
 ---
 
 import { Tabs, TabItem, Aside } from "@astrojs/starlight/components";
 
-Hướng dẫn này bao gồm mọi thứ bạn cần để đi từ số không đến một tích hợp Imbrace SDK hoạt động — cài đặt, thông tin xác thực, môi trường và ghi đè URL dịch vụ.
+Hướng dẫn này bao gồm mọi thứ bạn cần để đi từ số không đến một tích hợp Imbrace SDK hoạt động — cài đặt, môi trường, thông tin xác thực và ghi đè URL dịch vụ.
 
 ---
 
@@ -157,13 +157,13 @@ import { ImbraceClient } from "@imbrace/sdk";
 const client = new ImbraceClient({
   apiKey:         process.env.IMBRACE_API_KEY,
   organizationId: process.env.IMBRACE_ORGANIZATION_ID,
-  env: "stable", // hoặc dùng env: "stable"
+  env:            "stable",
 });
 
 // Phía client — Access Token (ví dụ: từ lần đăng nhập trước, hoặc token bạn tự lưu)
 const client = new ImbraceClient({
   accessToken: process.env.IMBRACE_ACCESS_TOKEN,
-  env: "stable",
+  env:         "stable",
 });
 
 // Đăng nhập bằng mật khẩu (POST /v1/login/sign_in) — phổ biến nhất cho ứng dụng end-user.
@@ -195,7 +195,7 @@ client = ImbraceClient(
 
 # Phía client — Access Token
 client = ImbraceClient(
-    access_token=os.environ["IMBRACE_ACCESS_TOKEN"],
+    access_token="eyJhbGci...",
     organization_id="org_xxx",
 )
 
@@ -218,7 +218,7 @@ anon.login_with_otp("user@example.com", "123456")
 from imbrace import AsyncImbraceClient
 
 async def main():
-    async with AsyncImbraceClient(api_key=os.environ["IMBRACE_API_KEY"]) as client:
+    async with AsyncImbraceClient(api_key="api_...") as client:
         me = await client.platform.get_me()
         print(me)
 ```
@@ -239,91 +239,6 @@ imbrace login --api-key api_xxx...
 ```
 
 Xem [Cài đặt CLI](/cli/installation/) để biết các phương pháp cài đặt thay thế và [CLI Commands](/cli/commands/) để biết tài liệu tham khảo lệnh đầy đủ.
-
----
-
-## Ví dụ Sử dụng Nhanh
-
-<Tabs>
-  <TabItem label="TypeScript">
-
-```typescript
-import { ImbraceClient } from '@imbrace/sdk'
-
-const client = new ImbraceClient({ apiKey: process.env.IMBRACE_API_KEY })
-
-// Lấy người dùng hiện tại
-const me = await client.platform.getMe()
-
-// Liệt kê kênh
-const channels = await client.channel.list()
-
-// Gửi tin nhắn
-await client.messages.send({ type: 'text', text: 'Xin chào!' })
-
-// AI completion
-const result = await client.ai.complete({
-  model: 'gpt-4o',
-  messages: [{ role: 'user', content: 'Tóm tắt điều này.' }],
-})
-
-// AI streaming
-for await (const chunk of client.ai.stream({ model: 'gpt-4o', messages: [...] })) {
-  process.stdout.write(chunk.choices[0]?.delta?.content ?? '')
-}
-
-// AI Agent — streaming chat
-const response = await client.aiAgent.streamChat({
-  id: 'chat_id',
-  assistant_id: 'asst_abc',
-  messages: [{ role: 'user', content: 'Xin chào' }],
-})
-const reader = response.body!.getReader()
-const decoder = new TextDecoder()
-while (true) {
-  const { done, value } = await reader.read()
-  if (done) break
-  console.log(decoder.decode(value))
-}
-```
-
-  </TabItem>
-  <TabItem label="Python">
-
-```python
-from imbrace import ImbraceClient
-from imbrace.types.ai import CompletionInput, CompletionMessage
-
-with ImbraceClient(api_key=os.environ["IMBRACE_API_KEY"]) as client:
-    # Lấy người dùng hiện tại
-    me = client.platform.get_me()
-
-    # Liệt kê kênh và board
-    channels = client.channel.list()
-    boards_res = client.boards.list()
-    boards_data = boards_res.get("data", [])
-    if boards_data:
-        board_id = boards_data[0].get("_id") or boards_data[0]["id"]
-        items = client.boards.list_items(board_id)
-
-    # AI completion
-    result = client.ai.complete(CompletionInput(
-        model="gpt-4o",
-        messages=[CompletionMessage(role="user", content="Xin chào")],
-    ))
-
-    # AI Agent — streaming chat
-    response = client.ai_agent.stream_chat({
-        "id": "chat_id",
-        "assistant_id": "asst_abc",
-        "messages": [{"role": "user", "content": "Xin chào"}],
-    })
-    for line in response.iter_lines():
-        print(line)
-```
-
-  </TabItem>
-</Tabs>
 
 ---
 
@@ -367,18 +282,18 @@ Tất cả các key dịch vụ hợp lệ:
 | Python key           | TypeScript key      | Dịch vụ                             |
 | -------------------- | ------------------- | ----------------------------------- |
 | `gateway`            | `gateway`           | App Gateway                         |
-| `platform`           | `platform`          | Platform service                    |
-| `channel_service`    | `channelService`    | Channel service                     |
+| `platform`           | `platform`          | Dịch vụ Platform                    |
+| `channel_service`    | `channelService`    | Dịch vụ Channel                     |
 | `data_board`         | `dataBoard`         | Data Board                          |
-| `backend`            | `backend`           | Legacy monolith (`/v1/backend`) — auth signin, templates, a few legacy routes |
-| `ips`                | `ips`               | IPS service                         |
-| `ai`                 | `ai`                | AI service                          |
-| `marketplaces`       | `marketplaces`      | Marketplace service                 |
-| `file_service`       | `fileService`       | File service                        |
-| `message_suggestion` | `messageSuggestion` | Message Suggestion service          |
-| `predict`            | `predict`           | Predict service                     |
+| `backend`            | `backend`           | Monolith cũ (`/v1/backend`) — dùng cho đăng nhập xác thực, template và một số route chưa được tách ra |
+| `ips`                | `ips`               | Dịch vụ IPS                         |
+| `ai`                 | `ai`                | Dịch vụ AI                          |
+| `marketplaces`       | `marketplaces`      | Dịch vụ Marketplace                 |
+| `file_service`       | `fileService`       | Dịch vụ File                        |
+| `message_suggestion` | `messageSuggestion` | Dịch vụ Message Suggestion          |
+| `predict`            | `predict`           | Dịch vụ Predict                     |
 | `workflow_engine`    | `workflowEngine`    | Workflows            |
-| `ai_agent`           | `aiAgent`           | AI Agent service                    |
+| `ai_agent`           | `aiAgent`           | Dịch vụ AI Agent                    |
 
 ---
 
@@ -409,14 +324,7 @@ cd py && pip install -e ".[dev]"
 
 ##### `401 Unauthorized`
 
-API Key đã hết hạn hoặc không hợp lệ. Tạo key mới:
-
-```bash
-curl -X POST https://app-gatewayv2.imbrace.co/private/backend/v1/third_party_token \
-  -H "x-access-token: <token_hiện_có_của_bạn>" \
-  -H "Content-Type: application/json" \
-  -d '{"expirationDays": 30}'
-```
+API Key đã hết hạn hoặc không hợp lệ. Tạo key mới từ [Imbrace Dashboard](https://cloud.imbrace.co) hoặc xem [hướng dẫn API Key](/guides/api-key).
 
 ##### `UserWarning: ImbraceClient: no credentials provided`
 

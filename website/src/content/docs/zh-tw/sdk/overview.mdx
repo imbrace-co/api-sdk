@@ -21,6 +21,8 @@ Imbrace SDK 是 Imbrace Gateway 的官方客戶端，提供 **TypeScript** 和 *
 
 ### 安裝
 
+> **目前版本：** `@imbrace/sdk` `v1.4.0`（npm）· `imbrace` `v1.2.1`（PyPI）
+
 <Tabs syncKey="lang">
   <TabItem label="TypeScript">
     ```bash
@@ -41,7 +43,7 @@ Imbrace SDK 是 Imbrace Gateway 的官方客戶端，提供 **TypeScript** 和 *
     ```typescript
     import { ImbraceClient } from "@imbrace/sdk"
 
-    const client = new ImbraceClient({ accessToken: process.env.IMBRACE_ACCESS_TOKEN })
+    const client = new ImbraceClient({ apiKey: "api_your_key" })
     const me = await client.platform.getMe()
     ```
   </TabItem>
@@ -49,7 +51,7 @@ Imbrace SDK 是 Imbrace Gateway 的官方客戶端，提供 **TypeScript** 和 *
     ```python
     from imbrace import ImbraceClient
 
-    with ImbraceClient(access_token=os.environ["IMBRACE_ACCESS_TOKEN"]) as client:
+    with ImbraceClient(api_key="api_your_key") as client:
         me = client.platform.get_me()
     ```
   </TabItem>
@@ -94,13 +96,13 @@ const flows  = await client.api.workflow.listFlows();
 
 ### 何時選擇哪種憑證
 
-| | API 金鑰 | 存取令牌 |
+| | API 金鑰（`api_...`） | 存取令牌（`eyJ...`） |
 |---|---|---|
-| **誰的後端是 Imbrace？** | 您後端內部的功能 | *Imbrace 就是*您的後端 |
-| **誰的使用者？** | 您的使用者 | Imbrace 的使用者 |
-| **最適合** | 伺服器對伺服器、內部腳本、CRM 整合 | 需要每個終端使用者登入的面向使用者的應用程式 |
+| **取得方式** | Imbrace Dashboard → Generate External Token | OTP 登入（`requestOtp` / `loginWithOtp`） |
+| **最適合** | 伺服器腳本、後端整合、CI 管線 | 每個終端使用者各自登入的面向使用者應用程式 |
+| **範圍** | 您的組織 — 完整 API 存取權 | 每位使用者的工作階段 — 僅限該使用者的權限 |
 
-完整的決策樹：[認證 →](/sdk/authentication/)。
+完整的決策樹：[認證 →](/sdk/authentication/) · [取得 API 金鑰 →](/guides/api-key/)
 
 ### 下一步
 
