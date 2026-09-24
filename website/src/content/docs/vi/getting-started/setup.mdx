@@ -98,7 +98,7 @@ print("SDK loaded:", ImbraceClient)
 | --------- | --------------------------------------- | --------------------- |
 | `develop` | `https://app-gateway.dev.imbrace.co`    | Phát triển nội bộ     |
 | `sandbox` | `https://app-gateway.sandbox.imbrace.co`| Kiểm thử tích hợp     |
-| `stable`  | `https://app-gatewayv2.imbrace.co`      | Sản xuất (mặc định)   |
+| `stable`  | `https://app-gatewayv2.imbrace.co`      | Production (mặc định) |
 
 Chuyển đổi môi trường qua tùy chọn constructor `env`, hoặc ghi đè URL trực tiếp bằng `baseUrl`:
 
@@ -129,11 +129,11 @@ SDK không tự động đọc biến môi trường — bạn truyền thông t
 
 ```env
 # Thông tin xác thực
-IMBRACE_API_KEY=api_key_của_bạn
-IMBRACE_ACCESS_TOKEN=jwt_token_của_bạn
+IMBRACE_API_KEY=your_api_key_here
+IMBRACE_ACCESS_TOKEN=your_jwt_token_here
 
 # ID Tổ chức — được gửi với mọi yêu cầu
-IMBRACE_ORGANIZATION_ID=org_id_của_bạn
+IMBRACE_ORGANIZATION_ID=your_org_id_here
 
 # Tùy chọn: ghi đè URL gateway trực tiếp
 IMBRACE_GATEWAY_URL=https://app-gatewayv2.imbrace.co
@@ -238,7 +238,7 @@ npm install -g @imbrace/cli
 imbrace login --api-key api_xxx...
 ```
 
-Xem [Cài đặt CLI](/cli/installation/) để biết các phương pháp cài đặt thay thế và [CLI Commands](/cli/commands/) để biết tài liệu tham khảo lệnh đầy đủ.
+Xem [Cài đặt CLI](/cli/installation/) để biết các phương pháp cài đặt thay thế và [Lệnh CLI](/cli/commands/) để biết tài liệu tham khảo lệnh đầy đủ.
 
 ---
 

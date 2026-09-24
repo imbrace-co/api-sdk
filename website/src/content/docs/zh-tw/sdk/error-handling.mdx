@@ -5,7 +5,7 @@ description: 錯誤類型、自動重試行為以及使用 Imbrace SDK 處理故
 
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 
-所有 SDK 拋出的錯誤都繼承自單一基礎類型，因此您可以在一個地方捕獲任何 SDK 錯誤，或者在需要不同反應時分支到特定的子類別。TypeScript 和 Python SDK 的階層完全相同。
+所有 SDK 拋出的錯誤都繼承自單一基礎類型，因此您可以在一個地方捕獲任何 SDK 錯誤，或在需要不同處理方式時依特定子類別分別處理。TypeScript 和 Python SDK 的階層完全相同。
 
 ## 錯誤階層
 
@@ -13,7 +13,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 <TabItem label="TypeScript">
 ```
 Error
-└── ImbraceError          (基礎 — SDK 錯誤的全面捕獲)
+└── ImbraceError          (基礎 — 可捕捉所有 SDK 錯誤)
     ├── AuthError          (401, 403 — 無效或過期的憑證)
     ├── ApiError           (4xx/5xx — 請求被伺服器拒絕)
     └── NetworkError       (逾時、連線拒絕、DNS 失敗)
@@ -22,7 +22,7 @@ Error
 <TabItem label="Python">
 ```
 Exception
-└── ImbraceError          (基礎 — SDK 錯誤的全面捕獲)
+└── ImbraceError          (基礎 — 可捕捉所有 SDK 錯誤)
     ├── AuthError          (401, 403 — 無效或過期的憑證)
     ├── ApiError           (4xx/5xx — 請求被伺服器拒絕)
     └── NetworkError       (逾時、連線拒絕、DNS 失敗)
@@ -227,7 +227,7 @@ except ImbraceError as e:
 
 ## 請求逾時
 
-在建立客戶端時設定逾時（預設：**30 秒**）。當逾時觸發時，進行中的請求將被中止並拋出/引發 `NetworkError`。
+在建立用戶端時設定逾時（預設：**30 秒**）。當逾時觸發時，進行中的請求將被中止並拋出/引發 `NetworkError`。
 
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">
@@ -244,7 +244,7 @@ client = ImbraceClient(timeout=15)  # 秒
 
 ## 非同步錯誤處理（Python）
 
-非同步客戶端會拋出相同的例外類型：
+非同步用戶端會拋出相同的例外類型：
 
 ```python
 from imbrace import AsyncImbraceClient, AuthError, ApiError
@@ -260,7 +260,7 @@ async with AsyncImbraceClient() as client:
 
 ---
 
-## 最佳實踐
+## 最佳做法
 
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">

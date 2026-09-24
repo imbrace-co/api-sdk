@@ -34,7 +34,7 @@ import VersionOnly from "../../../../components/VersionOnly.astro";
 </Tabs>
 </VersionOnly>
 
-### 初始化客戶端
+### 初始化用戶端
 
 <AuthOnly mode="access-token">
 <Tabs syncKey="lang">
@@ -49,7 +49,7 @@ import VersionOnly from "../../../../components/VersionOnly.astro";
     })
     ```
 
-    客戶端是有狀態的 — 建立一次並在整個應用程式中重複使用。
+    用戶端是有狀態的 — 建立一次並在整個應用程式中重複使用。
   </TabItem>
   <TabItem label="Python">
     ```python
@@ -64,7 +64,7 @@ import VersionOnly from "../../../../components/VersionOnly.astro";
         me = client.platform.get_me()
     ```
 
-    Python 也匯出 `AsyncImbraceClient`（`async with ...`）用於非同步技術棧，如 FastAPI。
+    Python 也匯出 `AsyncImbraceClient`（`async with ...`）用於 FastAPI 等非同步技術堆疊。
 
     context manager 會自動關閉底層的 HTTP 連線池。
   </TabItem>
@@ -85,7 +85,7 @@ import VersionOnly from "../../../../components/VersionOnly.astro";
     })
     ```
 
-    客戶端是有狀態的 — 建立一次並在整個應用程式中重複使用。
+    用戶端是有狀態的 — 建立一次並在整個應用程式中重複使用。
   </TabItem>
   <TabItem label="Python">
     ```python
@@ -101,7 +101,7 @@ import VersionOnly from "../../../../components/VersionOnly.astro";
         me = client.platform.get_me()
     ```
 
-    Python 也匯出 `AsyncImbraceClient`（`async with ...`）用於非同步技術棧，如 FastAPI。
+    Python 也匯出 `AsyncImbraceClient`（`async with ...`）用於 FastAPI 等非同步技術堆疊。
 
     context manager 會自動關閉底層的 HTTP 連線池。
   </TabItem>
@@ -134,11 +134,11 @@ SDK **不會**自動讀取環境變數。請直接在建構函式中傳遞憑證
 | 變數 | 用途 |
 |---|---|
 | `IMBRACE_API_KEY` | 您的 API 金鑰（組織層級憑證） |
-| `IMBRACE_ACCESS_TOKEN` | 使用者的存取令牌（每次連線的憑證） |
+| `IMBRACE_ACCESS_TOKEN` | 使用者的存取權杖（工作階段層級的憑證） |
 | `IMBRACE_ORGANIZATION_ID` | 組織 ID — 在每個請求中作為 `x-organization-id` 傳遞 |
 | `IMBRACE_GATEWAY_URL` | 覆寫閘道 URL（預設：`https://app-gatewayv2.imbrace.co`） |
 
-組織 ID 已編碼在 API 金鑰和存取令牌中。您可以選擇性地在建構函式中傳遞 `organizationId`（TypeScript）或 `organization_id`（Python）來覆寫它。詳情請參閱[認證](/sdk/authentication/)。
+組織 ID 已編碼在 API 金鑰和存取權杖中。您可以選擇性地在建構函式中傳遞 `organizationId`（TypeScript）或 `organization_id`（Python）來覆寫它。詳情請參閱[認證](/sdk/authentication/)。
 
 ---
 

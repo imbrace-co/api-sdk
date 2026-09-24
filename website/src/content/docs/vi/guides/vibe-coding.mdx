@@ -5,7 +5,7 @@ description: Sử dụng Imbrace SDK nhanh hơn bằng cách đưa llms.txt vào
 
 import { Aside, Tabs, TabItem } from "@astrojs/starlight/components";
 
-**Vibe Coding** có nghĩa là viết mã bằng cách cộng tác với trợ lý AI — mô tả những gì bạn muốn bằng ngôn ngữ tự nhiên và để AI tạo ra, giải thích hoặc tái cấu trúc mã cho bạn. Imbrace SDK đi kèm với tệp [`llms.txt`](https://developer.imbrace.co/llms.txt) để bất kỳ công cụ AI nào cũng có thể hiểu ngay SDK mà không cần phải bịa ra tên phương thức hoặc hình dạng tham số.
+**Vibe Coding** có nghĩa là viết mã bằng cách cộng tác với trợ lý AI — mô tả những gì bạn muốn bằng ngôn ngữ tự nhiên và để AI tạo ra, giải thích hoặc tái cấu trúc mã cho bạn. Imbrace SDK đi kèm với tệp [`llms.txt`](https://developer.imbrace.co/llms.txt) để bất kỳ công cụ AI nào cũng có thể hiểu ngay SDK mà không bịa ra tên phương thức hoặc cấu trúc tham số.
 
 ## Thiết lập
 
@@ -31,8 +31,8 @@ pip install imbrace
 Tạo tệp `.env` trong thư mục gốc dự án của bạn. SDK **không** tự động đọc biến môi trường — bạn truyền chúng vào constructor ở bước 3.
 
 ```env
-IMBRACE_API_KEY=api_key_của_bạn
-IMBRACE_ORGANIZATION_ID=org_id_của_bạn
+IMBRACE_API_KEY=your_api_key_here
+IMBRACE_ORGANIZATION_ID=your_org_id_here
 ```
 
 Xem [Xác thực](/sdk/authentication/) để biết khi nào nên sử dụng API Key so với Access Token, và [Hướng dẫn Thiết lập](/getting-started/setup/#get-an-api-key) để biết cách lấy API key.
@@ -139,7 +139,7 @@ imbrace workflow list --json
 imbrace document-ai list --json
 ```
 
-Các lệnh resource (`data-board`, `ai-agent`, `workflow`, `document-ai`, `orchestrator`, `guardrail`) hỗ trợ `--json` để có đầu ra máy có thể đọc được. Mọi lệnh đều hỗ trợ `-h` / `--help` để xem hướng dẫn sử dụng. Xem [CLI Commands](/cli/commands/) để biết tài liệu tham khảo đầy đủ.
+Các lệnh resource (`data-board`, `ai-agent`, `workflow`, `document-ai`, `orchestrator`, `guardrail`) hỗ trợ `--json` để có đầu ra dạng máy đọc được. Mọi lệnh đều hỗ trợ `-h` / `--help` để xem hướng dẫn sử dụng. Xem [Lệnh CLI](/cli/commands/) để biết tài liệu tham khảo đầy đủ.
 
 ## Giữ nó luôn cập nhật
 

@@ -168,7 +168,7 @@ client.workflows.apply_flow_operation("flow_id", {
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">
 ```typescript
-// 触发并忘记
+// 触发后不等待结果
 await client.workflows.triggerFlow("flow_id", {
   contactId: "contact_xxx",
   event: "lead_qualified",
@@ -183,7 +183,7 @@ const result = await client.workflows.triggerFlowSync("flow_id", {
 </TabItem>
 <TabItem label="Python">
 ```python
-# 触发并忘记
+# 触发后不等待结果
 client.workflows.trigger_flow("flow_id", {"contactId": "contact_xxx", "event": "lead_qualified"})
 
 # 等待结果

@@ -10,7 +10,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 ## 先决条件
 
 - TypeScript：Node 18+
-- Python：Python 3.10+ 和 `pip`
+- Python：Python 3.9+ 和 `pip`
 
 ## 环境 URL
 
@@ -128,7 +128,7 @@ pip install -r requirements.txt
 python -m pytest tests/test_guide_flow.py -v
 ```
 
-同样的测试以 `IMBRACE_API_KEY` 和 `IMBRACE_ACCESS_TOKEN` 两种认证模式运行。
+同一测试会分别使用 `IMBRACE_API_KEY` 和 `IMBRACE_ACCESS_TOKEN` 运行，以覆盖两种认证模式。
 
 ---
 
@@ -151,13 +151,13 @@ IMBRACE_GATEWAY_URL=https://app-gateway.sandbox.imbrace.co python -m pytest test
 
 ## 故障排除
 
-**`Cannot find package '@imbrace/sdk'`** (TypeScript)
+**`Cannot find package '@imbrace/sdk'`**（TypeScript）
 在 `test/test-local-pkg/ts` 中再次运行 `npm install`。它会从 `ts/` 构建出的 `.tgz` 解析 `@imbrace/sdk` — 若该文件缺失或过期，请在 `ts/` 重新运行 `npm pack`。
 
 **dist 文件报 `ERR_MODULE_NOT_FOUND`**（TypeScript）
 构建还未运行，或者添加了源文件但没有重新构建。在 `ts/` 中运行 `npm run build`。
 
-**`ModuleNotFoundError: No module named 'imbrace'`** (Python)
+**`ModuleNotFoundError: No module named 'imbrace'`**（Python）
 包未安装在当前虚拟环境中。重新运行 `pip install -e .`（editable）或 `pip install dist/imbrace-*.whl`。
 
 **实时调用返回 401 / 403**

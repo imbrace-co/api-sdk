@@ -145,7 +145,7 @@ IMBRACE_GATEWAY_URL=https://app-gatewayv2.imbrace.co
 
 ---
 
-### 初始化客戶端
+### 初始化用戶端
 
 <Tabs>
   <TabItem label="TypeScript">
@@ -160,7 +160,7 @@ const client = new ImbraceClient({
   env:            "stable",
 });
 
-// 客戶端 — 存取令牌（例如來自先前的登入，或你自己儲存的 token）
+// 用戶端 — 存取權杖（例如來自先前的登入，或您自己儲存的 token）
 const client = new ImbraceClient({
   accessToken: process.env.IMBRACE_ACCESS_TOKEN,
   env:         "stable",
@@ -176,7 +176,7 @@ await anon.selectOrganization(organizations[0].id);
 // OTP 登入流程（替代方案 — 用 email-OTP 體驗取代密碼）
 await anon.requestOtp("user@example.com");
 await anon.loginWithOtp("user@example.com", "123456");
-// 令牌自動儲存在客戶端上
+// 權杖自動儲存在用戶端上
 ```
 
   </TabItem>
@@ -193,7 +193,7 @@ client = ImbraceClient(
     env="stable",
 )
 
-# 客戶端 — 存取令牌
+# 用戶端 — 存取權杖
 client = ImbraceClient(
     access_token="eyJhbGci...",
     organization_id="org_xxx",
@@ -277,9 +277,9 @@ client = ImbraceClient(
   </TabItem>
 </Tabs>
 
-所有有效的服務金鑰：
+所有有效的服務鍵名：
 
-| Python 金鑰 | TypeScript 金鑰 | 服務 |
+| Python 鍵名 | TypeScript 鍵名 | 服務 |
 | -------------------- | ------------------- | ----------------------------------- |
 | `gateway`            | `gateway`           | App Gateway                         |
 | `platform`           | `platform`          | Platform 服務                       |
@@ -292,7 +292,7 @@ client = ImbraceClient(
 | `file_service`       | `fileService`       | 檔案服務                            |
 | `message_suggestion` | `messageSuggestion` | 訊息建議服務                        |
 | `predict`            | `predict`           | Predict 服務                        |
-| `workflow_engine`    | `workflowEngine`    | Workflows           |
+| `workflow_engine`    | `workflowEngine`    | 工作流程           |
 | `ai_agent`           | `aiAgent`           | AI Agent 服務                       |
 
 ---

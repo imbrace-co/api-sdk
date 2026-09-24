@@ -5,7 +5,7 @@ description: 错误类型、自动重试行为以及使用 Imbrace SDK 处理故
 
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 
-SDK 抛出的所有错误都继承自单个基类型，因此你可以在一处捕获任何 SDK 错误，或者在需要不同响应时在特定子类上分支。TypeScript 和 Python SDK 的层次结构相同。
+SDK 抛出的所有错误都继承自单个基类型，因此你可以在一处捕获任何 SDK 错误，或者在需要区别处理时按具体子类分别捕获。TypeScript 和 Python SDK 的层次结构相同。
 
 ## 错误层次结构
 
@@ -150,7 +150,7 @@ except NetworkError as e:
 
 ## 捕获所有 SDK 错误
 
-导入基类型以在单个块中处理任何 SDK 原始错误：
+导入基类型以在单个块中处理任何源自 SDK 的错误：
 
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">
@@ -297,7 +297,7 @@ def safe_get_me(client):
         refresh_credentials(client)
         return client.platform.get_me()
 
-# 3. 针对 ApiError 在 status_code 上分支
+# 3. 针对 ApiError 按 status_code 分支处理
 try:
     client.contacts.update(contact_id, data)
 except ApiError as e:

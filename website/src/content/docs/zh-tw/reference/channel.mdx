@@ -1,5 +1,5 @@
 ---
-title: Channel
+title: 頻道
 description: client.channel 的結構與方法參考 — 建立和管理訊息頻道（Web、WhatsApp、Facebook、Instagram、Email、WeChat、LINE）。
 ---
 
@@ -22,7 +22,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 | `organization_id` | string | 所屬組織 |
 | `business_unit_id` | string? | 業務單位 ID |
 | `is_active` | boolean | 頻道是否啟用 |
-| `config` | object? | 頻道特定配置 |
+| `config` | object? | 頻道特定設定 |
 | `created_at` | string | ISO 8601 建立時間戳 |
 | `updated_at` | string | ISO 8601 更新時間戳 |
 
@@ -45,7 +45,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 | 列出頻道 | `list` | `list` | 列出所有頻道，可依類型篩選 |
 | 取得頻道 | `get` | `get` | 依 ID 取得頻道 |
 | 建立頻道 | `create` | `create` | 通用頻道建立 |
-| 更新頻道 | `update` | `update` | 切換啟用狀態或更新配置 |
+| 更新頻道 | `update` | `update` | 切換啟用狀態或更新設定 |
 | 刪除頻道 | `delete` / `deleteV3` | `delete` / `delete_v3` | 刪除頻道 |
 | 取得數量 | `getCount` | `get_count` | 頻道總數 |
 
@@ -55,13 +55,13 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 |--------|-----------|--------|------|
 | 建立 Web | `createWeb` | `create_web` | Web 聊天頻道 |
 | 建立 Facebook | `createFacebook` | `create_facebook` | Facebook Messenger 頻道 |
-| 更新 Facebook | `updateFacebook` | `update_facebook` | 更新 Facebook 頻道配置 |
+| 更新 Facebook | `updateFacebook` | `update_facebook` | 更新 Facebook 頻道設定 |
 | 建立 Instagram | `createInstagram` | `create_instagram` | Instagram 頻道 |
 | 建立 Email | `createEmail` | `create_email` | Email 頻道 |
 | 建立 WeChat | `createWechat` | `create_wechat` | WeChat 頻道 |
 | 建立 LINE | `createLine` | `create_line` | LINE 頻道 |
 | 建立 WhatsApp | `createWhatsApp` | `create_whatsapp` | WhatsApp 頻道 |
-| 更新 WhatsApp | `updateWhatsApp` | `update_whatsapp` | 更新 WhatsApp 配置 |
+| 更新 WhatsApp | `updateWhatsApp` | `update_whatsapp` | 更新 WhatsApp 設定 |
 
 ### 憑證
 

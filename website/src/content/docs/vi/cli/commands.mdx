@@ -107,7 +107,7 @@ imbrace ai-agent delete <agentId> [--yes] [--json]
 
 ### Cờ Tạo / Cập nhật
 
-`create` và `update` chấp nhận cùng các cờ. `update` giữ nguyên các trường không thay đổi thông qua PUT-merge. `--id-only` chỉ có trên `create`.
+`create` và `update` chấp nhận cùng các cờ hành vi. `update` giữ nguyên các trường không thay đổi thông qua PUT-merge. `--id-only` chỉ có trên `create`.
 
 | Cờ | Ánh xạ tới | Ghi chú |
 |---|---|---|
@@ -140,7 +140,7 @@ imbrace ai-agent delete <agentId> [--yes] [--json]
 | `--streaming` | `streaming` | Mặc định true |
 | `--use-memory` | `use_memory` | Mặc định true |
 | **Đầu ra** | | |
-| `--json` | — | Đầu ra máy có thể đọc được |
+| `--json` | — | Đầu ra dạng máy đọc được |
 | `--id-only` | — | Chỉ in ID agent mới (chỉ khi tạo) |
 
 ### Ví dụ tạo đầy đủ
@@ -255,7 +255,7 @@ CLI xử lý ba hành vi đặc thù của nền tảng để người gọi kh�
 2. **`sub_agents` / `team_leads` phải là ID trợ lý (UUID), không phải ID use-case (`uc_*`).** CLI tự động phân giải mọi `uc_*` bạn truyền qua tra cứu `client.agent.get()`.
 3. **`createUseCase` âm thầm loại bỏ cả hai trường trên** khi được đặt trên payload trợ lý. CLI thực hiện 2 bước: tạo → `chatAi.updateAiAgent` PUT để áp dụng chúng.
 
-`get` lấy trợ lý cơ bản để `sub_agents` / `team_leads` hiển thị chính xác (chúng nằm trên trợ lý, không phải use case).
+`get` lấy trợ lý bên dưới để `sub_agents` / `team_leads` hiển thị chính xác (chúng nằm trên trợ lý, không phải use case).
 
 ---
 
@@ -478,7 +478,7 @@ Hiển thị tất cả profile kèm dấu đánh dấu profile đang hoạt đ�
 imbrace profile show [<name>] [--json]
 ```
 
-Mặc định là profile đang hoạt động. Hiển thị tất cả các trường đã lưu (bản xem trước credential, phương thức, email, môi trường, base URL, ID tổ chức, timeout, services, health check).
+Mặc định là profile đang hoạt động. Hiển thị tất cả các trường đã lưu (bản xem trước thông tin xác thực, phương thức, email, môi trường, base URL, ID tổ chức, timeout, services, health check).
 
 ### Sử dụng
 

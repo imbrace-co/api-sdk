@@ -5,17 +5,17 @@ description: 在 React、Next.js、Node.js、FastAPI、asyncio、Django 和 Cele
 
 import { Tabs, TabItem, Aside } from "@astrojs/starlight/components";
 
-兩個 SDK 的框架層級整合模式。選擇您技術棧適用的章節 — TypeScript 涵蓋 React、Next.js 和純 Node.js；Python 涵蓋 FastAPI、asyncio、Django 和 Celery。兩個版本都有記錄 OTP 登入流程。
+兩個 SDK 的框架層級整合模式。選擇您技術堆疊適用的章節 — TypeScript 涵蓋 React、Next.js 和純 Node.js；Python 涵蓋 FastAPI、asyncio、Django 和 Celery。兩個版本都有記錄 OTP 登入流程。
 
-有關憑證策略（API 金鑰與存取令牌、環境變數），請參閱[認證](/sdk/authentication/)和[設定指南](/getting-started/setup/#configure-credentials)。
+有關憑證策略（API 金鑰與存取權杖、環境變數），請參閱[認證](/sdk/authentication/)和[設定指南](/getting-started/setup/#configure-credentials)。
 
 ---
 
 ## React（TypeScript）
 
-### Singleton 客戶端
+### Singleton 用戶端
 
-在元件樹外部建立客戶端一次，並在所有元件中重複使用。`localStorage` 中的令牌來自 [OTP 登入流程](/sdk/authentication/#otp-login-flow)。
+在元件樹外部建立用戶端一次，並在所有元件中重複使用。`localStorage` 中的權杖來自 [OTP 登入流程](/sdk/authentication/#otp-login-flow)。
 
 ```typescript
 // lib/imbrace.ts
@@ -151,9 +151,9 @@ npx ts-node scripts/export-contacts.ts
 
 ## FastAPI（Python）
 
-### 每個請求的依賴注入
+### 每個請求的相依性注入
 
-最簡單的模式 — 每個請求一個非同步客戶端，生命週期由依賴項管理：
+最簡單的模式 — 每個請求一個非同步用戶端，生命週期由相依項管理：
 
 ```python
 from fastapi import FastAPI, Depends
@@ -185,7 +185,7 @@ async def chat(message: str, client: AsyncImbraceClient = Depends(get_imbrace)):
 
 ### 全域 singleton（更好的連線重複使用）
 
-為了獲得更高的吞吐量，可以在應用程式的整個生命週期中共用一個客戶端：
+為了獲得更高的吞吐量，可以在應用程式的整個生命週期中共用一個用戶端：
 
 ```python
 from contextlib import asynccontextmanager
@@ -258,7 +258,7 @@ asyncio.run(stream_response())
 
 ## Django（Python）
 
-### 同步視圖
+### 同步 View
 
 ```python
 # views.py
@@ -299,7 +299,7 @@ def get_client() -> ImbraceClient:
 
 ## Celery（Python）
 
-對於背景任務工作者，使用同步客戶端並在每個任務內部建立一個：
+對於背景任務工作者，使用同步用戶端並在每個任務內部建立一個：
 
 ```python
 # tasks.py
@@ -327,7 +327,7 @@ def sync_contacts(self):
 
 ## OTP 登入流程
 
-OTP 流程在兩個 SDK 中的概念相同：請求一個 OTP 到電子郵件，然後將其兌換為存取令牌。請參閱[認證 → OTP 登入流程](/sdk/authentication/#otp-login-flow)以了解完整的憑證生命週期。
+OTP 流程在兩個 SDK 中的概念相同：請求一個 OTP 到電子郵件，然後將其兌換為存取權杖。請參閱[認證 → OTP 登入流程](/sdk/authentication/#otp-login-flow)以了解完整的憑證生命週期。
 
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">
@@ -409,6 +409,6 @@ async def verify_otp(body: OtpVerify):
 
 ### 下一步
 
-- [認證 →](/sdk/authentication/) — OTP 登入流程、憑證生命週期與令牌儲存
+- [認證 →](/sdk/authentication/) — OTP 登入流程、憑證生命週期與權杖儲存
 - [錯誤處理 →](/sdk/error-handling/) — `AuthError`、`ApiError` 與 `NetworkError` 如何呈現
 - [快速入門 →](/sdk/quick-start/) — 在加入框架串接前的最小可運作範例

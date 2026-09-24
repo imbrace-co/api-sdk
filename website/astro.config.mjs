@@ -1,6 +1,13 @@
 import { defineConfig } from 'astro/config'
 import starlight from '@astrojs/starlight'
 import { visit } from 'unist-util-visit'
+import { existsSync, readFileSync } from 'node:fs'
+import { unified } from 'unified'
+import remarkParse from 'remark-parse'
+import remarkMdx from 'remark-mdx'
+import remarkGfm from 'remark-gfm'
+import { toString as mdastToString } from 'mdast-util-to-string'
+import GithubSlugger from 'github-slugger'
 
 const isProd = process.env.NODE_ENV === 'production'
 const base = isProd ? '/' : '/'
@@ -49,11 +56,47 @@ function rehypeLocalizeLinks() {
   }
 }
 
+// Headings in translated pages would otherwise get slugs from the translated
+// text, so `/zh-tw/sdk/authentication/#which-credential-should-i-use` lands
+// nowhere. Translations keep the English heading structure, so give the n-th
+// heading the n-th English heading's id; if the counts differ, leave the page
+// on its own slugs rather than guess.
+const englishHeadingIds = new Map()
+
+function headingIdsFor(englishPath) {
+  if (englishHeadingIds.has(englishPath)) return englishHeadingIds.get(englishPath)
+  let ids = null
+  if (existsSync(englishPath)) {
+    const tree = unified().use(remarkParse).use(remarkMdx).use(remarkGfm)
+      .parse(readFileSync(englishPath, 'utf8').replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, ''))
+    const slugger = new GithubSlugger()
+    ids = []
+    visit(tree, 'heading', (node) => { ids.push(slugger.slug(mdastToString(node))) })
+  }
+  englishHeadingIds.set(englishPath, ids)
+  return ids
+}
+
+function rehypeEnglishHeadingIds() {
+  return (tree, file) => {
+    const path = (file.history?.[0] ?? file.path ?? '').replace(/\\/g, '/')
+    const locale = LOCALES.find((l) => path.includes(`/content/docs/${l}/`))
+    if (!locale) return
+    const ids = headingIdsFor(path.replace(`/content/docs/${locale}/`, '/content/docs/'))
+    const headings = []
+    visit(tree, 'element', (node) => {
+      if (/^h[1-6]$/.test(node.tagName)) headings.push(node)
+    })
+    if (!ids || ids.length !== headings.length) return
+    headings.forEach((node, i) => { node.properties.id = ids[i] })
+  }
+}
+
 export default defineConfig({
   site: 'https://engineer.imbrace.co',
   base,
   markdown: {
-    rehypePlugins: [rehypeLocalizeLinks, rehypePrefixBase()],
+    rehypePlugins: [rehypeEnglishHeadingIds, rehypeLocalizeLinks, rehypePrefixBase()],
   },
   integrations: [
     starlight({
@@ -139,9 +182,9 @@ export default defineConfig({
             { label: 'Authentication',  translations: { vi: 'Xác Thực',              'zh-CN': '身份验证',   'zh-TW': '身份驗證'   }, link: '/sdk/authentication/' },
             { label: 'Full Flow Guide', translations: { vi: 'Hướng Dẫn Toàn Bộ',    'zh-CN': '完整流程指南', 'zh-TW': '完整流程指南' }, link: '/sdk/full-flow-guide/' },
             { label: 'Resources',       translations: { vi: 'Tài Nguyên',            'zh-CN': '资源参考',   'zh-TW': '資源參考'   }, link: '/sdk/resources/' },
-            { label: 'AI Agent',        translations: { vi: 'AI Agent',              'zh-CN': 'AI 代理',    'zh-TW': 'AI Agent'   }, link: '/sdk/ai-agent/' },
+            { label: 'AI Agent',        translations: { vi: 'AI Agent',              'zh-CN': 'AI 代理',    'zh-TW': 'AI 代理'    }, link: '/sdk/ai-agent/' },
             { label: 'Workflows',       translations: { vi: 'Workflows',             'zh-CN': '工作流',     'zh-TW': '工作流程'   }, link: '/sdk/workflows/' },
-            { label: 'DataBoards',      translations: { vi: 'Data Boards',           'zh-CN': '数据面板',   'zh-TW': 'Data Boards' }, link: '/sdk/databoard/' },
+            { label: 'DataBoards',      translations: { vi: 'Data Boards',           'zh-CN': '数据面板',   'zh-TW': '資料看板'   }, link: '/sdk/databoard/' },
             { label: 'Document AI',     translations: { vi: 'Document AI',           'zh-CN': 'Document AI', 'zh-TW': 'Document AI' }, link: '/sdk/document-ai/' },
             { label: 'Error Handling',  translations: { vi: 'Xử Lý Lỗi',            'zh-CN': '错误处理',   'zh-TW': '錯誤處理'   }, link: '/sdk/error-handling/' },
             { label: 'Integrations',    translations: { vi: 'Tích Hợp',             'zh-CN': '集成',       'zh-TW': '整合'       }, link: '/sdk/integrations/' },
@@ -152,14 +195,14 @@ export default defineConfig({
           label: 'Reference',
           translations: { vi: 'Tham Chiếu', 'zh-CN': '参考', 'zh-TW': '參考' },
           items: [
-            { label: 'AI Agent',      link: '/reference/ai-agent/' },
-            { label: 'Workflow',      link: '/reference/workflow/' },
-            { label: 'Board',         link: '/reference/board/' },
-            { label: 'Campaign',      link: '/reference/campaign/' },
-            { label: 'Communication', link: '/reference/communication/' },
-            { label: 'Channel',       link: '/reference/channel/' },
-            { label: 'Conversation',  link: '/reference/conversation/' },
-            { label: 'Contact',       link: '/reference/contact/' },
+            { label: 'AI Agent',      translations: { vi: 'AI Agent',            'zh-CN': 'AI 代理',     'zh-TW': 'AI 代理'      }, link: '/reference/ai-agent/' },
+            { label: 'Workflow',      translations: { vi: 'Workflow',            'zh-CN': '工作流',       'zh-TW': '工作流程'       }, link: '/reference/workflow/' },
+            { label: 'Board',         translations: { vi: 'Bảng dữ liệu',        'zh-CN': '数据面板',      'zh-TW': '資料看板'       }, link: '/reference/board/' },
+            { label: 'Campaign',      translations: { vi: 'Chiến dịch',          'zh-CN': '营销活动',      'zh-TW': '行銷活動'       }, link: '/reference/campaign/' },
+            { label: 'Communication', translations: { vi: 'Giao tiếp',           'zh-CN': '通信',        'zh-TW': '通訊'         }, link: '/reference/communication/' },
+            { label: 'Channel',       translations: { vi: 'Kênh',                'zh-CN': '渠道',        'zh-TW': '頻道'         }, link: '/reference/channel/' },
+            { label: 'Conversation',  translations: { vi: 'Hội thoại',           'zh-CN': '对话',        'zh-TW': '對話'         }, link: '/reference/conversation/' },
+            { label: 'Contact',       translations: { vi: 'Liên hệ',             'zh-CN': '联系人',       'zh-TW': '聯絡人'        }, link: '/reference/contact/' },
           ],
         },
         {

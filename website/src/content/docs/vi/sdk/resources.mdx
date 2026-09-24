@@ -5,7 +5,7 @@ description: Tài liệu tham khảo theo từng namespace cho Imbrace SDKs — 
 
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 
-Trang này bao gồm các namespace CRM và nhắn tin được hiển thị bởi SDK. Khởi tạo client trước (xem [Cài đặt](/sdk/installation/) hoặc [Quick Start](/sdk/quick-start/)). Tất cả các đoạn mã bên dưới đều giả định `client` là instance đã được khởi tạo.
+Trang này bao gồm các namespace CRM và nhắn tin do SDK cung cấp. Khởi tạo client trước (xem [Cài đặt](/sdk/installation/) hoặc [Quick Start](/sdk/quick-start/)). Tất cả các đoạn mã bên dưới đều giả định `client` là instance đã được khởi tạo.
 
 Để biết các resource liên quan đến AI và workflow, xem:
 - [AI Agent](/sdk/ai-agent/) — AI agents (`chatAi`), AI agent streaming, embeddings, parquet
@@ -16,7 +16,7 @@ Trang này bao gồm các namespace CRM và nhắn tin được hiển thị b�
 
 ---
 
-## Contacts — `client.contacts`
+## Liên hệ — `client.contacts`
 
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">
@@ -57,7 +57,7 @@ activity  = client.contacts.get_activities("conversation_id")
 
 ---
 
-## Conversations — `client.conversations`
+## Hội thoại — `client.conversations`
 
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">
@@ -162,7 +162,7 @@ await client.campaign.createTouchpoint({
 await client.campaign.updateTouchpoint("touchpoint_id", { delay_days: 5 });
 await client.campaign.deleteTouchpoint("touchpoint_id");
 
-// Xác thực cấu hình điểm tiếp xúc trước khi lưu
+// Kiểm tra tính hợp lệ của cấu hình điểm tiếp xúc trước khi lưu
 const result = await client.campaign.validateTouchpoint({ type: "email", template_id: "tpl_xxx" });
 ```
 </TabItem>
@@ -185,7 +185,7 @@ client.campaign.create_touchpoint({
 client.campaign.update_touchpoint("touchpoint_id", {"delay_days": 5})
 client.campaign.delete_touchpoint("touchpoint_id")
 
-# Xác thực cấu hình điểm tiếp xúc trước khi lưu
+# Kiểm tra tính hợp lệ của cấu hình điểm tiếp xúc trước khi lưu
 result = client.campaign.validate_touchpoint({"type": "email", "template_id": "tpl_xxx"})
 ```
 </TabItem>

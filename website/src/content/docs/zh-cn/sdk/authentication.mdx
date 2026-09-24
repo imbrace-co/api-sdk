@@ -134,7 +134,7 @@ Imbrace 是你的后端。你的终端用户登录 Imbrace（通过 OTP 或密�
     // 步骤 2：用户提交收到的 OTP。SDK 会存储短期 login_acc_... 令牌，
     //         并在同一次调用中获取用户的组织列表。
     const { organizations } = await client.loginWithOtp("user@example.com", "ABC123")
-    const chosen = organizations[0]  // ← 由您的 UI 选择
+    const chosen = organizations[0]  // ← 由你的 UI 选择
 
     // 步骤 3：将 login_acc_ 兑换为绑定组织的 acc_ 令牌。
     //         SDK 会自动更新内部令牌与 x-organization-id。
@@ -156,7 +156,7 @@ Imbrace 是你的后端。你的终端用户登录 Imbrace（通过 OTP 或密�
     # 步骤 2：用户提交 OTP。login_with_otp 会存储短期 login_acc_ 令牌
     #         并返回用户所属的组织。
     res = client.login_with_otp("user@example.com", "123456")
-    chosen = res["organizations"][0]  # ← 由您的 UI 选择
+    chosen = res["organizations"][0]  # ← 由你的 UI 选择
 
     # 步骤 3：将 login_acc_ 兑换为绑定组织的 acc_ 令牌。
     #         SDK 会自动更新令牌 + x-organization-id。
@@ -174,7 +174,7 @@ Imbrace 是你的后端。你的终端用户登录 Imbrace（通过 OTP 或密�
     async with AsyncImbraceClient() as client:
         await client.request_otp("user@example.com")
         res = await client.login_with_otp("user@example.com", "123456")
-        chosen = res["organizations"][0]  # ← 由您的 UI 选择
+        chosen = res["organizations"][0]  # ← 由你的 UI 选择
 
         await client.select_organization(chosen["organization_id"])
 
@@ -189,7 +189,7 @@ Imbrace 是你的后端。你的终端用户登录 Imbrace（通过 OTP 或密�
 
 ### 密码登录
 
-`login()` 在单次调用中同时返回登录令牌和用户的组织列表。使用 `selectOrganization()` 选择其中一个，SDK 会为您交换令牌和组织标头。
+`login()` 在单次调用中同时返回登录令牌和用户的组织列表。使用 `selectOrganization()` 选择其中一个，SDK 会为你替换令牌和组织请求头。
 
 <Tabs syncKey="lang">
   <TabItem label="TypeScript">
@@ -200,7 +200,7 @@ Imbrace 是你的后端。你的终端用户登录 Imbrace（通过 OTP 或密�
 
     // 步骤 1：登录。返回 { token: "login_acc_...", organizations: [...] }。
     const { organizations } = await client.login("user@example.com", "password")
-    const chosen = organizations[0]  // ← 由您的 UI 选择
+    const chosen = organizations[0]  // ← 由你的 UI 选择
 
     // 步骤 2：将 login_acc_ 兑换为绑定组织的 acc_ 令牌。
     await client.selectOrganization(chosen.id)
@@ -217,7 +217,7 @@ Imbrace 是你的后端。你的终端用户登录 Imbrace（通过 OTP 或密�
 
     # 步骤 1：登录。返回 { token: "login_acc_...", organizations: [...] }。
     res = client.login("user@example.com", "password123")
-    chosen = res["organizations"][0]  # ← 由您的 UI 选择
+    chosen = res["organizations"][0]  # ← 由你的 UI 选择
 
     # 步骤 2：将 login_acc_ 兑换为绑定组织的 acc_ 令牌。
     client.select_organization(chosen["organization_id"])

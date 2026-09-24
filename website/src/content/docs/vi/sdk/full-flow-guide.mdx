@@ -22,21 +22,21 @@ Hướng dẫn này đi qua bốn quy trình làm việc chính trong Imbrace SD
        ```typescript
        import { ImbraceClient } from "@imbrace/sdk"
 
-        const client = new ImbraceClient({
-          accessToken: process.env.IMBRACE_ACCESS_TOKEN,
-          env: "stable",
-        })
+       const client = new ImbraceClient({
+         accessToken: process.env.IMBRACE_ACCESS_TOKEN,
+         env: "stable",
+       })
        ```
      </TabItem>
      <TabItem label="Python">
-        ```python
-        import os
-        from imbrace import ImbraceClient
+       ```python
+       import os
+       from imbrace import ImbraceClient
 
-        client = ImbraceClient(
-            access_token=os.environ["IMBRACE_ACCESS_TOKEN"],
-            env="stable",
-        )
+       client = ImbraceClient(
+           access_token=os.environ["IMBRACE_ACCESS_TOKEN"],
+           env="stable",
+       )
        ```
      </TabItem>
    </Tabs>
@@ -48,23 +48,23 @@ Hướng dẫn này đi qua bốn quy trình làm việc chính trong Imbrace SD
        ```typescript
        import { ImbraceClient } from "@imbrace/sdk"
 
-        const client = new ImbraceClient({
-          apiKey:         process.env.IMBRACE_API_KEY,
-          organizationId: process.env.IMBRACE_ORGANIZATION_ID,
-          env:            "stable",
-        })
+       const client = new ImbraceClient({
+         apiKey:         process.env.IMBRACE_API_KEY,
+         organizationId: process.env.IMBRACE_ORGANIZATION_ID,
+         env:            "stable",
+       })
        ```
      </TabItem>
      <TabItem label="Python">
-        ```python
-        import os
-        from imbrace import ImbraceClient
+       ```python
+       import os
+       from imbrace import ImbraceClient
 
-        client = ImbraceClient(
-            api_key=os.environ["IMBRACE_API_KEY"],
-            organization_id=os.environ.get("IMBRACE_ORGANIZATION_ID"),
-            env="stable",
-        )
+       client = ImbraceClient(
+           api_key=os.environ["IMBRACE_API_KEY"],
+           organization_id=os.environ.get("IMBRACE_ORGANIZATION_ID"),
+           env="stable",
+       )
        ```
      </TabItem>
    </Tabs>
@@ -214,27 +214,27 @@ Hướng dẫn này đi qua bốn quy trình làm việc chính trong Imbrace SD
          id: sessionId,
          messages: [{ role: "user", content: "How long does it take?" }],
        })
-       ```
-     </TabItem>
-     <TabItem label="Python">
-       ```python
-       import uuid
+        ```
+      </TabItem>
+      <TabItem label="Python">
+        ```python
+        import uuid
 
-       session_id = str(uuid.uuid4())
+        session_id = str(uuid.uuid4())
 
-       # Tin nhắn đầu tiên
-       client.ai_agent.stream_chat({
-           "assistant_id": ai_agent_id,
-           "id": session_id,
-           "messages": [{"role": "user", "content": "What's your refund policy?"}],
-       })
+        # Tin nhắn đầu tiên
+        client.ai_agent.stream_chat({
+            "assistant_id": ai_agent_id,
+            "id": session_id,
+            "messages": [{"role": "user", "content": "What's your refund policy?"}],
+        })
 
-       # Tin nhắn tiếp theo — cùng phiên, AI agent nhớ ngữ cảnh
-       client.ai_agent.stream_chat({
-           "assistant_id": ai_agent_id,
-           "id": session_id,
-           "messages": [{"role": "user", "content": "How long does it take?"}],
-       })
+        # Tin nhắn tiếp theo — cùng phiên, AI agent nhớ ngữ cảnh
+        client.ai_agent.stream_chat({
+            "assistant_id": ai_agent_id,
+            "id": session_id,
+            "messages": [{"role": "user", "content": "How long does it take?"}],
+        })
        ```
      </TabItem>
    </Tabs>
@@ -466,7 +466,7 @@ Các tệp và thư mục Knowledge Hub nằm trong dịch vụ **data-board** (
        ```typescript
        const folder = await client.boards.createFolder({
          name: "Product Documentation",
-          organization_id: process.env.IMBRACE_ORGANIZATION_ID,
+         organization_id: process.env.IMBRACE_ORGANIZATION_ID,
          parent_id: "root",
        })
        console.log("Folder ID:", folder._id)
@@ -476,7 +476,7 @@ Các tệp và thư mục Knowledge Hub nằm trong dịch vụ **data-board** (
        ```python
        folder = client.boards.create_folder({
            "name": "Product Documentation",
-            "organization_id": os.environ.get("IMBRACE_ORGANIZATION_ID"),
+           "organization_id": os.environ.get("IMBRACE_ORGANIZATION_ID"),
            "parent_id": "root",
        })
        print("Folder ID:", folder["_id"])
@@ -495,7 +495,7 @@ Các tệp và thư mục Knowledge Hub nằm trong dịch vụ **data-board** (
        const formData = new FormData()
        formData.append("file", new Blob([fileBuffer], { type: "application/pdf" }), "faq.pdf")
        formData.append("folder_id", folder._id)
-        formData.append("organization_id", process.env.IMBRACE_ORGANIZATION_ID ?? "")
+       formData.append("organization_id", process.env.IMBRACE_ORGANIZATION_ID ?? "")
 
        const uploaded = await client.boards.uploadFile(formData)
        console.log("File uploaded:", uploaded.file_id)
@@ -509,7 +509,7 @@ Các tệp và thư mục Knowledge Hub nằm trong dịch vụ **data-board** (
        files = {
            "file": (path.name, path.read_bytes(), "application/pdf"),
            "folder_id": (None, folder["_id"]),
-            "organization_id": (None, os.environ.get("IMBRACE_ORGANIZATION_ID")),
+           "organization_id": (None, os.environ.get("IMBRACE_ORGANIZATION_ID")),
        }
        uploaded = client.boards.upload_file(files)
        print("File uploaded:", uploaded.get("file_id") or uploaded.get("_id"))
@@ -519,7 +519,7 @@ Các tệp và thư mục Knowledge Hub nằm trong dịch vụ **data-board** (
 
 3. **Gắn thư mục vào AI agent**
 
-   Truyền `_id` của thư mục trong `folder_ids` — AI agent truy xuất từ mọi tệp trong thư mục đó. Sử dụng `board_ids` để gắn một data-board CRM (các mục của nó trở thành nguồn kiến thức — xem [Resources → Boards & items](/sdk/resources/#boards--items--clientboards)). Trường `knowledge_hubs` cũ đã không còn được dùng nữa.
+   Truyền `_id` của thư mục trong `folder_ids` — AI agent truy xuất từ mọi tệp trong thư mục đó. Sử dụng `board_ids` để gắn một data-board CRM (các mục của nó trở thành nguồn kiến thức — xem [Resources → Boards & items](/sdk/databoard/#items)). Trường `knowledge_hubs` cũ đã bị deprecated (không nên dùng nữa).
 
    <Tabs syncKey="lang">
      <TabItem label="TypeScript">

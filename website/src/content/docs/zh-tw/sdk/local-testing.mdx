@@ -5,12 +5,12 @@ description: 針對真實或模擬閘道在本機測試建置的 Imbrace SDK 套
 
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 
-本指南讓您測試**已建置的套件**，完全按照使用者安裝的方式進行 — 而非原始原始碼。在發佈新版本之前，或在重現使用者回報的錯誤時使用。
+本指南讓您測試**已建置的套件**，完全按照使用者安裝的方式進行 — 而非未建置的原始碼。在發佈新版本之前，或在重現使用者回報的錯誤時使用。
 
 ## 先決條件
 
 - TypeScript：Node 18+
-- Python：Python 3.10+ 和 `pip`
+- Python：Python 3.9+ 和 `pip`
 
 ## 環境 URL
 
@@ -35,7 +35,7 @@ cp .env.example .env
 
 | 變數 | 取得位置 |
 | ----------------- | --------------------------------------------------------------------------------------------- |
-| `IMBRACE_API_KEY`     | Imbrace 入口網站，或使用現有存取令牌 `POST /private/backend/v1/third_party_token` |
+| `IMBRACE_API_KEY`     | Imbrace 入口網站，或使用現有存取權杖 `POST /private/backend/v1/third_party_token` |
 | `IMBRACE_GATEWAY_URL` | 上方表格中的 URL 之一（未設定時預設為 dev）              |
 
 組織上下文已編碼在 API 金鑰內部 — 您不需要傳遞組織 ID。
@@ -100,7 +100,7 @@ pip install -e .
 
 程式碼編輯後無需重新安裝即可生效。
 
-### Wheel 安裝（驗證發佈的形狀）
+### Wheel 安裝（驗證發佈後的套件內容）
 
 ```bash
 cd py

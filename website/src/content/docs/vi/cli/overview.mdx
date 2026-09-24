@@ -56,12 +56,12 @@ Thứ tự ưu tiên khi chọn profile: cờ `--profile` > biến môi trườn
 
 ### Tự động đăng nhập
 
-Các lệnh tài nguyên (ai-agent, data-board, document-ai, guardrail, orchestrator, workflow) kế thừa `BaseCommand`, lệnh này gọi `ensureLoggedIn()` khi khởi tạo. Nếu không tìm thấy thông tin xác thực cho profile đã xác định, nó sẽ tương tác yêu cầu người dùng chọn phương thức đăng nhập (API Key hoặc Email + Mật khẩu). Các lệnh xác thực và quản lý profile (`login`, `logout`, `whoami`, `docs`, `profile/*`) kế thừa trực tiếp `Command` và không tự động yêu cầu đăng nhập.
+Các lệnh tài nguyên (ai-agent, data-board, document-ai, guardrail, orchestrator, workflow) kế thừa `BaseCommand`, lớp này gọi `ensureLoggedIn()` khi khởi tạo. Nếu không tìm thấy thông tin xác thực cho profile đã xác định, nó sẽ hỏi người dùng (ở chế độ tương tác) để chọn phương thức đăng nhập (API Key hoặc Email + Mật khẩu). Các lệnh xác thực và quản lý profile (`login`, `logout`, `whoami`, `docs`, `profile/*`) kế thừa trực tiếp `Command` và không tự động yêu cầu đăng nhập.
 
 Mọi lệnh đều chấp nhận cờ toàn cục `--profile` để chọn một profile cụ thể, ghi đè biến môi trường `IMBRACE_PROFILE` và thiết lập `active_profile`.
 
 <Aside type="tip">
-  Hầu hết các lệnh đều chấp nhận `--json` để xuất dữ liệu máy có thể đọc được (ngoại lệ: `login`, `logout`). Mọi lệnh đều chấp nhận `-h` / `--help` để xem hướng dẫn sử dụng.
+  Hầu hết các lệnh đều chấp nhận `--json` để xuất dữ liệu ở dạng máy đọc được (ngoại lệ: `login`, `logout`). Mọi lệnh đều chấp nhận `-h` / `--help` để xem hướng dẫn sử dụng.
 </Aside>
 
 ## Cấu trúc dự án

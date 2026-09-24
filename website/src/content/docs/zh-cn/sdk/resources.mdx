@@ -1,6 +1,6 @@
 ---
 title: 资源参考
-description: Imbrace SDK 按命名空间的参考文档 — contacts、conversations、messaging、campaigns 等。
+description: Imbrace SDK 按命名空间的参考文档 — 联系人、对话、消息传递、营销活动等。
 ---
 
 import { Tabs, TabItem } from "@astrojs/starlight/components";
@@ -140,7 +140,7 @@ msgs = client.messages.list(limit=20)
 
 ---
 
-## 活动与触点 — `client.campaign`
+## 营销活动与接触点 — `client.campaign`
 
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">
@@ -150,7 +150,7 @@ const campaign  = await client.campaign.get("campaign_id");
 const newCamp   = await client.campaign.create({ name: "Q2 Outreach", channel_type: "email" });
 await client.campaign.delete("campaign_id");
 
-// 触点
+// 接触点
 const { data: touchpoints } = await client.campaign.listTouchpoints();
 const tp = await client.campaign.getTouchpoint("touchpoint_id");
 
@@ -162,7 +162,7 @@ await client.campaign.createTouchpoint({
 await client.campaign.updateTouchpoint("touchpoint_id", { delay_days: 5 });
 await client.campaign.deleteTouchpoint("touchpoint_id");
 
-// 保存前验证触点配置
+// 保存前验证接触点配置
 const result = await client.campaign.validateTouchpoint({ type: "email", template_id: "tpl_xxx" });
 ```
 </TabItem>
@@ -173,7 +173,7 @@ campaign  = client.campaign.get("campaign_id")
 new_camp  = client.campaign.create({"name": "Q2 Outreach", "channel_type": "email"})
 client.campaign.delete("campaign_id")
 
-# 触点
+# 接触点
 touchpoints = client.campaign.list_touchpoints().get("data", [])
 tp = client.campaign.get_touchpoint("touchpoint_id")
 
@@ -185,7 +185,7 @@ client.campaign.create_touchpoint({
 client.campaign.update_touchpoint("touchpoint_id", {"delay_days": 5})
 client.campaign.delete_touchpoint("touchpoint_id")
 
-# 保存前验证触点配置
+# 保存前验证接触点配置
 result = client.campaign.validate_touchpoint({"type": "email", "template_id": "tpl_xxx"})
 ```
 </TabItem>

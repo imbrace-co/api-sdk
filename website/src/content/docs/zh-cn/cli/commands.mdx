@@ -82,7 +82,7 @@ imbrace data-board export-csv --board-id <boardId> [--out ./board.csv]
 
 ## AI 代理
 
-AI 代理是一个配置好的助手（LLM + 提示词 + 行为）。创建时会原子性地预配助手、Web 频道和用例模板。
+AI 代理是一个配置好的助手（LLM + 提示词 + 行为）。创建时会原子性地预配助手、Web 渠道和用例模板。
 
 <Aside type="caution">
   所有代理内容（名称、描述、说明、行为字段）必须使用英文。越南语变音符号会产生不可读的 slug。
@@ -181,7 +181,7 @@ imbrace ai-agent create \
 
 ## Document AI
 
-Document AI 代理从非结构化文档（PDF、图片、扫描表单）中提取结构化 JSON。每个代理都有一个定义提取字段的**模式**、指导 LLM 的**指令**以及**模型 + 提供商**。存储为 AI 代理，`agent_type: "document_ai"`。
+Document AI 代理从非结构化文档（PDF、图片、扫描表单）中提取结构化 JSON。每个代理都有一个定义提取字段的 **schema**、指导 LLM 的**指令**以及**模型 + 提供商**。存储为 AI 代理，`agent_type: "document_ai"`。
 
 ### 增删改查
 
@@ -196,7 +196,7 @@ imbrace document-ai update <agentId> [--name | --instructions | --model | --prov
 imbrace document-ai delete <agentId> [--yes] [--json]
 ```
 
-`list` 默认为过滤 `documentAiOnly: true`。传入 `--all` 以包含常规代理。
+`list` 默认按 `documentAiOnly: true` 过滤。传入 `--all` 以包含常规代理。
 
 ### 处理文档
 
@@ -213,15 +213,15 @@ imbrace document-ai process \
 
 需要 `--agent-id`（使用代理存储的模型 + 指令）或 `--model`（覆盖）。
 
-### 建议模式
+### 建议 schema
 
 ```bash
 imbrace document-ai suggest-schema --url <url> --org-id <orgId> [--model <id>] [--json]
 ```
 
-要求 LLM 检查示例文档并提出提取模式。
+要求 LLM 检查示例文档并提出提取 schema。
 
-### 模式示例
+### Schema 示例
 
 ```json
 {
@@ -249,7 +249,7 @@ imbrace orchestrator delete <id> [--yes] [--json]
 
 ### 后端特性（自动处理）
 
-CLI 解决了三种平台行为，调用者无需了解 — 但在调试原始 SDK 响应时很有用：
+CLI 会自动规避以下三种平台行为，调用方无需了解 — 但在调试原始 SDK 响应时了解它们会很有帮助：
 
 1. **`agent_type: "team_lead"` 是编排器标记** — 没有独立的 `is_orchestrator` 布尔值。Web 应用也做同样的转换。
 2. **`sub_agents` / `team_leads` 必须是助手 ID（UUID），而不是用例 ID（`uc_*`）。** CLI 自动通过 `client.agent.get()` 查找解析你传入的任何 `uc_*`。
@@ -407,7 +407,7 @@ imbrace workflow run-detail <runId> [--json]
 
 > `@imbrace/cli` `v0.8.0`+。请勿与上文的 `imbrace workflow mcp ...` 混淆 — 那组命令管理的是工作流引擎自身的 MCP-server 资源。想零安装？网关通过 HTTP 托管同一套工具 — 参见 [MCP Server](/zh-cn/mcp/overview/)。
 
-`imbrace mcp` 通过 **stdio** 运行一个 [Model Context Protocol](https://modelcontextprotocol.io) 服务器，把 Imbrace API 作为工具暴露给 AI 代理（Claude Code、Claude Desktop、Cursor 等）。工具与 SDK 的 [`client.api`](/zh-cn/sdk/overview/) 表面出自同一套 `agent-tools` OpenAPI 规范 — 5 个服务共 272 个操作 — 命名格式为 `<service>_<operationId>`，例如 `dataBoard_listBoards`、`workflow_listFlows`。
+`imbrace mcp` 通过 **stdio** 运行一个 [Model Context Protocol](https://modelcontextprotocol.io) 服务器，把 Imbrace API 作为工具暴露给 AI 代理（Claude Code、Claude Desktop、Cursor 等）。工具与 SDK 的 [`client.api`](/sdk/overview/#the-full-api-surface--clientapi-typescript) 表面出自同一套 `agent-tools` OpenAPI 规范 — 5 个服务共 272 个操作 — 命名格式为 `<service>_<operationId>`，例如 `dataBoard_listBoards`、`workflow_listFlows`。
 
 ```bash
 imbrace mcp                                     # 只读工具（默认）
@@ -506,7 +506,7 @@ imbrace profile delete <name> [--yes] [--json]
 
 ---
 
-## 工具
+## 实用命令
 
 ### 打印 LLM 参考
 
@@ -514,7 +514,7 @@ imbrace profile delete <name> [--yes] [--json]
 imbrace docs [--path] [--json]
 ```
 
-打印捆绑的 `llms.txt` — 一个完整的命令参考，设计用于馈送到编码代理的上下文（Claude、Cursor 等）。
+打印捆绑的 `llms.txt` — 一个完整的命令参考，专为提供给编码代理作为上下文而设计（Claude、Cursor 等）。
 
 | 标志 | 行为 |
 |---|---|
