@@ -2,12 +2,13 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { IpsResource } from "../../../src/resources/ips.js"
 import { HttpTransport } from "../../../src/http.js"
 import { TokenManager } from "../../../src/auth/token-manager.js"
+import { ImbraceError } from "../../../src/errors.js"
 
-const BASE = "https://app-gatewayv2.imbrace.co/ips/v1"
+const GW = "https://app-gatewayv2.imbrace.co"
 
 function makeResource() {
   const http = new HttpTransport({ apiKey: "test_key", timeout: 5000, tokenManager: new TokenManager() })
-  return new IpsResource(http, BASE)
+  return new IpsResource(http, `${GW}/ips/v1`, `${GW}/data-board`, `${GW}/channel-service`)
 }
 
 function mockFetch(data: unknown, status = 200) {
@@ -16,107 +17,106 @@ function mockFetch(data: unknown, status = 200) {
   )
 }
 
+function calledUrl(i = 0): URL {
+  const arg = vi.mocked(globalThis.fetch).mock.calls[i][0]
+  return arg instanceof URL ? arg : new URL(String(arg))
+}
+
+// IPS is retired: schedulers moved to data-board, external data sync to channel-service.
 describe("IpsResource", () => {
   let originalFetch: typeof fetch
   beforeEach(() => { originalFetch = globalThis.fetch })
   afterEach(() => { globalThis.fetch = originalFetch })
 
-  // ─── Profiles   
+  // ─── Schedulers → data-board
 
-  it("getProfile() calls GET /ips/v1/profiles/:userId", async () => {
-    mockFetch({ _id: "u_1", displayName: "Alice" })
-    await makeResource().getProfile("u_1")
-    const url = new URL((vi.mocked(globalThis.fetch).mock.calls[0][0] as string))
-    expect(url.pathname).toBe("/ips/v1/profiles/u_1")
-    expect(vi.mocked(globalThis.fetch).mock.calls[0][1]?.method).toBe("GET")
+  it("listSchedulers() calls GET /data-board/v1/schedulers with query params", async () => {
+    mockFetch({ data: [{ _id: "s_1" }], count: 1, total: 1, has_more: false })
+    const res = await makeResource().listSchedulers({ limit: 5, event_type: "is:email_campaign" })
+    const url = calledUrl()
+    expect(url.pathname).toBe("/data-board/v1/schedulers")
+    expect(url.searchParams.get("limit")).toBe("5")
+    expect(url.searchParams.get("event_type")).toBe("is:email_campaign")
+    expect(res.data[0]._id).toBe("s_1")
   })
 
-  it("getMyProfile() calls GET /ips/v1/profiles/me", async () => {
-    mockFetch({ _id: "me", displayName: "Me" })
-    await makeResource().getMyProfile()
-    const url = new URL((vi.mocked(globalThis.fetch).mock.calls[0][0] as string))
-    expect(url.pathname).toBe("/ips/v1/profiles/me")
-  })
-
-  it("updateProfile() calls PATCH /ips/v1/profiles/:userId", async () => {
-    mockFetch({ _id: "u_1", displayName: "Bob" })
-    await makeResource().updateProfile("u_1", { displayName: "Bob" } as any)
-    const url = new URL((vi.mocked(globalThis.fetch).mock.calls[0][0] as string))
-    expect(url.pathname).toBe("/ips/v1/profiles/u_1")
-    expect(vi.mocked(globalThis.fetch).mock.calls[0][1]?.method).toBe("PATCH")
-  })
-
-  it("searchProfiles() calls GET /ips/v1/profiles with query param", async () => {
-    mockFetch({ data: [], total: 0 })
-    await makeResource().searchProfiles("alice")
-    const url = new URL((vi.mocked(globalThis.fetch).mock.calls[0][0] as URL))
-    expect(url.pathname).toBe("/ips/v1/profiles")
-    expect(url.searchParams.get("q")).toBe("alice")
-  })
-
-  it("searchProfiles() includes pagination params", async () => {
-    mockFetch({ data: [], total: 0 })
-    await makeResource().searchProfiles("alice", { page: 2, limit: 10 })
-    const url = new URL((vi.mocked(globalThis.fetch).mock.calls[0][0] as URL))
-    expect(url.searchParams.get("page")).toBe("2")
-    expect(url.searchParams.get("limit")).toBe("10")
-  })
-
-  // ─── Follow   
-
-  it("follow() calls POST /ips/v1/profiles/:userId/follow", async () => {
-    mockFetch({})
-    await makeResource().follow("u_2")
-    const url = new URL((vi.mocked(globalThis.fetch).mock.calls[0][0] as string))
-    expect(url.pathname).toBe("/ips/v1/profiles/u_2/follow")
-    expect(vi.mocked(globalThis.fetch).mock.calls[0][1]?.method).toBe("POST")
-  })
-
-  it("unfollow() calls DELETE /ips/v1/profiles/:userId/follow", async () => {
-    mockFetch({})
-    await makeResource().unfollow("u_2")
-    const url = new URL((vi.mocked(globalThis.fetch).mock.calls[0][0] as string))
-    expect(url.pathname).toBe("/ips/v1/profiles/u_2/follow")
+  it("deleteScheduler() calls DELETE /data-board/v1/schedulers/:id", async () => {
+    mockFetch({ message: "schedule s_1 is deleted successfully" })
+    await makeResource().deleteScheduler("s_1")
+    expect(calledUrl().pathname).toBe("/data-board/v1/schedulers/s_1")
     expect(vi.mocked(globalThis.fetch).mock.calls[0][1]?.method).toBe("DELETE")
   })
 
-  it("getFollowers() calls GET /ips/v1/profiles/:userId/followers", async () => {
-    mockFetch({ data: [], total: 0 })
-    await makeResource().getFollowers("u_1")
-    const url = new URL((vi.mocked(globalThis.fetch).mock.calls[0][0] as URL))
-    expect(url.pathname).toBe("/ips/v1/profiles/u_1/followers")
+  it("getSchedulerFilterOptions() calls GET /data-board/v1/schedulers/filter_options", async () => {
+    mockFetch([{ event_type: "board_automation" }])
+    const res = await makeResource().getSchedulerFilterOptions("event_type")
+    const url = calledUrl()
+    expect(url.pathname).toBe("/data-board/v1/schedulers/filter_options")
+    expect(url.searchParams.get("filter")).toBe("event_type")
+    expect(res[0].event_type).toBe("board_automation")
   })
 
-  it("getFollowing() calls GET /ips/v1/profiles/:userId/following", async () => {
-    mockFetch({ data: [], total: 0 })
-    await makeResource().getFollowing("u_1")
-    const url = new URL((vi.mocked(globalThis.fetch).mock.calls[0][0] as URL))
-    expect(url.pathname).toBe("/ips/v1/profiles/u_1/following")
+  // ─── External data sync → channel-service
+
+  it("listExternalDataSync() calls GET /channel-service/v1/external-data-sync", async () => {
+    mockFetch({ data: [{ id: "eds_1", provider: "clickup" }], count: 1 })
+    const res = await makeResource().listExternalDataSync()
+    expect(calledUrl().pathname).toBe("/channel-service/v1/external-data-sync")
+    expect(res.data[0].id).toBe("eds_1")
   })
 
-  // ─── Identities   
-
-  it("listIdentities() calls GET /ips/v1/identities/:userId", async () => {
-    mockFetch([{ provider: "google", sub: "sub_1" }])
-    await makeResource().listIdentities("u_1")
-    const url = new URL((vi.mocked(globalThis.fetch).mock.calls[0][0] as string))
-    expect(url.pathname).toBe("/ips/v1/identities/u_1")
-    expect(vi.mocked(globalThis.fetch).mock.calls[0][1]?.method).toBe("GET")
+  it("enableExternalDataSync() calls POST /channel-service/v1/external-data-sync/enable", async () => {
+    mockFetch({ message: "Sync enabled successfully.", subscription_id: "eds_1", provider: "clickup", is_active: true })
+    const res = await makeResource().enableExternalDataSync({ provider: "clickup", connection_id: "conn_1" })
+    expect(calledUrl().pathname).toBe("/channel-service/v1/external-data-sync/enable")
+    const init = vi.mocked(globalThis.fetch).mock.calls[0][1]!
+    expect(init.method).toBe("POST")
+    expect(JSON.parse(init.body as string)).toEqual({ provider: "clickup", connection_id: "conn_1" })
+    expect(res.subscription_id).toBe("eds_1")
   })
 
-  it("unlinkIdentity() calls DELETE /ips/v1/identities/:userId/:provider", async () => {
+  it("deleteExternalDataSync() calls DELETE /channel-service/v1/external-data-sync/:id", async () => {
     mockFetch({})
-    await makeResource().unlinkIdentity("u_1", "google")
-    const url = new URL((vi.mocked(globalThis.fetch).mock.calls[0][0] as string))
-    expect(url.pathname).toBe("/ips/v1/identities/u_1/google")
+    await makeResource().deleteExternalDataSync("eds_1")
+    expect(calledUrl().pathname).toBe("/channel-service/v1/external-data-sync/eds_1")
     expect(vi.mocked(globalThis.fetch).mock.calls[0][1]?.method).toBe("DELETE")
+  })
+
+  it("derives data-board and channel-service from the IPS base when not given", async () => {
+    mockFetch({ data: [], count: 0 })
+    const http = new HttpTransport({ apiKey: "test_key", timeout: 5000, tokenManager: new TokenManager() })
+    await new IpsResource(http, `${GW}/ips/v1`).listExternalDataSync()
+    expect(calledUrl().toString()).toBe(`${GW}/channel-service/v1/external-data-sync`)
   })
 
   it("sends x-api-key header", async () => {
-    mockFetch({})
-    await makeResource().getMyProfile()
+    mockFetch({ data: [], count: 0 })
+    await makeResource().listExternalDataSync()
     const headers = new Headers(vi.mocked(globalThis.fetch).mock.calls[0][1]?.headers as HeadersInit)
     expect(headers.get("x-api-key")).toBe("test_key")
   })
 
+  // ─── Retired: no replacement service
+
+  const retired: Array<[string, (r: IpsResource) => Promise<unknown>]> = [
+    ["getProfile", r => r.getProfile("u_1")],
+    ["getMyProfile", r => r.getMyProfile()],
+    ["updateProfile", r => r.updateProfile("u_1", {})],
+    ["searchProfiles", r => r.searchProfiles("alice")],
+    ["follow", r => r.follow("u_1")],
+    ["unfollow", r => r.unfollow("u_1")],
+    ["getFollowers", r => r.getFollowers("u_1")],
+    ["getFollowing", r => r.getFollowing("u_1")],
+    ["listIdentities", r => r.listIdentities("u_1")],
+    ["unlinkIdentity", r => r.unlinkIdentity("u_1", "google")],
+    ["listWorkflows", r => r.listWorkflows()],
+    ["listApWorkflows", r => r.listApWorkflows()],
+  ]
+
+  it.each(retired)("%s() rejects with ImbraceError and makes no request", async (name, call) => {
+    globalThis.fetch = vi.fn()
+    await expect(call(makeResource())).rejects.toThrow(ImbraceError)
+    await expect(call(makeResource())).rejects.toThrow(`ips.${name}() is no longer available`)
+    expect(globalThis.fetch).not.toHaveBeenCalled()
+  })
 })

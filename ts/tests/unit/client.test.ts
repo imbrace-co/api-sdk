@@ -127,6 +127,41 @@ describe("ImbraceClient", () => {
     expect(vi.mocked(globalThis.fetch)).not.toHaveBeenCalled()
   })
 
+  // The legacy backend monolith is gone: these must not route through /v{1,2}/backend.
+  it("wires categories to platform and templates to marketplace v3", async () => {
+    const urls: string[] = []
+    globalThis.fetch = vi.fn().mockImplementation(async (input: RequestInfo | URL) => {
+      urls.push(input instanceof URL ? input.toString() : String(input))
+      return new Response("{}", { status: 200 })
+    })
+    const client = new ImbraceClient({ env: "develop", apiKey: "key" })
+    await client.categories.list("org_1")
+    await client.templates.list()
+    expect(urls[0]).toBe("https://app-gateway.dev.imbrace.co/v1/platform/categories?organization_id=org_1")
+    expect(urls[1]).toBe("https://app-gateway.dev.imbrace.co/v3/marketplaces/use-cases")
+  })
+
+  // Legacy backend and IPS are both gone: these go to channel-service / data-board.
+  it("wires file upload, schedulers and external data sync to their new services", async () => {
+    const urls: string[] = []
+    globalThis.fetch = vi.fn().mockImplementation(async (input: RequestInfo | URL) => {
+      urls.push(input instanceof URL ? input.toString() : String(input))
+      return new Response("{}", { status: 200 })
+    })
+    const client = new ImbraceClient({ env: "develop", apiKey: "key" })
+    await client.messages.uploadFile(new FormData())
+    await client.schedule.list()
+    await client.ips.listSchedulers()
+    await client.ips.listExternalDataSync()
+    const gw = "https://app-gateway.dev.imbrace.co"
+    expect(urls).toEqual([
+      `${gw}/channel-service/v1/conversation_messages/_fileupload`,
+      `${gw}/data-board/v1/schedulers`,
+      `${gw}/data-board/v1/schedulers`,
+      `${gw}/channel-service/v1/external-data-sync`,
+    ])
+  })
+
   it("createImbraceClient returns an ImbraceClient", () => {
     const client = createImbraceClient({ apiKey: "key" })
     expect(client).toBeInstanceOf(ImbraceClient)

@@ -6,7 +6,7 @@ class MessagesResource:
     """Messages domain — Sync.
 
     @param base         - channel-service base URL (gateway/channel-service)
-    @param backend_base - backend base URL (gateway/v1/backend) for file upload
+    @param backend_base - override base for file upload (defaults to channel-service v1)
     """
 
     def __init__(self, http: HttpTransport, base: str, backend_base: Optional[str] = None):
@@ -38,8 +38,8 @@ class MessagesResource:
         return self._http.request("POST", f"{self._v1}/conversation_messages", json=body).json()
 
     def upload_file(self, files: Any) -> Dict[str, Any]:
-        """Upload message file. Endpoint: /v1/backend/conversation_messages/_fileupload"""
-        base = self._backend_base or f"{self._v1.replace('/channel-service/v1', '')}/v1/backend"
+        """Upload message file. Endpoint: /channel-service/v1/conversation_messages/_fileupload"""
+        base = self._backend_base or self._v1
         return self._http.request("POST", f"{base}/conversation_messages/_fileupload", files=files).json()
 
     # --- Comments ---
@@ -113,8 +113,8 @@ class AsyncMessagesResource:
         return res.json()
 
     async def upload_file(self, files: Any) -> Dict[str, Any]:
-        """Upload message file (async). Endpoint: /v1/backend/conversation_messages/_fileupload"""
-        base = self._backend_base or f"{self._v1.replace('/channel-service/v1', '')}/v1/backend"
+        """Upload message file (async). Endpoint: /channel-service/v1/conversation_messages/_fileupload"""
+        base = self._backend_base or self._v1
         res = await self._http.request("POST", f"{base}/conversation_messages/_fileupload", files=files)
         return res.json()
 

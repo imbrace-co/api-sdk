@@ -1,18 +1,19 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 from ..http import HttpTransport, AsyncHttpTransport
 
 
 class CategoriesResource:
     """Categories domain — Sync.
 
-    @param base - channel-service base URL (gateway/channel-service)
+    @param base - gateway base URL (categories live in platform-service)
     """
 
     def __init__(self, http: HttpTransport, base: str):
         self._http = http
-        self._base = f"{base.rstrip('/')}/v1/backend/categories"
+        self._base = f"{base.rstrip('/')}/v1/platform/categories"
 
-    def list(self, params: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    def list(self, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """List categories — returns ``{"data": [...]}``."""
         return self._http.request("GET", self._base, params=params or {}).json()
 
     def get(self, category_id: str) -> Dict[str, Any]:
@@ -33,9 +34,10 @@ class AsyncCategoriesResource:
 
     def __init__(self, http: AsyncHttpTransport, base: str):
         self._http = http
-        self._base = f"{base.rstrip('/')}/v1/backend/categories"
+        self._base = f"{base.rstrip('/')}/v1/platform/categories"
 
-    async def list(self, params: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    async def list(self, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """List categories — returns ``{"data": [...]}``."""
         res = await self._http.request("GET", self._base, params=params or {})
         return res.json()
 

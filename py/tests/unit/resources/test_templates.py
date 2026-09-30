@@ -4,7 +4,7 @@ from pytest_httpx import HTTPXMock
 from imbrace import ImbraceClient
 
 GW = "https://app-gatewayv2.imbrace.co"
-TPL = f"{GW}/v2/backend/templates"
+TPL = f"{GW}/v3/marketplaces/use-cases"
 
 
 @pytest.fixture
@@ -88,9 +88,9 @@ def test_create_custom_posts_full_payload(httpx_mock: HTTPXMock, client):
 
 
 def test_create_custom_routes_to_v2_custom(httpx_mock: HTTPXMock, client):
-    """Verify the path is /v2/backend/templates/v2/custom — not /templates/custom."""
+    """Verify the path is /v3/marketplaces/use-cases/v2/custom — not /templates/custom."""
     httpx_mock.add_response(url=f"{TPL}/v2/custom", method="POST", json={"data": {}})
     client.templates.create_custom(usecase={"title": "X"}, assistant={"name": "X"})
     req = httpx_mock.get_request()
     assert req is not None
-    assert req.url.path == "/v2/backend/templates/v2/custom"
+    assert req.url.path == "/v3/marketplaces/use-cases/v2/custom"

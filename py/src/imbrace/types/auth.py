@@ -1,23 +1,24 @@
 from __future__ import annotations
 from typing import List, Optional
-from typing_extensions import TypedDict
+from typing_extensions import NotRequired, TypedDict
 
 
 class ImbraceApiKey(TypedDict):
     _id: str
-    apiKey: str
+    apiKey: str  # same value as `token`; kept for existing callers
+    token: str
     organization_id: str
     user_id: str
     is_active: bool
-    expired_at: str
+    expired_at: Optional[str]  # None when the key never expires
     created_at: str
     updated_at: str
-    is_temp: bool
+    is_temp: NotRequired[bool]  # not returned by platform-service
 
 
 class ImbraceApiKeyResponse(TypedDict):
     apiKey: ImbraceApiKey
-    expires_in: int
+    expires_in: Optional[int]  # None when the key never expires
 
 
 class SignInResponse(TypedDict):

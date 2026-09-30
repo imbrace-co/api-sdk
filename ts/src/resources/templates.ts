@@ -102,7 +102,7 @@ export interface CreateCustomTemplateResponse {
 /**
  * Use Case Templates resource.
  *
- * Wraps `/v2/backend/templates` endpoints. The most important method is
+ * Wraps `/v3/marketplaces/use-cases` endpoints. The most important method is
  * {@link createCustom}, which atomically creates a UseCase + AI Agent pair
  * used by Document AI flows.
  *
@@ -142,7 +142,7 @@ export interface CreateCustomTemplateResponse {
 export class TemplatesResource {
   /**
    * @param http  HTTP transport
-   * @param base  Templates base URL (typically `${gateway}/v2/backend/templates`)
+   * @param base  Templates base URL (typically `${gateway}/v3/marketplaces/use-cases`)
    */
   constructor(
     private readonly http: HttpTransport,
@@ -153,7 +153,7 @@ export class TemplatesResource {
     return this.base.replace(/\/$/, "")
   }
 
-  /** List use case templates — `GET /v2/backend/templates`. */
+  /** List use case templates — `GET /v3/marketplaces/use-cases`. */
   async list(): Promise<UseCaseListResponse> {
     return this.http.getFetch()(this.root, { method: "GET" }).then(r => r.json())
   }
@@ -161,7 +161,7 @@ export class TemplatesResource {
   /**
    * Create a custom UseCase + AI Agent in one POST.
    *
-   * Routes to `POST /v2/backend/templates/v2/custom`. Backend auto-creates the
+   * Routes to `POST /v3/marketplaces/use-cases/v2/custom`. Backend auto-creates the
    * linked channel, workflow, and assistant_app, and returns the
    * assembled use case (with `assistant_id`, `channel_id`).
    *

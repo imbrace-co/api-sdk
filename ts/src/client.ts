@@ -150,12 +150,13 @@ export class ImbraceClient {
     this.teams         = new TeamsResource(this.http, urls.platform)
     this.settings      = new SettingsResource(this.http, urls.channelService, urls.platform)
 
-    // channel-service: channel, contacts, conversations, messages, categories, campaign, outbound
+    // channel-service: channel, contacts, conversations, messages, campaign, outbound
     this.channel       = new ChannelResource(this.http, urls.channelService)
     this.contacts      = new ContactsResource(this.http, urls.channelService)
     this.conversations = new ConversationsResource(this.http, urls.channelService)
-    this.messages      = new MessagesResource(this.http, urls.channelService, urls.backend)
-    this.categories    = new CategoriesResource(this.http, urls.channelService)
+    this.messages      = new MessagesResource(this.http, urls.channelService)
+    // categories live in platform-service (gateway /v1/platform/categories)
+    this.categories    = new CategoriesResource(this.http, urls.gateway)
     this.campaign      = new CampaignResource(this.http, urls.channelService)
     this.outbound      = new OutboundResource(this.http, urls.channelService)
 
@@ -168,13 +169,12 @@ export class ImbraceClient {
     // marketplace + agent (templates + use-cases)
     this.marketplace   = new MarketplaceResource(this.http, urls.marketplaces, urls.gateway)
     this.agent         = new AgentResource(this.http, urls.marketplaces)
-    // TODO: templates is currently still served by legacy backend at /v2/backend/templates;
-    // marketplace service exposes /market-places/templates (different surface) — needs API audit.
-    this.templates     = new TemplatesResource(this.http, `${urls.gateway}/v2/backend/templates`)
+    // use case templates live in marketplace v3 (the legacy /v2/backend/templates is gone)
+    this.templates     = new TemplatesResource(this.http, `${urls.marketplacesV3}/use-cases`)
 
-    // ips + scheduling
-    this.ips           = new IpsResource(this.http, urls.ips)
-    this.schedule      = new ScheduleResource(this.http, urls.ips)
+    // ips + scheduling. IPS is retired: schedulers moved to data-board, external data sync to channel-service
+    this.ips           = new IpsResource(this.http, urls.ips, urls.dataBoard, urls.channelService)
+    this.schedule      = new ScheduleResource(this.http, `${urls.dataBoard}/v1`)
 
     // ai-service-v2 / chat-ai / document-ai
     this.ai            = new AiResource(this.http, urls.ai)

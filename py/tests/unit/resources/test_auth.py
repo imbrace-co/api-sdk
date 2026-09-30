@@ -6,8 +6,8 @@ from pytest_httpx import HTTPXMock
 from imbrace import ImbraceClient
 
 GW = "https://app-gatewayv2.imbrace.co"
-# third-party token (API key generation) — requires access token, routes via private backend
-TOKEN_URL = f"{GW}/private/backend/v1/third_party_token"
+# third-party token (API key generation) — platform-service
+TOKEN_URL = f"{GW}/v1/platform/third_party_token"
 # auth login/token endpoints live on platform service (${GW}/platform/v1)
 LOGIN_V1 = f"{GW}/platform/v1/login"
 
@@ -20,9 +20,11 @@ def client():
 
 
 def test_get_third_party_token(httpx_mock: HTTPXMock, client):
-    payload = {"apiKey": {"apiKey": "api_new_xxx"}, "expires_in": 864000}
+    payload = {"apiKey": {"_id": "api_new_xxx", "token": "api_new_xxx"}, "expires_in": 864000}
     httpx_mock.add_response(url=TOKEN_URL, json=payload)
     result = client.auth.get_third_party_token()
+    assert result["apiKey"]["token"] == "api_new_xxx"
+    # mirrored for callers written against the retired backend
     assert result["apiKey"]["apiKey"] == "api_new_xxx"
     req = httpx_mock.get_requests()[0]
     assert req.method == "POST"

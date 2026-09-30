@@ -28,7 +28,7 @@ export interface MessageActionResponse {
 export class MessagesResource {
   /**
    * @param base        - channel-service base URL (gateway/channel-service)
-   * @param backendBase - backend base URL (gateway/v1/backend) for file upload
+   * @param backendBase - override base for file upload (defaults to channel-service v1)
    */
   constructor(
     private readonly http: HttpTransport,
