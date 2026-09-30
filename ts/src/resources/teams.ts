@@ -1,5 +1,7 @@
 import { HttpTransport } from "../http.js"
-import type { Team, PagedResponse } from "../types/index.js"
+import type { Team } from "../types/index.js"
+import { retired } from "./retired.js"
+import { addTeamUsersBody, teamListUrl, type AddTeamUsersInput, type PlatformList } from "./platform.js"
 
 export interface CreateTeamInput {
   name: string
@@ -69,13 +71,12 @@ export class TeamsResource {
     }).then(r => r.json())
   }
 
-  async list(params?: { type?: string; limit?: number; skip?: number; q?: string }): Promise<PagedResponse<Team>> {
-    const url = new URL(`${this.v2}/teams`)
-    if (params?.type)   url.searchParams.set("type",  params.type)
-    if (params?.limit)  url.searchParams.set("limit", String(params.limit))
-    if (params?.skip !== undefined) url.searchParams.set("skip", String(params.skip))
-    if (params?.q)      url.searchParams.set("q",     params.q)
-    return this.http.getFetch()(url, { method: "GET" }).then(r => r.json())
+  /**
+   * Teams of a business unit. platform-service requires the business unit id as `q`
+   * (with `type: "business_unit_id"`, which is the default).
+   */
+  async list(params: { q: string; type?: string; limit?: number; skip?: number; search?: string }): Promise<PlatformList<Team>> {
+    return this.http.getFetch()(teamListUrl(`${this.v2}/teams`, "business_unit_id", params), { method: "GET" }).then(r => r.json())
   }
 
   async listMy(): Promise<Team[]> {
@@ -102,15 +103,16 @@ export class TeamsResource {
     await this.http.getFetch()(`${this.v2}/teams/${teamId}`, { method: "DELETE" })
   }
 
-  async addUsers(body: { team_id: string; user_ids: string[] }): Promise<TeamMembershipResponse> {
+  /** Adds members to a team. Users with an unknown role are silently skipped by the server. */
+  async addUsers(body: AddTeamUsersInput): Promise<TeamMembershipResponse> {
     return this.http.getFetch()(`${this.v2}/teams/_add_users`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify(addTeamUsersBody(body)),
     }).then(r => r.json())
   }
 
-  async removeUsers(body: { user_ids: string[] }): Promise<TeamMembershipResponse> {
+  async removeUsers(body: { team_id: string; user_ids: string[] }): Promise<TeamMembershipResponse> {
     return this.http.getFetch()(`${this.v2}/teams/_remove_users`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -122,8 +124,10 @@ export class TeamsResource {
     return this.http.getFetch()(`${this.v1}/team/${teamId}/users`, { method: "GET" }).then(r => r.json())
   }
 
-  async getWorkflows(teamId: string): Promise<TeamWorkflowItem[]> {
-    return this.http.getFetch()(`${this.v1}/teams/${teamId}/workflows`, { method: "GET" }).then(r => r.json())
+  /** @deprecated Retired; throws. */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- keeps the signature for callers
+  async getWorkflows(_teamId: string): Promise<TeamWorkflowItem[]> {
+    return retired("teams.getWorkflows", "its route was removed when the legacy backend was retired")
   }
 
   async join(body: JoinTeamInput): Promise<TeamMembershipResponse> {

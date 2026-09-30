@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars -- retired methods keep their signatures for callers */
 import { HttpTransport } from "../http.js"
+import { retired } from "./retired.js"
 
 export interface Session {
   id: string
@@ -8,33 +10,29 @@ export interface Session {
   updated_at?: string
 }
 
+const REASON = "no iMBrace service serves /session anymore"
+
+/** @deprecated The gateway no longer serves `/session`. Every method throws. */
 export class SessionsResource {
   constructor(private readonly http: HttpTransport, private readonly base: string) {}
 
-  async list(params?: { directory?: string; workspace?: string }): Promise<Session[]> {
-    const url = new URL(`${this.base}/session`)
-    if (params?.directory) url.searchParams.set("directory", encodeURIComponent(params.directory))
-    if (params?.workspace) url.searchParams.set("workspace", params.workspace)
-    return this.http.getFetch()(url, { method: "GET" }).then(res => res.json())
+  /** @deprecated Retired; throws. */
+  async list(_params?: { directory?: string; workspace?: string }): Promise<Session[]> {
+    return retired("sessions.list", REASON)
   }
 
-  async get(sessionID: string, params?: { directory?: string; workspace?: string }): Promise<Session> {
-    const url = new URL(`${this.base}/session/${sessionID}`)
-    if (params?.directory) url.searchParams.set("directory", encodeURIComponent(params.directory))
-    if (params?.workspace) url.searchParams.set("workspace", params.workspace)
-    return this.http.getFetch()(url, { method: "GET" }).then(res => res.json())
+  /** @deprecated Retired; throws. */
+  async get(_sessionID: string, _params?: { directory?: string; workspace?: string }): Promise<Session> {
+    return retired("sessions.get", REASON)
   }
 
-  async create(body: { directory?: string; workspace?: string }): Promise<Session> {
-    return this.http.getFetch()(`${this.base}/session`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    }).then(res => res.json())
+  /** @deprecated Retired; throws. */
+  async create(_body: { directory?: string; workspace?: string }): Promise<Session> {
+    return retired("sessions.create", REASON)
   }
 
-  async delete(sessionID: string): Promise<{ success: boolean }> {
-    return this.http.getFetch()(`${this.base}/session/${sessionID}`, { method: "DELETE" })
-      .then(res => res.json())
+  /** @deprecated Retired; throws. */
+  async delete(_sessionID: string): Promise<{ success: boolean }> {
+    return retired("sessions.delete", REASON)
   }
 }

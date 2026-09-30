@@ -158,3 +158,35 @@ describe("BoardsResource", () => {
     expect(url.searchParams.get("organization_id")).toBe("org_1")
   })
 })
+
+// data-board wraps single boards/items in { data }; field endpoints return the board.
+describe("BoardsResource — response unwrapping", () => {
+  let originalFetch: typeof fetch
+  beforeEach(() => { originalFetch = globalThis.fetch })
+  afterEach(() => { globalThis.fetch = originalFetch })
+
+  it.each([
+    ["create", (r: BoardsResource) => r.create({ name: "B" })],
+    ["get", (r: BoardsResource) => r.get("b_1")],
+    ["update", (r: BoardsResource) => r.update("b_1", { name: "B2" })],
+    ["getItem", (r: BoardsResource) => r.getItem("b_1", "i_1")],
+    ["createItem", (r: BoardsResource) => r.createItem("b_1", { fields: [] })],
+    ["updateItem", (r: BoardsResource) => r.updateItem("b_1", "i_1", { data: [] })],
+  ])("%s() unwraps { data }", async (_name, call) => {
+    mockFetch({ data: { _id: "x_1" } })
+    const res: any = await call(makeResource())
+    expect(res._id).toBe("x_1")
+  })
+
+  it("createField() returns the new field, not the board", async () => {
+    mockFetch({ data: { _id: "b_1", fields: [{ id: "f_old", name: "Name" }, { id: "f_new", name: "Company" }] } })
+    const field: any = await makeResource().createField("b_1", { name: "Company", type: "ShortText" } as any)
+    expect(field.id).toBe("f_new")
+  })
+
+  it("updateField() returns the updated field, not the board", async () => {
+    mockFetch({ data: { _id: "b_1", fields: [{ id: "f_1", name: "Renamed" }, { id: "f_2", name: "Other" }] } })
+    const field: any = await makeResource().updateField("b_1", "f_1", { name: "Renamed" } as any)
+    expect(field.name).toBe("Renamed")
+  })
+})

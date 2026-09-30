@@ -45,7 +45,7 @@ export interface ServiceUrls {
   // ── ai-agent / message-suggestion / predict ────────────────────────────
   /** ai-agent — /api/ai-agent. */
   aiAgent: string
-  /** message-suggestion — /v1/message-suggestion. */
+  /** message suggestions — ai-agent `/ai-agent/suggestions`. */
   messageSuggestion: string
   /** predict — /predict. */
   predict: string
@@ -80,7 +80,7 @@ export function resolveServiceUrls(
     ips:               `${(hosts.ips ?? gw).replace(/\/$/, '')}/ips/v1`,
     ai:                gw,
     aiAgent:           `${gw}/ai-agent`,
-    messageSuggestion: `${gw}/v1/message-suggestion`,
+    messageSuggestion: `${gw}/ai-agent/suggestions`,
     predict:           `${gw}/predict`,
     workflowEngine:    `${gw}/activepieces`,
     backend:           `${gw}/v1/backend`,

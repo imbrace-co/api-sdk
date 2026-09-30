@@ -86,7 +86,7 @@ describe("ImbraceClient", () => {
       h.forEach((v, k) => { capturedHeaders[k] = v })
       return new Response("{}", { status: 200 })
     })
-    client.sessions.list()
+    client.platform.getMe()
     // Allow microtasks to run
     return new Promise<void>(resolve => setTimeout(() => {
       expect(capturedHeaders["x-access-token"]).toBe("tok_new")
@@ -105,7 +105,7 @@ describe("ImbraceClient", () => {
       h.forEach((v, k) => { capturedHeaders[k] = v })
       return new Response("{}", { status: 200 })
     })
-    client.sessions.list()
+    client.platform.getMe()
 
     await new Promise<void>(resolve => setTimeout(() => {
       expect(capturedHeaders["authorization"]).toBeUndefined()
@@ -159,6 +159,27 @@ describe("ImbraceClient", () => {
       `${gw}/data-board/v1/schedulers`,
       `${gw}/data-board/v1/schedulers`,
       `${gw}/channel-service/v1/external-data-sync`,
+    ])
+  })
+
+  // Routes that moved off the retired backend
+  it("wires platform contacts/credentials to channel-service and suggestions to ai-agent", async () => {
+    const urls: string[] = []
+    globalThis.fetch = vi.fn().mockImplementation(async (input: RequestInfo | URL) => {
+      urls.push(input instanceof URL ? input.toString() : String(input))
+      return new Response("{}", { status: 200 })
+    })
+    const client = new ImbraceClient({ env: "develop", apiKey: "key" })
+    await client.platform.getContactV2("con_1")
+    await client.platform.listCredentials()
+    await client.messageSuggestion.getSuggestions({ thread_id: "t" })
+    await client.ai.listAiAgentsV2()
+    const gw = "https://app-gateway.dev.imbrace.co"
+    expect(urls).toEqual([
+      `${gw}/channel-service/v1/contacts/con_1`,
+      `${gw}/channel-service/v1/credentials`,
+      `${gw}/ai-agent/suggestions`,
+      `${gw}/v3/ai/assistants`,
     ])
   })
 

@@ -132,3 +132,31 @@ describe("AiResource", () => {
     })
   })
 })
+
+// /v2/ai was retired; the "V2" methods now use chat-ai /v3/ai.
+describe("AiResource — V2 methods on /v3/ai", () => {
+  let originalFetch: typeof fetch
+  beforeEach(() => { originalFetch = globalThis.fetch })
+  afterEach(() => { globalThis.fetch = originalFetch })
+  const calledUrl = (i = 0) => new URL(String(vi.mocked(globalThis.fetch).mock.calls[i][0]))
+  const calledInit = (i = 0) => vi.mocked(globalThis.fetch).mock.calls[i][1]!
+
+  it("listAiAgentsV2() calls /v3/ai/assistants and wraps the array as { data }", async () => {
+    mockFetch([{ id: "a_1" }, { id: "a_2" }])
+    const res = await makeResource().listAiAgentsV2()
+    expect(calledUrl().pathname).toBe("/v3/ai/assistants")
+    expect(res.data).toHaveLength(2)
+  })
+
+  it.each([
+    ["createAiAgentV2", (r: AiResource) => r.createAiAgentV2({}), "POST", "/v3/ai/assistants"],
+    ["updateAiAgentV2", (r: AiResource) => r.updateAiAgentV2("a_1", {}), "PUT", "/v3/ai/assistants/a_1"],
+    ["deleteAiAgentV2", (r: AiResource) => r.deleteAiAgentV2("a_1"), "DELETE", "/v3/ai/assistants/a_1"],
+    ["createAiAgentAppV2", (r: AiResource) => r.createAiAgentAppV2({}), "POST", "/v3/ai/assistant_apps"],
+  ])("%s() uses %s %s", async (_n, call, method, path) => {
+    mockFetch({})
+    await call(makeResource())
+    expect(calledInit().method).toBe(method)
+    expect(calledUrl().pathname).toBe(path)
+  })
+})

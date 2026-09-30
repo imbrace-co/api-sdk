@@ -145,7 +145,7 @@ export class ImbraceClient {
 
     // platform-service: account, users, orgs, teams, apps, business units, …
     this.account       = new AccountResource(this.http, urls.platform)
-    this.platform      = new PlatformResource(this.http, urls.platform)
+    this.platform      = new PlatformResource(this.http, urls.platform, urls.channelService)
     this.organizations = new OrganizationsResource(this.http, urls.platform)
     this.teams         = new TeamsResource(this.http, urls.platform)
     this.settings      = new SettingsResource(this.http, urls.channelService, urls.platform)

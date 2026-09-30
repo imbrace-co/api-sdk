@@ -299,7 +299,6 @@ export class AiResource {
    */
   constructor(private readonly http: HttpTransport, private readonly base: string) {}
 
-  private get v2() { return `${this.base.replace(/\/$/, "")}/v2/ai` }
   private get v3() { return `${this.base.replace(/\/$/, "")}/v3/ai` }
 
   private get aiAgentBase() {
@@ -620,14 +619,17 @@ export class AiResource {
   }
 
 
-  // --- AI Agents (v2) ---
+  // --- AI Agents ("V2" names kept for compatibility; /v2/ai was retired, these now use /v3/ai) ---
 
+  /** `GET /v3/ai/assistants`. The service returns a bare array; it is wrapped as `{ data }`. */
   async listAiAgentsV2(): Promise<AiAgentListResponse> {
-    return this.http.getFetch()(`${this.v2}/ai/assistants`, { method: "GET" }).then(r => r.json())
+    return this.http.getFetch()(`${this.v3}/assistants`, { method: "GET" })
+      .then(r => r.json())
+      .then(res => (Array.isArray(res) ? { data: res, total: res.length } : res))
   }
 
   async createAiAgentV2(body: any): Promise<AiAgent> {
-    return this.http.getFetch()(`${this.v2}/ai/assistants`, {
+    return this.http.getFetch()(`${this.v3}/assistants`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -635,7 +637,7 @@ export class AiResource {
   }
 
   async updateAiAgentV2(aiAgentId: string, body: any): Promise<AiAgent> {
-    return this.http.getFetch()(`${this.v2}/ai/assistants/${aiAgentId}`, {
+    return this.http.getFetch()(`${this.v3}/assistants/${aiAgentId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -643,11 +645,11 @@ export class AiResource {
   }
 
   async deleteAiAgentV2(aiAgentId: string): Promise<void> {
-    await this.http.getFetch()(`${this.v2}/ai/assistants/${aiAgentId}`, { method: "DELETE" })
+    await this.http.getFetch()(`${this.v3}/assistants/${aiAgentId}`, { method: "DELETE" })
   }
 
   async createAiAgentAppV2(body: any): Promise<AiAgentApp> {
-    return this.http.getFetch()(`${this.v2}/ai/assistant_apps`, {
+    return this.http.getFetch()(`${this.v3}/assistant_apps`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
