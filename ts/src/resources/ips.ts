@@ -1,19 +1,42 @@
 import { HttpTransport } from "../http.js"
+import { ImbraceError } from "../errors.js"
 import type { IpsProfile, Identity, PagedResponse } from "../types/index.js"
 
 export interface Scheduler {
   _id: string
   name?: string
   type?: string
-  status?: string
+  event_type?: string
+  is_paused?: boolean
+  is_finished?: boolean
   [key: string]: unknown
 }
 
-export interface SchedulerFilterOptions {
-  options: Array<{ value: string; label: string; [key: string]: unknown }>
-  [key: string]: unknown
+/** `GET /data-board/v1/schedulers` — paged list. */
+export interface SchedulerListResponse {
+  data: Scheduler[]
+  count: number
+  total: number
+  has_more: boolean
 }
 
+/**
+ * Query for {@link IpsResource.listSchedulers}. Any extra key is a field filter,
+ * either a plain value or `"<filter type>:<value>"` (e.g. `event_type: "is:email_campaign"`).
+ */
+export interface SchedulerListParams {
+  skip?: number
+  limit?: number
+  sort?: string
+  order?: "asc" | "desc"
+  exact?: boolean
+  [field: string]: string | number | boolean | undefined
+}
+
+/** Distinct values of one field, e.g. `[{ event_type: "board_automation" }, …]`. */
+export type SchedulerFilterOptions = Array<Record<string, string>>
+
+/** @deprecated IPS workflows are gone — see {@link IpsResource.listWorkflows}. */
 export interface IpsWorkflow {
   _id: string
   name?: string
@@ -22,124 +45,165 @@ export interface IpsWorkflow {
 }
 
 export interface ExternalDataSync {
-  _id: string
-  name?: string
-  status?: string
+  id: string
+  organization_id?: string
+  provider?: string
+  connection_id?: string
+  connection_name?: string
+  is_active?: boolean
+  last_synced_at?: string | null
   [key: string]: unknown
 }
 
+/** `GET /channel-service/v1/external-data-sync`. */
+export interface ExternalDataSyncListResponse {
+  data: ExternalDataSync[]
+  count: number
+}
+
 export interface EnableExternalDataSyncInput {
-  source?: string
-  config?: Record<string, unknown>
+  provider: string
+  connection_id: string
+  destination?: "knowledgehub" | "workflow"
   [key: string]: unknown
 }
 
 export interface EnableExternalDataSyncResponse {
-  success: boolean
-  sync?: ExternalDataSync
-  [key: string]: unknown
+  message: string
+  subscription_id: string
+  provider: string
+  is_active: boolean
 }
 
+function retired(method: string, hint: string): never {
+  throw new ImbraceError(`ips.${method}() is no longer available: the IPS service has been retired. ${hint}`)
+}
+
+const NO_REPLACEMENT = "There is no replacement."
+
+/**
+ * Former IPS surface. The IPS service is retired: schedulers now live in
+ * data-board and external data sync in channel-service; the rest has no
+ * replacement and throws.
+ */
 export class IpsResource {
+  private readonly dataBoard: string
+  private readonly channelService: string
+
   /**
-   * @param base - Fully resolved IPS base URL including /ips/v1
-   *   develop: https://app-gateway.dev.imbrace.co/ips/v1
-   *   stable:  https://app-gatewayv2.imbrace.co/ips/v1
+   * @param base           - IPS base URL (`${gateway}/ips/v1`), kept for compatibility
+   * @param dataBoard      - data-board base URL (`${gateway}/data-board`)
+   * @param channelService - channel-service base URL (`${gateway}/channel-service`)
    */
-  constructor(private readonly http: HttpTransport, private readonly base: string) {}
-
-  async getProfile(userId: string): Promise<IpsProfile> {
-    return this.http.getFetch()(`${this.base}/profiles/${userId}`, { method: "GET" }).then(r => r.json())
+  constructor(
+    private readonly http: HttpTransport,
+    base: string,
+    dataBoard?: string,
+    channelService?: string,
+  ) {
+    const gateway = base.replace(/\/ips\/v\d+\/?$/, "")
+    this.dataBoard = (dataBoard ?? `${gateway}/data-board`).replace(/\/$/, "")
+    this.channelService = (channelService ?? `${gateway}/channel-service`).replace(/\/$/, "")
   }
 
+  /* eslint-disable @typescript-eslint/no-unused-vars -- retired methods keep their signatures for callers */
+  /** @deprecated IPS is retired; throws. */
+  async getProfile(_userId: string): Promise<IpsProfile> {
+    return retired("getProfile", NO_REPLACEMENT)
+  }
+
+  /** @deprecated IPS is retired; throws. */
   async getMyProfile(): Promise<IpsProfile> {
-    return this.http.getFetch()(`${this.base}/profiles/me`, { method: "GET" }).then(r => r.json())
+    return retired("getMyProfile", NO_REPLACEMENT)
   }
 
-  async updateProfile(userId: string, body: Partial<IpsProfile>): Promise<IpsProfile> {
-    return this.http.getFetch()(`${this.base}/profiles/${userId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    }).then(r => r.json())
+  /** @deprecated IPS is retired; throws. */
+  async updateProfile(_userId: string, _body: Partial<IpsProfile>): Promise<IpsProfile> {
+    return retired("updateProfile", NO_REPLACEMENT)
   }
 
-  async searchProfiles(query: string, params?: { page?: number; limit?: number }): Promise<PagedResponse<IpsProfile>> {
-    const url = new URL(`${this.base}/profiles`)
-    url.searchParams.set("q", query)
-    if (params?.page)  url.searchParams.set("page",  String(params.page))
-    if (params?.limit) url.searchParams.set("limit", String(params.limit))
+  /** @deprecated IPS is retired; throws. */
+  async searchProfiles(_query: string, _params?: { page?: number; limit?: number }): Promise<PagedResponse<IpsProfile>> {
+    return retired("searchProfiles", NO_REPLACEMENT)
+  }
+
+  /** @deprecated IPS is retired; throws. */
+  async follow(_targetUserId: string): Promise<void> {
+    return retired("follow", NO_REPLACEMENT)
+  }
+
+  /** @deprecated IPS is retired; throws. */
+  async unfollow(_targetUserId: string): Promise<void> {
+    return retired("unfollow", NO_REPLACEMENT)
+  }
+
+  /** @deprecated IPS is retired; throws. */
+  async getFollowers(_userId: string, _params?: { page?: number; limit?: number }): Promise<PagedResponse<IpsProfile>> {
+    return retired("getFollowers", NO_REPLACEMENT)
+  }
+
+  /** @deprecated IPS is retired; throws. */
+  async getFollowing(_userId: string, _params?: { page?: number; limit?: number }): Promise<PagedResponse<IpsProfile>> {
+    return retired("getFollowing", NO_REPLACEMENT)
+  }
+
+  /** @deprecated IPS is retired; throws. */
+  async listIdentities(_userId: string): Promise<Identity[]> {
+    return retired("listIdentities", NO_REPLACEMENT)
+  }
+
+  /** @deprecated IPS is retired; throws. */
+  async unlinkIdentity(_userId: string, _provider: string): Promise<void> {
+    return retired("unlinkIdentity", NO_REPLACEMENT)
+  }
+  /* eslint-enable @typescript-eslint/no-unused-vars */
+
+  /** List schedulers — `GET /data-board/v1/schedulers`. */
+  async listSchedulers(params?: SchedulerListParams): Promise<SchedulerListResponse> {
+    const url = new URL(`${this.dataBoard}/v1/schedulers`)
+    for (const [k, v] of Object.entries(params ?? {})) {
+      if (v !== undefined) url.searchParams.set(k, String(v))
+    }
     return this.http.getFetch()(url, { method: "GET" }).then(r => r.json())
   }
 
-  async follow(targetUserId: string): Promise<void> {
-    await this.http.getFetch()(`${this.base}/profiles/${targetUserId}/follow`, { method: "POST" })
-  }
-
-  async unfollow(targetUserId: string): Promise<void> {
-    await this.http.getFetch()(`${this.base}/profiles/${targetUserId}/follow`, { method: "DELETE" })
-  }
-
-  async getFollowers(userId: string, params?: { page?: number; limit?: number }): Promise<PagedResponse<IpsProfile>> {
-    const url = new URL(`${this.base}/profiles/${userId}/followers`)
-    if (params?.page)  url.searchParams.set("page",  String(params.page))
-    if (params?.limit) url.searchParams.set("limit", String(params.limit))
-    return this.http.getFetch()(url, { method: "GET" }).then(r => r.json())
-  }
-
-  async getFollowing(userId: string, params?: { page?: number; limit?: number }): Promise<PagedResponse<IpsProfile>> {
-    const url = new URL(`${this.base}/profiles/${userId}/following`)
-    if (params?.page)  url.searchParams.set("page",  String(params.page))
-    if (params?.limit) url.searchParams.set("limit", String(params.limit))
-    return this.http.getFetch()(url, { method: "GET" }).then(r => r.json())
-  }
-
-  async listIdentities(userId: string): Promise<Identity[]> {
-    return this.http.getFetch()(`${this.base}/identities/${userId}`, { method: "GET" }).then(r => r.json())
-  }
-
-  async unlinkIdentity(userId: string, provider: string): Promise<void> {
-    await this.http.getFetch()(`${this.base}/identities/${userId}/${provider}`, { method: "DELETE" })
-  }
-
-  async listSchedulers(params?: { filter?: string }): Promise<Scheduler[]> {
-    const url = new URL(`${this.base}/schedulers`)
-    if (params?.filter) url.searchParams.set("filter", params.filter)
-    return this.http.getFetch()(url, { method: "GET" }).then(r => r.json())
-  }
-
+  /** Delete a scheduler — `DELETE /data-board/v1/schedulers/:id`. */
   async deleteScheduler(schedulerId: string): Promise<void> {
-    await this.http.getFetch()(`${this.base}/schedulers/${schedulerId}`, { method: "DELETE" })
+    await this.http.getFetch()(`${this.dataBoard}/v1/schedulers/${schedulerId}`, { method: "DELETE" })
   }
 
-  async getSchedulerFilterOptions(filter: string): Promise<SchedulerFilterOptions> {
-    const url = new URL(`${this.base}/schedulers/filter_options`)
+  /** Distinct values of one field — `GET /data-board/v1/schedulers/filter_options`. */
+  async getSchedulerFilterOptions(filter: "event_type" | "channel_source" | "sender"): Promise<SchedulerFilterOptions> {
+    const url = new URL(`${this.dataBoard}/v1/schedulers/filter_options`)
     url.searchParams.set("filter", filter)
     return this.http.getFetch()(url, { method: "GET" }).then(r => r.json())
   }
 
-  async listWorkflows(params?: Record<string, string>): Promise<IpsWorkflow[]> {
-    const url = new URL(`${this.base}/workflows/all`)
-    if (params) Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v))
-    return this.http.getFetch()(url, { method: "GET" }).then(r => r.json())
+  /* eslint-disable @typescript-eslint/no-unused-vars */
+  /** @deprecated IPS is retired; throws. Use `client.workflows.listChannelAutomation()`. */
+  async listWorkflows(_params?: Record<string, string>): Promise<IpsWorkflow[]> {
+    return retired("listWorkflows", "Use client.workflows.listChannelAutomation() instead.")
   }
 
-  async listApWorkflows(params?: Record<string, string>): Promise<IpsWorkflow[]> {
-    const url = new URL(`${this.base}/ap-workflows/all`)
-    if (params) Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v))
-    return this.http.getFetch()(url, { method: "GET" }).then(r => r.json())
+  /** @deprecated IPS is retired; throws. Use `client.workflows.listFlows()`. */
+  async listApWorkflows(_params?: Record<string, string>): Promise<IpsWorkflow[]> {
+    return retired("listApWorkflows", "Use client.workflows.listFlows() instead.")
+  }
+  /* eslint-enable @typescript-eslint/no-unused-vars */
+
+  /** List sync subscriptions — `GET /channel-service/v1/external-data-sync`. */
+  async listExternalDataSync(): Promise<ExternalDataSyncListResponse> {
+    return this.http.getFetch()(`${this.channelService}/v1/external-data-sync`, { method: "GET" }).then(r => r.json())
   }
 
-  async listExternalDataSync(): Promise<ExternalDataSync[]> {
-    return this.http.getFetch()(`${this.base}/external-data-sync`, { method: "GET" }).then(r => r.json())
-  }
-
+  /** Delete a sync subscription — `DELETE /channel-service/v1/external-data-sync/:id`. */
   async deleteExternalDataSync(syncId: string): Promise<void> {
-    await this.http.getFetch()(`${this.base}/external-data-sync/${syncId}`, { method: "DELETE" })
+    await this.http.getFetch()(`${this.channelService}/v1/external-data-sync/${syncId}`, { method: "DELETE" })
   }
 
+  /** Enable a sync — `POST /channel-service/v1/external-data-sync/enable`. */
   async enableExternalDataSync(body: EnableExternalDataSyncInput): Promise<EnableExternalDataSyncResponse> {
-    return this.http.getFetch()(`${this.base}/external-data-sync/enable`, {
+    return this.http.getFetch()(`${this.channelService}/v1/external-data-sync/enable`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),

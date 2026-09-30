@@ -210,7 +210,7 @@ def test_suggest_schema_respects_custom_model(httpx_mock: HTTPXMock, client):
 # ── createFull (orchestrator) ─────────────────────────────────────────────────
 
 DB = f"{GW}/data-board"
-TPL = f"{GW}/v2/backend/templates"
+TPL = f"{GW}/v3/marketplaces/use-cases"
 
 
 def test_create_full_runs_full_flow(httpx_mock: HTTPXMock, client):

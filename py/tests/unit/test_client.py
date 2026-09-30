@@ -12,7 +12,8 @@ def test_default_env_is_stable():
 def test_env_develop():
     client = ImbraceClient(env="develop", api_key="test_key")
     assert client.auth._base == "https://app-gateway.dev.imbrace.co/platform"
-    assert client.ips._base == "https://app-gateway.dev.imbrace.co/ips/v1"
+    assert client.ips._data_board == "https://app-gateway.dev.imbrace.co/data-board"
+    assert client.ips._channel_service == "https://app-gateway.dev.imbrace.co/channel-service"
 
 
 def test_env_sandbox():

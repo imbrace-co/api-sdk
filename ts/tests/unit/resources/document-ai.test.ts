@@ -280,7 +280,7 @@ describe("DocumentAIResource", () => {
     function makeWiredResource() {
       const http = new HttpTransport({ apiKey: "test_key", timeout: 5000, tokenManager: new TokenManager() })
       const boards    = new BoardsResource(http, `${GW}/data-board`, `${GW}/v1/backend`)
-      const templates = new TemplatesResource(http, `${GW}/v2/backend/templates`)
+      const templates = new TemplatesResource(http, `${GW}/v3/marketplaces/use-cases`)
       const documentAi = new DocumentAIResource(http, BASE, { boards, templates })
       return { documentAi, boards, templates }
     }
@@ -320,11 +320,11 @@ describe("DocumentAIResource", () => {
       expect(result.channel_id).toBe("ch_xxx")
       expect(result.usecase_id).toBe("uc_xxx")
 
-      // Verify URLs hit — board now on data-board, fields too, then templates on backend
+      // Verify URLs hit — board now on data-board, fields too, then templates on marketplace v3
       expect(getCalledUrl(0)).toBe(`${GW}/data-board/boards`)
       expect(getCalledUrl(1)).toBe(`${GW}/data-board/boards/brd_xxx/fields`)
       expect(getCalledUrl(2)).toBe(`${GW}/data-board/boards/brd_xxx/fields`)
-      expect(getCalledUrl(3)).toBe(`${GW}/v2/backend/templates/v2/custom`)
+      expect(getCalledUrl(3)).toBe(`${GW}/v3/marketplaces/use-cases/v2/custom`)
 
       // Board POST body
       const boardBody = getCalledBody(0)

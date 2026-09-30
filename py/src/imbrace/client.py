@@ -115,22 +115,22 @@ class ImbraceClient:
         self.channel       = ChannelResource(self.http, urls.channel_service)
         self.contacts      = ContactsResource(self.http, urls.channel_service)
         self.conversations = ConversationsResource(self.http, urls.channel_service)
-        self.messages      = MessagesResource(self.http, urls.channel_service, urls.backend)
-        self.categories    = CategoriesResource(self.http, urls.channel_service)
+        self.messages      = MessagesResource(self.http, urls.channel_service)
+        self.categories    = CategoriesResource(self.http, urls.gateway)
 
         # Workflows: backend (channel automation) + workflow_engine (flow engine)
         self.workflows     = WorkflowsResource(self.http, urls.backend, urls.workflow_engine, urls.channel_service)
 
         # Dedicated services
         self.boards        = BoardsResource(self.http, urls.data_board, urls.backend)
-        self.ips           = IpsResource(self.http, urls.ips)
+        self.ips           = IpsResource(self.http, urls.ips, urls.data_board, urls.channel_service)
         self.ai            = AiResource(self.http, urls.ai)
 
         # Marketplace: standalone service + platform/v2 sub-paths
         self.marketplace   = MarketplaceResource(self.http, urls.marketplaces)
 
-        # Use Case Templates — sibling to marketplaces under /v2/backend/
-        self.templates     = TemplatesResource(self.http, f"{urls.gateway}/v2/backend/templates")
+        # Use Case Templates — marketplace v3 (legacy /v2/backend/templates is gone)
+        self.templates     = TemplatesResource(self.http, f"{urls.gateway}/v3/marketplaces/use-cases")
 
         # Agent templates + use-cases
         self.agent         = AgentResource(self.http, urls.marketplaces)
@@ -138,7 +138,7 @@ class ImbraceClient:
         # Gateway fallback
         self.health        = HealthResource(self.http, urls.gateway)
         self.sessions      = SessionsResource(self.http, urls.gateway)
-        self.schedule      = ScheduleResource(self.http, urls.ips)
+        self.schedule      = ScheduleResource(self.http, f"{urls.data_board}/v1")
         self.campaign      = CampaignsResource(self.http, urls.channel_service)
         self.data_files    = DataFilesResource(self.http, urls.data_board)
         self.folders       = FoldersResource(self.http, urls.data_board)

@@ -3,16 +3,21 @@ import { HttpTransport } from "../http.js"
 export interface ThirdPartyTokenResponse {
   apiKey: {
     _id: string
+    /** The key itself. Same value as `token`; kept for existing callers of {@link extractApiKey}. */
     apiKey: string
+    token: string
     organization_id: string
     user_id: string
     is_active: boolean
-    expired_at: string
+    /** `null` when the key never expires. */
+    expired_at: string | null
     created_at: string
     updated_at: string
-    is_temp: boolean
+    is_temp?: boolean
+    [key: string]: unknown
   }
-  expires_in: number
+  /** Seconds until expiry, `null` when the key never expires. */
+  expires_in: number | null
 }
 
 export interface SignInResponse {
@@ -173,14 +178,18 @@ export class AuthResource {
 
   // ─── Third-party token  
 
+  /** Mint an API key for the current user — `POST /v1/platform/third_party_token`. */
   async getThirdPartyToken(expirationDays: number = 10): Promise<ThirdPartyTokenResponse> {
-    return this.http
-      .getFetch()(`${this.gateway}/private/backend/v1/third_party_token`, {
+    const res = await this.http
+      .getFetch()(`${this.gateway}/v1/platform/third_party_token`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ expirationDays }),
       })
       .then((r) => r.json())
+    // platform names the key `token`; the retired backend called it `apiKey`
+    if (res?.apiKey && res.apiKey.apiKey === undefined) res.apiKey.apiKey = res.apiKey.token
+    return res
   }
 
   // ─── Login  

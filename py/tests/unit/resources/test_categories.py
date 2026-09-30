@@ -3,7 +3,7 @@ from pytest_httpx import HTTPXMock
 from imbrace import ImbraceClient, AsyncImbraceClient
 
 BASE = "https://app-gatewayv2.imbrace.co"
-URL = f"{BASE}/channel-service/v1/backend/categories"
+URL = f"{BASE}/v1/platform/categories"
 
 @pytest.fixture
 def client():
@@ -16,9 +16,9 @@ async def async_client():
     await client.close()
 
 def test_list_categories(httpx_mock: HTTPXMock, client):
-    httpx_mock.add_response(url=URL, json=[{"id": "c1"}])
+    httpx_mock.add_response(url=URL, json={"data": [{"_id": "c1", "id": "c1"}]})
     res = client.categories.list()
-    assert res[0]["id"] == "c1"
+    assert res["data"][0]["id"] == "c1"
 
 def test_get_category(httpx_mock: HTTPXMock, client):
     httpx_mock.add_response(url=f"{URL}/c1", json={"id": "c1"})
@@ -32,6 +32,14 @@ def test_create_category(httpx_mock: HTTPXMock, client):
 
 @pytest.mark.anyio
 async def test_async_list_categories(httpx_mock: HTTPXMock, async_client):
-    httpx_mock.add_response(url=URL, json=[{"id": "c1"}])
+    httpx_mock.add_response(url=URL, json={"data": [{"_id": "c1", "id": "c1"}]})
     res = await async_client.categories.list()
-    assert res[0]["id"] == "c1"
+    assert res["data"][0]["id"] == "c1"
+
+def test_delete_category(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(
+        url=f"{URL}/c1", method="DELETE",
+        json={"message": "Category deleted successfully", "id": "c1"},
+    )
+    res = client.categories.delete("c1")
+    assert res["id"] == "c1"

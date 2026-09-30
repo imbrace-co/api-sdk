@@ -3,9 +3,9 @@ from ..http import HttpTransport, AsyncHttpTransport
 
 
 class ScheduleResource:
-    """Schedule domain — Sync. Alias to IPS schedulers for convenience.
+    """Schedule domain — Sync. Schedulers live in data-board.
 
-    @param base - ips base URL (ips-host/ips/v1)
+    @param base - data-board v1 base URL (gateway/data-board/v1)
     """
 
     def __init__(self, http: HttpTransport, base: str):
@@ -18,8 +18,10 @@ class ScheduleResource:
     def delete(self, scheduler_id: str) -> Dict[str, Any]:
         return self._http.request("DELETE", f"{self._base}/{scheduler_id}").json()
 
-    def get_filter_options(self) -> Dict[str, Any]:
-        return self._http.request("GET", f"{self._base}/filter_options").json()
+    def get_filter_options(self, filter: Optional[str] = None) -> Any:
+        """Distinct values of ``filter`` (event_type | channel_source | sender)."""
+        params = {"filter": filter} if filter else {}
+        return self._http.request("GET", f"{self._base}/filter_options", params=params).json()
 
 
 class AsyncScheduleResource:
@@ -37,6 +39,7 @@ class AsyncScheduleResource:
         res = await self._http.request("DELETE", f"{self._base}/{scheduler_id}")
         return res.json()
 
-    async def get_filter_options(self) -> Dict[str, Any]:
-        res = await self._http.request("GET", f"{self._base}/filter_options")
+    async def get_filter_options(self, filter: Optional[str] = None) -> Any:
+        params = {"filter": filter} if filter else {}
+        res = await self._http.request("GET", f"{self._base}/filter_options", params=params)
         return res.json()

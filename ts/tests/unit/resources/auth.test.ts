@@ -21,12 +21,19 @@ describe("AuthResource", () => {
   beforeEach(() => { originalFetch = globalThis.fetch })
   afterEach(() => { globalThis.fetch = originalFetch })
 
-  it("getThirdPartyToken() calls POST /private/backend/v1/third_party_token", async () => {
-    mockFetch({ apiKey: { _id: "key_1", apiKey: "abc123", is_active: true }, expires_in: 864000 })
+  it("getThirdPartyToken() calls POST /v1/platform/third_party_token", async () => {
+    mockFetch({ apiKey: { _id: "key_1", token: "abc123", is_active: true }, expires_in: 864000 })
     await makeResource().getThirdPartyToken()
     const url = new URL((vi.mocked(globalThis.fetch).mock.calls[0][0] as string))
-    expect(url.pathname).toBe("/private/backend/v1/third_party_token")
+    expect(url.pathname).toBe("/v1/platform/third_party_token")
     expect(vi.mocked(globalThis.fetch).mock.calls[0][1]?.method).toBe("POST")
+  })
+
+  it("getThirdPartyToken() mirrors platform's `token` into `apiKey.apiKey`", async () => {
+    mockFetch({ apiKey: { _id: "key_1", token: "abc123", is_active: true }, expires_in: 864000 })
+    const res = await makeResource().getThirdPartyToken()
+    expect(res.apiKey.token).toBe("abc123")
+    expect(res.apiKey.apiKey).toBe("abc123")
   })
 
   it("getThirdPartyToken() sends default expirationDays=10", async () => {

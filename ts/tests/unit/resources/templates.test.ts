@@ -4,7 +4,7 @@ import { HttpTransport } from "../../../src/http.js"
 import { TokenManager } from "../../../src/auth/token-manager.js"
 
 const GW = "https://app-gatewayv2.imbrace.co"
-const BASE = `${GW}/v2/backend/templates`
+const BASE = `${GW}/v3/marketplaces/use-cases`
 
 function makeResource() {
   const http = new HttpTransport({ apiKey: "test_key", timeout: 5000, tokenManager: new TokenManager() })
@@ -33,7 +33,7 @@ describe("TemplatesResource", () => {
   afterEach(() => { globalThis.fetch = originalFetch })
 
   describe("list()", () => {
-    it("hits GET /v2/backend/templates", async () => {
+    it("hits GET /v3/marketplaces/use-cases", async () => {
       mockFetch({
         data: [
           { _id: "uc_1", doc_name: "UseCase", title: "Receipt Extractor", agent_type: "document_ai" },
@@ -103,7 +103,7 @@ describe("TemplatesResource", () => {
       expect(body.assistant.document_ai.source_languages).toEqual(["English"])
     })
 
-    it("routes POST to /v2/backend/templates/v2/custom", async () => {
+    it("routes POST to /v3/marketplaces/use-cases/v2/custom", async () => {
       mockFetch({ data: {} })
       await makeResource().createCustom({
         usecase: { title: "X" },

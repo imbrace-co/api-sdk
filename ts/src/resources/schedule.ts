@@ -1,13 +1,15 @@
 import { HttpTransport } from "../http.js"
-import type { Scheduler } from "./ips.js"
+import type { SchedulerListParams, SchedulerListResponse } from "./ips.js"
 
 export class ScheduleResource {
+  /** @param base - data-board v1 base URL (`${gateway}/data-board/v1`) */
   constructor(private readonly http: HttpTransport, private readonly base: string) {}
 
-  async list(params?: { filter?: string }): Promise<Scheduler[]> {
-    // base = ips/v1 — schedulers are in the IPS service
+  async list(params?: SchedulerListParams): Promise<SchedulerListResponse> {
     const url = new URL(`${this.base}/schedulers`)
-    if (params?.filter) url.searchParams.set("filter", params.filter)
+    for (const [k, v] of Object.entries(params ?? {})) {
+      if (v !== undefined) url.searchParams.set(k, String(v))
+    }
     return this.http.getFetch()(url, { method: "GET" }).then(r => r.json())
   }
 

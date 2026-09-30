@@ -10,6 +10,14 @@ from ..types.auth import (
 )
 
 
+def _with_legacy_key_field(res: Any) -> Any:
+    """platform-service names the key `token`; the retired backend called it `apiKey`."""
+    key = res.get("apiKey") if isinstance(res, dict) else None
+    if isinstance(key, dict) and "apiKey" not in key and "token" in key:
+        key["apiKey"] = key["token"]
+    return res
+
+
 class SigninSSOInput(TypedDict, total=False):
     code: str
     state: str
@@ -59,11 +67,12 @@ class AuthResource:
 
     # --- Third-party token (API Key generation) ---
     def get_third_party_token(self, expiration_days: int = 10) -> ImbraceApiKeyResponse:
-        return self._http.request(
+        """Mint an API key for the current user — ``POST /v1/platform/third_party_token``."""
+        return _with_legacy_key_field(self._http.request(
             "POST",
-            f"{self._gateway}/private/backend/v1/third_party_token",
+            f"{self._gateway}/v1/platform/third_party_token",
             json={"expirationDays": expiration_days},
-        ).json()
+        ).json())
 
     # --- Login ---
     def signin_email_request(self, email: str) -> None:
@@ -198,10 +207,10 @@ class AsyncAuthResource:
     async def get_third_party_token(self, expiration_days: int = 10) -> ImbraceApiKeyResponse:
         res = await self._http.request(
             "POST",
-            f"{self._gateway}/private/backend/v1/third_party_token",
+            f"{self._gateway}/v1/platform/third_party_token",
             json={"expirationDays": expiration_days},
         )
-        return res.json()
+        return _with_legacy_key_field(res.json())
 
     async def signin_email_request(self, email: str) -> None:
         await self._http.request("POST", f"{self._v1}/login/_signin_email_request", json={"email": email})

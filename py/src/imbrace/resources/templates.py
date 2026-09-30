@@ -103,12 +103,12 @@ class CreateCustomTemplateResponse(TypedDict, total=False):
 class TemplatesResource:
     """Use Case Templates — Sync.
 
-    Wraps ``/v2/backend/templates`` endpoints. The most important method is
+    Wraps ``/v3/marketplaces/use-cases`` endpoints. The most important method is
     :meth:`create_custom`, which atomically creates a UseCase + AI Agent pair
     used by Document AI flows (see also :class:`DocumentAIResource`).
 
     @param http  HTTP transport
-    @param base  Templates base URL (typically ``{gateway}/v2/backend/templates``)
+    @param base  Templates base URL (typically ``{gateway}/v3/marketplaces/use-cases``)
 
     Example::
 
@@ -151,7 +151,7 @@ class TemplatesResource:
         self._base = base.rstrip("/")
 
     def list(self) -> UseCaseListResponse:
-        """List use case templates — ``GET /v2/backend/templates``."""
+        """List use case templates — ``GET /v3/marketplaces/use-cases``."""
         return self._http.request("GET", self._base).json()
 
     def create_custom(
@@ -161,7 +161,7 @@ class TemplatesResource:
     ) -> CreateCustomTemplateResponse:
         """Create a custom UseCase + AI Agent in one POST.
 
-        Routes to ``POST /v2/backend/templates/v2/custom``. Backend auto-creates
+        Routes to ``POST /v3/marketplaces/use-cases/v2/custom``. Backend auto-creates
         the linked channel, workflow, and assistant_app, and
         returns the assembled use case (with ``assistant_id``, ``channel_id``).
 
@@ -171,15 +171,15 @@ class TemplatesResource:
         return self._http.request("POST", f"{self._base}/v2/custom", json=body).json()
 
     def update_custom(self, usecase_id: str, body: Dict[str, Any]) -> CreateCustomTemplateResponse:
-        """Partial update — ``PATCH /v2/backend/templates/{id}/custom``."""
+        """Partial update — ``PATCH /v3/marketplaces/use-cases/{id}/custom``."""
         return self._http.request("PATCH", f"{self._base}/{usecase_id}/custom", json=body).json()
 
     def delete(self, usecase_id: str) -> None:
-        """Delete v1 template — ``DELETE /v2/backend/templates/{id}``."""
+        """Delete v1 template — ``DELETE /v3/marketplaces/use-cases/{id}``."""
         self._http.request("DELETE", f"{self._base}/{usecase_id}")
 
     def delete_v2(self, usecase_id: str) -> None:
-        """Delete v2 template (atomic) — ``DELETE /v2/backend/templates/v2/{id}``.
+        """Delete v2 template (atomic) — ``DELETE /v3/marketplaces/use-cases/v2/{id}``.
 
         Cascades through linked AI Agent + Channel. Use this for templates
         created via :meth:`create_custom`.
