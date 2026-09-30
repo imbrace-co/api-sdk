@@ -229,6 +229,160 @@ declare module 'astro:content' {
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
+"install/kubernetes.mdx": {
+	id: "install/kubernetes.mdx";
+  slug: "install/kubernetes";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".mdx"] };
+"learn/build-guide.md": {
+	id: "learn/build-guide.md";
+  slug: "learn/build-guide";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"learn/build-it-well/anti-patterns.md": {
+	id: "learn/build-it-well/anti-patterns.md";
+  slug: "learn/build-it-well/anti-patterns";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"learn/build-it-well/document-models.md": {
+	id: "learn/build-it-well/document-models.md";
+  slug: "learn/build-it-well/document-models";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"learn/build-it-well/human-approval.md": {
+	id: "learn/build-it-well/human-approval.md";
+  slug: "learn/build-it-well/human-approval";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"learn/build-it-well/index.md": {
+	id: "learn/build-it-well/index.md";
+  slug: "learn/build-it-well";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"learn/build-it-well/native-first.md": {
+	id: "learn/build-it-well/native-first.md";
+  slug: "learn/build-it-well/native-first";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"learn/build-it-well/review-checklist.md": {
+	id: "learn/build-it-well/review-checklist.md";
+  slug: "learn/build-it-well/review-checklist";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"learn/build-it-well/the-eight-principles.md": {
+	id: "learn/build-it-well/the-eight-principles.md";
+  slug: "learn/build-it-well/the-eight-principles";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"learn/build-it-well/use-case-shapes.md": {
+	id: "learn/build-it-well/use-case-shapes.md";
+  slug: "learn/build-it-well/use-case-shapes";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"learn/build-it/building-blocks.md": {
+	id: "learn/build-it/building-blocks.md";
+  slug: "learn/build-it/building-blocks";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"learn/build-it/getting-started.md": {
+	id: "learn/build-it/getting-started.md";
+  slug: "learn/build-it/getting-started";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"learn/build-it/index.md": {
+	id: "learn/build-it/index.md";
+  slug: "learn/build-it";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"learn/build-it/vibe-coding-tutorial.md": {
+	id: "learn/build-it/vibe-coding-tutorial.md";
+  slug: "learn/build-it/vibe-coding-tutorial";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"learn/build-it/working-with-ai.md": {
+	id: "learn/build-it/working-with-ai.md";
+  slug: "learn/build-it/working-with-ai";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"learn/index.md": {
+	id: "learn/index.md";
+  slug: "learn";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"learn/see-it-work/cv-screening.md": {
+	id: "learn/see-it-work/cv-screening.md";
+  slug: "learn/see-it-work/cv-screening";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"learn/see-it-work/platform-tour.md": {
+	id: "learn/see-it-work/platform-tour.md";
+  slug: "learn/see-it-work/platform-tour";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"learn/see-it-work/sales-quoting.md": {
+	id: "learn/see-it-work/sales-quoting.md";
+  slug: "learn/see-it-work/sales-quoting";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"learn/understand/capability-truth-table.md": {
+	id: "learn/understand/capability-truth-table.md";
+  slug: "learn/understand/capability-truth-table";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"learn/understand/overview.md": {
+	id: "learn/understand/overview.md";
+  slug: "learn/understand/overview";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"mcp/overview.mdx": {
+	id: "mcp/overview.mdx";
+  slug: "mcp/overview";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".mdx"] };
 "reference/ai-agent.mdx": {
 	id: "reference/ai-agent.mdx";
   slug: "reference/ai-agent";
@@ -449,6 +603,20 @@ declare module 'astro:content' {
 "vi/index.mdx": {
 	id: "vi/index.mdx";
   slug: "vi";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".mdx"] };
+"vi/install/kubernetes.mdx": {
+	id: "vi/install/kubernetes.mdx";
+  slug: "vi/install/kubernetes";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".mdx"] };
+"vi/mcp/overview.mdx": {
+	id: "vi/mcp/overview.mdx";
+  slug: "vi/mcp/overview";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
@@ -677,6 +845,160 @@ declare module 'astro:content' {
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
+"zh-cn/install/kubernetes.mdx": {
+	id: "zh-cn/install/kubernetes.mdx";
+  slug: "zh-cn/install/kubernetes";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".mdx"] };
+"zh-cn/learn/build-guide.md": {
+	id: "zh-cn/learn/build-guide.md";
+  slug: "zh-cn/learn/build-guide";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-cn/learn/build-it-well/anti-patterns.md": {
+	id: "zh-cn/learn/build-it-well/anti-patterns.md";
+  slug: "zh-cn/learn/build-it-well/anti-patterns";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-cn/learn/build-it-well/document-models.md": {
+	id: "zh-cn/learn/build-it-well/document-models.md";
+  slug: "zh-cn/learn/build-it-well/document-models";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-cn/learn/build-it-well/human-approval.md": {
+	id: "zh-cn/learn/build-it-well/human-approval.md";
+  slug: "zh-cn/learn/build-it-well/human-approval";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-cn/learn/build-it-well/index.md": {
+	id: "zh-cn/learn/build-it-well/index.md";
+  slug: "zh-cn/learn/build-it-well";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-cn/learn/build-it-well/native-first.md": {
+	id: "zh-cn/learn/build-it-well/native-first.md";
+  slug: "zh-cn/learn/build-it-well/native-first";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-cn/learn/build-it-well/review-checklist.md": {
+	id: "zh-cn/learn/build-it-well/review-checklist.md";
+  slug: "zh-cn/learn/build-it-well/review-checklist";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-cn/learn/build-it-well/the-eight-principles.md": {
+	id: "zh-cn/learn/build-it-well/the-eight-principles.md";
+  slug: "zh-cn/learn/build-it-well/the-eight-principles";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-cn/learn/build-it-well/use-case-shapes.md": {
+	id: "zh-cn/learn/build-it-well/use-case-shapes.md";
+  slug: "zh-cn/learn/build-it-well/use-case-shapes";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-cn/learn/build-it/building-blocks.md": {
+	id: "zh-cn/learn/build-it/building-blocks.md";
+  slug: "zh-cn/learn/build-it/building-blocks";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-cn/learn/build-it/getting-started.md": {
+	id: "zh-cn/learn/build-it/getting-started.md";
+  slug: "zh-cn/learn/build-it/getting-started";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-cn/learn/build-it/index.md": {
+	id: "zh-cn/learn/build-it/index.md";
+  slug: "zh-cn/learn/build-it";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-cn/learn/build-it/vibe-coding-tutorial.md": {
+	id: "zh-cn/learn/build-it/vibe-coding-tutorial.md";
+  slug: "zh-cn/learn/build-it/vibe-coding-tutorial";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-cn/learn/build-it/working-with-ai.md": {
+	id: "zh-cn/learn/build-it/working-with-ai.md";
+  slug: "zh-cn/learn/build-it/working-with-ai";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-cn/learn/index.md": {
+	id: "zh-cn/learn/index.md";
+  slug: "zh-cn/learn";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-cn/learn/see-it-work/cv-screening.md": {
+	id: "zh-cn/learn/see-it-work/cv-screening.md";
+  slug: "zh-cn/learn/see-it-work/cv-screening";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-cn/learn/see-it-work/platform-tour.md": {
+	id: "zh-cn/learn/see-it-work/platform-tour.md";
+  slug: "zh-cn/learn/see-it-work/platform-tour";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-cn/learn/see-it-work/sales-quoting.md": {
+	id: "zh-cn/learn/see-it-work/sales-quoting.md";
+  slug: "zh-cn/learn/see-it-work/sales-quoting";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-cn/learn/understand/capability-truth-table.md": {
+	id: "zh-cn/learn/understand/capability-truth-table.md";
+  slug: "zh-cn/learn/understand/capability-truth-table";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-cn/learn/understand/overview.md": {
+	id: "zh-cn/learn/understand/overview.md";
+  slug: "zh-cn/learn/understand/overview";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-cn/mcp/overview.mdx": {
+	id: "zh-cn/mcp/overview.mdx";
+  slug: "zh-cn/mcp/overview";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".mdx"] };
 "zh-cn/reference/ai-agent.mdx": {
 	id: "zh-cn/reference/ai-agent.mdx";
   slug: "zh-cn/reference/ai-agent";
@@ -897,6 +1219,160 @@ declare module 'astro:content' {
 "zh-tw/index.mdx": {
 	id: "zh-tw/index.mdx";
   slug: "zh-tw";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".mdx"] };
+"zh-tw/install/kubernetes.mdx": {
+	id: "zh-tw/install/kubernetes.mdx";
+  slug: "zh-tw/install/kubernetes";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".mdx"] };
+"zh-tw/learn/build-guide.md": {
+	id: "zh-tw/learn/build-guide.md";
+  slug: "zh-tw/learn/build-guide";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-tw/learn/build-it-well/anti-patterns.md": {
+	id: "zh-tw/learn/build-it-well/anti-patterns.md";
+  slug: "zh-tw/learn/build-it-well/anti-patterns";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-tw/learn/build-it-well/document-models.md": {
+	id: "zh-tw/learn/build-it-well/document-models.md";
+  slug: "zh-tw/learn/build-it-well/document-models";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-tw/learn/build-it-well/human-approval.md": {
+	id: "zh-tw/learn/build-it-well/human-approval.md";
+  slug: "zh-tw/learn/build-it-well/human-approval";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-tw/learn/build-it-well/index.md": {
+	id: "zh-tw/learn/build-it-well/index.md";
+  slug: "zh-tw/learn/build-it-well";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-tw/learn/build-it-well/native-first.md": {
+	id: "zh-tw/learn/build-it-well/native-first.md";
+  slug: "zh-tw/learn/build-it-well/native-first";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-tw/learn/build-it-well/review-checklist.md": {
+	id: "zh-tw/learn/build-it-well/review-checklist.md";
+  slug: "zh-tw/learn/build-it-well/review-checklist";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-tw/learn/build-it-well/the-eight-principles.md": {
+	id: "zh-tw/learn/build-it-well/the-eight-principles.md";
+  slug: "zh-tw/learn/build-it-well/the-eight-principles";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-tw/learn/build-it-well/use-case-shapes.md": {
+	id: "zh-tw/learn/build-it-well/use-case-shapes.md";
+  slug: "zh-tw/learn/build-it-well/use-case-shapes";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-tw/learn/build-it/building-blocks.md": {
+	id: "zh-tw/learn/build-it/building-blocks.md";
+  slug: "zh-tw/learn/build-it/building-blocks";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-tw/learn/build-it/getting-started.md": {
+	id: "zh-tw/learn/build-it/getting-started.md";
+  slug: "zh-tw/learn/build-it/getting-started";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-tw/learn/build-it/index.md": {
+	id: "zh-tw/learn/build-it/index.md";
+  slug: "zh-tw/learn/build-it";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-tw/learn/build-it/vibe-coding-tutorial.md": {
+	id: "zh-tw/learn/build-it/vibe-coding-tutorial.md";
+  slug: "zh-tw/learn/build-it/vibe-coding-tutorial";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-tw/learn/build-it/working-with-ai.md": {
+	id: "zh-tw/learn/build-it/working-with-ai.md";
+  slug: "zh-tw/learn/build-it/working-with-ai";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-tw/learn/index.md": {
+	id: "zh-tw/learn/index.md";
+  slug: "zh-tw/learn";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-tw/learn/see-it-work/cv-screening.md": {
+	id: "zh-tw/learn/see-it-work/cv-screening.md";
+  slug: "zh-tw/learn/see-it-work/cv-screening";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-tw/learn/see-it-work/platform-tour.md": {
+	id: "zh-tw/learn/see-it-work/platform-tour.md";
+  slug: "zh-tw/learn/see-it-work/platform-tour";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-tw/learn/see-it-work/sales-quoting.md": {
+	id: "zh-tw/learn/see-it-work/sales-quoting.md";
+  slug: "zh-tw/learn/see-it-work/sales-quoting";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-tw/learn/understand/capability-truth-table.md": {
+	id: "zh-tw/learn/understand/capability-truth-table.md";
+  slug: "zh-tw/learn/understand/capability-truth-table";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-tw/learn/understand/overview.md": {
+	id: "zh-tw/learn/understand/overview.md";
+  slug: "zh-tw/learn/understand/overview";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-tw/mcp/overview.mdx": {
+	id: "zh-tw/mcp/overview.mdx";
+  slug: "zh-tw/mcp/overview";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">

@@ -1,0 +1,101 @@
+/* ============================================================
+   iMBrace partner course - Learn section branding
+   ============================================================
+   Scoped ONLY to the course's own elements (the video embed
+   wrapper, .imb-video, and any class the Learn pages emit) -
+   never to a selector that would touch an existing page's own
+   look, font or colour. Do not add an unscoped rule here.
+
+   Colours and the self-hosted font are the course theme's own
+   tokens (basecamp/skills/demo-video/templates/theme/imbrace-course.json),
+   which are themselves the product's own design tokens
+   (imbrace-shell tokens.css: primary-1 #156df2, primary-4
+   #135dd5, accent-yellow-2 #fa9917, light-7 #333333) - never
+   invented here.
+   ============================================================ */
+
+@font-face {
+  font-family: 'IMB Course Roboto';
+  src: url('/fonts/roboto-latin.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* --- Video embed (course lesson pages) ----------------------- */
+
+.imb-video {
+  --imb-ink: #333333;
+  --imb-navy: #135dd5;
+  --imb-sky: #156df2;
+  --imb-orange: #fa9917;
+
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  margin: 1.75rem 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--imb-ink), var(--imb-navy));
+  box-shadow:
+    0 0 0 1px rgba(19, 93, 213, 0.18),
+    0 10px 30px rgba(19, 93, 213, 0.14);
+  font-family: 'IMB Course Roboto', var(--sl-font, sans-serif);
+}
+
+:root[data-theme='dark'] .imb-video {
+  box-shadow:
+    0 0 0 1px rgba(21, 109, 242, 0.32),
+    0 10px 34px rgba(0, 0, 0, 0.45);
+}
+
+.imb-video iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* A thin brand-orange accent rule under the embed, matching the course theme's badge colour. */
+.imb-video::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--imb-orange);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+@media (max-width: 480px) {
+  .imb-video {
+    border-radius: 8px;
+    margin: 1.25rem 0;
+  }
+}
+
+/* --- Screenshot legends (Learn pages) ------------------------- */
+
+/* Chinese legend lines: site.py emits <span class="imb-legend"> instead of an <em>, so
+   they render upright (CJK type has no italic - an em would be a synthetic slant). Scoped
+   to this class only; English legends stay a plain italic em. */
+.imb-legend {
+  font-style: normal;
+  font-size: 0.875em;
+  color: var(--sl-color-gray-3);
+}
+
+/* --- Chinese emphasis (Learn pages) --------------------------- */
+
+/* CJK type has no italic, so a plain *...* (an <em>) in zh-TW / zh-CN content would render
+   as a synthetic slant. Make it upright there. Scoped to Learn pages only: the page's own
+   canonical link must sit under /learn/ (Starlight sets no per-section class), and to the
+   two Chinese locales via the lang attribute Starlight puts on <html> (zh-TW, zh-CN).
+   English (and Vietnamese) emphasis stays italic. */
+html[lang='zh-TW']:has(link[rel='canonical'][href*='/learn/']) .sl-markdown-content em,
+html[lang='zh-CN']:has(link[rel='canonical'][href*='/learn/']) .sl-markdown-content em {
+  font-style: normal;
+}

@@ -1,0 +1,2421 @@
+# iMBrace Learn, every page in one file
+
+
+==================== index.md ====================
+
+---
+level: '0'
+track:
+- sell
+- build
+- deploy
+---
+
+# Start here
+
+This course teaches you iMBrace: understand it, see it work, build on it and build it well,
+in English, Traditional Chinese and Simplified Chinese. Pick the path that fits you and read
+the pages in order.
+
+## Pick your path
+
+**Explain iMBrace to a customer.**
+[What iMBrace is](/learn/understand/overview.md), then
+[What iMBrace does today](/learn/understand/capability-truth-table.md), then
+[A tour of the platform](/learn/see-it-work/platform-tour.md), then
+[CV screening, end to end](/learn/see-it-work/cv-screening.md) or
+[Sales quoting](/learn/see-it-work/sales-quoting.md).
+
+**Build on iMBrace.**
+[Getting started](/learn/build-it/getting-started.md), then
+[The building blocks](/learn/build-it/building-blocks.md), then
+[the tutorial](/learn/build-it/vibe-coding-tutorial.md), then
+[Working with an AI coding tool](/learn/build-it/working-with-ai.md), then
+[Build it well](/learn/build-it-well/index.md). The hands-on tutorial takes about an hour.
+
+**Build with an AI coding tool.**
+Start with the [Build guide for AI tools](/learn/build-guide.md). Your tool can also read
+[the whole course as one file](https://engineer.imbrace.co/learn/llms-full.txt).
+
+**Work with iMBrace as a partner.**
+The partner kit adds demo scripts, delivery and deployment guides and a practice
+organisation. Ask your iMBrace contact for it.
+
+
+==================== understand/overview.md ====================
+
+---
+level: '0'
+track:
+- sell
+- build
+- deploy
+verified_on: 2026-09-29
+---
+
+# What iMBrace is
+
+iMBrace is an enterprise AI platform. It gives a company AI agents that answer questions from
+its own approved knowledge, software that reads documents and turns them into structured
+records, and workflows that carry out everyday business processes. A company can run it fully
+on its own servers, in a private cloud, or as SaaS. The company chooses where its data lives
+and which AI model reads it.
+
+## Intelligent and accurate
+
+iMBrace pairs AI that understands with steps that are exact, so a whole business process runs
+end to end, reliably.
+
+- Agents understand what people ask and answer from the company's own approved knowledge. When
+  something is not in that knowledge, the agent says so.
+- Workflows carry out the work precisely: routing, checks, calculations and updates to other
+  business systems, the same way every time.
+- People make the decisions that matter: a workflow waits for the right person's approval, then
+  carries on by itself.
+
+Together they run real business processes, not just conversations.
+
+## Why it is governed
+
+An AI agent that works inside a company's systems needs clear controls. iMBrace builds them in.
+
+- Access is layered: by team, so people only see the knowledge and data of the teams they
+  belong to; by role, so a person's permissions match what they are meant to manage versus use;
+  and, on Enterprise installations, by individual field on a record, so one board can show
+  different detail to different readers.
+- The platform keeps a record of activity across it - logins, file uploads, channel changes,
+  and changes to a Data Board - each one timestamped and, where a person did it, attributed to
+  them. On Enterprise installations, that record extends to AI agent activity too.
+- A workflow can pause at a decision that matters and wait for a named approver - for hours
+  or days if needed - then pick up again on its own and finish what it was doing. Who decided,
+  what they decided, and when is recorded with it.
+- These rules are enforced by the platform's own checks, not by anything typed into a prompt.
+- The company decides where the platform runs and which AI model it uses, including a model
+  that never leaves its own building.
+
+## How the pieces fit together
+
+Customers and staff reach the platform through a channel they already use: a chat widget,
+WhatsApp, or another connected channel. An agent answers, backed by the company's approved
+knowledge. When something needs doing, a workflow does it, reaching into the company's other
+business systems as needed. Anything the platform pulls from a document, or produces as a
+record, lands on a structured board - and that record is what makes the answer, or the action,
+checkable afterwards. One set of governance rules sits across the whole loop.
+
+Screen: Diagram: how iMBrace works, from channel to agent, workflow and board, under one governance layer
+*How iMBrace works: a channel reaches an agent, backed by approved knowledge; a workflow does the work; results land on a board - all under one governance layer.*
+
+That is the platform in one pass. [What iMBrace does today](/learn/understand/capability-truth-table.md) sets
+out the detail, area by area, with a page or a screen where you can see each capability for
+yourself.
+
+
+==================== understand/capability-truth-table.md ====================
+
+---
+level: '0'
+track:
+- sell
+- build
+- deploy
+verified_on: '2026-09-28'
+---
+
+# What iMBrace does today
+
+Every row below is a capability that works in iMBrace today, checked against a real page or
+the product itself - not a plan or a roadmap. Where a row is marked "(Enterprise
+installations)", that capability belongs to that kind of installation; everything else is
+available generally. Edition and pricing questions go to your iMBrace contact.
+
+## Reaching customers and staff
+
+| What you can do | Where to see it |
+|---|---|
+| Talk to customers over WhatsApp, Facebook Messenger, Instagram, LINE, WeChat, email, or a web chat widget on your own site - all from one shared inbox | the product (Conversations) |
+| See every conversation tracked with its own status - online, overdue, rep needed, pending, or closed - so your team always knows what needs a reply | the product (Conversations) |
+| Split conversations by team, in either a first-come-first-served mode or one where everyone on the team can join freely | the product (Teams, Conversations) |
+
+## Agents and knowledge
+
+| What you can do | Where to see it |
+|---|---|
+| Build an AI agent with its own personality, tone, and core task, and give it reference material to answer from - PDF, Word, plain text, CSV, or Excel files are all accepted | the product (AgentIQ) |
+| Point an agent at knowledge your organisation already holds, instead of re-uploading it | the product (AgentIQ, Knowledge) |
+| Limit a knowledge folder or board to selected teams, so only the people on those teams can see what is in it | the product (Knowledge) |
+| Keep an agent's context through a longer back-and-forth: it remembers earlier turns in the same conversation | the product (AgentIQ, Advanced Settings) |
+| Set up an orchestrator agent that hands part of a task to one or more specialised sub-agents | the product (Create Your AI - Orchestrator) |
+| Call an agent, or a document-extraction step, from inside an automated workflow, so an AI step runs as part of a bigger process rather than a separate chat | the product (Workflows - AI Agent Skills) |
+
+## Documents
+
+| What you can do | Where to see it |
+|---|---|
+| Turn a PDF or an image - an invoice, a form, a receipt, a contract, a business card, and more - into a structured record, using a model that reads the layout rather than a fixed template | https://engineer.imbrace.co/sdk/document-ai |
+| Set up the extraction once, as a Document Model, and reuse it for every document of that type; a version history shows how it changed | the product (DocIQ, Document Models) |
+| Send the extracted result straight to a Data Board, mapped to the columns you choose, and to more than one board at once if you need it | the product (DocIQ) |
+| Tell DocIQ which language your documents are in, to improve extraction accuracy, including documents with handwriting | the product (DocIQ, Settings) |
+| Upload reference material to a knowledge folder in a wide range of formats - PDF, Word, PowerPoint, Excel, CSV, video, or image files | the product (Knowledge) |
+| Limit which teams can use a given Document Model, the same way you limit a knowledge folder | the product (DocIQ, Document Models) |
+
+## Data and workflows
+
+| What you can do | Where to see it |
+|---|---|
+| Keep structured records on a shared Data Board that every workflow, agent, and person reads and writes | the product (Knowledge, DataIQ) |
+| Start a workflow from an incoming message on a connected channel, a schedule, or a change to a Data Board record - created, deleted, or a chosen field updated | the product (Workflows, FlowOps) |
+| Reach an outside system from inside a workflow through a pre-built connector - iMBrace ships natively integrated with more than 100 services, from a CRM to a spreadsheet to a ticketing tool | the product (Integrations) |
+| Keep a connector's credentials in the organisation's own store, separate from the workflow itself, so a shared or exported workflow definition carries no key | https://engineer.imbrace.co/sdk/workflows |
+| Pause a workflow at a decision that matters and wait for a specific person to decide, for as long as it takes, then pick the run back up on its own, with who decided, what they decided, and when recorded against it | the product (Workflows, Board Automation) |
+
+## Access and governance
+
+| What you can do | Where to see it |
+|---|---|
+| Restrict a knowledge folder or a Data Board to selected teams, so a person only sees the teams they belong to | the product (Teams, Access Control) |
+| Set a member's permissions by role within a team - for example, a Team Admin versus a Representative | the product (Teams) |
+| Restrict an individual field on a record to a specific role, so one board can show different detail to different readers (Enterprise installations) | the product (Access Control) |
+| Look back at a record of activity across the platform - logins, file uploads, channel changes, and changes to a Data Board - each one timestamped and, where a person did it, attributed to them | the product (Audit Log) |
+| Extend the activity record to AI agent actions as well (Enterprise installations) | the product (Audit Log) |
+| Have access rules enforced by the platform's own permission checks, not by anything written into a prompt | the product |
+
+## Where it runs
+
+| What you can do | Where to see it |
+|---|---|
+| Run iMBrace as a hosted service on iMBrace's own cloud, with nothing to install | https://engineer.imbrace.co/getting-started/setup |
+| Install iMBrace on your own infrastructure - a single on-premise server, or a private cloud deployment - instead of the hosted service | https://engineer.imbrace.co/install/kubernetes |
+| Choose which AI model answers each agent's questions - a system default, or a provider you connect and manage yourself, model by model | the product (LLM Providers) |
+
+## Building on it
+
+| What you can do | Where to see it |
+|---|---|
+| Build against iMBrace with an official SDK in TypeScript or Python | https://engineer.imbrace.co/sdk/installation |
+| Connect an AI coding tool to a live organisation over one URL and one key - read-only until you turn on write access, one permission at a time | https://engineer.imbrace.co/mcp/overview |
+| Hand your coding tool the platform's own map of itself, so it writes correct code on the first try instead of guessing a method name | https://engineer.imbrace.co/llms.txt |
+| Manage boards, agents, workflows, and document-extraction jobs from the terminal | https://engineer.imbrace.co/cli/overview |
+
+
+==================== see-it-work/platform-tour.md ====================
+
+---
+level: '1'
+track:
+- sell
+- build
+- deploy
+verified_on: 2026-09-29
+---
+
+# A tour of the platform
+
+This is the sidebar of an iMBrace organisation, walked in the order it lays out: Applications,
+InsightsIQ, Knowledge, Actions, Governance and Settings. Each area gets one short stop - what it
+is for, what you see when you open it, and what is worth showing a customer there. Read it once
+before your first demo, then keep it open as a checklist while you walk someone else through the
+platform.
+
+## Applications
+
+Applications is where a conversation with a customer or a member of staff actually happens. It
+opens on Conversations, a shared inbox for every message landing from a connected channel, with
+chips to filter by view and by status - online, overdue, rep needed, pending, closed. Whatever
+channel a message came in on, it is one list. Show a customer a live conversation arriving, or
+filter down to overdue and show that nothing sits unanswered.
+
+Screen: Applications sidebar showing the Conversations inbox and its status filters
+*1 Applications > Conversations in the sidebar. 2 The Status filters for the shared inbox.*
+
+## InsightsIQ
+
+InsightsIQ is where you talk to an agent directly and see what it does with a question. It opens
+on a chat landing: an agent picker to choose who you are asking, and a composer to ask them. Type
+a real question and show the answer arriving, backed by the organisation's own approved
+knowledge - and saying so plainly if the answer is not in it. See it in action:
+[CV screening, end to end](/learn/see-it-work/cv-screening.md) and [Sales quoting](/learn/see-it-work/sales-quoting.md).
+
+Screen: InsightsIQ chat landing with the agent picker and composer
+*1 InsightsIQ in the sidebar. 2 The agent picker.*
+
+## Knowledge
+
+Knowledge holds what the organisation knows: the models that read its documents, the boards that
+hold its structured records, and the material an agent answers from.
+
+## DocIQ
+
+DocIQ is where a document model turns an unstructured file - an invoice, a form, a CV - into a
+structured record. It opens on Document Models, a library already organised by category such as
+Finance & Accounting, Human Resources and Sales & Customers, with Document Boards and Processing
+Logs alongside it. Open the model that already matches a customer's own paperwork and show what
+it pulls out, field by field.
+
+Screen: DocIQ Document Models tab with its category strip
+*1 Knowledge > DocIQ in the sidebar. 2 A document model card.*
+
+## DataIQ
+
+DataIQ is where a structured record actually lives: a board, shaped with your own rows and typed
+columns. It opens on board tiles, each a card with the board's name and how many records it
+holds. Open a board and read a real row straight off the table - the same one a workflow's
+steps, an agent's skill, or a document model's extraction all read and write.
+
+Screen: DataIQ board tiles showing each board's record count
+*1 Knowledge > DataIQ in the sidebar. 2 A board tile.*
+
+DocIQ's document models and DataIQ's boards are two of
+[the five building blocks](/learn/build-it/building-blocks.md) every iMBrace build is made from;
+Actions, next, holds the other three - agent, workflow and channel.
+
+## CommsIQ
+
+CommsIQ sits alongside DocIQ and DataIQ, on its own All tab.
+
+## KB
+
+KB is where reference material is uploaded straight in - PDF, Word, PowerPoint, Excel, CSV,
+video or image files - organised into folders, for an agent to answer from without anyone
+retyping it. If a customer's own material is loaded, open its folder and show the agent's answer
+quoting straight from it.
+
+## Actions
+
+Actions is where the other three building blocks live: the agent that has the conversation, the
+workflow that does the work, and the channel that carries it back and forth.
+
+## AgentIQ
+
+AgentIQ is where an agent gets built and set up. It opens on three tabs - Marketplace, My AI and
+Active AI - with Active AI listing every agent already at work, each on its own card: the Sales
+Quoting agent's card reads "Turns a plain-words request into a priced Quillmoor Components
+quotation." Open an agent's Behavior Settings and scroll to Skills to show exactly which
+workflows it is set up to call, each one built and named for a specific job.
+
+Screen: AgentIQ Active AI tab listing the organisation's agents
+*1 Actions > AgentIQ in the sidebar. 2 The Sales Quoting agent's card.*
+
+## FlowOps
+
+FlowOps is where a workflow is built and watched: a sequence of steps that runs on its own once
+triggered, reading a board, calculating, waiting on a decision, sending a message. It opens
+straight onto the list of workflows already running. Open one and point to the step where it
+waits for the right person to decide, then show it picking back up and finishing on its own once
+they have. More on where that decision actually gets made:
+[Human approval](/learn/build-it-well/human-approval.md).
+
+Screen: FlowOps list of workflows
+*1 Actions > FlowOps in the sidebar. 2 A workflow row.*
+
+## ConnectIQ
+
+ConnectIQ connects the platform outward, two ways. Its Channels tab lists where a person
+actually reaches an agent - a Web Widget (Active, Allow Files Upload), plus rows to add LINE,
+Facebook, Instagram, WeChat and WhatsApp. Its MCP tab is the address and key an AI coding tool
+connects with to see and build on an organisation directly - the full guide is at
+[engineer.imbrace.co/mcp/overview](https://engineer.imbrace.co/mcp/overview/). Show Channels
+first, the apps a customer's own customers already use, and keep MCP for a technical audience.
+
+Screen: ConnectIQ Channels tab listing the Web Widget and messaging channels
+*1 Actions > ConnectIQ in the sidebar. 2 The Web Widget channel.*
+
+## Governance
+
+Governance is the platform's own record of what happened, kept without anyone having to ask for
+it. Audit Log, its landing tab, times and attributes activity across the organisation - logins,
+file uploads, channel changes, changes to a board - so any of it is checkable afterwards;
+Hardware Metrics, Token Usage and Conversation Logs (AI Tracing) sit alongside it. Open Audit Log
+and show one real row: what changed, who did it, and when.
+
+Screen: Governance Audit Log tab with a timestamped activity record
+*1 Governance in the sidebar. 2 The Audit Log's Type column.*
+
+## Settings
+
+Settings, for a demo, is Teams and Org Members. Teams - All Teams and My Teams - is
+where access is organised and a member's role is set within it, a Team Admin next to a
+Representative, each seeing only the teams they belong to; Org Members lists who makes up the
+organisation. Open Teams and show how a person's access maps to what they actually do.
+
+Screen: Settings Teams tab showing All Teams and My Teams
+*1 Settings in the sidebar. 2 The Teams tab.*
+
+That is the guided path through the sidebar - open it once with a customer, and every area
+already has something to show them.
+
+
+==================== see-it-work/cv-screening.md ====================
+
+---
+level: '1'
+track:
+- sell
+- build
+- deploy
+verified_on: 2026-09-29
+---
+
+# CV screening, end to end
+
+Lumenvale Software's recruiter has one job description and ten CVs to compare fairly, with
+no easy way to check a shortlist's reasoning against the record. iMBrace turns the job
+description into an agreed set of criteria, scores every CV against them with the CV's own
+words as evidence, and hands back a ranked shortlist the recruiter can question and trust.
+
+## What happens, step by step
+
+Here is the story, start to finish:
+
+1. The recruiter starts with a job description and ten CVs for a Customer Success Manager
+   role.
+2. DocIQ, iMBrace's document reader, reads the job description and pulls out what it asks
+   for.
+
+Screen: A Job Description record in DataIQ with its requirement lines extracted as a field
+*1 Knowledge > DataIQ in the sidebar. 2 The job description's requirement lines, pulled out as a field.*
+
+3. An agent called the Criteria Architect proposes a set of screening criteria from those
+   requirements, each one showing where it came from.
+4. The recruiter reviews the criteria on a board - a structured table in DataIQ - ticks the
+   ones to use, and clicks Save.
+
+Screen: The Criteria board with every row ticked approved
+*1 Knowledge > DataIQ in the sidebar. 2 Every criterion approved, ticked in the approved column.*
+
+5. The ten CVs go in next. Each becomes its own record, with the candidate's work history
+   and education read out in full.
+
+Screen: A CV landed as its own DataIQ record, with identity fields and Work History read out as structured fields
+*1 Knowledge > DataIQ in the sidebar. 2 A candidate's record with fields like Current / Most Recent Title. 3 The same record's Work History field.*
+
+6. A second agent, the Evidence Assessor, scores every CV against the approved criteria,
+   quoting the exact line in the CV that supports each score.
+
+Screen: The Criterion Evidence board with the CV quote behind one candidate's score
+*1 Knowledge > DataIQ in the sidebar. 2 The quoted CV line behind a criterion's score, in the quote_given column.*
+
+7. The scores land on the Candidate Scorecard, ranked from strongest fit to weakest.
+
+Screen: The Candidate Scorecard board with a fit percentage for every candidate
+*1 Knowledge > DataIQ in the sidebar. 2 Each candidate's fit percentage, in the fit_pct column.*
+
+8. The recruiter asks a third agent, the Screening Analyst, in InsightsIQ - iMBrace's chat
+   that answers with its source - for the shortlist, and why one candidate ranks where they
+   do. The answer arrives with the CV quotes behind it.
+
+Screen: InsightsIQ's answer: a ranked shortlist of candidates who cleared the fit bar
+*1 InsightsIQ in the sidebar. 2 The Screening Analyst's ranked shortlist answer.*
+
+Screen: InsightsIQ's answer explaining one candidate's rank, with the CV gap behind it
+*1 InsightsIQ in the sidebar. 2 The Screening Analyst's answer on why one candidate ranks where they do.*
+
+## Where people decide
+
+The recruiter approves the criteria before a single CV is scored: ticking each one and
+clicking Save on the Criteria board. It sits there, before scoring starts, so every CV is
+measured against a standard the recruiter has actually agreed to, not one an agent assumed
+on its own behalf.
+
+## What you can change without code
+
+The criteria a CV is scored against, and the level a candidate needs to reach, are both
+rows on a board.
+
+| Row | What it controls |
+|---|---|
+| Each criterion on the Criteria board | What a CV is compared against - must-have, nice-to-have, or red-flag - and whether the recruiter has approved it. |
+| Each line on the Level Expectations board | What meeting a level looks like for a given track, so a criterion can point at a level instead of a fixed rule. |
+
+Add, edit or retire a row, and the next CV scored reads the change - no rebuild needed.
+
+## Try it
+
+If you are a partner, your practice organisation arrives with CV screening already
+installed, using Lumenvale Software's job description and CVs, and the demo script in your
+partner kit walks you through running it live, from criteria approval through to the
+shortlist. Anyone else can ask their iMBrace contact to see it running on an organisation of
+their own.
+
+
+==================== see-it-work/sales-quoting.md ====================
+
+---
+level: '1'
+track:
+- sell
+- build
+- deploy
+verified_on: 2026-09-29
+---
+
+# Sales quoting
+
+Quillmoor Components' sales team quotes industrial fasteners and fittings from a large
+catalogue, and a discount beyond the standard rule needs a manager's word before it goes
+out. iMBrace turns a plain-words request straight into a priced quotation, and only lets it
+go final once the right person has approved anything beyond that rule.
+
+## What happens, step by step
+
+Here is the story, start to finish:
+
+1. A sales person asks the agent, called Sales Quoting, for a quotation in plain words: the
+   customer, the products and the quantities.
+2. The agent reads SQ Catalogue and SQ Pricing Rules, two boards - structured tables in
+   DataIQ - that hold Quillmoor's products and its pricing rules.
+
+Screen: The SQ Catalogue board listing Quillmoor's products with their SKUs and prices
+*1 Knowledge > DataIQ in the sidebar. 2 The SQ Catalogue board, Quillmoor's products and prices.*
+
+Screen: The SQ Pricing Rules board with the approval_threshold discount rule
+*1 Knowledge > DataIQ in the sidebar. 2 The discount rule row, in the approval_threshold field.*
+
+3. It works out the quotation and writes it, line by line, onto the SQ Quotations and
+   SQ Quotation Lines boards.
+
+Screen: InsightsIQ's answer: a new quotation written up with its priced lines and total
+*1 InsightsIQ in the sidebar. 2 The Sales Quoting agent's answer: the new quotation, priced line by line.*
+
+4. When the discount asked for goes beyond the rule on the SQ Pricing Rules board, the
+   quotation's status shows it is waiting for a manager - the platform holds it there
+   itself, not on the agent's word.
+
+Screen: The SQ Quotations board with one row showing status awaiting approval
+*1 Knowledge > DataIQ in the sidebar. 2 The quotation's own status: awaiting approval.*
+
+5. The manager reviews it and approves it directly on the board.
+
+Screen: The Approved By cell on a quotation row being edited with a manager's name, next to the Save button
+*1 The Approved By cell, being edited with the manager's name. 2 The Save button.*
+
+6. A workflow - iMBrace's engine for steps that run on their own once triggered - picks up
+   the approval by itself and marks the quotation final. The sales person then asks the
+   agent for the finished quotation as a document, ready to send.
+
+Screen: The SQ Quotations board with the row's status now approved
+*The quotation's status flipped to approved.*
+
+Screen: InsightsIQ's answer with the finished quotation's number and its document download links
+*The Sales Quoting agent's answer: the finished quotation number, with its PDF and XLSX download links.*
+
+## Where people decide
+
+A quotation asking for a discount beyond the standard rule waits for a manager to approve
+it before it can go final. It sits there because a discount the rule does not already
+allow should always be a person's decision, checked the same way every time by iMBrace
+itself, rather than left to memory.
+
+## What you can change without code
+
+The rule a discount is checked against, and everything Quillmoor sells, are both rows on a
+board.
+
+| Row | What it controls |
+|---|---|
+| Each rule on the SQ Pricing Rules board | The margin Quillmoor expects, and the discount level that needs a manager's approval. |
+| Each product on the SQ Catalogue board | What Quillmoor sells, and at what price. |
+| Each line on the SQ Terms board | The wording that appears on every quotation, such as validity, delivery and payment. |
+
+Change a row, and the next quotation written reads the update - no rebuild needed.
+
+## Try it
+
+If you are a partner, your practice organisation arrives with Sales Quoting already
+installed, using Quillmoor Components' catalogue and pricing rules, and the demo script in
+your partner kit walks you through running it live, from the first request through to
+manager approval and the finished quotation. Anyone else can ask their iMBrace contact to
+see it running on an organisation of their own.
+
+
+==================== build-it/index.md ====================
+
+---
+level: '2'
+track:
+- build
+---
+
+# Build it
+
+Earlier levels of the course explain what iMBrace is and show a use case working end to end.
+This level has you build one yourself.
+
+## What this level gets you
+
+By the end you can build a small working agent on a test organisation, with whatever AI
+coding tool you already use. Nobody needs to hand you source code to get there - you need
+a test organisation, a key, and your coding tool connected over MCP.
+
+- [Getting started](/learn/build-it/getting-started.md) - a test organisation, the SDK, credentials, and
+  your coding tool connected to the organisation. Do this first.
+- [Vibe coding on iMBrace - Build it](/learn/build-it/vibe-coding-tutorial.md) - the written tutorial.
+  Follow it in order; it is written to be followed once, start to finish, on a real test
+  organisation.
+- [Working with an AI coding tool](/learn/build-it/working-with-ai.md) - the stance and guardrails that keep
+  what your tool builds trustworthy.
+
+## Before you start
+
+- A test organisation and an API key. Never a production key.
+- Any AI coding tool that can hold an MCP connection and read a text file. This tutorial
+  names none, on purpose - it works with whichever one you already use.
+- About an hour.
+
+## After this level
+
+Level 3, Build it well, is the method behind the habits this page teaches: why each one
+matters, what it looks like when it is missing, and how to tell the difference before a
+customer does. Level 2 gets you a working agent. Level 3 is what makes one worth shipping.
+
+
+==================== build-it/getting-started.md ====================
+
+---
+level: '2'
+track:
+- build
+verified_on: 2026-09-29
+---
+
+# Getting started
+
+Six steps, about twenty minutes. At the end, your AI coding tool can see what exists in a
+test organisation and write code against the SDK without guessing.
+
+**Direction here, facts there.** The SDK, CLI and MCP documentation lives at
+[engineer.imbrace.co](https://engineer.imbrace.co) and changes on its own schedule. This page
+names the page to read for each step and copies almost nothing: only the two install commands
+and the two credential names, because a copied reference goes stale and a stale reference is
+worse than none.
+
+*Last checked against the site: 23 September 2026.*
+
+## 1. A test organisation and an API key
+
+Build in a test organisation, never in production. Treat an API key like the organisation's
+own password: it acts with its role's full access. A production key never goes into a coding
+tool, a test run, or a pipeline.
+
+A test organisation can live on iMBrace's cloud or on your own installation - on your own
+servers or in a private cloud. Whoever runs your installation can create one.
+
+How to generate a key from the dashboard: the [API key
+guide](https://engineer.imbrace.co/guides/api-key/).
+
+Screen: Settings Generate External Token tab with the expiration field and Generate Token button
+*1 Settings > Generate External Token tab. 2 The Generate Token button.*
+
+## 2. Install the SDK
+
+For the language you build in:
+
+```bash
+npm install @imbrace/sdk        # TypeScript / JavaScript
+pip install imbrace             # Python
+```
+
+Versions and requirements: the [installation page](https://engineer.imbrace.co/sdk/installation/).
+
+## 3. Keep the credentials out of the code
+
+Put them in a `.env` file that is never committed:
+
+```
+IMBRACE_API_KEY=...
+IMBRACE_ORGANIZATION_ID=...
+```
+
+Those are the SDK's own names. Point the client at where your organisation lives: the
+[setup guide](https://engineer.imbrace.co/getting-started/setup/) shows the environment setting
+for iMBrace's cloud, and the gateway URL variable for your own installation's address, and how
+to pass the values to the client.
+
+Give your coding tool the variable names, not the values. A live key pasted into a chat
+with a coding tool is a key you no longer control.
+
+## 4. Connect your coding tool to the organisation
+
+The platform's gateway hosts a Model Context Protocol (MCP) server, so there is nothing to
+install or run. You give your tool the server's address and your key, and it then sees
+what that key's role allows and no more - and, until you add write access, only the reading
+side of it (see below).
+
+The per-tool steps are on the [MCP page](https://engineer.imbrace.co/mcp/overview/). Follow
+them there rather than from a copy, because the address and the flags are the site's to
+change. If you would rather run a local server, the [CLI](https://engineer.imbrace.co/cli/overview/)
+can do that too.
+
+What the connection covers:
+
+- **It is read-only until you add write access.** Out of the box your tool can look but not
+  change anything. The MCP page shows the flag that adds create and update, and the one that
+  adds delete. Use them only on a test organisation.
+- **Agents and file uploads go through the SDK** or the platform's own screens.
+- **Availability depends on your installation and edition.** Whoever runs your installation
+  can confirm it is enabled. Where it is not, your tool works through the SDK or the CLI.
+
+With the connection in place your tool has both halves: this guide answers "how should this
+be built", and the organisation answers "what exists here" and "what did that workflow do on
+its last run".
+
+## 5. Give your tool the SDK's own map
+
+When your tool writes code against the SDK, it should fetch the site's
+[llms.txt](https://engineer.imbrace.co/llms.txt) and read the page it points to, rather than
+answer from memory. The site's [vibe coding guide](https://engineer.imbrace.co/guides/vibe-coding/)
+shows how to hand it over in each tool.
+
+If your machine cannot reach the site - an isolated network, for example - the SDK you
+installed carries its own description of every method: type definitions in the TypeScript
+package, readable source in the Python one. Your tool can read those instead. Either way, it
+must never guess a method name.
+
+## 6. Prove the setup
+
+Ask your tool two things, then check both yourself:
+
+1. "List the boards in this organisation." It should answer through the MCP connection. On a
+   new organisation an empty list is the right answer, not a failure.
+2. "Make one read-only SDK call that lists the boards, and show me the output." The same
+   list should come back through the SDK.
+
+If both agree with what you see in the platform, you are set up. If either fails, it is a
+credentials or connection problem; fix it here before you build anything.
+
+## Next
+
+[The tutorial](/learn/build-it/vibe-coding-tutorial.md) builds a small working agent with your tool, one
+step at a time. [Working with an AI coding tool](/learn/build-it/working-with-ai.md) is the stance that
+keeps what it builds trustworthy.
+
+
+==================== build-it/vibe-coding-tutorial.md ====================
+
+---
+level: '2'
+track:
+- build
+verified_on: 2026-09-30
+---
+
+# Vibe coding on iMBrace - Build it
+
+This is Level 2 of the course: Build it. Earlier levels show a use case working end
+to end; this page has you build one yourself.
+
+By the end you will have a small agent running on your own test organisation. It is
+small on purpose. The point is not the agent - it is five habits that make anything you
+build on iMBrace easy to trust, which Level 3 (Build it well) then covers in depth.
+
+## What you will build
+
+Imagine a fictional company, Harbor Bicycle Co., that sells and services bicycles online.
+You are building their return-desk agent. A customer writes in asking to return an item.
+The agent should:
+
+1. Log the request as a row on a board, instead of leaving it in a chat transcript.
+2. Work out the refund amount from a rule anyone at Harbor could edit, not from the
+   model's own arithmetic.
+3. Wait for a person to approve the row before anything is promised to the customer.
+4. Only after that approval, send the customer a confirmation - using the platform's own
+   connection for email, never a credential sitting inside your workflow.
+
+Nothing here is Harbor Bicycle Co.'s real system - it does not exist. Swap the company,
+the items and the rule for your own before you show this to anyone.
+
+## What you need
+
+- A test organisation and an API key. If you do not have one yet, the [API key
+  guide](https://engineer.imbrace.co/guides/api-key/) shows how to generate one from the
+  dashboard. Use a test organisation's key here - never a production one.
+- An AI coding tool connected to that organisation over MCP, so it can see your boards and
+  workflows directly instead of guessing. This page names no tool; any coding assistant
+  that can hold an MCP connection and read a text file works. The [MCP
+  guide](https://engineer.imbrace.co/mcp/overview/) has the exact connection steps for
+  your tool - do that first, before Step 1 below. If MCP is not enabled on your installation,
+  [Getting started](/learn/build-it/getting-started.md) shows the SDK route.
+- If your tool prefers to write real SDK code rather than call the platform directly, install
+  the SDK for your language:
+
+  ```bash
+  npm install @imbrace/sdk
+  ```
+
+  ```bash
+  pip install imbrace
+  ```
+
+  Either way, your tool will end up needing two environment variables:
+  `IMBRACE_API_KEY` and `IMBRACE_ORGANIZATION_ID`. Keep them in a local `.env` file that
+  is never committed anywhere, and never paste a live key into a chat with your coding
+  tool if you can hand it the variable name instead.
+- About an hour. Most of it is reading what the platform hands back to you, which is the
+  habit this whole page is trying to build.
+
+A few words this page uses: a **board** is a structured table you shape yourself - rows and
+typed columns, like a lightweight CRM sheet. A **workflow** (also called a flow) is a
+sequence of steps that runs on its own once triggered. A **native step** is a ready-made
+step the platform ships - nothing to write, nothing to host, no key of your own to manage.
+An **agent** is the conversational front end a person or a channel talks to.
+
+## Steps
+
+### 1. Look before you build
+
+Do not open an editor yet. Ask your coding tool what already exists.
+
+**You type**, roughly:
+
+> Before we build anything: what boards already exist in this organisation? And
+> search the platform's catalog of native workflow steps for anything related to sending
+> an email and reading one.
+
+**You should see**: on a new test organisation, an empty list of boards - that is expected, not a
+failure. On an organisation that already holds other work, other boards appear at this first
+check instead - that is fine too; once you create yours in Step 2, look for it there by name.
+Either way you should also see a short list of native steps for email, likely alongside other
+channels you did not ask about. Read the list. This is the habit: find the node the platform
+already ships before you consider writing one yourself. A step your tool writes from scratch
+costs you a credential to hold and a piece of code to maintain; a native step costs neither.
+
+### 2. Create the board that holds return requests
+
+**You type**:
+
+> Create a board called Return Requests with these columns: Customer name, Order
+> reference, Item, Condition, Price, Refund amount, Decision, Decided by, Decided at.
+
+**You should see**: a new board in your organisation with those nine columns and no rows yet.
+Open it in the platform and check the column names and types by eye - do not just trust
+your tool's summary of what it did.
+
+If your tool says it cannot create anything, its MCP connection is read-only - that is the
+default. Add write access as the MCP page describes (a flag on the connection address), and
+only ever on a test organisation.
+
+### 3. Add two test rows
+
+Use synthetic data. Never real customer or order information, even in a test organisation.
+
+**You type**:
+
+> Add two rows to Return Requests. Make up obviously fake customer names and order
+> references. Row one: an unopened helmet, price 45. Row two: a used bike lock, price 28.
+> Leave Refund amount, Decision, Decided by and Decided at blank.
+
+**You should see**: two rows, Condition set to "unopened" and "used", Price filled in, the
+last four columns empty.
+
+Screen: Return Requests board open, showing its columns and two rows
+*1 Knowledge > DataIQ in the sidebar. 2 The Return Requests board's columns and rows.*
+
+### 4. Put the refund rule where a person can change it, not in a sentence
+
+This is the habit that matters most on this page. It would be faster to tell the agent
+"refund in full if unopened, half if used" in its instructions. Do not. A rule written into
+an agent's instructions cannot be edited by anyone who is not editing the agent, cannot be
+quoted back to a customer, and cannot be audited later. A rule that lives as a row can be
+all three.
+
+**You type**:
+
+> Create a second board called Refund Rules with two columns, Condition and Refund
+> percent. Add two rows: unopened, 100. used, 50.
+
+**You should see**: a two-row, two-column board. Anyone at Harbor Bicycle Co. could open
+this and change 50 to 60 without touching a workflow or an agent.
+
+Screen: Refund Rules board, its two rows anyone at Harbor could edit
+*1 Knowledge > DataIQ in the sidebar. 2 The Refund Rules board's two rows.*
+
+### 5. Build the workflow, and let one small step do the arithmetic
+
+**You type**:
+
+> Build a workflow called Calculate refund amount on the Return Requests board that runs
+> when a row is added or changed. It should: read the row's Condition, look up the matching
+> row on Refund Rules, multiply
+> Price by Refund percent using a plain calculation step, and write the result into Refund
+> amount. Use native steps for the board reads and writes. Only the multiplication itself
+> should be a step you write, and keep it pure - it takes the two numbers in, returns one
+> number out, and touches nothing else. No network call, no credential, inside that step.
+
+**You should see**: a workflow you can open in the platform's own editor and read top to
+bottom without opening any code. Most of its steps are native. Exactly one step is the
+short calculation your tool wrote, and it is short enough to read in ten seconds. Run it
+once by hand if your tool offers a test-run option, and check Refund amount lands at 45
+for the unopened helmet and 14 for the used lock.
+
+Screen: Calculate refund amount workflow: the board read, the calculation step and the board write, top to bottom
+*1 Find the matching row on Refund Rules (native). 2 Calculate refund - the one step written by hand. 3 Write Refund amount back to the row (native).*
+
+This is the second habit: a model is good at deciding which rule applies and bad at being
+trusted to multiply correctly under pressure, silently, every single time. Let a
+calculating step do the arithmetic. Ask the model to decide; let code compute.
+
+### 6. Add the approval gate
+
+**You type**:
+
+> Build a second workflow called Apply return decision on Return Requests that runs when the
+> Decision column changes. It must do nothing unless Decision is Approved and Decided by
+> holds a name; it then records the time in Decided at. A row with no decision, or a decision
+> with no name, must go no further.
+
+**You should see**: nothing happens for either row yet - neither has a decision. Open the
+board yourself and, on the unopened-helmet row only, set Decision to Approved and put your
+name in Decided by. Then press **Save**: a board edit is held until it is saved, and nothing
+fires before that. Leave the used-lock row alone. Decided at fills in on the approved row
+only.
+
+Screen: Return Requests scrolled to Decision, Decided by and Decided at - one row approved, one still blank
+*1 Knowledge > DataIQ in the sidebar. 2 Decision, Decided by and Decided at columns.*
+
+This is the third habit: a decision is a value written on a row, with who and when, not a
+person typing "looks fine" into a chat with the agent. If nobody set Decision, nothing
+downstream should move - and after this step, nothing does.
+
+### 7. Send the confirmation the safe way
+
+**You type**:
+
+> Add a Customer email column to Return Requests, then extend the approval workflow: once
+> it has recorded the decision, send a short confirmation to that address, naming the
+> refund amount, using the platform's own connected email step. Do not put an email
+> password or API key anywhere in this workflow - use the organisation's existing
+> connection, or set one up first if none exists.
+
+**You should see**: in the workflow, a Send Email (Gmail) step after the step that records
+Decided at, on the approved branch only. Approve the unopened-helmet row and press **Save**:
+the workflow runs once and the confirmation goes to that row's Customer email, naming the
+refund amount. The still-pending row starts no run, so nothing is sent for it.
+
+Screen: Apply return decision workflow with the new Send Email (Gmail) step after the step that records Decided at
+*1 FlowOps in the sidebar. 2 The Send Email (Gmail) step, after the step that records Decided at, on the approved branch.*
+
+To check the credential, open Actions > FlowOps > More > Connections. The email credential
+is there as its own named connection, Gmail, and no step of the workflow holds it. This is
+the habit from Step 1 carried all the way through: a credential belongs to the platform's own
+connection store, never to a workflow. If you export this workflow later, open the exported
+file and confirm no key or password is inside it.
+
+Screen: FlowOps Connections list showing one connection named Gmail
+*1 FlowOps > More > Connections. 2 The one connection named Gmail.*
+
+The board itself shows nothing about a sent email. To see it, open the workflow's run
+history: the run for the approved row finished, and its Send Email (Gmail) step is marked
+succeeded. The recipient's inbox holds the email itself.
+
+Screen: A finished run of Apply return decision, its Send Email (Gmail) step marked succeeded
+*1 FlowOps in the sidebar. 2 The Send Email (Gmail) step of the run, marked succeeded.*
+
+Which email connection to use: a mail-server (SMTP) connection is set up once with the
+server's details. A hosted mail service such as Gmail needs a person to sign in to the
+provider once, in each organisation. An installation with no internet access uses a
+mail-server (SMTP) connection on its own network.
+
+### 8. Create the agent
+
+Agents are created with the SDK's AI agent methods (the site has them) or in the platform's
+agent screens, so this step uses one of those. Either way, your tool can write the agent's
+instructions.
+
+**You type**:
+
+> First build a workflow called Log return request that the agent can call as a tool. It
+> takes Customer name, Order reference, Item, Condition and Price, creates one row on
+> Return Requests with only those five values, and writes nothing else. Then create an AI
+> agent called Return Desk Assistant and give it that one tool - not the board itself. Its
+> job: when a customer describes an item they want to return, log it with the tool and reply
+> that their request is being reviewed. It must never state a refund amount and never
+> promise anything - a human has not decided yet.
+
+Screen: AgentIQ's agent list, the Return Desk Assistant card
+*1 Actions > AgentIQ in the sidebar. 2 The Return Desk Assistant agent's card.*
+
+Why a tool and not the board: an agent given the whole board can write any column on it,
+including Decision - it could approve its own request. The tool can only write the five
+columns a customer supplies, so the decision stays with a person.
+
+One more habit worth building into the agent's own instructions: Refund Rules is matched by
+an exact value, so tell the agent to write Condition using the rule's own two words -
+"unopened" or "used" - never the customer's own phrasing or a translation of it. Any board a
+natural-language agent writes to, when a workflow looks a row up by exact match, needs the
+same care.
+
+**You should see**: chatting to the new agent with something like "I'd like to return
+order HB-2044, a helmet, still unopened. My name is Morgan Ellery and it cost 39" produces a
+new row on Return Requests with those details filled in, and a reply along the lines of
+"your return request has been logged and is being reviewed by the team" - no number, no
+promise. If your tool's draft instructions let the agent guess a refund figure itself, that
+is worth catching here: send it back and ask for the number to be removed from what the
+agent is allowed to say. Then ask it to approve the request itself: it must not be able to,
+because nothing in its tool can write Decision.
+
+Screen: Return Desk Assistant's reply: logged and under review, no figure, no promise
+*1 InsightsIQ in the sidebar. 2 The assistant's reply names no refund figure and makes no promise.*
+
+## How to check it worked
+
+Do not take your coding tool's summary of what it did as proof. A plausible account of a
+working build is easy to produce and easy to mistake for a real one - go and look.
+
+- Open Return Requests. Both rows should show a correct Refund amount: 45 and 14.
+- Only the row you approved should have a run with a succeeded Send Email (Gmail) step; the
+  pending row should have no run at all.
+- Open the workflow's run history and read the actual status of each run, not a summary of
+  it - a run that is still waiting looks different from one that finished.
+- Open Actions > FlowOps > More > Connections and confirm the email credential is a named
+  connection, not text inside a step.
+- Talk to the Return Desk Assistant with a new, made-up return. Confirm a row appears and
+  the agent's reply carries no figure and no promise.
+- Ask the assistant to approve a request. Confirm Decision stays empty: the agent has no way
+  to write it.
+- Now approve the used-lock row too, and confirm its confirmation sends as well - proving
+  the gate was real, not decorative.
+
+If any of these do not hold, that is more useful than a build that looked fine and was
+not. Fix the one thing that failed and check again.
+
+## What to do next
+
+- Try a second condition - a part returned with a missing box, say - and a second rule row.
+  Confirm you can change the refund rate without touching the workflow or the agent.
+- Try approving nothing, ever, for a row - confirm the customer never receives a refund
+  figure, however long you leave it.
+- Read Level 3, Build it well, for the fuller method behind these five habits - it covers
+  what makes a build like this one survive being handed to a real customer, not just a
+  test organisation.
+- For anything about the SDK, the CLI or the MCP connection itself, [engineer.imbrace.co](https://engineer.imbrace.co)
+  is the source that stays current - this page will drift before that one does. [Getting
+  started](/learn/build-it/getting-started.md) has the set-up in full.
+
+
+==================== build-it/working-with-ai.md ====================
+
+---
+level: '2'
+track:
+- build
+verified_on: '2026-09-23'
+---
+
+# Working with an AI coding tool
+
+Most building on iMBrace can now be done with an AI coding tool. That is fine, and it changes
+almost nothing about what "done" means. This page is what does change.
+
+## The stance
+
+**The tool assists; the person decides.** Not because the tool is weak, but because
+accountability does not transfer. Someone signs off that the build works, and it cannot be
+the thing that wrote it.
+
+**A build's report on itself is never trusted.** AI tools make this sharper: a convincing
+summary of a passing test is easy to produce and hard to tell from a real one. Run it. Watch
+it. Look at the result on the platform. A green you did not see is not a green.
+
+**Say the honest status.** Every piece of a build is one of three things:
+
+- **proposed** - designed, not built;
+- **built** - built, but not yet run against the platform and checked;
+- **live** - run on the platform, and the result checked by a person.
+
+Nobody is judged for "built". Writing "live" for something that never ran is the failure.
+
+## What to give the tool
+
+- **This guide's `AGENTS.md`**, or the one page that governs the job in front of you. Not
+  everything at once: a tool that reads everything has less room left for your problem.
+- **The SDK's own map**, fetched fresh from [engineer.imbrace.co](https://engineer.imbrace.co/llms.txt)
+  when it writes SDK code. Never an old copy.
+- **The organisation itself**, over the MCP connection, when the question is about what
+  exists or what happened - see [Getting started](/learn/build-it/getting-started.md).
+
+## The guardrails
+
+- **No credential in a workflow, a code step, a prompt, or a committed file.** Credentials
+  live in the organisation's connection store, or in a local `.env` that is never committed.
+- **A code step is pure** - numbers in, a result out, no network call, no key - or it says
+  plainly why it is not.
+- **A refusal is data, not an error.** "I could not find that" is a valid, useful answer.
+- **A skipped check is never a pass.** If a test could not run, say it did not run.
+- **No personal data** in test data, logs, prompts or examples. Invent it.
+- **Write for a stranger.** Plain sentences, no shorthand, nothing that only makes sense to
+  whoever was in the conversation.
+
+## Habits that carry most of the weight
+
+1. **Business outcome first.** Who uses it, what breaks today, what it unlocks. A clever
+   answer to a question nobody asked is a wrong answer.
+2. **The person sketches first.** Have the person draw the use case - the shape, the parts,
+   where a human decides - before the tool proposes a design. It keeps the design theirs.
+3. **Disagree with evidence.** When the tool thinks the person is wrong, it says so at once,
+   with the evidence, rather than quietly doing what was asked.
+4. **Every claim carries an anchor.** A board row, a run's id, a pasted output. No anchor,
+   no claim.
+5. **Correct records with a date.** When a finding or a decision note turns out to be wrong,
+   say so in place, with the date, and leave the original visible.
+6. **Someone else reviews it.** The person who did not build it runs the
+   [review checklist](/learn/build-it-well/review-checklist.md) before it ships.
+7. **Match the ceremony to the size of the change.** A small change gets a small record.
+
+## Keep delegation shallow
+
+If your tool hands work to its own helpers, keep the hand-off at the top level, give each
+helper a complete brief, and check each result yourself: when a helper says it fixed
+something, open the file and look.
+
+## What done means
+
+Something another person can install, a note they can follow, a test they can run, and an
+honest status on each part.
+
+
+==================== build-it/building-blocks.md ====================
+
+---
+level: '2'
+track:
+- build
+verified_on: 2026-09-29
+---
+
+# The building blocks
+
+Every use case on iMBrace, however different they look, is built from the same five
+things: a board, an agent, a document model, a workflow and a channel. This page names
+each one, says what it is for, and shows where it lives in the product, so that nothing on
+the sidebar is a mystery the first time you open a training organisation. It closes with
+three ways to extend one of these or hand it on to someone else: skills, the MCP
+connection, and installing a module.
+
+## A board
+
+A board is a structured table you shape yourself - rows and typed columns, like a
+lightweight CRM sheet. It is for holding whatever a build needs to remember: a list of
+return requests, a priced quotation, a set of rules a person can edit.
+
+In the sidebar this lives under **Knowledge > DataIQ** (the SDK and its permission scope
+call it a board, or a databoard; the product name on screen is DataIQ). Every other
+block reads or writes a board: a workflow's steps, an agent's one narrow tool, and a
+document model's own extraction all land on one.
+
+Screen: A DataIQ board open as rows with typed columns
+*1 Knowledge > DataIQ in the sidebar. 2 The board's typed columns.*
+
+The habit that makes a board trustworthy: put a rule a business person might need to
+change - a threshold, a rate, a limit - on a board as an editable row, never inside an
+agent's own instructions. [The eight principles](/learn/build-it-well/the-eight-principles.md)
+explains why.
+
+Do it in code: [Board](https://engineer.imbrace.co/reference/board/).
+
+## An agent
+
+An agent is the conversational front end a person or a channel talks to. It is for having
+the conversation itself: understanding what someone is asking for, and calling the right
+tool to act on it.
+
+In the sidebar this lives under **Actions > AgentIQ**. An agent is reached through a
+channel, and it acts by calling a workflow - one of its skills, covered below - which is
+where any reading or writing of a board actually happens.
+
+Screen: AgentIQ Active AI tab, one agent per card
+*1 Actions > AgentIQ in the sidebar. 2 The Sales Quoting agent's card.*
+
+The habit that makes an agent trustworthy: give it one narrow tool for the one thing it
+must do, never the whole board, so it can log a request but can never write the decision
+that approves it. [Human approval](/learn/build-it-well/human-approval.md) sets out why the
+agent must never be able to write that decision itself.
+
+Do it in code: [AI agent](https://engineer.imbrace.co/reference/ai-agent/).
+
+## A document model
+
+A document model tells extraction what to pull out of a file. It is for turning an
+unstructured document - an invoice, a form, a scanned packing slip - into the structured
+fields a board can hold.
+
+In the sidebar this lives under **Knowledge > DocIQ**, on the **Document Models** tab. What
+it extracts lands as rows on a board, the same board a workflow or an agent then reads.
+
+Screen: DocIQ Document Models tab, one model's extraction fields
+*1 The Document Models tab. 2 The model's fields table.*
+
+The habit that makes a document model trustworthy: adopt the platform's own default model
+before writing a new one, and point extraction at a single board's own fields rather than
+leaving the choice of model to chance.
+[Document models](/learn/build-it-well/document-models.md) sets out the order to try them in.
+
+Do it in code: [Document AI](https://engineer.imbrace.co/sdk/document-ai/).
+
+## A workflow
+
+A workflow (also called a flow) is a sequence of steps that runs on its own once
+triggered. It is for doing the actual work, in a fixed and checkable order: reading a
+board, running a calculation, waiting for a person to decide, sending a message.
+
+In the sidebar this lives under **Actions > FlowOps** (the SDK and its permission scope
+call it a workflow; the product name on screen is FlowOps). A workflow reads and
+writes a board, can be the one tool an agent calls, and can start from a channel event as
+easily as from a board changing.
+
+Screen: FlowOps list of workflows
+*1 Actions > FlowOps in the sidebar. 2 The list of workflows.*
+
+The habit that makes a workflow trustworthy: build it from the platform's own ready-made
+steps first, and keep any step you do write pure - it computes over the values it is given
+and holds no credential of its own. [Native-first](/learn/build-it-well/native-first.md) sets
+out what that buys you.
+
+Do it in code: [Workflow](https://engineer.imbrace.co/reference/workflow/).
+
+## A channel
+
+A channel is where a person actually reaches an agent - a website chat widget, WhatsApp,
+email, or another connected messaging app - and it is the address a reply goes back to.
+
+In the sidebar this lives under **Actions > ConnectIQ**, on the **Channels** tab. A channel
+is how a conversation with an agent begins, and a workflow can use one of its events as its
+own trigger.
+
+Screen: ConnectIQ Channels tab listing the Web Widget and messaging channels
+*1 The Channels tab. 2 The Web Widget's channel list.*
+
+The habit that makes a channel trustworthy: set up its login once as the organisation's
+own connection, never as a value sitting inside a workflow. A connection that needs
+someone's sign-in, such as a hosted mail service, is made by a person once per
+organisation; a mail-server connection is configured once with the server's own details.
+[Native-first](/learn/build-it-well/native-first.md) sets out why nothing in a flow should
+ever carry a credential.
+
+Do it in code: [Channel](https://engineer.imbrace.co/reference/channel/).
+
+## Three ways to extend and deliver them
+
+### Skills - what an agent can do
+
+A skill is a workflow given to an agent as a named tool it can call. It is for extending
+what an agent can actually do beyond talking - logging a row, looking something up,
+running a calculation - always through a workflow, never by handing the agent a board
+directly.
+
+In an agent's setup under **AgentIQ**, skills sit on the **Behavior Settings** tab, in its
+**Skills** section (the SDK's full flow guide calls these tools, under Workflows). Add a workflow here and the agent can call it in a
+conversation; its description is what the agent reads to decide when that is the right
+moment.
+
+Screen: An agent's Behavior Settings tab, its Skills list of functions
+*1 The Behavior Settings tab. 2 The Skills section's list of functions.*
+
+Do it in code: [Full Flow Guide](https://engineer.imbrace.co/sdk/full-flow-guide/).
+
+### The MCP connection - how a coding tool sees an organisation
+
+The MCP connection is how an AI coding tool sees and changes an organisation directly,
+rather than being told about it secondhand. It is for building: point a coding tool at it
+with an address and a key, and it can list what boards and workflows already exist before
+writing a line of anything.
+
+In the sidebar this lives under **Actions > ConnectIQ**, on the **MCP** tab, and it opens
+the very guide you would read directly at
+[engineer.imbrace.co/mcp/overview](https://engineer.imbrace.co/mcp/overview/).
+[Getting started](/learn/build-it/getting-started.md) walks through connecting a coding tool to a test
+organisation this way, step by step.
+
+Screen: ConnectIQ MCP tab opening the MCP connection guide
+*ConnectIQ MCP tab opening the MCP connection guide*
+
+Do it in code: [MCP Server guide](https://engineer.imbrace.co/mcp/overview/).
+
+### Installing a module
+
+Installing a module copies a whole use case - its workflows, its agent set-up and its
+boards - into an organisation in one step, as a single package. It hands someone a working
+starting point instead of a set of instructions to follow by hand. Your iMBrace contact
+installs modules into your organisation.
+
+Once installed, its boards, workflows and agent appear in their usual screens - DataIQ,
+FlowOps and AgentIQ - where an admin can see and edit them like anything else in the
+organisation. For a single agent, **AgentIQ** also has a **Marketplace** tab of ready-made
+agent templates to start from.
+
+Screen: AgentIQ Marketplace tab of ready-made agent templates
+*1 The Marketplace tab. 2 The ready-made template card.*
+
+Do it in code: [SDK overview](https://engineer.imbrace.co/sdk/overview/).
+
+## How they fit together
+
+Harbor Bicycle Co.'s return desk, from the tutorial, uses every block at once. A customer
+talks to the Return Desk Assistant. The agent listens, and its one skill - a workflow
+called Log return request - writes a new row on the Return Requests board. A second
+workflow watches that same board: once a person sets Decision to Approved, it records who
+decided and when, then sends the customer a confirmation by email. Nothing here needed a
+document model, because nothing arrived as a file - a return that came in as a scanned
+packing slip would be read by a document model first, and land as a row on that same
+board.
+
+Every one of Harbor's blocks could be packaged as a single module and installed into a
+second organisation, its boards, workflows and agent set-up
+travelling together for that organisation's own admin to open and adjust. And the same MCP
+connection that let a coding tool build all of it in the first place is what lets it check
+the result afterwards: list the board, read the workflow's last run.
+
+Build it yourself, one step at a time, in [the tutorial](/learn/build-it/vibe-coding-tutorial.md).
+
+
+==================== build-guide.md ====================
+
+---
+level: '2'
+track:
+- build
+---
+
+# Build guide for AI tools
+
+The iMBrace build guide is this course's [Build it well](/learn/build-it-well/index.md) pages, the
+principles behind every good iMBrace build, plus [getting started](/learn/build-it/getting-started.md)
+and [the tutorial](/learn/build-it/vibe-coding-tutorial.md) - packaged as plain files an AI coding tool
+reads itself, instead of a page you read and explain to it.
+
+## Who it's for
+
+Anyone building on iMBrace with Claude Code, Codex, Cursor, or another AI coding tool that can
+read a project's files.
+
+## How to use it
+
+Download the guide below, then point your tool at it. Three short recipes:
+
+**Claude Code.** Unzip the guide into your project. Its own `CLAUDE.md` is a single line,
+`@AGENTS.md`, so once your project's `CLAUDE.md` reads it - directly, or through your own
+`@` line pointing at the unzipped folder - Claude Code follows that through to `AGENTS.md`.
+Prefer a skill instead: the guide also carries a `SKILL.md`, so installing the unzipped
+folder as a Claude Code skill works the same way, without editing `CLAUDE.md` at all.
+
+**Codex and other tools that read `AGENTS.md`.** Unzip the guide so its `AGENTS.md` sits at
+your project's root, or add a line to your own root `AGENTS.md` pointing at it. Any tool that
+already follows that convention picks it up the same way.
+
+**Cursor.** The guide ships a `.cursor/rules/imbrace.mdc` file. Unzip the guide into your
+project and Cursor reads that rule, which points at `AGENTS.md` for the method itself.
+
+## Where the facts come from
+
+The guide is method only: how to design and build well. It never copies SDK, CLI or MCP
+facts, because a copied fact goes stale. Instead it tells your tool to fetch
+[https://engineer.imbrace.co/llms.txt](https://engineer.imbrace.co/llms.txt) live and read
+the page it points to. Connect your tool to a test organisation the same way: see the
+[MCP page](https://engineer.imbrace.co/mcp/overview/).
+
+## Downloads
+
+- **The zip** -
+  [imbrace-build-guide-community.zip](https://engineer.imbrace.co/learn/imbrace-build-guide-community.zip)
+- **The browsable files** - `AGENTS.md` and the rest, under
+  [engineer.imbrace.co/learn/agent-pack/README.md](https://engineer.imbrace.co/learn/agent-pack/README.md)
+- **The whole guide in one file**, for a tool that reads a single document instead of a
+  folder: [English](https://engineer.imbrace.co/learn/llms-full.txt),
+  [Traditional Chinese](https://engineer.imbrace.co/zh-tw/learn/llms-full.txt),
+  [Simplified Chinese](https://engineer.imbrace.co/zh-cn/learn/llms-full.txt)
+
+
+==================== build-it-well/index.md ====================
+
+---
+level: '3'
+track:
+- build
+verified_on: '2026-09-23'
+---
+
+# Build it well
+
+A demo shows that something can work once. Building it well means it keeps working: with
+real data, under real load, with a person genuinely in the loop, and without anyone having
+to remember to be careful.
+
+This is not about writing more code. Most of what makes a build solid is design choices you
+make before you write anything: which parts you assemble it from, where a human signs off,
+what runs on the platform's own capability instead of custom code, and what never leaves the
+build's own configuration.
+
+## The eight principles, in one line each
+
+1. **Provenance** - every number in an answer can be traced back to where it came from, or
+   the answer says plainly that it is not in the data.
+2. **Determinism** - the AI picks which rule applies; the rule itself lives as data a person
+   can edit; the arithmetic is always done the same, reliable way.
+3. **Modularity** - the build is assembled from parts that each do one job and have a clear
+   contract, not one large tangle of custom logic.
+4. **Domain-free cores** - the reusable logic carries no customer names, no specific
+   business detail; everything specific to one company arrives as configuration.
+5. **Human governance** - a real decision is a recorded fact - who decided, what, and when -
+   not a friendly "yes" typed into a chat window.
+6. **Native-first** - use what the platform already gives you before writing custom code;
+   nothing in a build should ever hold a login credential.
+7. **Operability** - a build can be reset, tested, and checked independently, not just run
+   once by the person who built it.
+8. **Security and sovereignty** - credentials, secrets and sensitive data stay in
+   configuration and out of the build's own logic.
+
+## What is on this page and what is on the rest
+
+| Page | What it covers |
+|---|---|
+| [The eight principles](/learn/build-it-well/the-eight-principles.md) | Each principle in full: what it means, what good looks like, how it goes wrong, and the questions to ask of your own build. |
+| [Use-case shapes](/learn/build-it-well/use-case-shapes.md) | Nine recurring shapes a business use case takes, and the kinds of parts each one is typically assembled from. |
+| [Human approval](/learn/build-it-well/human-approval.md) | One decision, five places a person can actually make it - and why a chat reply is not one of them. |
+| [Native-first](/learn/build-it-well/native-first.md) | Why you reach for the platform's own capability before writing code, and what that buys you. |
+| [Document models](/learn/build-it-well/document-models.md) | How to choose what DocIQ extracts from a document: adopt the default, extend it, write your own last. |
+| [Anti-patterns](/learn/build-it-well/anti-patterns.md) | The mistakes that get built again and again, what each one costs, and the fix. |
+| [Review checklist](/learn/build-it-well/review-checklist.md) | The same eight-principle review, as a checklist you can run on your own build before you ship it. |
+
+None of this requires memorising anything. Pick the page that matches the decision in front
+of you, use its questions, and move on.
+
+
+==================== build-it-well/the-eight-principles.md ====================
+
+---
+level: '3'
+track:
+- build
+verified_on: '2026-09-25'
+---
+
+# The eight principles
+
+Eight ideas separate a build that works once from a build that keeps working. None of them
+require exotic technology. Most are decisions about where a piece of logic lives, and who
+gets to change it.
+
+## 1. Provenance
+
+**What it means.** Every number an answer contains can be traced to where it came from, or
+the answer says plainly that it is not in the data. A figure with no source behind it is not
+a cheaper version of a sourced figure - it is a different kind of thing, and the difference
+is invisible until someone acts on it.
+
+**What good looks like.**
+- Every figure in an answer comes with the records it was drawn from, and the date the data
+  is current to.
+- A quoted line is checked against the document it claims to come from, and the answer says
+  where in that document it appears.
+- When the answer is not in the data, the reply says so plainly, with no invented figure to
+  fill the gap.
+- Each kind of answer has a fixed shape - which figures, from which sources, in which order.
+  A fixed shape stops invented figures where written rules alone do not.
+
+**How it goes wrong.**
+- **The confident summary.** A number that reads well, produced by an AI, with nothing
+  behind it. It survives review precisely because it reads well.
+- **Provenance as decoration.** A source list that names a document but not the specific
+  rows or passage, so nobody can actually check the figure without redoing the work.
+- **The softened finding.** A flagged problem quietly downgraded on a later pass, with
+  nobody noticing it changed.
+- **The quote that only exists.** A check that a quoted line appears in the source proves the
+  line exists, not that it supports the verdict it is quoted for.
+
+**Questions to ask.**
+1. Pick any figure in a recent answer. Can you get from it to the record it came from,
+   without asking the person who built it?
+2. Does the answer carry an as-of date?
+3. Take a quoted line. Can the system prove it appears in the source, and say where?
+4. When the data cannot answer a question, what does the person actually see?
+5. Does each quoted line actually support the verdict it is attached to, or does it only
+   appear in the source?
+
+## 2. Determinism
+
+**What it means.** The AI picks which rule applies. The rule itself lives as data a person
+can read and change. The arithmetic is always carried out the same way. Nothing consequential
+is worked out inside an AI's own reasoning, and the same question asked twice gets the same
+answer.
+
+**What good looks like.**
+- Arithmetic always goes through one dedicated calculating step, with every input shown.
+- Rules live as rows or fields a person can edit, so changing a threshold does not need a
+  developer or a new release.
+- A rule the system does not yet implement refuses cleanly rather than being silently
+  skipped or guessed at.
+
+**How it goes wrong.**
+- **The rulebook in the prompt.** Limits, criteria or thresholds written into an AI's
+  instructions, where nobody can edit, quote, or audit them.
+- **The calculator you can skip.** Nothing forces the AI to use the dedicated calculating
+  step, so under load it works the sum out itself - and is usually right, until it is not,
+  silently.
+- **The mixed-up rules.** Numbers a system applies automatically and wording an AI is meant
+  to quote, stored together in a way that blurs which is which.
+- **The negative rule.** A rule written as what must not happen is easy to read the wrong way
+  round, by a person or a model. State each rule as the condition you want to see, and keep an
+  either-or requirement as one rule, not two.
+
+**Questions to ask.**
+1. Where, specifically, does each number in an output get computed?
+2. Can a business person change a threshold or a limit without asking a developer?
+3. Ask the same question twice. Are the two answers identical?
+4. What happens today when the system meets a rule it has not been taught yet?
+
+## 3. Modularity
+
+**What it means.** A build is assembled from parts, each with a clear job and a clear
+contract, rather than one large tangle of bespoke logic. Something is only "shared" once two
+separate, named uses actually use it as it stands - not because it looks reusable.
+
+**What good looks like.**
+- Each part does one job, has a defined input and output, and can be tested on its own.
+- A part called shared genuinely has two real users using it unchanged. At least one of
+  those uses is not the one it was originally built for.
+- Two versions of something that differ by an edited internal detail are honestly two
+  different parts, not one part pretending to be generic.
+
+**How it goes wrong.**
+- **Shared by aspiration.** A part labelled reusable with exactly one real user, so the next
+  team inherits a promise that was never actually true.
+- **The forked copy.** A second version that needed one more tweak, so someone copied the
+  whole thing rather than parameterising it. Now there are two things to maintain and one
+  name for both.
+- **The part with no user.** Built because it seemed generally useful. Maintained forever.
+  Used once, if at all.
+
+**Questions to ask.**
+1. Pick something labelled shared. Name its two real, separate users.
+2. Does any "variant" actually differ by an edit to the core logic, rather than by its
+   configuration?
+3. Can one part be tested on its own, without a live account or a network connection?
+4. Is there anything in the build with no real, named user? Why does it exist?
+
+## 4. Domain-free cores
+
+**What it means.** The reusable logic at the centre of a build - an agent's core
+instructions, a shared skill - carries no customer name, no specific business process, no
+detail that belongs to one company. Everything specific to one company arrives as
+configuration, supplied alongside the core rather than baked into it.
+
+**What good looks like.**
+- The core reads like a description of a role or a job to do, not like one company's
+  process written out in prose.
+- Every piece of company-specific detail is supplied through configuration, and the core
+  contains nothing beyond what that configuration actually declares.
+- The same core can serve a different company or a different industry by changing only its
+  configuration, with no edit to the core itself.
+
+**How it goes wrong.**
+- **The baked-in business.** A prompt or a body of logic carrying one company's product
+  list, terminology or process, which goes stale the moment that company's data changes.
+- **The company name in a general part.** A part named for one deal or one customer, which
+  the next team cannot reuse without renaming and rewriting it.
+- **The configuration that lies.** Settings declared and never actually used by the core, or
+  used by the core without ever being declared - so nobody can tell what the core actually
+  depends on.
+- **The baked address.** A machine's network address written into a workflow. It ties the
+  build to one network, so moving the installation means finding and changing every step that
+  used it. Refer to services by the installation's own internal names, and confirm them with
+  whoever runs it.
+
+**Questions to ask.**
+1. Search the core logic for a company name, an account identifier, or a customer-specific
+   term. What comes back?
+2. Could this core serve a different company or industry by changing only its
+   configuration?
+3. Does every setting in the configuration actually get used by the core, and does the core
+   use nothing beyond what is declared?
+4. Does any workflow contain a machine's network address?
+
+## 5. Human governance
+
+**What it means.** A gate is a recorded decision on a specific item - who decided, what they
+decided, and when - and it fails closed. No decision recorded means no output goes out. The
+surface a person uses to decide is a design choice per use case; that the decision gets
+recorded is not.
+
+**What good looks like.**
+- The gate works out its own answer from the underlying data, rather than trusting whatever
+  the AI just said in the same turn.
+- The decision is written down with who decided, what they decided, and when - captured by
+  the system itself, not just visible in a chat transcript.
+- Nothing consequential is auto-approved. A missing decision blocks the output rather than
+  letting it through by default.
+- The ask pauses the process, it does not end it. Once the decision lands, the same run
+  carries on by itself - finishing the job or telling the person who asked - without anyone
+  having to come back and ask again.
+
+**How it goes wrong.**
+- **The gate with nothing behind it.** A status field a person is meant to update, with
+  nothing actually watching it or acting on the change. It looks like oversight and provides
+  none.
+- **The conversational yes.** A person types "yes" to an AI and nothing is recorded anywhere
+  durable, so the decision exists only in a transcript nobody will read again.
+- **The trusting gate.** The approval step reads the number the AI proposed instead of
+  working it out independently, so a wrong number can approve itself.
+- **The self-approving agent.** The agent can write the decision itself - the status, the
+  approval, the decider - through the same tool it uses for everything else. Columns that
+  record a decision should take their starting value when the record is created and refuse
+  every later write from the agent.
+- **The missing verdict read as a pass.** A check that has not run yet, or that failed, leaves
+  a record looking exactly like one that passed. Stamp a verdict on every record, clear ones
+  included, and make every later step wait for it and refuse without it.
+- **The ask that hangs up.** The decision gets recorded and nothing after it moves. The
+  person who asked has to notice and follow up themselves.
+
+**Questions to ask.**
+1. Show the record of the last decision that was made. Who, what, when?
+2. If the approver were unavailable, would anything still go out?
+3. Does the gate work out its own answer, or does it trust a number it was handed?
+4. What happens if the same decision arrives twice?
+5. Can the agent write the columns that record a decision?
+6. What does a later step do when the check has not stamped the record yet?
+7. Approve it, reject it, and leave one unanswered. In each case, does the process carry on
+   by itself - the job finished or the outcome reported - with nobody having to ask twice?
+
+See [Human approval](/learn/build-it-well/human-approval.md) for the five places a person can actually make a
+decision, and why a chat reply on its own is not one of them.
+
+## 6. Native-first
+
+**What it means.** If the platform already gives you a way to do something - move data,
+send a message, wait for a person, connect to another system - use that, rather than writing
+custom code to do it yourself. If you can name a capability as a feature of the
+platform, rebuilding it in custom code hides it, ages badly, and usually ends up needing a
+credential that the built-in way would never have needed.
+
+**What good looks like.**
+- The build reads step by step through the platform's own building blocks, understandable to
+  someone who is not a developer.
+- Connections to other systems are held in the platform's own connection store, scoped and
+  reusable, never embedded inside the build's logic.
+- Where custom code is genuinely needed, it only computes over the inputs it is given; it
+  does not call out to anything else on its own.
+- Any exception is written down: which capability was considered, why it was not used, and
+  what would let it be retired.
+
+**How it goes wrong.**
+- **The hand-rolled shortcut.** Custom code doing something the platform already offers,
+  usually because nobody checked first. It typically needs a credential the built-in way
+  would not have needed, and it breaks the moment the build moves somewhere else.
+- **The glorified script.** One large piece of custom logic with a thin layer of AI on top.
+  It gets the right answer and demonstrates nothing about whether the design holds up.
+- **The silent credential.** A login or key embedded somewhere in a build that nobody wrote
+  down, so nobody ever goes back to remove it.
+
+**Questions to ask.**
+1. Open the build. Can someone who is not a developer say what each step does?
+2. Search the build for anything that looks like a credential or an access key. What comes
+   back?
+3. For each piece of custom code: which platform capability was considered, and why was it
+   not enough?
+4. Move the build to a different account or environment. What breaks?
+
+More on this in [Native-first](/learn/build-it-well/native-first.md).
+
+## 7. Operability
+
+**What it means.** Keeping a build running is part of building it, not an afterthought: a
+way to reset it back to a known state, a fixed set of test cases to score it against, every
+mode of the build actually exercised, and a second, independent pass that checks the first
+one's work.
+
+**What good looks like.**
+- Every part of the build has a test that can run with no live account or credential, and
+  those tests run automatically before anything ships.
+- A fixed set of test cases is scored the same way every time, and a case that could not run
+  is reported as skipped - never silently counted as a pass.
+- A second, independent check reviews the main path and flags disagreements, without quietly
+  fixing them itself.
+- The build can be reset to its starting state from within the platform, not by someone
+  manually restoring it from a laptop.
+- Error replies from tools are short, and each conversation is sized to fit the context of
+  the model that runs it.
+
+**How it goes wrong.**
+- **The unseen green.** A report that a test passed, pasted in rather than actually watched
+  run.
+- **Everyone's own scoring.** Each build inventing its own way of comparing results to
+  expectations, so no two reported scores mean the same thing.
+- **The unresettable demo.** A build that works once and then needs its author personally to
+  put it back together before it can be shown again.
+- **The unaudited pass.** One result, believed, because nothing else ever checked it.
+- **The status taken as the outcome.** A step's status tells you the step ran; the record it
+  was meant to produce tells you the work happened. Check the record.
+- **The trusted answer key.** Test answers are written by people and can be wrong. Where a
+  result disagrees with the key, check the key too, and report results against both the
+  original key and the corrected one.
+
+**Questions to ask.**
+1. Did you run the tests yourself, and did you watch them pass?
+2. Where is the fixed test set, and when was it last scored?
+3. Reset the build. Does it come back to exactly the same state?
+4. What independently checks the main path, and when did it last find a disagreement?
+5. Could someone who did not build this install and run it from the package and the
+   documentation alone?
+6. For each step, which record proves its work happened?
+
+## 8. Security and sovereignty
+
+**What it means.** A credential on this kind of platform is a key to a great deal, not a
+single password to one small thing. Treat it that way: scoped narrowly, held in
+configuration, never embedded in the build's own logic, never committed to a shared
+document, and never handed to an AI coding tool as part of its working context.
+
+**What good looks like.**
+- A build reaches other systems through the platform's own connections, so its logic
+  contains no credential at all and can be shared or moved safely.
+- Any deliberate exception is written down on the build itself, naming what it is and what
+  would remove the need for it.
+- Automated checks catch the rest before anything ships: no credential-shaped text, no
+  internal machine names or file paths, no personal contact details.
+- Masking of sensitive fields is enforced by the platform itself on the underlying data, not
+  by a step in the logic that could be skipped or forgotten. A store of raw, unmasked
+  identifiers is never connected to an AI at all.
+- Which AI models read the data is set per installation and per organisation. Before personal
+  data goes in, confirm with whoever runs the installation that every model it uses - for
+  chat, document reading and search - runs inside the deployment.
+
+**How it goes wrong.**
+- **The convenient shortcut.** Temporarily connecting the store of raw, sensitive data
+  straight to an AI to answer one awkward question. The separation was the whole guarantee,
+  and it just quietly stopped being true.
+- **The credential in the export.** A shared package that only works because it carries a
+  live credential inside it, handed to someone outside the team.
+- **The indistinguishable credential.** Nothing in the process marks a throwaway test
+  credential as different from a live one, so a build can end up using the wrong one. Label
+  test and live credentials differently, and confirm which kind a build is holding before
+  sharing or running it.
+- **The unchecked export.** Sharing an export without opening it first. Open every export
+  before it leaves the team and confirm it holds no credential, no customer data and no
+  personal details.
+- **The credential sent to a webhook.** Run history keeps each run's inputs so a run can be
+  reviewed later - which is exactly why a credential never belongs in a webhook call. Send an
+  identifier and let the workflow use a stored connection.
+
+**Questions to ask.**
+1. Search everything about to be shared for anything that looks like a credential. What
+   comes back?
+2. Is the credential an AI coding tool has access to a limited, disposable one?
+3. Is sensitive-field masking enforced by the platform, or by a step someone could skip?
+4. Who can see the raw, unmasked data, and what actually stops an AI from being connected to
+   it?
+5. What does the last package you shared with someone else actually contain?
+6. Which AI models read this build's data, and is any of them outside the deployment?
+
+
+==================== build-it-well/use-case-shapes.md ====================
+
+---
+level: '3'
+track:
+- build
+verified_on: '2026-09-23'
+---
+
+# Use-case shapes
+
+Most business use cases are not as different from each other as they first look. Once you
+have seen enough of them, they sort into a small number of recurring shapes. Find the shape
+your problem looks like, and you have a first draft of what to assemble - something to argue
+with, not a finished design.
+
+Each shape below names what it looks like, then the kinds of parts it is typically built
+from. These are kinds of parts and what they do, not specific products - the actual building
+blocks live in the platform's own part library.
+
+## 1. Transactional resolver
+
+**It looks like:** someone asks, in plain words, for a priced or configured thing - a quote,
+a booking, a specific option worked out for them.
+
+**Typically assembled from:**
+- an agent tuned to this kind of transaction
+- a skill that looks up existing records
+- a skill that searches for matching records
+- a skill that runs the calculation, showing every input it used
+- a skill that saves the resulting record
+- a skill that puts together a document from a template
+- a skill that asks a person to approve before anything goes out
+- a skill that sends the finished document to the requester
+- where capacity is limited, a skill that reserves a slot against what is genuinely still
+  available, not just against a raw quantity
+
+## 2. Extraction back office
+
+**It looks like:** documents arrive - invoices, applications, forms - and need to become
+checked, structured records.
+
+**Typically assembled from:**
+- an agent that reads incoming documents
+- the platform's own document intake
+- a skill that splits a document into its separate parts before reading them
+- a skill that compares one record against another, including a three-way match where a
+  third source is involved
+- a skill that checks extracted values against rules
+- a skill that finds duplicate records, even ones written slightly differently
+- a skill that saves records
+- a skill that asks a person for a decision on anything that does not clearly pass
+- a skill that sends a message with the outcome
+- an independent pass that audits what the first pass did
+
+## 3. Insights desk
+
+**It looks like:** people ask plain-language questions about data that already exists
+somewhere in the business.
+
+**Typically assembled from:**
+- an agent built for answering questions over data
+- a skill that queries the underlying records and returns the query it actually ran, not
+  just an answer with no working shown
+- a skill that groups and totals records
+- a skill that runs calculations
+- a skill that sends the answer by email
+- an automation that links a new record back to its parent as soon as it appears
+
+Where a figure has to be provable, use the query skill above, which returns the query it ran
+with the answer, so anyone can check the number afterwards.
+
+## 4. Conversational front door
+
+**It looks like:** a channel where anyone might arrive - a chat widget, a messaging app, an
+inbox - and the build has to work out who it is talking to before it can do anything useful.
+
+**Typically assembled from:**
+- an agent standing at that channel
+- a skill that verifies who the sender actually is
+- a skill that finds a matching record, with a sensible fallback when nothing matches
+- the platform's own document intake, for anything sent as a file
+- a skill that screens incoming free text for anything that should not be acted on
+  automatically
+- a skill that asks a person for a decision
+- a skill that issues a single-use access link
+- a skill that sends a message
+- a skill that saves records
+
+## 5. Multi-agent examiner
+
+**It looks like:** a case has to be judged against a rulebook, and the judgment genuinely
+needs more than one point of view - a lead coordinating several specialists.
+
+**Typically assembled from:**
+- a lead agent, one or more specialist assessor agents, a rulebook reader, and a report
+  writer
+- a skill that queries the underlying records
+- a skill that checks values against rules
+- a skill that verifies a quoted line against its source
+- a skill that compares records
+- a skill that runs calculations
+- a skill that saves the resulting records
+- a skill that asks a person for a decision
+- an independent audit pass over the whole case
+
+## 6. Self-filling CRM
+
+**It looks like:** notes, calls and messages arrive continuously, and need to turn into
+records a person then confirms, rather than types in by hand.
+
+**Typically assembled from:**
+- an agent that reads incoming notes and messages
+- a skill that splits an incoming document into its separate parts
+- a skill that verifies a quoted line
+- a skill that saves records, including any nested child records that belong to them
+- a skill that keeps a running history of what changed and when
+- a skill that asks a person to confirm before anything is treated as final
+- a skill that writes a short report
+- a skill that composes and sends an email
+- an automation that waits for a burst of related activity to settle before acting, rather
+  than firing on the very first item and being wrong the moment the rest arrive
+
+## 7. Contract or document management
+
+**It looks like:** one long document - a contract, an agreement, a long-form filing - drives
+a working record and a schedule of things that need to happen against it.
+
+**Typically assembled from:**
+- an agent (sometimes two, working together) that reads the document
+- a skill that splits and routes the document to the right handling
+- a skill that extracts a wide set of fields and checks the result against the full field
+  list
+- a skill that verifies a quoted line
+- a skill that checks values against rules
+- a skill that fills in a template
+- a skill that issues a single-use access link
+- a skill that stores the resulting file
+- a scheduled automation that runs the whole cycle at a set cadence
+
+## 8. Knowledge kit
+
+**It looks like:** people ask questions of a body of documents - policies, manuals, past
+correspondence.
+
+This is the one shape where the easy first instinct is often the wrong one, so it is worth
+splitting in two:
+
+- **"How do I do this"** is a genuine search question. The platform's own built-in retrieval
+  over a set of documents handles this well, and needs nothing more built on top.
+- **"How many" or "which document said this, on what page"** is a counting and citing
+  question, best answered from records rather than retrieval. Index every page as its own
+  record, then use a skill that queries those records and a skill that groups and totals
+  them. Counting and citing are then exact.
+
+## 9. Governance showcase
+
+**It looks like:** the point of the build is demonstrating who may see what - access,
+masking, and audit, rather than any one transaction.
+
+**Typically assembled from:**
+- the platform's own access administration, view-level masking, model governance, and read
+  audit
+- a skill that masks sensitive fields in anything an agent writes out
+- a skill that screens text
+- a skill that issues a single-use access link
+- an output check on the agent's own answers, as a second layer alongside the platform's
+  view-level masking
+
+
+==================== build-it-well/human-approval.md ====================
+
+---
+level: '3'
+track:
+- build
+verified_on: '2026-09-25'
+---
+
+# Human approval
+
+Every build that matters has a moment where a person needs to say yes before something goes
+out. The decision itself is always the same kind of thing. Where a person makes it can be
+different for every use case.
+
+## The decision is one thing, the surface is another
+
+The decision part works out what should happen from the underlying records, refuses to
+proceed if nobody has decided, and writes down who decided, what they decided, and when.
+That part does not change from build to build.
+
+The surface - where and how a person actually makes that decision - is a design choice, made
+per use case, based on where the person already is and how the build needs to behave while
+it waits.
+
+## Five places a person can make it
+
+| Surface | How it works | Use it when |
+|---|---|---|
+| **A field on a record** | a person flips a status field on a board or list; the next step fires automatically once it changes | the reviewer already works from that board day to day. No custom interface needed, and the most common surface by far |
+| **A pause that genuinely waits** | the build actually suspends the run until someone resolves it, rather than polling or guessing | the process must not continue at all until a person acts |
+| **A single-use link** | a signed link, one per possible outcome; visiting it shows the details, and confirming on it writes the decision | the reviewer is somewhere else entirely, and building them a portal is overkill |
+| **An approval card in chat** | the build posts a message with buttons in the channel the reviewer already uses; the run resumes on the click | the reviewer lives in that channel already |
+| **A command in a conversation** | a verified person types an approval, referencing the specific item; the system records it against that item | the reviewer is already talking with an agent, and the channel can verify who they are |
+
+All five end at the same place: a recorded decision, tied to a specific item, with who
+decided and when.
+
+Recording the decision is not the last step. Whichever surface was used, the process picks
+back up on its own once the decision lands - finishing the job it was waiting on, or telling
+the person who asked what happened - without anyone having to notice and come back to ask
+again.
+
+Which surfaces are available depends on your installation and version; your iMBrace contact
+can confirm them. The field on a record is the most widely used and the simplest place to
+start. Whatever surface you choose, walk the path as the reviewer before you rely on it: they
+are told, they open the item, they record the decision.
+
+## A proven combination: a board column that resumes a paused workflow
+
+When the process must genuinely wait and the reviewer works from a board, combine the first
+two surfaces. The workflow creates a task (the Todos step), notifies the reviewer - for
+example by email, with a link to the record, never a link that decides - and then pauses to
+wait. The reviewer picks approve or reject in a single-choice column on the record. An
+automation bound to that one column resumes the paused task. The workflow - not the edit -
+then writes the outcome, so there is exactly one writer for the decision.
+
+Notify the reviewer directly. A waiting task only moves when the reviewer knows it is there,
+so the message with a link to the record is a required step of the pattern, not an extra.
+
+## The rule that does not bend
+
+**A friendly "yes" typed into a chat is not, by itself, a decision.** It is flow control -
+it might tell the conversation to keep going - but on its own it leaves no durable record
+that anyone can point to later and say: this was approved, by this person, at this time.
+
+The command surface above is not an exception to that rule. It is what makes a chat message
+count as a decision: the system captures it as a structured record against a specific item,
+with a verified sender, rather than leaving it sitting in a transcript. A bare "yes" with
+nothing to tie it to a specific item is not accepted as a decision at all.
+
+Two more rules worth holding onto:
+
+- **The gate works out its own answer.** It recomputes the outcome from the underlying
+  records rather than trusting a number it was just handed in the same interaction. A gate
+  that trusts what it is told will happily approve a wrong number.
+- **No decision means no output.** Not a default. Not a timeout that lets things through
+  after a while. If nobody has decided, nothing goes out.
+
+## Four details that make a gate hold
+
+- **A board edit takes effect when it is saved.** Test the gate from the saved state, and
+  include "press Save" in the reviewer's instructions.
+- **A decision link shows first and acts only on confirm.** Opening a link - by a person, a
+  mail scanner or a preview - must never be enough to record a decision. Send decision links
+  only to the reviewer, and keep them, and any identifier that could make the decision, off
+  the record itself.
+- **The agent must never be able to write the decision.** Build the columns that record a
+  decision so they take their starting value when the record is created and refuse every later
+  write from the agent - give the agent narrow tools that cannot reach them.
+- **"No verdict yet" must never read as a pass.** A check that has not run, or that failed,
+  leaves the record looking exactly like one that passed. Stamp a verdict on every record,
+  clear ones included, and make every later step wait for it and refuse without it.
+
+## Prove the gate is wired, not just present
+
+A control point is only as good as what is bound to it. Confirm the status field triggers a
+real automation on every value it can take, not only the ones you expect.
+
+Wire the surface to something that genuinely depends on it, and exercise the whole path end
+to end - including the "nobody decided yet" case - before calling the approval step done.
+
+
+==================== build-it-well/native-first.md ====================
+
+---
+level: '3'
+track:
+- build
+verified_on: '2026-09-23'
+---
+
+# Native-first
+
+Before writing custom code to do something, check whether the platform already does it. This
+is not a style preference. It changes what your build costs to run, how safely it can be
+moved, and how easily someone else can understand it later.
+
+## The idea in one sentence
+
+If a person could point at a capability and name it as a feature of the platform, it is
+almost certainly already built in. Rebuilding it yourself in custom code hides what it does
+behind code someone has to read, tends to age badly as the platform evolves, and very often
+ends up needing a login credential that the built-in way would never have needed at all.
+
+## What the platform typically gives you, out of the box
+
+A working platform of this kind ships with a large amount of ready-made capability: reading
+and writing structured records, sending mail and chat messages across the usual channels,
+calendars, spreadsheets, file storage, handling incoming documents, pausing a process to
+wait for a person, calling one process from another, routing and looping within a process,
+and stopping a run cleanly. Connections to accounts and other systems live in the platform's
+own connection store - configured once, referenced by a build, and never carried inside the
+build's own logic.
+
+Before writing a line of custom code, it is worth checking the platform's current capability
+list for something that already does the job. New capability ships regularly, and the safest
+default is always to look before you build.
+
+## When custom code is genuinely justified
+
+Two things both need to be true:
+
+1. **Nothing built in does the job**, and you can say specifically what you checked and why
+   it was not enough.
+2. **The code is pure** - it only computes over the values it is given. It does not itself
+   call out to another system with a credential of its own. If it genuinely needs to reach
+   another system, it does that through one of the platform's own connections, not through a
+   key embedded in the code.
+
+Any exception to native-first should be written down plainly: what was considered, why it
+was not used, and what would let the custom code be retired later. Treat an exception as a
+temporary, named debt rather than a quiet permanent choice - and retire it the moment a
+built-in way to do the same job ships.
+
+## Why this matters more than it sounds like it should
+
+- **Nothing in a build should ever hold a credential.** A build that only ever uses the
+  platform's own connections contains no login details, no API keys, nothing of that shape
+  at all. That means the build itself can be shared, exported, or moved to another account
+  safely - there is nothing inside it that needs to be rotated, redacted, or worried about.
+- **A build using built-in capability is readable by someone who is not a developer.** They
+  can open it and see, step by step, what each part does, without opening any code.
+  Custom code hides that behind a wall only a developer can read.
+- **It survives being moved.** Export a build made from built-in capability into a
+  different account, and it needs no rewiring. A build with a credential baked into it
+  breaks, or worse, quietly keeps working using the wrong account's access. Connections that
+  use a provider sign-in, such as Gmail, are authorised once per account by someone with
+  access; a mail-server (SMTP) connection is configured once with the server's details.
+
+## What good looks like
+
+- The build reads step by step in the platform's own view, understandable without opening
+  any code.
+- A search of the build's logic for anything credential-shaped turns up nothing.
+- Every piece of custom code, if any, has a note saying which built-in capability was
+  considered and why it was not enough.
+- Moving the build to a different account changes nothing about how it behaves.
+
+## A worked example
+
+Take a quoting assistant: sending the finished document needs no custom code at all - the
+steps read the record, route on its status, format a date, send the mail and update the
+record, all built in. The approval step works the same way, with a built-in task that pauses
+the process until a person decides, then picks up again on its own and sends the document.
+Custom code is typically limited to a few things: the arithmetic, a database query, a final
+verification check and the layout of the document itself.
+
+
+==================== build-it-well/document-models.md ====================
+
+---
+level: '3'
+track:
+- build
+verified_on: '2026-09-23'
+---
+
+# Document models
+
+When DocIQ reads a document - a CV, an invoice, a purchase order - a **document model** tells
+it what to pull out and which record to fill. There are three ways to get one, and they are
+in strict order.
+
+1. **Adopt the organisation's default.** The platform ships a large library of models,
+   including resumes, invoices, purchase orders and onboarding checklists. Adopting one costs
+   nothing, and every future build on the organisation sees the same fields.
+2. **Extend a default when a field is genuinely missing.** Ask your iMBrace contact. Adding
+   a field to the default puts it in front of every organisation, instead of forking a model
+   for one customer.
+3. **Write your own only where no default exists**, and write it in the platform's own style,
+   so that a future default can replace it cleanly.
+
+## What not to do
+
+- **Manage a model as its own deliberate step, never as a side effect of a build.** Create or
+  change a document model outside a running build, so every build that reads a given document
+  type points at the same, single model.
+- **Do not leave the choice of model to chance.** Where a step always reads one kind of
+  document, tell it which model to use, so every document lands on the board you intend.
+
+## Validate with your own documents
+
+Check each of these with a few of your own documents before a design depends on it:
+
+- **A wide model.** A model with dozens of fields is easier to validate as several focused
+  passes. Whatever the size, check each result against the field list so every field is
+  accounted for.
+- **Nested rows.** Line items on an invoice, jobs in a CV's work history: confirm in your
+  test set that each child row lands on the board linked to its parent.
+- **A document that is really a table** - a price list, a statement - is many records, not
+  one. Read it as rows.
+- **A document that does not look like its type.** Include atypical examples in your test
+  set - a job description with no duties section, a form missing its standard headings - and
+  make sure the agent reports an unrecognised document as unrecognised, never as a success.
+- **Organisation-wide settings.** DocIQ's model settings are shared across the organisation.
+  Record the settings your build was tested with next to your test set, and re-run the set
+  whenever they change.
+- **Where the models run.** Which model reads your documents is set per installation and per
+  organisation. Where personal data must stay on premises, have whoever runs the installation
+  confirm that every model DocIQ uses - for reading and for search - runs inside it, before
+  the first real document goes in.
+
+## Design choices that pay off
+
+- **Fewer models is cheaper and more accurate.** Classification compares each document with
+  every model in the organisation, so every unused model adds cost and room for error. Keep
+  the models you use, and where a step always reads one kind of document, point it at that
+  document's board so the model is fixed.
+- **Give a closed vocabulary to any field you will group or chart by.** List the allowed
+  values in the field's description, so grouping and charting work from a fixed, known set
+  of terms.
+- **Describe each document type by what it is and what it is not.** Descriptions that name the
+  near-identical types a document is not are what keep them apart.
+
+
+==================== build-it-well/anti-patterns.md ====================
+
+---
+level: '3'
+track:
+- build
+verified_on: '2026-09-26'
+---
+
+# Anti-patterns
+
+Each of these looks reasonable at the time, which is exactly why they are worth naming in
+advance.
+
+## The gate with nothing behind it
+
+A status field a person is meant to update, with nothing actually watching it or acting on
+the change. **What it costs:** it looks like oversight in a review and provides none in
+production - things go out with nobody having genuinely approved them. **The fix:** wire the
+surface to something that truly depends on it, and exercise the full path - including the
+"nobody decided yet" case - end to end before calling it done.
+
+## The ask that hangs up
+
+A build asks a person for a decision, then stops there. The decision gets recorded, but
+nothing downstream moves: the document is not sent, the person who asked is not told, and
+they have to notice and come back to ask again. **What it costs:** it passes a review and
+fails in production - work sits recorded but unfinished, and someone has to chase it by
+hand. **The fix:** design the ask to pick back up once it is answered - approved, rejected,
+or left open - so the process finishes the job or reports the outcome on its own.
+
+## The confident summary
+
+An AI-produced answer that reads well and has nothing behind it. **What it costs:** it
+survives review precisely because it reads convincingly, and a decision gets made on a
+number nobody can actually trace. **The fix:** require every figure to carry the record it
+came from; when the answer is not in the data, say so plainly instead of filling the gap.
+
+## The calculator you can skip
+
+Nothing forces arithmetic through one dedicated, checkable step, so under load the AI just
+works the sum out itself. **What it costs:** it is usually right, which is what makes it
+dangerous - the failures are rare, silent, and easy to miss until someone checks. **The
+fix:** route all arithmetic through one dedicated calculating step, every time, with the
+inputs shown.
+
+## The rulebook in the prompt
+
+Limits, criteria or thresholds written into an AI's instructions instead of held as
+editable data. **What it costs:** a business person cannot change a number without going
+through a developer, and nobody can audit which rule actually fired on a given case. **The
+fix:** hold rules as data on a record a non-developer can open and edit directly.
+
+## The forked copy
+
+Copying a working build's internals to create a near-identical version for a new case,
+instead of parameterising the original. **What it costs:** two things to maintain that
+quietly drift apart, and the next person often does not even know a second copy exists.
+**The fix:** parameterise instead of copying. If a genuine second version is truly needed,
+give it its own name and its own documentation rather than letting it masquerade as the
+first.
+
+## The hand-rolled shortcut
+
+Custom code doing something the platform already offers as a built-in capability, usually
+because nobody checked first. **What it costs:** it typically needs a credential the
+built-in way would never have needed, and it breaks the moment the build is moved to another
+account. **The fix:** check the platform's current capability list before writing any code.
+See [Native-first](/learn/build-it-well/native-first.md).
+
+## The unchecked extraction
+
+Trusting an extraction result without comparing it with what was asked for. **What it
+costs:** a missing field is easy to overlook when nobody checks the output against the field
+list. **The fix:** check every result against the field list, and keep a long field list as
+several focused passes.
+
+## The retrieval count
+
+Treating a counting or citing question - "how many," "which document, on what page" - as a
+search question. **What it costs:** that kind of question needs structured records to answer
+exactly; retrieval alone cannot show its working. **The fix:** index the material into
+structured records and query them. Save search-and-retrieve for genuine "how do I"
+questions.
+
+## The leading-edge fire
+
+A process reacts to the very first item in a related burst of activity, instead of waiting
+for the burst to settle. **What it costs:** the result is generated before the rest of the
+related items have arrived, and it is wrong or incomplete the moment they do. **The fix:**
+wait for the burst to go quiet, then act once, on the complete picture.
+
+## The trusting gate
+
+An approval step that reads the number the AI just proposed instead of working it out
+independently from the underlying records. **What it costs:** a wrong number can approve
+itself, because nothing ever checked it against the source. **The fix:** the gate always
+re-derives its own answer.
+
+## The self-report
+
+A build reporting its own success - a plausible-looking pasted result, a status of "done" or
+"live" for something nobody actually watched run. **What it costs:** confidence in a state
+of the world that was never actually observed. **The fix:** run it yourself, watch it
+happen, and only mark something as working once someone has genuinely seen it work.
+
+## The convenient shortcut around privacy
+
+Temporarily connecting a store of raw, sensitive data directly to an AI to answer one
+awkward question. **What it costs:** the separation between sensitive data and the AI was
+the entire privacy guarantee, and it has just quietly stopped being true - even if only for
+a moment. **The fix:** never connect it, even briefly. If a question genuinely needs the raw
+data, it is the wrong question for that AI to be answering.
+
+## The answer key in the prompt
+
+The expected answers - the figures a demo should show - written into the agent's own
+instructions. **What it costs:** the demo passes while the tools behind it are wrong, and
+nobody finds out until a real question is asked. **The fix:** expected values live in the
+test set, never in the instructions, and a check before the agent goes live refuses
+instructions that contain them.
+
+## Memory as the data source
+
+An agent answers a live-data question from what it remembers, or from a document attached to
+it some time ago, instead of reading the source in front of it. **What it costs:** a
+confident answer with yesterday's figures in it. **The fix:** attach no documents to an agent
+that answers from live data, give it a standing rule never to save figures to memory or
+answer from memory, and keep a test question that would catch a stale answer. Keep the
+conversation's own history on for any agent that holds a conversation - it needs it to stand
+by what it said earlier.
+
+## Conceding a disputed figure
+
+A person offers their own number and the agent drops its correct, tool-computed figure to
+agree with them. **What it costs:** the answer becomes whatever the most confident person in
+the conversation says. **The fix:** give the agent a challenge rule - re-run the tool, try to
+reproduce the person's figure with a tool, and say plainly what each figure covers.
+
+## The pivot photograph
+
+Reading a pivot table in a converted spreadsheet as if it still calculated. When an Excel
+workbook is converted to Google Sheets, its pivot tables keep the values they showed at that
+moment and stop updating. **What it costs:** every figure taken from the pivot is frozen at
+the conversion date, however current the rows beneath it are. **The fix:** calculate from
+the raw rows, and say so wherever the pivot is shown.
+
+## The whole tab in the turn
+
+A large sheet or table handed whole to an agent in a single turn. **What it costs:** it is
+more than the agent can take in at once, and whatever follows is built on a partial read
+that looks complete. **The fix:** read it with the platform's own read step, total it in a
+calculation step, and give the agent only the finished figures, with the rows, filters and
+dates they came from. See [Native-first](/learn/build-it-well/native-first.md).
+
+## The unused shared part
+
+Something built because it seemed generally useful, then never actually reused, but still
+maintained indefinitely. **What it costs:** ongoing upkeep for something that returns no
+value, and a false sense that the build is more modular than it actually is. **The fix:**
+do not label something reusable until at least two real, separate, named needs for it exist.
+
+
+==================== build-it-well/review-checklist.md ====================
+
+---
+level: '3'
+track:
+- build
+verified_on: '2026-09-25'
+---
+
+# Review checklist
+
+This is the same review used internally, written so you can run it on your own build.
+It takes about an hour, and it is far more useful when the person running it did not build
+the thing being reviewed.
+
+## How to run it
+
+1. Copy the scoring table below next to the build you are reviewing.
+2. Work through each principle's questions, drawn from
+   [The eight principles](/learn/build-it-well/the-eight-principles.md).
+3. Score every question: **achieved**, **partial**, **not achieved**, or **not
+   applicable**.
+4. Every score needs an **anchor** - something concrete that proves it: a specific record, a
+   pasted result you watched happen, a screenshot of the actual behaviour. A score with
+   nothing behind it is an opinion, not a review.
+5. Anything scored **not achieved** becomes either a fix before you ship, or a written,
+   dated note saying who accepted the gap and why.
+
+## The rules that make it worth doing
+
+- **The reviewer did not build it.** A person reviewing their own work tends to find only
+  what they already knew about.
+- **Run things; do not just read about them.** Do not assume a test passes because it looks
+  like it should. Run it and watch the result.
+- **"Not applicable" needs a reason.** It is a legitimate score, but silence is not - write
+  down why the question does not apply here.
+- **A partial is not a pass.** It is a named gap with an owner and, ideally, a date to
+  revisit it.
+- **This reviews the build, not the person.** The goal is a better artifact, not a
+  judgement on whoever made it.
+
+## 1. Provenance
+
+| # | Question | Score | Anchor | Note |
+|---|---|---|---|---|
+| 1 | Can you get from a figure in the output to the record behind it, unaided? | | | |
+| 2 | Does the answer carry an as-of date? | | | |
+| 3 | Is a quoted line proved against its source, with a location? | | | |
+| 4 | What does a person see when the data cannot answer the question? | | | |
+| 5 | Does each quoted line support its verdict, or does it only appear in the source? | | | |
+
+## 2. Determinism
+
+| # | Question | Score | Anchor | Note |
+|---|---|---|---|---|
+| 1 | Where, specifically, is each number computed? | | | |
+| 2 | Can a business person change a threshold without a developer? | | | |
+| 3 | Does the same question, asked twice, give the same answer? | | | |
+| 4 | What happens when the system meets a rule it does not yet implement? | | | |
+
+## 3. Modularity
+
+| # | Question | Score | Anchor | Note |
+|---|---|---|---|---|
+| 1 | For anything labelled shared, name both real, separate uses of it. | | | |
+| 2 | Does any variant actually differ by an edit, rather than by its configuration? | | | |
+| 3 | Can a part be tested on its own, with no live account or network? | | | |
+| 4 | Is there anything in the build with no real, named user? | | | |
+
+## 4. Domain-free cores
+
+| # | Question | Score | Anchor | Note |
+|---|---|---|---|---|
+| 1 | Does the core logic contain a company name or a customer-specific detail? | | | |
+| 2 | Could this core serve a different company by changing only its configuration? | | | |
+| 3 | Does every setting in the configuration get used, and is everything used declared? | | | |
+| 4 | Does any workflow contain a machine's network address? | | | |
+
+## 5. Human governance
+
+| # | Question | Score | Anchor | Note |
+|---|---|---|---|---|
+| 1 | Show the record of the last decision made. Who, what, when? | | | |
+| 2 | If the approver were unavailable, would anything still go out? | | | |
+| 3 | Does the gate work out its own answer, or trust one it was handed? | | | |
+| 4 | What happens when the same decision arrives twice? | | | |
+| 5 | Can the agent write the columns that record a decision? | | | |
+| 6 | What does a later step do when the check has not stamped the record yet? | | | |
+| 7 | Approve it, reject it, and leave one unanswered. Does the process carry on by itself each time? | | | |
+
+## 6. Native-first
+
+| # | Question | Score | Anchor | Note |
+|---|---|---|---|---|
+| 1 | Can someone who is not a developer read the build and say what each step does? | | | |
+| 2 | Does a search of the build turn up anything credential-shaped? | | | |
+| 3 | For each piece of custom code, which built-in capability was considered and rejected, and why? | | | |
+| 4 | Move the build to a different account. What breaks? | | | |
+
+## 7. Operability
+
+| # | Question | Score | Anchor | Note |
+|---|---|---|---|---|
+| 1 | Did you run the tests yourself, and watch them pass? | | | |
+| 2 | Where is the fixed test set, and when was it last scored? | | | |
+| 3 | Does a reset restore the build to exactly the same starting state? | | | |
+| 4 | What independently checks the main path, and when did it last disagree with it? | | | |
+| 5 | Could a stranger install and run this from the package and the documentation alone? | | | |
+| 6 | For each step, which record proves its work happened? | | | |
+
+## 8. Security and sovereignty
+
+| # | Question | Score | Anchor | Note |
+|---|---|---|---|---|
+| 1 | Does anything about to be shared contain a credential shape? | | | |
+| 2 | Is the credential any AI tool has access to a limited, disposable one? | | | |
+| 3 | Is sensitive-field masking enforced by the platform, or by a step that could be skipped? | | | |
+| 4 | Who can see raw, unmasked data, and what actually stops an AI being connected to it? | | | |
+| 5 | What does the last package you shared actually contain? | | | |
+| 6 | Which AI models read this build's data, and is any of them outside the deployment? | | | |
+
+## Gaps accepted
+
+| Gap | Why it is acceptable now | Accepted by | Date | Revisit when |
+|---|---|---|---|---|
+| | | | | |
