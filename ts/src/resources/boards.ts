@@ -233,7 +233,14 @@ export interface DeleteFilesResponse {
 }
 
 export interface UploadFileResponse {
-  url: string
+  id: string
+  _id?: string
+  name?: string
+  folder_id?: string
+  key?: string
+  /** Not returned by the current data-board service. */
+  url?: string
+  /** Not returned by the current data-board service; use `id`. */
   file_id?: string
   [key: string]: unknown
 }
@@ -298,7 +305,7 @@ export class BoardsResource {
   }
 
   async get(boardId: string): Promise<Board> {
-    return this.http.getFetch()(`${this.base}/boards/${boardId}`, { method: "GET" }).then(r => r.json())
+    return this.http.getFetch()(`${this.base}/boards/${boardId}`, { method: "GET" }).then(r => r.json()).then(unwrapData)
   }
 
   /**
@@ -313,7 +320,7 @@ export class BoardsResource {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
-    }).then(r => r.json())
+    }).then(r => r.json()).then(unwrapData)
   }
 
   async update(boardId: string, body: UpdateBoardInput): Promise<Board> {
@@ -321,7 +328,7 @@ export class BoardsResource {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
-    }).then(r => r.json())
+    }).then(r => r.json()).then(unwrapData)
   }
 
   async delete(boardId: string): Promise<void> {
@@ -370,20 +377,22 @@ export class BoardsResource {
    * Add a field to a board. data-board returns the field directly (unlike
    * legacy backend which returned the full Board).
    */
+  /** Adds a field. data-board responds with the whole board; the new field is returned. */
   async createField(boardId: string, body: CreateFieldInput): Promise<BoardField> {
     return this.http.getFetch()(`${this.base}/boards/${boardId}/fields`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
-    }).then(r => r.json())
+    }).then(r => r.json()).then(res => pickField(unwrapData(res), fields => [...fields].reverse().find(fl => fl.name === body.name)))
   }
 
+  /** Updates a field. data-board responds with the whole board; the updated field is returned. */
   async updateField(boardId: string, fieldId: string, body: UpdateFieldInput): Promise<BoardField> {
     return this.http.getFetch()(`${this.base}/boards/${boardId}/fields/${fieldId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
-    }).then(r => r.json())
+    }).then(r => r.json()).then(res => pickField(unwrapData(res), fields => fields.find(fl => (fl.id ?? fl._id) === fieldId)))
   }
 
   async deleteField(boardId: string, fieldId: string): Promise<void> {
@@ -414,7 +423,7 @@ export class BoardsResource {
   }
 
   async getItem(boardId: string, itemId: string): Promise<BoardItem> {
-    return this.http.getFetch()(`${this.base}/boards/${boardId}/items/${itemId}`, { method: "GET" }).then(r => r.json())
+    return this.http.getFetch()(`${this.base}/boards/${boardId}/items/${itemId}`, { method: "GET" }).then(r => r.json()).then(unwrapData)
   }
 
   async createItem(boardId: string, body: CreateItemInput): Promise<BoardItem> {
@@ -422,7 +431,7 @@ export class BoardsResource {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
-    }).then(r => r.json())
+    }).then(r => r.json()).then(unwrapData)
   }
 
   /**
@@ -435,7 +444,7 @@ export class BoardsResource {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
-    }).then(r => r.json())
+    }).then(r => r.json()).then(unwrapData)
   }
 
   async deleteItem(boardId: string, itemId: string): Promise<void> {
@@ -674,4 +683,15 @@ export class BoardsResource {
   async getOneDriveSessionStatus(): Promise<OneDriveSessionStatus> {
     return this.http.getFetch()(`${this.base}/auth/onedrive/files/session/status`, { method: "GET" }).then(r => r.json())
   }
+}
+
+/** data-board wraps single boards and items in `{ data }`. */
+function unwrapData(res: any): any {
+  return res && typeof res === "object" && !Array.isArray(res) && "data" in res ? res.data : res
+}
+
+/** Field endpoints return the parent board; pick the field out of `board.fields`. */
+function pickField(res: any, find: (fields: any[]) => any): any {
+  if (res && Array.isArray(res.fields)) return find(res.fields) ?? res
+  return res
 }

@@ -1,4 +1,6 @@
 import { HttpTransport } from "../http.js";
+import { ImbraceError } from "../errors.js";
+import { retired } from "./retired.js";
 import { randomUUID } from "crypto";
 
 function buildQuery(
@@ -38,54 +40,35 @@ export class AiAgentResource {
       .then((r) => r.json());
   }
 
-  // --- Chat v1 ---
+  // --- Chat history ---
+  // The /ai-agent/chat list/get/delete routes were removed from ai-agent; these now
+  // use the chat-client store (same as listClientChats / getClientChat / deleteClientChat).
 
-  /**
-   * List chats (legacy chat-v1 store). `organization_id` falls back to the SDK
-   * client's configured org id if not supplied — service requires it in the
-   * query string.
-   *
-   * NOTE: On the current prod-v2 gateway the underlying `/ai-agent/chat`
-   * endpoint backs onto a Mongo `chats` collection that is frequently
-   * unavailable, returning `500 "chats.find() buffering timed out"` after 10s.
-   * For listing a user's conversations, prefer {@link listClientChats}
-   * (`/ai-agent/chat-client/chats`), which is the actively-served store.
-   */
+  /** List chats — `GET /ai-agent/chat-client/chats`. */
   async listChats(params?: {
     organization_id?: string;
     user_id?: string;
     limit?: number;
   }): Promise<any> {
-    const merged = {
-      organization_id: this.http.getOrganizationId(),
-      ...params,
-    };
-    return this.http
-      .getFetch()(`${this.base}/chat${buildQuery(merged)}`)
-      .then((r) => r.json());
+    return this.listClientChats({
+      organization_id: params?.organization_id ?? this.http.getOrganizationId(),
+      limit: params?.limit,
+    });
   }
 
-  async getChat(id: string, includeMessages?: boolean): Promise<any> {
-    return this.http
-      .getFetch()(
-        `${this.base}/chat/${id}${buildQuery({ include_messages: includeMessages })}`,
-      )
-      .then((r) => r.json());
+  /** Get a chat — `GET /ai-agent/chat-client/chats/:id`. */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- kept for callers
+  async getChat(id: string, _includeMessages?: boolean): Promise<any> {
+    return this.getClientChat(id);
   }
 
+  /** Delete a chat — `DELETE /ai-agent/chat-client/chats/:id`. */
   async deleteChat(
     id: string,
-    params?: { organization_id?: string; user_id?: string },
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- kept for callers
+    _params?: { organization_id?: string; user_id?: string },
   ): Promise<any> {
-    const merged = {
-      organization_id: this.http.getOrganizationId(),
-      ...params,
-    };
-    return this.http
-      .getFetch()(`${this.base}/chat/${id}${buildQuery(merged)}`, {
-        method: "DELETE",
-      })
-      .then((r) => r.json());
+    return this.deleteClientChat(id);
   }
 
   // --- Chat v2 (streaming — returns raw Response for SSE consumption) ---
@@ -128,7 +111,8 @@ export class AiAgentResource {
    *
    * Server events have the shape `data: {"type": "text-delta", "delta": "..."}`
    * (with control events like `start`, `text-start`, `finish` mixed in). This
-   * helper filters to text deltas only.
+   * helper filters to text deltas only, and throws if the server streams an
+   * `error` event (e.g. an invalid model), which would otherwise yield nothing.
    *
    * @example
    * for await (const chunk of client.aiAgent.streamChatText({ assistant_id, messages })) {
@@ -159,13 +143,17 @@ export class AiAgentResource {
         if (!payload || payload === "[DONE]") continue;
         try {
           const evt: any = JSON.parse(payload);
+          if (evt?.type === "error") {
+            throw new ImbraceError(`streamChatText: ${evt.errorText ?? "stream error"}`);
+          }
           if (evt?.type === "text-delta" && typeof evt.delta === "string") {
             yield evt.delta;
           } else if (typeof evt?.choices?.[0]?.delta?.content === "string") {
             // OpenAI-shape fallback (in case server is reconfigured)
             yield evt.choices[0].delta.content;
           }
-        } catch {
+        } catch (e) {
+          if (e instanceof ImbraceError) throw e;
           // Non-JSON heartbeats — ignore.
         }
       }
@@ -212,64 +200,46 @@ export class AiAgentResource {
       .then((r) => r.json());
   }
 
-  // --- Embeddings / files ---
+  // --- Embeddings / files (retired) ---
+  // ai-agent no longer serves /embedding/*. RAG files are handled by client.ai
+  // (listRagFiles, getRagFile, uploadRagFile, deleteRagFile).
+  /* eslint-disable @typescript-eslint/no-unused-vars -- retired methods keep their signatures for callers */
 
-  async processEmbedding(body: {
-    fileId: string;
-    options?: Record<string, unknown>;
-  }): Promise<any> {
-    return this.http
-      .getFetch()(`${this.base}/embedding/process`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      })
-      .then((r) => r.json());
+  /** @deprecated Retired; throws. Use `client.ai.uploadRagFile()`. */
+  async processEmbedding(_body: { fileId: string; options?: Record<string, unknown> }): Promise<any> {
+    return retired("aiAgent.processEmbedding", "the ai-agent embedding routes were removed", "Use client.ai.uploadRagFile() instead.");
   }
 
-  async listEmbeddingFiles(
-    params?: Record<string, string | number>,
-  ): Promise<any> {
-    return this.http
-      .getFetch()(`${this.base}/embedding/files${buildQuery(params ?? {})}`)
-      .then((r) => r.json());
+  /** @deprecated Retired; throws. Use `client.ai.listRagFiles()`. */
+  async listEmbeddingFiles(_params?: Record<string, string | number>): Promise<any> {
+    return retired("aiAgent.listEmbeddingFiles", "the ai-agent embedding routes were removed", "Use client.ai.listRagFiles() instead.");
   }
 
-  async getEmbeddingFile(id: string): Promise<any> {
-    return this.http
-      .getFetch()(`${this.base}/embedding/files/${id}`)
-      .then((r) => r.json());
+  /** @deprecated Retired; throws. Use `client.ai.getRagFile()`. */
+  async getEmbeddingFile(_id: string): Promise<any> {
+    return retired("aiAgent.getEmbeddingFile", "the ai-agent embedding routes were removed", "Use client.ai.getRagFile() instead.");
   }
 
-  async previewEmbeddingFile(params?: Record<string, string>): Promise<any> {
-    return this.http
-      .getFetch()(
-        `${this.base}/embedding/files/preview${buildQuery(params ?? {})}`,
-      )
-      .then((r) => r.json());
+  /** @deprecated Retired; throws. */
+  async previewEmbeddingFile(_params?: Record<string, string>): Promise<any> {
+    return retired("aiAgent.previewEmbeddingFile", "the ai-agent embedding routes were removed");
   }
 
-  async updateEmbeddingFileStatus(id: string, status: string): Promise<any> {
-    return this.http
-      .getFetch()(`${this.base}/embedding/files/${id}/status`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-      })
-      .then((r) => r.json());
+  /** @deprecated Retired; throws. */
+  async updateEmbeddingFileStatus(_id: string, _status: string): Promise<any> {
+    return retired("aiAgent.updateEmbeddingFileStatus", "the ai-agent embedding routes were removed");
   }
 
-  async deleteEmbeddingFile(id: string): Promise<any> {
-    return this.http
-      .getFetch()(`${this.base}/embedding/files/${id}`, { method: "DELETE" })
-      .then((r) => r.json());
+  /** @deprecated Retired; throws. Use `client.ai.deleteRagFile()`. */
+  async deleteEmbeddingFile(_id: string): Promise<any> {
+    return retired("aiAgent.deleteEmbeddingFile", "the ai-agent embedding routes were removed", "Use client.ai.deleteRagFile() instead.");
   }
 
-  async classifyFile(params?: Record<string, string>): Promise<any> {
-    return this.http
-      .getFetch()(`${this.base}/embedding/classify${buildQuery(params ?? {})}`)
-      .then((r) => r.json());
+  /** @deprecated Retired; throws. */
+  async classifyFile(_params?: Record<string, string>): Promise<any> {
+    return retired("aiAgent.classifyFile", "the ai-agent embedding routes were removed");
   }
+  /* eslint-enable @typescript-eslint/no-unused-vars */
 
   // --- Data Board ---
 

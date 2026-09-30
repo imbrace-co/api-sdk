@@ -1,5 +1,5 @@
 import { HttpTransport } from "../http.js"
-import { ImbraceError } from "../errors.js"
+import { retired as retiredMethod } from "./retired.js"
 import type { IpsProfile, Identity, PagedResponse } from "../types/index.js"
 
 export interface Scheduler {
@@ -76,7 +76,7 @@ export interface EnableExternalDataSyncResponse {
 }
 
 function retired(method: string, hint: string): never {
-  throw new ImbraceError(`ips.${method}() is no longer available: the IPS service has been retired. ${hint}`)
+  return retiredMethod(`ips.${method}`, "the IPS service has been retired", hint)
 }
 
 const NO_REPLACEMENT = "There is no replacement."
