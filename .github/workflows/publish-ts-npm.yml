@@ -60,11 +60,15 @@ jobs:
         uses: actions/checkout@v4
 
 
-      - name: Setup Node.js 20
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           registry-url: 'https://registry.npmjs.org'
+
+      # npm trusted publishing (OIDC) needs npm >= 11.5.1; Node 22 ships npm 10.
+      - name: Upgrade npm
+        run: npm install -g npm@^11.5.1
 
       - name: Install dependencies
         run: npm ci
@@ -98,5 +102,5 @@ jobs:
             echo "Stable release — publishing under @latest dist-tag"
             npm publish --access public
           fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        # No token: npm authenticates this workflow via its trusted publisher (OIDC,
+        # needs `id-token: write` above) and attaches provenance automatically.
