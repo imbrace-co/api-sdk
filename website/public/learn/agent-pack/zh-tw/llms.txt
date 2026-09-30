@@ -1,0 +1,29 @@
+# iMBrace 建置指南
+
+> 如何在 iMBrace 上為 AI 程式碼工具設計並妥善建置。版本 1.0.1，社群版。SDK、CLI 與 API 的事實不在本指南中：請至 https://engineer.imbrace.co/llms.txt 取得。
+
+從 [AGENTS.md](AGENTS.md) 開始。
+
+## 認識
+- [iMBrace 是什麼](understand/overview.md): iMBrace 是什麼、如何讓 AI 保持可靠，以及由什麼來治理，內容足以向潛在客戶說明。
+- [iMBrace 現在能做什麼](understand/capability-truth-table.md): 逐項列出 iMBrace 現在能做的事，並附上頁面或畫面，讓你可以親自確認每一項。
+
+## 建置
+- [建置](build-it/index.md): iMBrace 課程第 2 級——在測試組織上建置一個能運作的小型代理人。
+- [快速上手](build-it/getting-started.md): 設定 AI 程式碼工具以便在 iMBrace 上建置——測試組織、SDK、憑證，以及與組織的即時連線。
+- [Vibe coding on iMBrace：動手建置](build-it/vibe-coding-tutorial.md): 使用任何 AI 程式碼工具，在測試組織中建置一個能運作的小型代理人。
+- [與 AI 程式碼工具協作](build-it/working-with-ai.md): 讓 AI 程式碼工具在 iMBrace 上建置出的成果值得信任所需的態度、習慣與防護措施。
+- [基本組成元件](build-it/building-blocks.md): 認出每一個 iMBrace 建置背後都有的五樣東西，以及延伸並交付它們的三種方式——說出它們的名稱，並找到它們在畫面上的位置。
+
+## 建置得好
+- [建置得好](build-it-well/index.md): 要讓一個 iMBrace 建置成果禁得起真實使用、真實負載與真實監督的考驗，需要哪些設計。
+- [八大原則](build-it-well/the-eight-principles.md): 支撐一個禁得起實際使用考驗之建置的八大原則：每項原則的意義、做得好的樣子，以及會如何出錯。
+- [使用案例的形狀](build-it-well/use-case-shapes.md): 業務使用案例在 iMBrace 上會呈現的九種常見形狀，以及每一種形狀通常是用哪些元件組成的。
+- [人工核准](build-it-well/human-approval.md): 一項決策，五個能實際做出它的地方－以及為什麼在聊天室裡回覆一聲，不算是其中一種。
+- [原生優先](build-it-well/native-first.md): 為什麼要在寫程式碼之前，先善用平台自身的內建元件，以及這麼做能帶來什麼好處。
+- [文件模型](build-it-well/document-models.md): 如何選擇「文件模組」要從一份文件中擷取什麼內容－先採用平台的預設模型，其次加以擴充，只有在真的別無選擇時才自行撰寫。
+- [反模式](build-it-well/anti-patterns.md): 一再被重複建置出來的錯誤，各自的代價，以及對應的解法。
+- [審查清單](build-it-well/review-checklist.md): 依循八大原則進行審查，寫成一份你可以在上線之前，對自己的建置親自跑一遍的清單。
+
+## 本指南之外的參考資料
+- [iMBrace SDK、CLI 與 MCP](https://engineer.imbrace.co/llms.txt)：事實資料，永遠即時抓取

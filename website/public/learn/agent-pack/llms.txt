@@ -1,0 +1,29 @@
+# iMBrace build guide
+
+> How to design and build on iMBrace well, for AI coding tools. Edition 1.0.1, community edition. SDK, CLI and API facts are not in this guide: fetch https://engineer.imbrace.co/llms.txt for those.
+
+Start with [AGENTS.md](AGENTS.md).
+
+## Understand
+- [What iMBrace is](understand/overview.md): What iMBrace is, how it keeps AI dependable, and what governs it - enough to explain to a customer who might fit.
+- [What iMBrace does today](understand/capability-truth-table.md): A capability-by-capability list of what iMBrace can do right now, with a page or a screen where you can check each one yourself.
+
+## Build it
+- [Build it](build-it/index.md): Level 2 of the iMBrace course - build a small working agent on a test organisation.
+- [Getting started](build-it/getting-started.md): Set up an AI coding tool to build on iMBrace - a test organisation, the SDK, credentials, and a live connection to the organisation.
+- [Vibe coding on iMBrace - Build it](build-it/vibe-coding-tutorial.md): Build a small working agent on a test organisation, with any AI coding tool.
+- [Working with an AI coding tool](build-it/working-with-ai.md): The stance, habits and guardrails that keep what an AI coding tool builds on iMBrace trustworthy.
+- [The building blocks](build-it/building-blocks.md): Recognise the five things every iMBrace build is made from, plus the three ways to extend and deliver them, by name and by where each one lives on screen.
+
+## Build it well
+- [Build it well](build-it-well/index.md): What it takes to design an iMBrace build that survives contact with real use, real load, and real oversight.
+- [The eight principles](build-it-well/the-eight-principles.md): The eight principles behind a build that survives contact with real use - what each one means, what good looks like, and how it goes wrong.
+- [Use-case shapes](build-it-well/use-case-shapes.md): Nine recurring shapes a business use case takes on iMBrace, and the kinds of parts each one is assembled from.
+- [Human approval](build-it-well/human-approval.md): One decision, five places a person can actually make it - and why a chat reply is not one of them.
+- [Native-first](build-it-well/native-first.md): Why you reach for the platform's own building blocks before writing code, and what that buys you.
+- [Document models](build-it-well/document-models.md): How to choose what DocIQ extracts from a document - adopt the platform's default model, extend it, and write your own only as a last resort.
+- [Anti-patterns](build-it-well/anti-patterns.md): The mistakes that get built again and again, what each one costs, and the fix.
+- [Review checklist](build-it-well/review-checklist.md): The eight-principle review, as a checklist you can run on your own build before you ship it.
+
+## Reference, outside this guide
+- [iMBrace SDK, CLI and MCP](https://engineer.imbrace.co/llms.txt): the facts, always fetched fresh

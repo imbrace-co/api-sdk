@@ -1,0 +1,64 @@
+---
+title: 履歷篩選，從頭到尾
+description: 看看 iMBrace 如何把招募人員的職缺說明和一疊履歷，轉換成一份經過排序、附有佐證的入圍名單。
+---
+
+Lumenvale Software 的招募人員手上有一份職缺說明和十份履歷要公平比較，卻沒有簡單的方法能對照紀錄，檢查入圍名單背後的判斷依據。iMBrace 會把職缺說明轉換成一組經過確認的篩選條件，依這些條件為每份履歷評分，並以履歷本身的文字作為佐證，最後交回一份經過排序、招募人員既能質疑、也能信任的入圍名單。
+
+## 整個流程，一步一步來
+
+以下是完整的故事，從頭到尾：
+
+1. 招募人員手上有一份職缺說明，以及十份應徵客戶成功經理職位的履歷。
+2. 「文件模組」（DocIQ）是 iMBrace 的文件閱讀工具，會讀取這份職缺說明，並找出其中要求的重點。
+
+![一筆職缺說明紀錄開啟在數據表中，需求條列被擷取為欄位](../../../../../assets/learn/zh-tw/cv-screening/job-description.jpg)
+<span class="imb-legend">1　「知識模組」（Knowledge）>「數據表」（DataIQ）。2　職缺說明的需求條列，被讀取為「Requirement Lines」欄位。</span>
+
+3. 一個名為 Criteria Architect 的代理人，會根據這些要求提出一組篩選條件，每一項都會標示出它的依據來源。
+4. 招募人員會在「數據表」（DataIQ）上檢視這些條件，勾選要採用的項目，然後按下「儲存」（Save）。
+
+![條件清單數據表，每一列的核准欄位都已打勾](../../../../../assets/learn/zh-tw/cv-screening/criteria-approved.jpg)
+<span class="imb-legend">1　「知識模組」（Knowledge）>「數據表」（DataIQ）。2　每一項條件都已核准，在「approved」欄位打勾。</span>
+
+5. 接著輸入這十份履歷。每一份都會成為獨立的一筆紀錄，候選人的完整工作經歷與學歷都會被讀出來。
+
+![一份履歷寫入為數據表中的獨立紀錄，身分欄位與工作經歷都讀取為結構化欄位](../../../../../assets/learn/zh-tw/cv-screening/cv-board.jpg)
+<span class="imb-legend">1　「知識模組」（Knowledge）>「數據表」（DataIQ）。2　一位應徵者的紀錄，包括「Current / Most Recent Title」等欄位。3　同一筆紀錄的「Work History」欄位。</span>
+
+6. 第二個代理人 Evidence Assessor，會依核准後的條件為每份履歷評分，並引用履歷中支持每項分數的確切文字。
+
+![條件證據數據表，顯示某候選人一項評分背後引用的履歷原文](../../../../../assets/learn/zh-tw/cv-screening/criterion-evidence.jpg)
+<span class="imb-legend">1　「知識模組」（Knowledge）>「數據表」（DataIQ）。2　一項評分背後、引自履歷的原文，在「quote_given」欄位。</span>
+
+7. 分數會顯示在 Candidate Scorecard 上，依符合程度由高到低排序。
+
+![候選人評分卡數據表，每位候選人都有一個符合百分比](../../../../../assets/learn/zh-tw/cv-screening/candidate-scorecard.jpg)
+<span class="imb-legend">1　「知識模組」（Knowledge）>「數據表」（DataIQ）。2　每位候選人的符合百分比，在「fit_pct」欄位。</span>
+
+8. 招募人員會在「分析模組」（InsightsIQ）——iMBrace 這款會附上出處作答的對話工具——中，向第三個代理人 Screening Analyst 詢問入圍名單，以及某位候選人為何排在這個名次。回答會附上背後引用的履歷原文。
+
+![InsightsIQ 的回覆：通過符合度門檻的候選人入圍名單](../../../../../assets/learn/zh-tw/cv-screening/shortlist-answer.jpg)
+<span class="imb-legend">1　側邊欄的「分析模組」（InsightsIQ）。2　Screening Analyst 的入圍名單回覆。</span>
+
+![InsightsIQ 的回覆，說明某候選人的排名與其履歷缺口](../../../../../assets/learn/zh-tw/cv-screening/why-rank-answer.jpg)
+<span class="imb-legend">1　側邊欄的「分析模組」（InsightsIQ）。2　Screening Analyst 說明某候選人排名原因的回覆。</span>
+
+## 人在哪裡做決定
+
+招募人員會在任何一份履歷被評分之前，先核准這些條件：逐一勾選，再於 Criteria 數據表上按下「儲存」（Save）。這個步驟放在評分開始之前，確保每份履歷都是依招募人員真正同意過的標準來衡量，而不是代理人自行認定的標準。
+
+## 不用寫程式就能調整的內容
+
+履歷評分所依據的條件，以及候選人需要達到的等級，都是數據表上的一列資料。
+
+| 資料列 | 控制的內容 |
+|---|---|
+| Criteria 數據表上的每一項條件 | 履歷要拿來比對的項目——必要條件、加分條件，或警示條件——以及招募人員是否已核准這一項。 |
+| Level Expectations 數據表上的每一行 | 在特定職涯路線下，達到某個等級代表什麼樣子，讓一項條件可以指向某個等級，而不是一條固定的規則。 |
+
+新增、編輯或下架一列資料，下一份被評分的履歷就會套用這項變更——不需要重新建置。
+
+## 動手試試看
+
+如果你是合作夥伴，你的練習組織一開始就已經安裝好履歷篩選，並使用 Lumenvale Software 的職缺說明與履歷；你的合作夥伴工具包中的示範腳本則會帶你完整跑一遍實際操作，從核准條件一路到產生入圍名單。其他人則可以請自己的 iMBrace 聯絡窗口，在屬於自己的組織上展示它的運作情形。

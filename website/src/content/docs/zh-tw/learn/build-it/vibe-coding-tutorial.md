@@ -1,0 +1,176 @@
+---
+title: Vibe coding on iMBrace：動手建置
+description: 使用任何 AI 程式碼工具，在測試組織中建置一個能運作的小型代理人。
+---
+
+這是課程的第 2 級：動手建置。前面的級別會示範一個完整運作的使用案例；這一頁則換你自己動手建置一個。
+
+完成後，你會在自己的測試組織中，讓一個小型「代理人」（AI Agent）運作起來。它刻意做得很小，因為重點不在這個代理人本身，而在於五個習慣——這些習慣能讓你在 iMBrace 上建置的任何東西都值得信任，第 3 級（建置得好）會深入介紹。
+
+## 你將建置的內容
+
+想像一家虛構公司 Harbor Bicycle Co.，在網路上銷售並維修自行車。你要為它建置退貨櫃台的代理人。當顧客寫信要求退貨時，這個代理人應該要：
+
+1. 把這筆申請記錄成「數據表」（board）上的一列，而不是留在聊天紀錄裡。
+2. 依照 Harbor 任何人都能編輯的規則算出退款金額，而不是靠模型自己做運算。
+3. 在向顧客承諾任何事之前，先等待有人核准這一列。
+4. 只有在核准之後，才用平台本身的電子郵件連線寄出確認通知給顧客——絕不把憑證放進你的工作流裡。
+
+這裡的一切都不是 Harbor Bicycle Co. 的真實系統——這家公司並不存在。在把成果展示給任何人看之前，記得把公司、商品和規則換成你自己的內容。
+
+## 你需要準備的東西
+
+- 一個測試組織和一組 API 金鑰。如果你還沒有，[API 金鑰指南](https://engineer.imbrace.co/zh-tw/guides/api-key/) 說明了如何從儀表板產生金鑰。這裡請使用測試組織的金鑰——絕不要使用正式環境的金鑰。
+- 一個透過 MCP 連接到該組織的 AI 程式碼工具，讓它能直接看到你的數據表和工作流，而不是用猜的。這一頁不指定特定工具；任何能建立 MCP 連線、又能讀取文字檔的程式碼助理都適用。[MCP 指南](https://engineer.imbrace.co/zh-tw/mcp/overview/) 有你所用工具的確切連線步驟——請先完成連線，再開始下面的步驟 1。如果你的安裝環境未啟用 MCP，[快速上手](/learn/build-it/getting-started/) 說明了改用 SDK 的做法。
+- 如果你的工具偏好直接寫 SDK 程式碼，而不是直接呼叫平台，請安裝你所用語言的 SDK：
+
+  ```bash
+  npm install @imbrace/sdk
+  ```
+
+  ```bash
+  pip install imbrace
+  ```
+
+  不論哪一種方式，你的工具最後都需要兩個環境變數：`IMBRACE_API_KEY` 和 `IMBRACE_ORGANIZATION_ID`。把它們放在本機的 `.env` 檔案中，絕不提交到任何地方；如果可以只把變數名稱交給程式碼工具，就不要把實際金鑰貼進與它的對話裡。
+- 大約一小時。大部分時間花在閱讀平台回傳給你的內容——這正是這一整頁想培養的習慣。
+
+這一頁會用到幾個詞：<strong>「數據表」</strong>是你自己定義的結構化表格——由列與具型別的欄組成，就像一份輕量版的 CRM 表。<strong>「工作流」（也稱為 flow）</strong>是一經觸發就會自動依序執行的一連串步驟。<strong>「原生步驟」</strong>是平台內建的現成步驟——不必自己寫、不必自己架設，也沒有自己的金鑰要管理。<strong>「代理人」</strong>則是使用者或頻道會與之對話的介面；產品在畫面上把代理人列在<strong>「AI智能助手」</strong>（AgentIQ）選單之下。
+
+## 操作步驟
+
+### 1. 動手之前先看一看
+
+先別急著打開編輯器，讓你的程式碼工具先確認目前已經有哪些東西存在。
+
+<strong>你輸入的內容</strong>大致如下：
+
+> 在我們動手之前：這個組織裡目前已經有哪些數據表？另外，請在平台的原生工作流步驟目錄中，搜尋任何與寄送和讀取電子郵件相關的步驟。
+
+<strong>你應該會看到</strong>：在全新的測試組織中，數據表清單是空的——這是正常現象，不是失敗。如果這個組織原本就已經有其他工作內容，這次檢查看到的會是其他既有的數據表——這也沒關係；等你在步驟 2 建立好自己的數據表之後，依名稱到那裡尋找它就好。不論是哪一種情況，你也都會看到一小份電子郵件相關原生步驟的清單，旁邊可能還會列出你沒問到的其他頻道。把這份清單讀過一遍。這就是這個習慣的重點：在考慮自己動手寫之前，先找出平台已經內建的步驟。工具從零寫出來的步驟，會讓你多一組要保管的憑證、多一段要維護的程式碼；原生步驟則兩者都不用。
+
+### 2. 建立用來存放退貨申請的數據表
+
+<strong>你輸入的內容</strong>：
+
+> 建立一個名為 Return Requests 的數據表，包含以下欄位：Customer name、Order reference、Item、Condition、Price、Refund amount、Decision、Decided by、Decided at。
+
+<strong>你應該會看到</strong>：組織中出現一個新的數據表，有這九個欄位，但還沒有任何列。請到平台裡打開它，親眼確認欄位名稱與型別——不要只相信工具對自己做了什麼的摘要說明。
+
+如果你的工具說它無法建立任何東西，代表它的 MCP 連線是唯讀的——這是預設值。請依照 MCP 頁面的說明加入寫入權限（在連線位址上加一個旗標），而且務必只在測試組織上這麼做。
+
+### 3. 新增兩筆測試資料列
+
+請使用合成資料。就算是在測試組織中，也絕不使用真實的顧客或訂單資訊。
+
+<strong>你輸入的內容</strong>：
+
+> 在 Return Requests 新增兩列資料，顧客姓名和訂單編號請用明顯是假的內容。第一列：一頂未拆封的安全帽，價格 45。第二列：一個用過的自行車鎖，價格 28。Refund amount、Decision、Decided by 和 Decided at 欄位先留空。
+
+<strong>你應該會看到</strong>：兩列資料，Condition 分別是「unopened」和「used」，Price 已經填好，最後四個欄位是空的。
+
+![Return Requests 數據表已開啟，顯示欄位與兩筆資料列](../../../../../assets/learn/zh-tw/vibe-coding-tutorial/return-requests-board.jpg)
+<span class="imb-legend">1「知識模組」（Knowledge）>「數據表」（DataIQ）。2 Return Requests 數據表的欄位與資料列。</span>
+
+### 4. 把退款規則放在有人能修改的地方，而不是寫進一句話裡
+
+這是這一頁最重要的一個習慣。直接在代理人的指示裡寫「未拆封全額退款，用過的退一半」會更快，但請不要這麼做。寫進代理人指示裡的規則，除非有人去編輯這個代理人，否則無法修改，也無法向顧客引述，事後更無法稽核。而以資料列形式存在的規則，這三件事都做得到。
+
+<strong>你輸入的內容</strong>：
+
+> 建立第二個數據表，名為 Refund Rules，包含兩個欄位：Condition 和 Refund percent。新增兩列資料：unopened、100；used、50。
+
+<strong>你應該會看到</strong>：一個兩列兩欄的數據表。Harbor Bicycle Co. 的任何人都能打開它，把 50 改成 60，完全不必動到工作流或代理人。
+
+![Refund Rules 數據表，任何人都能編輯的兩筆規則](../../../../../assets/learn/zh-tw/vibe-coding-tutorial/refund-rules-board.jpg)
+<span class="imb-legend">1「知識模組」（Knowledge）>「數據表」（DataIQ）。2 Refund Rules 數據表的兩筆資料列。</span>
+
+### 5. 建立工作流，把運算交給一個小步驟處理
+
+<strong>你輸入的內容</strong>：
+
+> 在 Return Requests 這個數據表上建立一個名為 Calculate refund amount 的工作流，只要有一列被新增或修改就會執行。它應該：讀取該列的 Condition，到 Refund Rules 上查出對應的那一列，用一個單純的計算步驟把 Price 乘上 Refund percent，再把結果寫進 Refund amount。數據表的讀取和寫入請使用原生步驟。只有乘法運算本身需要你自己寫一個步驟，而且要保持單純——它只接收兩個數字、回傳一個數字，不碰其他任何東西。這個步驟裡不能有網路呼叫，也不能有憑證。
+
+<strong>你應該會看到</strong>：一個可以在平台自己的編輯器裡從頭讀到尾、完全不必打開任何程式碼的工作流。裡面大部分步驟都是原生步驟，只有一個是你的工具寫的簡短計算步驟，而且短到十秒內就能讀完。如果你的工具有提供測試執行選項，就手動執行一次，確認未拆封安全帽的 Refund amount 是 45，用過的自行車鎖是 14。
+
+![Calculate refund amount 工作流：讀取資料表、計算步驟與寫回資料表，從上到下](../../../../../assets/learn/zh-tw/vibe-coding-tutorial/workflow-canvas.jpg)
+<span class="imb-legend">1「Find the matching...」查找 Refund Rules 上符合的資料列（原生步驟）。2「Calculate refund (...)」唯一一行手寫的計算步驟。3「Write Refund amo...」把結果寫回資料列（原生步驟）。</span>
+
+這是第二個習慣：模型很擅長判斷該套用哪一條規則，但不適合被信任在無人監督、每一次都要在壓力下默默算對乘法。把運算交給一個計算步驟去做。讓模型負責判斷，讓程式碼負責計算。
+
+### 6. 加入核准關卡
+
+<strong>你輸入的內容</strong>：
+
+> 在 Return Requests 上建立第二個名為 Apply return decision 的工作流，只要 Decision 欄位變更就會執行。除非 Decision 是 Approved 而且 Decided by 有填人名，否則什麼都不做；符合條件時才把時間寫進 Decided at。沒有決定，或決定了卻沒填人名的資料列，都不能繼續往下走。
+
+<strong>你應該會看到</strong>：兩列資料目前都沒有任何反應——因為都還沒有決定。請自己打開這個數據表，只在未拆封安全帽那一列，把 Decision 設為 Approved，並在 Decided by 填上你的名字，然後按下<strong>「儲存」（Save）</strong>：數據表的編輯在儲存之前都不會生效，儲存前也不會觸發任何動作。用過的自行車鎖那一列則不要動。Decided at 只會在核准的那一列自動填上。
+
+![Return Requests 數據表捲動至 Decision、Decided by、Decided at：一列已核准，一列仍空白](../../../../../assets/learn/zh-tw/vibe-coding-tutorial/approval-decision.jpg)
+<span class="imb-legend">1「知識模組」（Knowledge）>「數據表」（DataIQ）。2 Decision、Decided by、Decided at 三個欄位。</span>
+
+這是第三個習慣：決定是寫在資料列上的一個值，附帶是誰、何時——而不是有人在與代理人的對話裡打「看起來沒問題」。如果沒有人設定 Decision，後續流程就不該有任何動作——完成這一步之後，確實也不會有。
+
+### 7. 用安全的方式寄出確認通知
+
+<strong>你輸入的內容</strong>：
+
+> 先在 Return Requests 新增一個 Customer email 欄位。接著延伸核准工作流：一旦記錄了決定，就用平台本身已連線的電子郵件步驟，把一封簡短的確認通知寄到該欄位裡的地址，內容要註明退款金額。這個工作流裡任何地方都不能放電子郵件密碼或 API 金鑰——請使用組織既有的連線，如果還沒有，就先設定一個。
+
+<strong>你應該會看到</strong>：工作流裡，在記錄 Decided at 的步驟之後，只在核准分支上多了一個 Send Email (Gmail) 步驟。核准未拆封安全帽那一列並按下<strong>「儲存」（Save）</strong>：工作流會執行一次，確認通知會寄到該列的 Customer email，內容註明退款金額。仍待處理的那一列不會啟動任何執行，所以不會寄出任何東西。
+
+![Apply return decision 工作流，記錄 Decided at 的步驟之後新增了 Send Email (Gmail) 步驟](../../../../../assets/learn/zh-tw/vibe-coding-tutorial/email-step.jpg)
+<span class="imb-legend">1「流程營運模組」（FlowOps）。2「Send Email (Gmail)」步驟，接在記錄 Decided at 的步驟之後，位於核准分支。</span>
+
+要檢查憑證，請打開「行動模組」（Actions）>「流程營運模組」（FlowOps）>「更多」>「連線」。電子郵件憑證在那裡，是一個有名稱的連線，名為 Gmail，工作流的任何步驟都沒有存放它。這正是步驟 1 那個習慣一路延續下來的結果：憑證屬於平台本身的連線儲存區，永遠不屬於某個工作流。如果之後你匯出這個工作流，請打開匯出的檔案，確認裡面沒有任何金鑰或密碼。
+
+![流程營運模組的「連線」清單，顯示一個名為 Gmail 的連線](../../../../../assets/learn/zh-tw/vibe-coding-tutorial/connections.jpg)
+<span class="imb-legend">1「流程營運模組」（FlowOps）>「更多」>「連線」。2 唯一一個名為 Gmail 的連線。</span>
+
+數據表本身不會顯示任何寄信的紀錄。要確認，請打開工作流的執行紀錄：已核准那一列的執行已經完成，其中的 Send Email (Gmail) 步驟標示為成功。郵件本身則在收件人的收件匣裡。
+
+![Apply return decision 已完成的一次執行，其 Send Email (Gmail) 步驟標示為成功](../../../../../assets/learn/zh-tw/vibe-coding-tutorial/email-sent.jpg)
+<span class="imb-legend">1「流程營運模組」（FlowOps）。2 該次執行的「Send Email (Gmail)」步驟，標示為成功。</span>
+
+該用哪一種電子郵件連線：郵件伺服器（SMTP）連線只要用伺服器的詳細資料設定一次即可。像 Gmail 這類代管郵件服務，則需要有人在每個組織裡各登入該服務供應商一次。沒有網際網路連線的安裝環境，則在自己的網路上使用郵件伺服器（SMTP）連線。
+
+### 8. 建立代理人
+
+代理人可以透過 SDK 的 AI Agent 方法建立（網站上有相關說明），也可以在平台的 AI智能助手畫面中建立，這個步驟會用到其中一種方式。不論哪一種，你的工具都可以幫你寫好代理人的指示。
+
+<strong>你輸入的內容</strong>：
+
+> 首先建立一個名為 Log return request 的工作流，讓代理人可以把它當成工具呼叫。這個工作流接收 Customer name、Order reference、Item、Condition 和 Price，在 Return Requests 上建立一列只包含這五個值的資料，不寫入其他任何內容。接著建立一個名為 Return Desk Assistant 的代理人，只給它這一個工具——而不是整個數據表本身。它的工作是：當顧客描述想退貨的商品時，用這個工具記錄下來，並回覆對方申請正在審核中。它絕不能說出退款金額，也絕不能做出任何承諾——因為人還沒有做出決定。
+
+![AI智能助手的代理清單，Return Desk Assistant 卡片](../../../../../assets/learn/zh-tw/vibe-coding-tutorial/agent-card.jpg)
+<span class="imb-legend">1「行動模組」（Actions）>「AI智能助手」（AgentIQ）。2 Return Desk Assistant 代理卡片。</span>
+
+為什麼給工具而不是給整個數據表：如果代理人拿到整個數據表的存取權，它就能寫入任何欄位，包括 Decision——等於能自己核准自己的申請。工具則只能寫入顧客提供的那五個欄位，決定權因此留在人的手上。
+
+還有一個習慣值得寫進代理人自己的指示裡：Refund Rules 是以精確比對的方式查找，所以要告訴代理人在填寫 Condition 時，使用規則本身的那兩個詞——「unopened」或「used」——絕不要用顧客自己的說法，也不要翻譯它。凡是工作流會以精確比對方式查找資料列的數據表，只要是由能理解自然語言的代理人負責寫入，都需要同樣的細心。
+
+<strong>你應該會看到</strong>：對新建立的代理人說類似「我想退貨，訂單 HB-2044，一頂還沒拆封的安全帽。我叫 Morgan Ellery，訂單金額是 39」，就會在 Return Requests 上產生一列填好這些細節的資料，並得到類似「你的退貨申請已經記錄，正由團隊審核中」的回覆——沒有金額、沒有承諾。如果你的工具草擬的指示讓代理人自己猜一個退款數字，這裡就該抓出來：把指示退回去，要求把金額從代理人能說的內容裡拿掉。接著請它自己核准這筆申請：它應該做不到，因為它的工具裡沒有任何東西能寫入 Decision。
+
+![Return Desk Assistant 的回覆：已記錄並交由審核，沒有金額也沒有承諾](../../../../../assets/learn/zh-tw/vibe-coding-tutorial/chat-answer.jpg)
+<span class="imb-legend">1「分析模組」（InsightsIQ）。2 AI智能助手的回覆沒有提到金額，也沒有任何承諾。</span>
+
+## 如何確認它真的可行
+
+不要把程式碼工具對自己做了什麼的摘要說明當成證據。一段聽起來合理、描述建置成功的說法很容易寫出來，也很容易被誤認為真的成功——請親自去看。
+
+- 打開 Return Requests。兩列資料的 Refund amount 都應該正確：45 和 14。
+- 只有你核准的那一列應該有一次執行，且其中的 Send Email (Gmail) 步驟標示為成功；待處理的那一列完全不應該有任何執行。
+- 打開這個工作流的執行紀錄，讀取每次執行的實際狀態，而不是摘要說明——仍在等待的執行和已完成的執行看起來會不一樣。
+- 打開「行動模組」（Actions）>「流程營運模組」（FlowOps）>「更多」>「連線」，確認電子郵件憑證是一個有名稱的連線，而不是寫死在某個步驟裡的文字。
+- 用一筆新編的退貨案例去跟 Return Desk Assistant 對話。確認出現了一列新資料，而且代理人的回覆沒有任何金額、也沒有任何承諾。
+- 請這個代理人核准一筆申請。確認 Decision 仍然是空的：代理人沒有辦法寫入這個欄位。
+- 現在也核准用過的自行車鎖那一列，確認它的確認通知同樣會寄出——證明這道核准關卡是真的在運作，不是裝飾用的。
+
+如果上面任何一項不成立，這其實比一個看起來沒問題、實際上卻不行的建置更有價值。修好失敗的那一項，然後再檢查一次。
+
+## 接下來可以做的事
+
+- 試著加入第二種 Condition——例如商品退回時少了包裝盒——並新增第二列規則。確認你不需要動到工作流或代理人，就能改變退款比例。
+- 試著讓某一列永遠不要核准，確認不論放多久，顧客都不會收到退款金額。
+- 閱讀第 3 級「建置得好」，了解這五個習慣背後更完整的方法——它會說明是什麼讓像這樣的建置，在交給真實顧客而不只是測試組織時，依然禁得起考驗。
+- 關於 SDK、CLI 或 MCP 連線本身的任何內容，[engineer.imbrace.co](https://engineer.imbrace.co/zh-tw/) 是保持最新的權威來源——這一頁會比那裡更快過時。[快速上手](/learn/build-it/getting-started/) 有完整的設定說明。
