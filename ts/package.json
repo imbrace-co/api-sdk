@@ -1,6 +1,6 @@
 {
   "name": "@imbrace/sdk",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "Official TypeScript/JavaScript SDK for iMBrace — dual auth (API Key + Access Token)",
   "type": "module",
   "license": "MIT",

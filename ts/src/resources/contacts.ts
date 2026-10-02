@@ -8,6 +8,22 @@ export interface UpdateContactInput {
   [key: string]: unknown
 }
 
+export interface CreateContactInput {
+  display_name?: string
+  first_name?: string
+  last_name?: string
+  email?: string
+  phone_number?: string
+  channel_id?: string
+  /** Defaults to `web`. */
+  channel_type?: string
+  time_zone?: string
+  avatar_url?: string
+  provider_user_id?: string
+  bu_id?: string
+  [key: string]: unknown
+}
+
 export interface ContactComment {
   _id: string
   text?: string
@@ -53,6 +69,19 @@ export class ContactsResource {
 
   async get(contactId: string): Promise<Contact> {
     return this.http.getFetch()(`${this.v1}/contacts/${contactId}`, { method: "GET" }).then(r => r.json())
+  }
+
+  /** Create a contact. Every field is optional; `channel_type` defaults to `web`. */
+  async create(body: CreateContactInput): Promise<Contact> {
+    return this.http.getFetch()(`${this.v1}/contacts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }).then(r => r.json())
+  }
+
+  async delete(contactId: string): Promise<{ message: string }> {
+    return this.http.getFetch()(`${this.v1}/contacts/${contactId}`, { method: "DELETE" }).then(r => r.json())
   }
 
   async update(contactId: string, body: UpdateContactInput): Promise<Contact> {

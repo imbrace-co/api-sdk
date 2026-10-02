@@ -1,4 +1,5 @@
 import { HttpTransport } from "../http.js"
+import { ApiError } from "../errors.js"
 import type { Board, BoardItem, PagedResponse } from "../types/index.js"
 
 /** Meilisearch-compatible envelope returned by `boards.search()`. */
@@ -168,18 +169,26 @@ export interface KnowledgeFolder {
   _id: string
   name: string
   organization_id?: string
+  /** `"root"` for a top-level folder. */
+  parent_folder_id?: string
+  /** @deprecated the server field is `parent_folder_id`. */
   parent_id?: string
   [key: string]: unknown
 }
 
 export interface CreateFolderInput {
   name: string
+  /** Defaults to the caller's organization. */
   organization_id?: string
-  parent_id?: string
-  /** Defaults to `"upload"` (the only enum value the backend currently accepts). */
-  source_type?: string
-  /** Defaults to `"root"` for top-level folders. Backend rejects null. */
+  /** Parent folder id; `"root"` (default) for a top-level folder. */
   parent_folder_id?: string
+  /** @deprecated alias of `parent_folder_id`. */
+  parent_id?: string
+  /** `"upload"` (default), `"external"` or `"assistant"`. */
+  source_type?: string
+  description?: string
+  tags?: string[]
+  team_ids?: string[]
   [key: string]: unknown
 }
 
@@ -264,9 +273,29 @@ export interface LinkPreviewResponse {
   [key: string]: unknown
 }
 
+/** `google-drive` or `onedrive`. */
+export type DriveType = "google-drive" | "onedrive"
+
 export interface DriveAuthResponse {
+  /** Open this URL so the user can grant access. */
   auth_url?: string
+  /** Pass to the drive list/download calls as `sessionId`. */
+  session_id?: string
   [key: string]: unknown
+}
+
+export interface DriveSessionStatus {
+  connected: boolean
+  session_id: string
+  is_expired?: boolean
+  expires_at?: number
+  time_remaining_ms?: number
+  [key: string]: unknown
+}
+
+export interface DriveProvider {
+  provider: string
+  configured: boolean
 }
 
 export interface DriveItem {
@@ -292,7 +321,22 @@ export class BoardsResource {
     private readonly http: HttpTransport,
     private readonly base: string,
     private readonly backend: string,
+    /** platform base URL (`${gateway}/platform`), used to look up the caller's org. */
+    private readonly platform?: string,
   ) {}
+
+  private orgId?: string
+
+  /** The caller's organization: the client's configured org, else the account's. */
+  private async resolveOrgId(): Promise<string | undefined> {
+    if (this.orgId) return this.orgId
+    this.orgId = this.http.getOrganizationId()
+    if (!this.orgId && this.platform) {
+      const me: any = await this.http.getFetch()(`${this.platform}/v1/account`, { method: "GET" }).then(r => r.json())
+      this.orgId = me?.organization_id ?? me?.data?.organization_id
+    }
+    return this.orgId
+  }
 
   async list(params?: { limit?: number; skip?: number; sort?: string; hidden?: boolean; types?: string }): Promise<{ data: Board[] }> {
     const url = new URL(`${this.base}/boards`)
@@ -529,6 +573,13 @@ export class BoardsResource {
     await this.http.getFetch()(`${this.base}/boards/${boardId}/segmentation/${segmentId}`, { method: "DELETE" })
   }
 
+  /** All Knowledge Hub folders of the org. */
+  async listFolders(params?: { ignoreAssistant?: boolean }): Promise<KnowledgeFolder[]> {
+    const url = new URL(`${this.base}/folders`)
+    if (params?.ignoreAssistant !== undefined) url.searchParams.set("ignore_assistant", String(params.ignoreAssistant))
+    return this.http.getFetch()(url, { method: "GET" }).then(r => r.json()).then(r => r.data ?? r)
+  }
+
   async searchFolders(params?: { organizationId?: string; q?: string }): Promise<KnowledgeFolder[]> {
     const url = new URL(`${this.base}/folders/search`)
     if (params?.organizationId) url.searchParams.set("organization_id", params.organizationId)
@@ -545,15 +596,16 @@ export class BoardsResource {
   /**
    * Create a Knowledge Hub folder.
    *
-   * Backend requires `source_type` (only valid: `"upload"`) and `parent_folder_id`
-   * (use `"root"` for top-level). This wrapper auto-fills both with sane defaults
-   * if the caller omits them.
+   * The server needs `organization_id`, `source_type` and `parent_folder_id`;
+   * they default to the caller's org, `"upload"` and `"root"`.
    */
   async createFolder(body: CreateFolderInput): Promise<KnowledgeFolder> {
+    const { parent_id, ...rest } = body
     const wire: Record<string, unknown> = {
       source_type: "upload",
-      parent_folder_id: "root",
-      ...body,
+      ...rest,
+      parent_folder_id: body.parent_folder_id ?? parent_id ?? "root",
+      organization_id: body.organization_id ?? await this.resolveOrgId(),
     }
     return this.http.getFetch()(`${this.base}/folders`, {
       method: "POST",
@@ -567,6 +619,15 @@ export class BoardsResource {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
+    }).then(r => r.json()).then(r => r.data ?? r)
+  }
+
+  /** Turn syncing of an external (Drive) folder on or off. */
+  async setFolderSync(folderId: string, enabled: boolean): Promise<KnowledgeFolder> {
+    return this.http.getFetch()(`${this.base}/folders/${folderId}/sync`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ is_sync_enabled: enabled }),
     }).then(r => r.json()).then(r => r.data ?? r)
   }
 
@@ -658,20 +719,50 @@ export class BoardsResource {
     }).then(r => r.json()).then(r => r.data ?? r)
   }
 
-  async initiateDriveAuth(type: string): Promise<DriveAuthResponse> {
-    return this.http.getFetch()(`${this.base}/auth/${type}/initiate`, { method: "GET" }).then(r => r.json())
+  /** Which drive providers are configured on the server. */
+  async listDriveProviders(): Promise<DriveProvider[]> {
+    return this.http.getFetch()(`${this.base}/providers`, { method: "GET" }).then(r => r.json()).then(r => r.data ?? r)
   }
 
-  async listDriveFolders(type: string, params?: Record<string, string>): Promise<DriveItem[]> {
+  /** Start the OAuth flow for a drive; returns `auth_url` and `session_id`. */
+  async initiateDriveAuth(type: DriveType | string): Promise<DriveAuthResponse> {
+    const url = new URL(`${this.base}/auth/${type}/initiate`)
+    const org = await this.resolveOrgId()
+    if (org) url.searchParams.set("organizationId", org)
+    return this.http.getFetch()(url, { method: "GET" }).then(r => r.json()).then(r => r.data ?? r)
+  }
+
+  /** Whether the user finished the OAuth flow for `sessionId` (`connected: false` until they do). */
+  async getDriveSessionStatus(type: DriveType | string, sessionId: string): Promise<DriveSessionStatus> {
+    const url = new URL(`${this.base}/auth/${type}/session/status`)
+    url.searchParams.set("sessionId", sessionId)
+    try {
+      const r = await this.http.getFetch()(url, { method: "GET" }).then(r => r.json())
+      return { connected: true, ...(r.data ?? r) }
+    } catch (e) {
+      // the server only stores the session once the user has signed in
+      if (e instanceof ApiError && e.statusCode === 404) return { connected: false, session_id: sessionId }
+      throw e
+    }
+  }
+
+  /** Folders in the drive. Params: `sessionId` (required), `parentId` (Google) or `folderId` (OneDrive), `q`, `skip`, `limit`. */
+  async listDriveFolders(type: DriveType | string, params?: Record<string, string>): Promise<DriveItem[]> {
     const url = new URL(`${this.base}/${type}/folders`)
     if (params) Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v))
-    return this.http.getFetch()(url, { method: "GET" }).then(r => r.json())
+    return this.http.getFetch()(url, { method: "GET" }).then(r => r.json()).then(r => r.data ?? r)
   }
 
-  async listDriveFiles(type: string, params?: Record<string, string>): Promise<DriveItem[]> {
+  /** Files in the drive. Params: `sessionId` (required), `parentId` (Google) or `folderId` (OneDrive), `recursive`. */
+  async listDriveFiles(type: DriveType | string, params?: Record<string, string>): Promise<DriveItem[]> {
     const url = new URL(`${this.base}/${type}/files`)
     if (params) Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v))
-    return this.http.getFetch()(url, { method: "GET" }).then(r => r.json())
+    return this.http.getFetch()(url, { method: "GET" }).then(r => r.json()).then(r => r.data ?? r)
+  }
+
+  /** Background sync state of a drive. */
+  async getDriveSyncStatus(type: DriveType | string): Promise<Record<string, unknown>> {
+    return this.http.getFetch()(`${this.base}/${type}/sync/status`, { method: "GET" }).then(r => r.json()).then(r => r.data ?? r)
   }
 
   async downloadDriveFile(type: string, params?: Record<string, string>): Promise<Response> {
@@ -680,8 +771,9 @@ export class BoardsResource {
     return this.http.getFetch()(url, { method: "GET" })
   }
 
-  async getOneDriveSessionStatus(): Promise<OneDriveSessionStatus> {
-    return this.http.getFetch()(`${this.base}/auth/onedrive/files/session/status`, { method: "GET" }).then(r => r.json())
+  /** @deprecated use `getDriveSessionStatus("onedrive", sessionId)`. */
+  async getOneDriveSessionStatus(sessionId: string): Promise<DriveSessionStatus> {
+    return this.getDriveSessionStatus("onedrive", sessionId)
   }
 }
 

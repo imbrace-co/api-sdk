@@ -96,7 +96,21 @@ export interface McpServer {
   updated: string
   projectId: string
   name?: string
+  /** Secret used in the server's SSE URL. */
+  token?: string
+  tools?: McpServerTool[]
   [key: string]: unknown
+}
+
+/** A tool exposed by an MCP server: a piece action or a whole flow. */
+export type McpServerTool =
+  | { type: 'PIECE'; toolName: string; pieceMetadata: Record<string, unknown>; [key: string]: unknown }
+  | { type: 'FLOW'; toolName: string; flowId: string; [key: string]: unknown }
+
+export interface UpdateMcpServerInput {
+  name?: string
+  /** Replaces the full tool list. */
+  tools?: McpServerTool[]
 }
 
 export interface UserInvitation {
@@ -247,12 +261,18 @@ export class WorkflowsResource {
    */
   async resolveProjectId(): Promise<string> {
     if (this._cachedProjectId) return this._cachedProjectId
-    const r: any = await this.listFlows({ limit: 1 } as any)
-    const flow = (r?.data ?? [])[0]
-    const pid = flow?.projectId ?? flow?.project_id
+    // The engine answers `/users/projects/:id` with the caller's org project whatever the id;
+    // older engines without that route fall back to the first flow.
+    const project: any = await this.apFetch(this.apUrl('/v1/users/projects/current')).catch(() => undefined)
+    let pid = project?.id
+    if (!pid) {
+      const r: any = await this.listFlows({ limit: 1 } as any)
+      const flow = (r?.data ?? [])[0]
+      pid = flow?.projectId ?? flow?.project_id
+    }
     if (!pid) {
       throw new Error(
-        "workflows.resolveProjectId: org has no flows yet — cannot derive projectId. " +
+        "workflows.resolveProjectId: no workflow project found for this org — cannot derive projectId. " +
         "Pass it explicitly to the calling method (e.g. listMcpServers(projectId)).",
       )
     }
@@ -554,8 +574,19 @@ export class WorkflowsResource {
     return this.apFetch(this.apUrl(`/v1/mcp-servers/${mcpServerId}`))
   }
 
-  createMcpServer(body: Record<string, unknown>): Promise<McpServer> {
+  /** Create an MCP server. `projectId` is resolved automatically when omitted. */
+  async createMcpServer(body: { name: string; projectId?: string; [key: string]: unknown }): Promise<McpServer> {
+    const projectId = body.projectId ?? await this.resolveProjectId()
     return this.apFetch(this.apUrl('/v1/mcp-servers'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...body, projectId }),
+    })
+  }
+
+  /** Rename an MCP server or replace its tools. The engine updates with POST, not PUT. */
+  updateMcpServer(mcpServerId: string, body: UpdateMcpServerInput): Promise<McpServer> {
+    return this.apFetch(this.apUrl(`/v1/mcp-servers/${mcpServerId}`), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
