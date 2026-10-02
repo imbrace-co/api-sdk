@@ -132,15 +132,15 @@ export class AgentResource {
 
   async createUseCase(body: CreateUseCaseInput): Promise<UseCase> {
     // Match `chatAi.createAiAgent` ergonomics — default empty/missing
-    // model_id + provider_id to the org's system LLM (gpt-4o). Without
+    // model_id + provider_id to the org's default chat model. Without
     // these, the assistant is created but ai-agent returns 500 on chat:
     // "Assistant is missing model_id/provider_id configuration".
     const wireBody: CreateUseCaseInput = {
       ...body,
       assistant: {
         ...body.assistant,
-        provider_id: body.assistant?.provider_id || "system",
-        model_id:    body.assistant?.model_id    || "gpt-4o",
+        provider_id: body.assistant?.provider_id || "default",
+        model_id:    body.assistant?.model_id    || "Default",
       },
     }
     return this.http.getFetch()(`${this.useCases}/v2/custom`, {

@@ -38,6 +38,11 @@ import { PredictResource } from "./resources/predict.js"
 import { AiAgentResource } from "./resources/ai-agent.js"
 import { DocumentAIResource } from "./resources/document-ai.js"
 import { TemplatesResource } from "./resources/templates.js"
+import { DocumentModelsResource } from "./resources/document-models.js"
+import { CrmAutomationResource } from "./resources/crm-automation.js"
+import { ApiKeysResource } from "./resources/api-keys.js"
+import { RolesResource } from "./resources/roles.js"
+import { AuditLogsResource } from "./resources/audit-logs.js"
 
 export interface ImbraceClientConfig {
 
@@ -92,6 +97,11 @@ export class ImbraceClient {
   public readonly aiAgent: AiAgentResource
   public readonly documentAi: DocumentAIResource
   public readonly templates: TemplatesResource
+  public readonly documentModels: DocumentModelsResource
+  public readonly crmAutomation: CrmAutomationResource
+  public readonly apiKeys: ApiKeysResource
+  public readonly roles: RolesResource
+  public readonly auditLogs: AuditLogsResource
 
   /**
    * Every operation the services expose to agents (273 across 5 services),
@@ -148,6 +158,9 @@ export class ImbraceClient {
     this.platform      = new PlatformResource(this.http, urls.platform, urls.channelService)
     this.organizations = new OrganizationsResource(this.http, urls.platform)
     this.teams         = new TeamsResource(this.http, urls.platform)
+    this.apiKeys       = new ApiKeysResource(this.http, urls.platform)
+    this.roles         = new RolesResource(this.http, urls.platform)
+    this.auditLogs     = new AuditLogsResource(this.http, urls.platform)
     this.settings      = new SettingsResource(this.http, urls.channelService, urls.platform)
 
     // channel-service: channel, contacts, conversations, messages, campaign, outbound
@@ -161,7 +174,9 @@ export class ImbraceClient {
     this.outbound      = new OutboundResource(this.http, urls.channelService)
 
     // data-board: boards / items / fields
-    this.boards        = new BoardsResource(this.http, urls.dataBoard, urls.backend)
+    this.boards        = new BoardsResource(this.http, urls.dataBoard, urls.backend, urls.platform)
+    this.documentModels = new DocumentModelsResource(this.http, urls.dataBoard)
+    this.crmAutomation = new CrmAutomationResource(this.http, `${urls.dataBoard}/v1`)
 
     // file-service
     this.fileService   = new FileServiceResource(this.http, urls.fileService)

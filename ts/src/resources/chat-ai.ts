@@ -18,13 +18,12 @@ export interface CreateAiAgentInput {
   name: string
   workflow_name: string
   /**
-   * The provider this AI agent chats through. Use `"system"` to delegate to
-   * the org's default LLM provider; pass a specific provider UUID to pin one.
+   * The provider this AI agent chats through. Use `"default"` to follow the
+   * org's default chat model; pass a specific provider UUID to pin one.
    */
   provider_id: string
   /**
-   * The model name. With `provider_id: "system"` use a model name (e.g.
-   * `"gpt-4o"`) or the literal `"Default"` to fall back to the system default.
+   * The model name. With `provider_id: "default"` pass `"Default"`.
    * For a custom provider, pass that provider's model id.
    */
   model_id: string
@@ -33,6 +32,25 @@ export interface CreateAiAgentInput {
   model?: string
   instructions?: string
   [key: string]: unknown
+}
+
+/** A tool server an agent can call (stored in the agent's `metadata.tool_servers`). */
+export interface ToolServerConfig {
+  enabled: boolean
+  url: string
+  type?: "mcp" | "openapi"
+  key?: string
+  path?: string
+  auth_type?: "bearer" | "session"
+  /** Limit to these tool names; `null` allows all. */
+  enabled_tools?: string[] | null
+  [key: string]: unknown
+}
+
+/** `sub_agents` comes back as ids or `{ assistant_id, name }` objects. */
+function subAgentIds(list: unknown): string[] | undefined {
+  if (!Array.isArray(list)) return undefined
+  return list.map(x => (typeof x === "string" ? x : (x as any)?.assistant_id ?? (x as any)?.id)).filter(Boolean)
 }
 
 // ─── Document AI ──────────────────────────────────────────────────────────────
@@ -120,13 +138,11 @@ export class ChatAiResource {
   }
 
   async createAiAgent(body: CreateAiAgentInput): Promise<AiAgent> {
-    // Default to system provider + "Default" model when omitted. "Default"
-    // routes to whatever the org has configured as its system default — a
-    // literal name like "gpt-4o" is brittle because not every org's system
-    // provider exposes it (e.g. an org wired to a Bedrock-only provider).
+    // Default to the org's default chat model when omitted. The "system"
+    // provider falls back to env-configured hosts and fails on orgs without them.
     const wireBody: CreateAiAgentInput = {
       ...body,
-      provider_id: body?.provider_id ?? "system",
+      provider_id: body?.provider_id ?? "default",
       model_id:    body?.model_id    ?? "Default",
     }
     return this.http.getFetch()(`${this.base}/assistant_apps`, {
@@ -136,11 +152,70 @@ export class ChatAiResource {
     }).then(r => r.json())
   }
 
+  /**
+   * Update an AI agent. Only the fields you pass change.
+   *
+   * The server replaces the whole agent on this route (a missing `sub_agents`
+   * would turn a team lead back into a plain agent), so the SDK fills the
+   * fields you leave out from the current agent.
+   */
   async updateAiAgent(id: string, body: Partial<CreateAiAgentInput>): Promise<AiAgent> {
+    const current = await this.getAiAgent(id)
+    const keep: Record<string, unknown> = {
+      name: current.name,
+      workflow_name: current.workflow_name,
+      agent_type: current.agent_type,
+      sub_agents: subAgentIds(current.sub_agents),
+    }
+    for (const k of Object.keys(keep)) if (keep[k] === undefined || keep[k] === null) delete keep[k]
     return this.http.getFetch()(`${this.base}/assistant_apps/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ ...keep, ...body }),
+    }).then(r => r.json())
+  }
+
+  // ── Orchestrator (team lead + sub-agents) ──────────────────────────────────
+
+  /**
+   * Create an orchestrator: an agent that hands questions to its sub-agents.
+   * Sub-agents are existing AI agent ids. Whether it may delegate at chat time
+   * depends on the org's plan (the "Orchestrator" feature).
+   */
+  async createOrchestrator(body: CreateAiAgentInput & { sub_agents: string[] }): Promise<AiAgent> {
+    return this.createAiAgent({ ...body, agent_type: "team_lead" })
+  }
+
+  /** Replace the sub-agents of an agent and make it a team lead. */
+  async setSubAgents(id: string, subAgents: string[]): Promise<AiAgent> {
+    return this.updateAssistant(id, { agent_type: "team_lead", sub_agents: subAgents })
+  }
+
+  // ── Tool servers (MCP) ────────────────────────────────────────────────────
+
+  /**
+   * Replace the MCP / OpenAPI tool servers an agent can call. For a workflow
+   * MCP server, `url` is its SSE URL (contains the server's token).
+   */
+  async setToolServers(id: string, servers: ToolServerConfig[]): Promise<AiAgent> {
+    const current = await this.getAiAgent(id)
+    const metadata = { ...((current.metadata as Record<string, unknown>) ?? {}), tool_servers: servers }
+    return this.updateAiAgent(id, { metadata })
+  }
+
+  /** The tool servers configured on an agent. */
+  async listToolServers(id: string): Promise<ToolServerConfig[]> {
+    const metadata = ((await this.getAiAgent(id)).metadata ?? {}) as Record<string, any>
+    return metadata.tool_servers ?? (metadata.tool_server ? [metadata.tool_server] : [])
+  }
+
+  /** Partial update on `/assistants/:id`, which keeps the fields you leave out. */
+  private async updateAssistant(id: string, body: Record<string, unknown>): Promise<AiAgent> {
+    const current = await this.getAiAgent(id)
+    return this.http.getFetch()(`${this.base}/assistants/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: current.name, ...body }),
     }).then(r => r.json())
   }
 

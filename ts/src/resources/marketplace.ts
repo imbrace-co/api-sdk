@@ -49,6 +49,36 @@ export interface MarketplaceFileUploadResponse {
   [key: string]: unknown
 }
 
+export interface MarketplaceApp {
+  app_key: string
+  name?: string
+  version?: string
+  package_id?: string
+  [key: string]: unknown
+}
+
+export interface AppInstall {
+  id: string
+  app_key: string
+  version?: string
+  [key: string]: unknown
+}
+
+export interface InstallTeamDefaultsInput {
+  /** Teams to install agents for; `[]` installs only the org-wide ones. */
+  teams: Array<{ id: string; name: string }>
+  reset?: boolean
+  source?: "package" | "builtin"
+  kind?: "sync" | "create"
+}
+
+export interface InstallTeamDefaultsResult {
+  installed: Array<{ template_id: string; team_id?: string; use_case_id: string }>
+  skipped: unknown[]
+  failed: unknown[]
+  [key: string]: unknown
+}
+
 export class MarketplaceResource {
   /**
    * @param base    - Marketplace service base URL (gateway/marketplaces/v2)
@@ -121,5 +151,47 @@ export class MarketplaceResource {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     }).then(r => r.json())
+  }
+
+  // ── Apps (marketplace v3) ──────────────────────────────────────────────
+
+  private get v3() { return `${this.gateway.replace(/\/$/, "")}/v3/marketplaces` }
+
+  private v3json(path: string, method: string, body?: unknown): Promise<any> {
+    return this.http.getFetch()(`${this.v3}${path}`, {
+      method,
+      ...(body !== undefined ? { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {}),
+    }).then(r => r.json())
+  }
+
+  /** Apps that can be installed. */
+  async listAppCatalog(): Promise<MarketplaceApp[]> {
+    return this.v3json("/apps/catalog", "GET").then(r => r.data)
+  }
+
+  /** Apps installed in the org. */
+  async listInstalledApps(): Promise<AppInstall[]> {
+    return this.v3json("/apps/installed", "GET").then(r => r.data)
+  }
+
+  async getAppInstall(installId: string): Promise<AppInstall> {
+    return this.v3json(`/apps/installs/${installId}`, "GET").then(r => r.data)
+  }
+
+  /** Install by `package_id`, or by `app_key` (+ optional `version`). */
+  async installApp(body: { package_id: string } | { app_key: string; version?: string }): Promise<{ install: AppInstall; setup?: unknown }> {
+    return this.v3json("/apps/install", "POST", body).then(r => r.data)
+  }
+
+  async uninstallApp(installId: string): Promise<{ id: string; app_key?: string }> {
+    return this.v3json(`/apps/installs/${installId}`, "DELETE").then(r => r.data)
+  }
+
+  /**
+   * Install the default team agents for the given teams (matched by team name).
+   * Runs synchronously and can take minutes. `reset: true` removes them first.
+   */
+  async installTeamDefaults(body: InstallTeamDefaultsInput): Promise<InstallTeamDefaultsResult> {
+    return this.v3json("/market-places/v2/templates/_install_team_defaults", "POST", body).then(r => r.data)
   }
 }
