@@ -49,4 +49,4 @@ verified_on: '2026-09-23'
 
 ---
 
-*版本 1.0.1，于 2026年9月30日。社区版，发布于 engineer.imbrace.co，这是一份用 AI 编程工具在 iMBrace 上构建的方法指南。*
+*版本 1.0.3，于 2026年10月4日。社区版，发布于 engineer.imbrace.co，这是一份用 AI 编程工具在 iMBrace 上构建的方法指南。*

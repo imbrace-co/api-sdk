@@ -35,8 +35,10 @@ An AI agent that works inside a company's systems needs clear controls. iMBrace 
   and changes to a Data Board - each one timestamped and, where a person did it, attributed to
   them. On Enterprise installations, that record extends to AI agent activity too.
 - A workflow can pause at a decision that matters and wait for a named approver - for hours
-  or days if needed - then pick up again on its own and finish what it was doing. Who decided,
-  what they decided, and when is recorded with it.
+  or days if needed. The approver decides from where they already work: an email with Approve
+  and Reject buttons, each opening a page where they confirm. Opening the link decides
+  nothing. Once they confirm, the same workflow picks up on its own and finishes what it was
+  doing. Who decided, what they decided, and when is recorded with it.
 - These rules are enforced by the platform's own checks, not by anything typed into a prompt.
 - The company decides where the platform runs and which AI model it uses, including a model
   that never leaves its own building.

@@ -24,7 +24,7 @@ description: 要设计出一个经得起真实使用、真实负载和真实监�
 |---|---|
 | [八项原则详解](/learn/build-it-well/the-eight-principles/) | 每项原则的完整说明：它的含义、做得好是什么样子、常见的出错方式，以及你该向自己的构建提出哪些问题。 |
 | [用例形态](/learn/build-it-well/use-case-shapes/) | 业务用例反复出现的九种形态，以及每一种通常由哪些部件组装而成。 |
-| [人工批准](/learn/build-it-well/human-approval/) | 一项决定，实际有五个地方可以由人来做出——以及为什么聊天回复不算其中之一。 |
+| [人工批准](/learn/build-it-well/human-approval/) | 一个人如何从带有“批准”和“拒绝”按钮的邮件做出决定，并在页面上确认——以及为什么聊天回复不算是一项决定。 |
 | [原生优先](/learn/build-it-well/native-first/) | 为什么要先用平台自身的能力、再考虑写代码，以及这样做能带来什么好处。 |
 | [文档模型](/learn/build-it-well/document-models/) | 如何选择让“文档模块”（DocIQ）从文档中提取什么内容：优先采用默认模型，其次扩展它，最后才考虑自己编写。 |
 | [反模式](/learn/build-it-well/anti-patterns/) | 反复出现的构建错误、每一种的代价，以及对应的修复方法。 |

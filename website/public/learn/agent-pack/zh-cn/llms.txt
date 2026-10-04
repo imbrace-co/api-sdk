@@ -1,6 +1,6 @@
 # iMBrace 构建指南
 
-> 如何在 iMBrace 上为 AI 编程工具设计并妥善构建。版本 1.0.1，社区版。SDK、CLI 和 API 的事实不在本指南中：请到 https://engineer.imbrace.co/llms.txt 获取。
+> 如何在 iMBrace 上为 AI 编程工具设计并妥善构建。版本 1.0.3，社区版。SDK、CLI 和 API 的事实不在本指南中：请到 https://engineer.imbrace.co/llms.txt 获取。
 
 从 [AGENTS.md](AGENTS.md) 开始。
 
@@ -9,9 +9,10 @@
 - [iMBrace 今天能做什么](understand/capability-truth-table.md): 按能力逐项列出 iMBrace 目前能做的事，并附上你可以亲自核实每一项的页面或界面。
 
 ## 动手构建
-- [动手构建](build-it/index.md): iMBrace 课程第2级——在测试组织上构建一个可运行的小型智能体。
-- [快速开始](build-it/getting-started.md): 设置一个 AI 编程工具，在 iMBrace 上构建：一个测试组织、SDK、凭证，以及与该组织的实时连接。
+- [动手构建](build-it/index.md): iMBrace 课程第 2 级——在测试组织上构建一个可运行的小型退货台，然后让它等待人的决定。
+- [设置你的编程工具](build-it/set-up-your-coding-tool.md): 通过 MCP 把 AI 编程工具连接到测试组织，并把 SDK 的地图交给它：测试组织与密钥、MCP 连接，以及确认一切正常的检查。
 - [Vibe coding on iMBrace - 动手构建](build-it/vibe-coding-tutorial.md): 在测试组织中，使用任意一款 AI 编程工具，构建一个可运行的小型智能体。
+- [让它等待人的决定](build-it/make-it-wait-for-a-person.md): 让退货台通过邮件询问一个人并等待答复，这样同一次运行就会记录这个决定，并通知客户。
 - [与 AI 编程工具协作](build-it/working-with-ai.md): 让 AI 编程工具在 iMBrace 上构建出的成果保持可信的立场、习惯与准则。
 - [构建模块](build-it/building-blocks.md): 认识每一个 iMBrace 构建都由哪五个部分组成，以及扩展和交付它们的三种方式——记住每一个的名称，也记住它在界面上的位置。
 
@@ -19,7 +20,7 @@
 - [构建得好](build-it-well/index.md): 要设计出一个经得起真实使用、真实负载和真实监督考验的 iMBrace 构建，需要具备什么。
 - [八项原则](build-it-well/the-eight-principles.md): 一个能经受真实使用考验的构建背后的八项原则——每一项原则的含义、做得好是什么样子，以及常见的出错方式。
 - [用例形态](build-it-well/use-case-shapes.md): 业务用例在 iMBrace 上反复出现的九种形态，以及每一种通常由哪些部件组装而成。
-- [人工批准](build-it-well/human-approval.md): 同一项决定，实际有五个地方可以由人来做出——以及为什么聊天回复不算其中之一。
+- [人工批准](build-it-well/human-approval.md): 一个人如何在自己本来工作的地方做出决定——一封带有“批准”和“拒绝”按钮的邮件，再到页面上确认——以及构建在这之后如何接着把事情做完。
 - [原生优先](build-it-well/native-first.md): 为什么要先动用平台自身的构建部件、再考虑写代码，以及这样做能带来什么好处。
 - [文档模型](build-it-well/document-models.md): 如何选择让文档模块（DocIQ）从文档中提取什么内容——优先采用平台的默认模型，其次扩展它，只有在万不得已时才自己编写。
 - [反模式](build-it-well/anti-patterns.md): 一再被构建出来的错误、每一种的代价，以及对应的修复方法。

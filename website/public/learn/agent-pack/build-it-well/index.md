@@ -43,7 +43,7 @@ build's own configuration.
 |---|---|
 | [The eight principles](the-eight-principles.md) | Each principle in full: what it means, what good looks like, how it goes wrong, and the questions to ask of your own build. |
 | [Use-case shapes](use-case-shapes.md) | Nine recurring shapes a business use case takes, and the kinds of parts each one is typically assembled from. |
-| [Human approval](human-approval.md) | One decision, five places a person can actually make it - and why a chat reply is not one of them. |
+| [Human approval](human-approval.md) | How a person decides from an email with Approve and Reject buttons, confirmed on a page - and why a chat reply is not a decision. |
 | [Native-first](native-first.md) | Why you reach for the platform's own capability before writing code, and what that buys you. |
 | [Document models](document-models.md) | How to choose what DocIQ extracts from a document: adopt the default, extend it, write your own last. |
 | [Anti-patterns](anti-patterns.md) | The mistakes that get built again and again, what each one costs, and the fix. |
@@ -54,4 +54,4 @@ of you, use its questions, and move on.
 
 ---
 
-*Edition 1.0.1, 30 September 2026. Community edition, published on engineer.imbrace.co - a method guide for building on iMBrace with an AI coding tool.*
+*Edition 1.0.3, 4 October 2026. Community edition, published on engineer.imbrace.co - a method guide for building on iMBrace with an AI coding tool.*

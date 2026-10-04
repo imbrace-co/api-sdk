@@ -91,7 +91,7 @@ iMBrace 上的每一个用例，不论外观差异有多大，都是用同样的
 
 MCP 连接让 AI 编程工具能够直接查看并更改一个组织，而不是靠别人转述来了解它。它是用来构建的：把编程工具指向它，给出一个地址和一个密钥，它就能在写下任何一行代码之前，列出已经存在哪些数据表和工作流程。
 
-在侧边栏中，它位于“行动模块”下的“连接模块”，在**MCP**标签页，点开后就是你原本会直接去读的那份指南：[engineer.imbrace.co/mcp/overview](https://engineer.imbrace.co/zh-cn/mcp/overview/)。[快速开始](/zh-cn/learn/build-it/getting-started.md) 一步步演示了如何用这种方式把编程工具连接到测试组织。
+在侧边栏中，它位于“行动模块”下的“连接模块”，在**MCP**标签页，点开后就是你原本会直接去读的那份指南：[engineer.imbrace.co/mcp/overview](https://engineer.imbrace.co/zh-cn/mcp/overview/)。[设置你的编程工具](/zh-cn/learn/build-it/set-up-your-coding-tool.md) 一步步演示了如何用这种方式把编程工具连接到测试组织。
 
 画面：连接模块的MCP标签页，打开MCP连接指南
 *连接模块的MCP标签页，打开MCP连接指南*
@@ -111,8 +111,8 @@ MCP 连接让 AI 编程工具能够直接查看并更改一个组织，而不是
 
 ## 它们如何协同运作
 
-教程中，Harbor Bicycle Co. 的退货台，一次性用到了所有构建模块。顾客与 Return Desk Assistant 对话。这个智能体负责倾听，它唯一的技能——一个叫 Log return request 的工作流程——会在 Return Requests 数据表上写入新的一行。另一个工作流程则监看同一张数据表：一旦有人把 Decision 设为 Approved，它就会记录是谁在什么时候做出的决定，然后给顾客发一封确认邮件。这个场景不需要用到文档模型，因为没有任何东西是以文件形式进来的——如果退货是以扫描装箱单的形式进来，就会先由文档模型读取，再以一行的形式落在同一张数据表上。
+教程和[让它等待人的决定](/zh-cn/learn/build-it/make-it-wait-for-a-person.md)中，Harbor Bicycle Co. 的退货台，一次性用到了所有构建模块。客户与 Return Desk Assistant 对话。这个智能体负责倾听，它唯一的技能——一个叫 Log return request 的工作流程——会在 Return Requests 数据表上写入新的一行。第二个工作流程根据 Refund Rules 数据表算出退款金额。还有一个工作流程去询问值班经理：它通过邮件发出一张带有“批准”（Approve）和“拒绝”（Reject）按钮的卡片，然后等待。每个按钮都会打开一个页面，由经理在上面确认；随后这个工作流程从暂停的地方接着往下走，把决定、审核人的姓名和时间记录在这一行上，并给客户发邮件。这个场景不需要用到文档模型，因为没有任何东西是以文件形式进来的——如果退货是以扫描装箱单的形式进来，就会先由文档模型读取，再以一行的形式落在同一张数据表上。
 
 Harbor 的每一个构建模块，都可以打包成一个模块，安装进另一个组织，它的数据表、工作流程和智能体设置会一起带过去，让那个组织自己的管理员打开并调整。而最初让编程工具搭建出这一切的那同一个 MCP 连接，之后也能用来检查结果：列出数据表，读取工作流程最近一次的运行记录。
 
-想亲手搭建一遍，一步一步来，请见[教程](/zh-cn/learn/build-it/vibe-coding-tutorial.md)。
+想亲手搭建一遍，一步一步来，请见[教程](/zh-cn/learn/build-it/vibe-coding-tutorial.md)，然后在[让它等待人的决定](/zh-cn/learn/build-it/make-it-wait-for-a-person.md)里，让退货台去等待一个人的决定。

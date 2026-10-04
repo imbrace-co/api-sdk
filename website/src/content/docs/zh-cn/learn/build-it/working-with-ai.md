@@ -30,7 +30,7 @@ description: 让 AI 编程工具在 iMBrace 上构建出的成果保持可信的
 - <strong>SDK 自己的地图</strong>，在它编写 SDK 代码时，从
   [engineer.imbrace.co](https://engineer.imbrace.co/llms.txt) 现抓现用，绝不用旧的副本。
 - <strong>组织本身</strong>，通过 MCP 连接，用在“这里存在什么”或“发生过什么”这类问题上——见
-  [快速开始](/learn/build-it/getting-started/)。
+  [设置你的编程工具](/learn/build-it/set-up-your-coding-tool/)。
 
 ## 准则
 

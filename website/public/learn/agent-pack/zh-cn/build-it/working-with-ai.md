@@ -36,7 +36,7 @@ verified_on: '2026-09-23'
 - **SDK 自己的地图**，在它编写 SDK 代码时，从
   [engineer.imbrace.co](https://engineer.imbrace.co/llms.txt) 现抓现用，绝不用旧的副本。
 - **组织本身**，通过 MCP 连接，用在“这里存在什么”或“发生过什么”这类问题上——见
-  [快速开始](getting-started.md)。
+  [设置你的编程工具](set-up-your-coding-tool.md)。
 
 ## 准则
 
@@ -77,4 +77,4 @@ verified_on: '2026-09-23'
 
 ---
 
-*版本 1.0.1，于 2026年9月30日。社区版，发布于 engineer.imbrace.co，这是一份用 AI 编程工具在 iMBrace 上构建的方法指南。*
+*版本 1.0.3，于 2026年10月4日。社区版，发布于 engineer.imbrace.co，这是一份用 AI 编程工具在 iMBrace 上构建的方法指南。*

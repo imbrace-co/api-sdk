@@ -34,7 +34,7 @@ verified_on: '2026-09-23'
 - **SDK 自己的地图**，在它编写 SDK 代码时，从
   [engineer.imbrace.co](https://engineer.imbrace.co/llms.txt) 现抓现用，绝不用旧的副本。
 - **组织本身**，通过 MCP 连接，用在“这里存在什么”或“发生过什么”这类问题上——见
-  [快速开始](/zh-cn/learn/build-it/getting-started.md)。
+  [设置你的编程工具](/zh-cn/learn/build-it/set-up-your-coding-tool.md)。
 
 ## 准则
 

@@ -39,4 +39,4 @@ verified_on: '2026-09-23'
 
 ---
 
-*版本 1.0.1，於 2026年9月30日。社群版，發布於 engineer.imbrace.co，這是一份用 AI 程式碼工具在 iMBrace 上建置的方法指南。*
+*版本 1.0.3，於 2026年10月4日。社群版，發布於 engineer.imbrace.co，這是一份用 AI 程式碼工具在 iMBrace 上建置的方法指南。*

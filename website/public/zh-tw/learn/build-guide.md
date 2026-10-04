@@ -6,7 +6,7 @@ track:
 
 # AI 工具的建置指南
 
-iMBrace 建置指南就是本課程的[建置得好](/zh-tw/learn/build-it-well/index.md)各頁、每一個好的 iMBrace 建置成果背後的原則，加上[快速上手](/zh-tw/learn/build-it/getting-started.md)與[教學課程](/zh-tw/learn/build-it/vibe-coding-tutorial.md)——全部打包成 AI 程式碼工具自己就能讀取的純文字檔案，而不是一份需要你讀完再講給它聽的頁面。
+iMBrace 建置指南就是本課程的[建置得好](/zh-tw/learn/build-it-well/index.md)各頁、每一個好的 iMBrace 建置成果背後的原則，加上[設定你的程式碼工具](/zh-tw/learn/build-it/set-up-your-coding-tool.md)、[教學課程](/zh-tw/learn/build-it/vibe-coding-tutorial.md)與[讓它等一個人做決定](/zh-tw/learn/build-it/make-it-wait-for-a-person.md)——全部打包成 AI 程式碼工具自己就能讀取的純文字檔案，而不是一份需要你讀完再講給它聽的頁面。
 
 ## 適用對象
 
@@ -28,6 +28,8 @@ iMBrace 建置指南就是本課程的[建置得好](/zh-tw/learn/build-it-well/
 
 ## 下載
 
-- **壓縮檔**——[imbrace-build-guide-community.zip](https://engineer.imbrace.co/learn/imbrace-build-guide-community.zip)
+- [AI 程式碼工具的建置指南（.zip）](https://engineer.imbrace.co/learn/imbrace-build-guide-community.zip)
+- [整門課程，給 AI 工具讀取（llms-full.txt）](https://engineer.imbrace.co/zh-tw/learn/llms-full.txt)
+
 - **可瀏覽的檔案**——`AGENTS.md` 及其他檔案，都在 [engineer.imbrace.co/learn/agent-pack/README.md](https://engineer.imbrace.co/learn/agent-pack/README.md) 之下
 - **整份指南合併成單一檔案**，適合只讀取單一文件、而非整個資料夾的工具：[英文](https://engineer.imbrace.co/learn/llms-full.txt)、[繁體中文](https://engineer.imbrace.co/zh-tw/learn/llms-full.txt)、[簡體中文](https://engineer.imbrace.co/zh-cn/learn/llms-full.txt)

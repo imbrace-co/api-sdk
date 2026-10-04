@@ -147,7 +147,7 @@ writing a line of anything.
 In the sidebar this lives under **Actions > ConnectIQ**, on the **MCP** tab, and it opens
 the very guide you would read directly at
 [engineer.imbrace.co/mcp/overview](https://engineer.imbrace.co/mcp/overview/).
-[Getting started](getting-started.md) walks through connecting a coding tool to a test
+[Set up your coding tool](set-up-your-coding-tool.md) walks through connecting a coding tool to a test
 organisation this way, step by step.
 
 Screen: ConnectIQ MCP tab opening the MCP connection guide
@@ -174,13 +174,16 @@ Do it in code: [SDK overview](https://engineer.imbrace.co/sdk/overview/).
 
 ## How they fit together
 
-Harbor Bicycle Co.'s return desk, from the tutorial, uses every block at once. A customer
+Harbor Bicycle Co.'s return desk, from the tutorial and [Make it wait for a
+person](make-it-wait-for-a-person.md), uses every block at once. A customer
 talks to the Return Desk Assistant. The agent listens, and its one skill - a workflow
 called Log return request - writes a new row on the Return Requests board. A second
-workflow watches that same board: once a person sets Decision to Approved, it records who
-decided and when, then sends the customer a confirmation by email. Nothing here needed a
-document model, because nothing arrived as a file - a return that came in as a scanned
-packing slip would be read by a document model first, and land as a row on that same
+workflow works out the refund from the Refund Rules board. A further workflow asks the duty
+manager: it emails a card with Approve and Reject buttons and waits. Each button opens a page
+where the manager confirms; then the workflow carries on from where it paused, records the
+decision, the reviewer's name and the time on the row, and emails the customer. Nothing here
+needed a document model, because nothing arrived as a file - a return that came in as a
+scanned packing slip would be read by a document model first, and land as a row on that same
 board.
 
 Every one of Harbor's blocks could be packaged as a single module and installed into a
@@ -189,8 +192,9 @@ travelling together for that organisation's own admin to open and adjust. And th
 connection that let a coding tool build all of it in the first place is what lets it check
 the result afterwards: list the board, read the workflow's last run.
 
-Build it yourself, one step at a time, in [the tutorial](vibe-coding-tutorial.md).
+Build it yourself, one step at a time, in [the tutorial](vibe-coding-tutorial.md), then make
+it wait for a person in [Make it wait for a person](make-it-wait-for-a-person.md).
 
 ---
 
-*Edition 1.0.1, 30 September 2026. Community edition, published on engineer.imbrace.co - a method guide for building on iMBrace with an AI coding tool.*
+*Edition 1.0.3, 4 October 2026. Community edition, published on engineer.imbrace.co - a method guide for building on iMBrace with an AI coding tool.*

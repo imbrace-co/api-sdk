@@ -6,7 +6,7 @@ alwaysApply: false
 
 Follow [AGENTS.md](../../AGENTS.md) for how to build on iMBrace well: the method, the
 rules for every build, and the read order for a new one. Start a new design at
-`build-it-well/use-case-shapes.md`; start a new person at `build-it/getting-started.md`.
+`build-it-well/use-case-shapes.md`; start a new person at `build-it/set-up-your-coding-tool.md`.
 
 SDK, CLI and MCP facts are never in this guide: fetch them fresh from
 https://engineer.imbrace.co/llms.txt, never from memory.
