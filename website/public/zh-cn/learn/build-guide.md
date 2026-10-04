@@ -6,7 +6,7 @@ track:
 
 # AI 工具的构建指南
 
-iMBrace 构建指南就是本课程的[构建得好](/zh-cn/learn/build-it-well/index.md)各页、每一个好的 iMBrace 构建成果背后的原则，加上[快速开始](/zh-cn/learn/build-it/getting-started.md)与[教程](/zh-cn/learn/build-it/vibe-coding-tutorial.md)——全部打包成 AI 编程工具自己就能读取的纯文本文件，而不是一份需要你读完再讲给它听的页面。
+iMBrace 构建指南就是本课程的[构建得好](/zh-cn/learn/build-it-well/index.md)各页、每一个好的 iMBrace 构建成果背后的原则，加上[设置你的编程工具](/zh-cn/learn/build-it/set-up-your-coding-tool.md)、[教程](/zh-cn/learn/build-it/vibe-coding-tutorial.md)与[让它等待人的决定](/zh-cn/learn/build-it/make-it-wait-for-a-person.md)——全部打包成 AI 编程工具自己就能读取的纯文本文件，而不是一份需要你读完再讲给它听的页面。
 
 ## 适用对象
 
@@ -28,6 +28,8 @@ iMBrace 构建指南就是本课程的[构建得好](/zh-cn/learn/build-it-well/
 
 ## 下载
 
-- **压缩包**——[imbrace-build-guide-community.zip](https://engineer.imbrace.co/learn/imbrace-build-guide-community.zip)
+- [AI 编程工具的构建指南（.zip）](https://engineer.imbrace.co/learn/imbrace-build-guide-community.zip)
+- [整门课程，给 AI 工具读取（llms-full.txt）](https://engineer.imbrace.co/zh-cn/learn/llms-full.txt)
+
 - **可浏览的文件**——`AGENTS.md` 及其他文件，都在 [engineer.imbrace.co/learn/agent-pack/README.md](https://engineer.imbrace.co/learn/agent-pack/README.md) 之下
 - **整份指南合并成单个文件**，适合只读取单一文档、而非整个文件夹的工具：[英文](https://engineer.imbrace.co/learn/llms-full.txt)、[繁体中文](https://engineer.imbrace.co/zh-tw/learn/llms-full.txt)、[简体中文](https://engineer.imbrace.co/zh-cn/learn/llms-full.txt)

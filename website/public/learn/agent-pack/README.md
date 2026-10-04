@@ -7,7 +7,7 @@ put a real human decision where one is needed, and check the result on the platf
 of trusting a summary.
 
 It is also readable by people. Start with `build-it-well/index.md` for the method, or
-`build-it/getting-started.md` to set up.
+`build-it/set-up-your-coding-tool.md` to set up.
 
 ## What is inside
 
@@ -18,9 +18,10 @@ It is also readable by people. Start with `build-it-well/index.md` for the metho
 
 **Build it** (level 2)
 
-- `build-it/index.md` - Level 2 of the iMBrace course - build a small working agent on a test organisation.
-- `build-it/getting-started.md` - Set up an AI coding tool to build on iMBrace - a test organisation, the SDK, credentials, and a live connection to the organisation.
+- `build-it/index.md` - Level 2 of the iMBrace course - build a small working return desk on a test organisation, then make it wait for a person.
+- `build-it/set-up-your-coding-tool.md` - Connect an AI coding tool to a test organisation over MCP and give it the SDK's map - a test organisation and key, the MCP connection, and a check that it all works.
 - `build-it/vibe-coding-tutorial.md` - Build a small working agent on a test organisation, with any AI coding tool.
+- `build-it/make-it-wait-for-a-person.md` - Make the return desk ask a person by email and wait for the answer, so the same run records the decision and tells the customer.
 - `build-it/working-with-ai.md` - The stance, habits and guardrails that keep what an AI coding tool builds on iMBrace trustworthy.
 - `build-it/building-blocks.md` - Recognise the five things every iMBrace build is made from, plus the three ways to extend and deliver them, by name and by where each one lives on screen.
 
@@ -29,7 +30,7 @@ It is also readable by people. Start with `build-it-well/index.md` for the metho
 - `build-it-well/index.md` - What it takes to design an iMBrace build that survives contact with real use, real load, and real oversight.
 - `build-it-well/the-eight-principles.md` - The eight principles behind a build that survives contact with real use - what each one means, what good looks like, and how it goes wrong.
 - `build-it-well/use-case-shapes.md` - Nine recurring shapes a business use case takes on iMBrace, and the kinds of parts each one is assembled from.
-- `build-it-well/human-approval.md` - One decision, five places a person can actually make it - and why a chat reply is not one of them.
+- `build-it-well/human-approval.md` - How a person decides from where they already work - an email with Approve and Reject buttons, confirmed on a page - and how the build carries on afterwards.
 - `build-it-well/native-first.md` - Why you reach for the platform's own building blocks before writing code, and what that buys you.
 - `build-it-well/document-models.md` - How to choose what DocIQ extracts from a document - adopt the platform's default model, extend it, and write your own only as a last resort.
 - `build-it-well/anti-patterns.md` - The mistakes that get built again and again, what each one costs, and the fix.
@@ -48,7 +49,7 @@ It is also readable by people. Start with `build-it-well/index.md` for the metho
    `llms-full.txt`, which is the whole guide in one file.
 3. **Anywhere else:** give the tool `llms.txt`, the index that lists every page.
 
-Then connect the tool to your test organisation over MCP (`build-it/getting-started.md`), so
+Then connect the tool to your test organisation over MCP (`build-it/set-up-your-coding-tool.md`), so
 it can see what already exists instead of guessing.
 
 ## What is not in here, on purpose
@@ -59,7 +60,7 @@ has gone stale.
 
 ## Updates
 
-This is edition 1.0.1, 30 September 2026. When the method changes we send a new edition, and
+This is edition 1.0.3, 4 October 2026. When the method changes we send a new edition, and
 `CHANGELOG.md` says what changed. Replace the whole folder rather than editing it, so your
 copy stays in step. Once the guide is published on engineer.imbrace.co, your tool will be
 able to read the latest edition there directly.
@@ -73,4 +74,4 @@ the most useful thing you can send us.
 
 ---
 
-*Edition 1.0.1, 30 September 2026. Community edition, published on engineer.imbrace.co - a method guide for building on iMBrace with an AI coding tool.*
+*Edition 1.0.3, 4 October 2026. Community edition, published on engineer.imbrace.co - a method guide for building on iMBrace with an AI coding tool.*

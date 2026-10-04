@@ -77,10 +77,11 @@ the thing being reviewed.
 | 1 | Show the record of the last decision made. Who, what, when? | | | |
 | 2 | If the approver were unavailable, would anything still go out? | | | |
 | 3 | Does the gate work out its own answer, or trust one it was handed? | | | |
-| 4 | What happens when the same decision arrives twice? | | | |
-| 5 | Can the agent write the columns that record a decision? | | | |
-| 6 | What does a later step do when the check has not stamped the record yet? | | | |
-| 7 | Approve it, reject it, and leave one unanswered. Does the process carry on by itself each time? | | | |
+| 4 | Where does the reviewer already work, and was that exact route walked end to end, as them? Does opening the link alone decide anything? | | | |
+| 5 | What happens when the same decision arrives twice? | | | |
+| 6 | Can the agent write the columns that record a decision? | | | |
+| 7 | What does a later step do when the check has not stamped the record yet? | | | |
+| 8 | Approve it, reject it, and leave one unanswered. Does the process carry on by itself each time? | | | |
 
 ## 6. Native-first
 

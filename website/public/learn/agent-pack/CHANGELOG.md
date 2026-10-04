@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.0.3 - 30 September 2026
+
+- **Human approval:** a person now decides from where they already work - an email with
+  Approve and Reject buttons, each opening a confirm page, where only the page's Confirm
+  decides. The run waits, then the same run finishes the job and tells the requester. Deciding
+  by editing a cell in a board is now named as an anti-pattern, and the review checklist asks
+  where the reviewer already works.
+- **The eight principles, Use-case shapes, Review checklist, Anti-patterns:** updated to match.
+
+## 1.0.2 - 30 September 2026
+
+- **Build it:** the Getting started page is now Set up your coding tool (`build-it/set-up-your-coding-tool.md`). It keeps the test organisation and key, the MCP connection, the SDK's map and the check that it works, and sends the SDK install and credentials to the docs' own Setup Guide instead of repeating them.
+
 ## 1.0.1 - 29 September 2026
 
 - Chinese wording made consistent across every page - one name for each building block,
@@ -42,4 +55,4 @@ First edition.
 
 ---
 
-*Edition 1.0.1, 30 September 2026. Community edition, published on engineer.imbrace.co - a method guide for building on iMBrace with an AI coding tool.*
+*Edition 1.0.3, 4 October 2026. Community edition, published on engineer.imbrace.co - a method guide for building on iMBrace with an AI coding tool.*

@@ -6,7 +6,7 @@ track:
 - sell
 - build
 - deploy
-verified_on: '2026-09-28'
+verified_on: '2026-09-30'
 ---
 
 # What iMBrace does today
@@ -54,7 +54,9 @@ available generally. Edition and pricing questions go to your iMBrace contact.
 | Start a workflow from an incoming message on a connected channel, a schedule, or a change to a Data Board record - created, deleted, or a chosen field updated | the product (Workflows, FlowOps) |
 | Reach an outside system from inside a workflow through a pre-built connector - iMBrace ships natively integrated with more than 100 services, from a CRM to a spreadsheet to a ticketing tool | the product (Integrations) |
 | Keep a connector's credentials in the organisation's own store, separate from the workflow itself, so a shared or exported workflow definition carries no key | https://engineer.imbrace.co/sdk/workflows |
-| Pause a workflow at a decision that matters and wait for a specific person to decide, for as long as it takes, then pick the run back up on its own, with who decided, what they decided, and when recorded against it | the product (Workflows, Board Automation) |
+| Pause a workflow at a decision that matters and hold its place while a specific person decides, then pick the same run back up when they answer, with who decided, what they decided, and when recorded against it. If nobody answers, the run stays paused and visible, and nothing goes out | the product (FlowOps) |
+| Ask that person from where they already work: an email with a card of the facts and two buttons, Approve and Reject, each opening a page where they press Confirm. Opening a link decides nothing, and once one answer is confirmed the other button stops working | the product (FlowOps), and the emailed card |
+| Finish the job after the answer: once approved, the finished PDF and Excel documents are emailed to the person who asked; if rejected, that person is told and no documents go out. A request that already meets the rules skips the approval, and its documents are emailed straight away | the product (FlowOps, and the requester's inbox) |
 
 ## Access and governance
 
@@ -86,4 +88,4 @@ available generally. Edition and pricing questions go to your iMBrace contact.
 
 ---
 
-*Edition 1.0.1, 30 September 2026. Community edition, published on engineer.imbrace.co - a method guide for building on iMBrace with an AI coding tool.*
+*Edition 1.0.3, 4 October 2026. Community edition, published on engineer.imbrace.co - a method guide for building on iMBrace with an AI coding tool.*

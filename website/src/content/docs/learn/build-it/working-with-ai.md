@@ -31,7 +31,7 @@ Nobody is judged for "built". Writing "live" for something that never ran is the
 - **The SDK's own map**, fetched fresh from [engineer.imbrace.co](https://engineer.imbrace.co/llms.txt)
   when it writes SDK code. Never an old copy.
 - **The organisation itself**, over the MCP connection, when the question is about what
-  exists or what happened - see [Getting started](/learn/build-it/getting-started/).
+  exists or what happened - see [Set up your coding tool](/learn/build-it/set-up-your-coding-tool/).
 
 ## The guardrails
 

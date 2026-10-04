@@ -11,15 +11,19 @@ This level has you build one yourself.
 
 ## What this level gets you
 
-By the end you can build a small working agent on a test organisation, with whatever AI
-coding tool you already use. Nobody needs to hand you source code to get there - you need
-a test organisation, a key, and your coding tool connected over MCP.
+By the end you can build a small working return desk on a test organisation, and make it
+wait for a person's decision, with whatever AI coding tool you already use. Nobody needs to
+hand you source code to get there - you need a test organisation, a key, and your coding
+tool connected over MCP.
 
-- [Getting started](/learn/build-it/getting-started.md) - a test organisation, the SDK, credentials, and
+- [Set up your coding tool](/learn/build-it/set-up-your-coding-tool.md) - a test organisation and key, and
   your coding tool connected to the organisation. Do this first.
 - [Vibe coding on iMBrace - Build it](/learn/build-it/vibe-coding-tutorial.md) - the written tutorial.
   Follow it in order; it is written to be followed once, start to finish, on a real test
   organisation.
+- [Make it wait for a person](/learn/build-it/make-it-wait-for-a-person.md) - a second sitting that starts
+  from the finished desk and makes it ask a person by email and wait for the answer before
+  anything is promised to the customer.
 - [Working with an AI coding tool](/learn/build-it/working-with-ai.md) - the stance and guardrails that keep
   what your tool builds trustworthy.
 
@@ -28,7 +32,8 @@ a test organisation, a key, and your coding tool connected over MCP.
 - A test organisation and an API key. Never a production key.
 - Any AI coding tool that can hold an MCP connection and read a text file. This tutorial
   names none, on purpose - it works with whichever one you already use.
-- About an hour.
+- About an hour for the tutorial. Make it wait for a person is a second sitting, and needs
+  two email addresses you can read.
 
 ## After this level
 

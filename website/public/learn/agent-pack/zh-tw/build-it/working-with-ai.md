@@ -29,7 +29,7 @@ verified_on: '2026-09-23'
 
 - **這份指南的 `AGENTS.md`**，或是管轄你眼前這項工作的那一頁就好，不要一次全部都給——讀了所有東西的工具，留給你問題本身的空間反而更少。
 - **SDK 自己的地圖**，在它撰寫 SDK 程式碼時，從 [engineer.imbrace.co](https://engineer.imbrace.co/llms.txt) 即時抓取，絕不使用舊的副本。
-- **組織本身**，透過 MCP 連線取得——當問題是關於現在有什麼、或發生過什麼事的時候，請見[快速上手](getting-started.md)。
+- **組織本身**，透過 MCP 連線取得——當問題是關於現在有什麼、或發生過什麼事的時候，請見[設定你的程式碼工具](set-up-your-coding-tool.md)。
 
 ## 防護措施
 
@@ -60,4 +60,4 @@ verified_on: '2026-09-23'
 
 ---
 
-*版本 1.0.1，於 2026年9月30日。社群版，發布於 engineer.imbrace.co，這是一份用 AI 程式碼工具在 iMBrace 上建置的方法指南。*
+*版本 1.0.3，於 2026年10月4日。社群版，發布於 engineer.imbrace.co，這是一份用 AI 程式碼工具在 iMBrace 上建置的方法指南。*

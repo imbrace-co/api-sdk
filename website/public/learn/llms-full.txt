@@ -11,13 +11,29 @@ track:
 - deploy
 ---
 
-# Start here
+# About the course
 
 This course teaches you iMBrace: understand it, see it work, build on it and build it well,
-in English, Traditional Chinese and Simplified Chinese. Pick the path that fits you and read
-the pages in order.
+in English, Traditional Chinese and Simplified Chinese. It sits beside the SDK documentation:
+the docs are the reference, and the course is a guided route through them, with screenshots.
+Choose the path that fits you below.
 
-## Pick your path
+## Downloads
+
+- [Build guide for AI coding tools (.zip)](https://engineer.imbrace.co/learn/imbrace-build-guide-community.zip)
+- [The whole course for AI tools (llms-full.txt)](https://engineer.imbrace.co/learn/llms-full.txt)
+
+The partner kit (demo scripts, delivery and deployment guides, a practice organisation) is
+not a download: ask your iMBrace contact for it.
+
+## Choose your path
+
+- [Explain iMBrace to a customer](/learn/understand/overview.md) - What it is, what it does today, and a tour of it working.
+- [Build on iMBrace](/learn/build-it/set-up-your-coding-tool.md) - Set up your coding tool, then build a small working return desk and make it wait for a person.
+- [Build with an AI coding tool](/learn/build-guide.md) - Give your tool the build guide, or the whole course as one file.
+- **Work with iMBrace as a partner** - Demo scripts, delivery and deployment guides and a practice organisation, in the partner kit.
+
+### Every page on each path, in order
 
 **Explain iMBrace to a customer.**
 [What iMBrace is](/learn/understand/overview.md), then
@@ -27,11 +43,13 @@ the pages in order.
 [Sales quoting](/learn/see-it-work/sales-quoting.md).
 
 **Build on iMBrace.**
-[Getting started](/learn/build-it/getting-started.md), then
+[Set up your coding tool](/learn/build-it/set-up-your-coding-tool.md), then
 [The building blocks](/learn/build-it/building-blocks.md), then
 [the tutorial](/learn/build-it/vibe-coding-tutorial.md), then
+[Make it wait for a person](/learn/build-it/make-it-wait-for-a-person.md), then
 [Working with an AI coding tool](/learn/build-it/working-with-ai.md), then
-[Build it well](/learn/build-it-well/index.md). The hands-on tutorial takes about an hour.
+[Build it well](/learn/build-it-well/index.md). The hands-on tutorial takes about an hour;
+Make it wait for a person is a second sitting.
 
 **Build with an AI coding tool.**
 Start with the [Build guide for AI tools](/learn/build-guide.md). Your tool can also read
@@ -87,8 +105,10 @@ An AI agent that works inside a company's systems needs clear controls. iMBrace 
   and changes to a Data Board - each one timestamped and, where a person did it, attributed to
   them. On Enterprise installations, that record extends to AI agent activity too.
 - A workflow can pause at a decision that matters and wait for a named approver - for hours
-  or days if needed - then pick up again on its own and finish what it was doing. Who decided,
-  what they decided, and when is recorded with it.
+  or days if needed. The approver decides from where they already work: an email with Approve
+  and Reject buttons, each opening a page where they confirm. Opening the link decides
+  nothing. Once they confirm, the same workflow picks up on its own and finishes what it was
+  doing. Who decided, what they decided, and when is recorded with it.
 - These rules are enforced by the platform's own checks, not by anything typed into a prompt.
 - The company decides where the platform runs and which AI model it uses, including a model
   that never leaves its own building.
@@ -118,7 +138,7 @@ track:
 - sell
 - build
 - deploy
-verified_on: '2026-09-28'
+verified_on: '2026-09-30'
 ---
 
 # What iMBrace does today
@@ -166,7 +186,9 @@ available generally. Edition and pricing questions go to your iMBrace contact.
 | Start a workflow from an incoming message on a connected channel, a schedule, or a change to a Data Board record - created, deleted, or a chosen field updated | the product (Workflows, FlowOps) |
 | Reach an outside system from inside a workflow through a pre-built connector - iMBrace ships natively integrated with more than 100 services, from a CRM to a spreadsheet to a ticketing tool | the product (Integrations) |
 | Keep a connector's credentials in the organisation's own store, separate from the workflow itself, so a shared or exported workflow definition carries no key | https://engineer.imbrace.co/sdk/workflows |
-| Pause a workflow at a decision that matters and wait for a specific person to decide, for as long as it takes, then pick the run back up on its own, with who decided, what they decided, and when recorded against it | the product (Workflows, Board Automation) |
+| Pause a workflow at a decision that matters and hold its place while a specific person decides, then pick the same run back up when they answer, with who decided, what they decided, and when recorded against it. If nobody answers, the run stays paused and visible, and nothing goes out | the product (FlowOps) |
+| Ask that person from where they already work: an email with a card of the facts and two buttons, Approve and Reject, each opening a page where they press Confirm. Opening a link decides nothing, and once one answer is confirmed the other button stops working | the product (FlowOps), and the emailed card |
+| Finish the job after the answer: once approved, the finished PDF and Excel documents are emailed to the person who asked; if rejected, that person is told and no documents go out. A request that already meets the rules skips the approval, and its documents are emailed straight away | the product (FlowOps, and the requester's inbox) |
 
 ## Access and governance
 
@@ -445,27 +467,30 @@ track:
 - sell
 - build
 - deploy
-verified_on: 2026-09-29
+verified_on: 2026-10-03
 ---
 
 # Sales quoting
 
 Quillmoor Components' sales team quotes industrial fasteners and fittings from a large
-catalogue, and a discount beyond the standard rule needs a manager's word before it goes
-out. iMBrace turns a plain-words request straight into a priced quotation, and only lets it
-go final once the right person has approved anything beyond that rule.
+catalogue, and a discount that pulls the margin below Quillmoor's floor needs a manager's word
+before anything goes out. iMBrace turns a plain-words request into a priced quotation. When
+the margin is under the floor, the work stops and waits for the manager, who answers from an
+email. The moment they do, the same work carries on and sends the finished documents to the
+person who asked.
 
 ## What happens, step by step
 
 Here is the story, start to finish:
 
 1. A sales person asks the agent, called Sales Quoting, for a quotation in plain words: the
-   customer, the products and the quantities.
+   customer, the products and the quantities. They can add their own email address, and the
+   finished documents come to it; without one, the documents go to the sales desk.
 2. The agent reads SQ Catalogue and SQ Pricing Rules, two boards - structured tables in
    DataIQ - that hold Quillmoor's products and its pricing rules.
 
-Screen: The SQ Catalogue board listing Quillmoor's products with their SKUs and prices
-*1 Knowledge > DataIQ in the sidebar. 2 The SQ Catalogue board, Quillmoor's products and prices.*
+Screen: The SQ Catalogue board listing Quillmoor's products with their SKUs
+*1 Knowledge > DataIQ in the sidebar. 2 The SQ Catalogue board, Quillmoor's products and their SKUs.*
 
 Screen: The SQ Pricing Rules board with the approval_threshold discount rule
 *1 Knowledge > DataIQ in the sidebar. 2 The discount rule row, in the approval_threshold field.*
@@ -476,43 +501,77 @@ Screen: The SQ Pricing Rules board with the approval_threshold discount rule
 Screen: InsightsIQ's answer: a new quotation written up with its priced lines and total
 *1 InsightsIQ in the sidebar. 2 The Sales Quoting agent's answer: the new quotation, priced line by line.*
 
-4. When the discount asked for goes beyond the rule on the SQ Pricing Rules board, the
-   quotation's status shows it is waiting for a manager - the platform holds it there
-   itself, not on the agent's word.
+4. iMBrace then checks the margin itself, from the lines that were written - not from the
+   agent's word. A quotation whose margin clears the floor needs no approval: its documents
+   are composed and emailed to the person who asked, automatically.
+5. A quotation whose margin is under the floor waits. Its status shows awaiting approval,
+   and the workflow behind it - iMBrace's engine for steps that run on their own once
+   triggered - pauses at the decision. In FlowOps the quotation's run is marked Paused: it
+   has not failed and it has not finished, it is holding its place until a person answers.
 
 Screen: The SQ Quotations board with one row showing status awaiting approval
 *1 Knowledge > DataIQ in the sidebar. 2 The quotation's own status: awaiting approval.*
 
-5. The manager reviews it and approves it directly on the board.
+Screen: The FlowOps list of runs with the quotation's run marked Paused
+*1 Actions > FlowOps in the sidebar. 2 The quotation's run, marked Paused: it is waiting for the manager.*
 
-Screen: The Approved By cell on a quotation row being edited with a manager's name, next to the Save button
-*1 The Approved By cell, being edited with the manager's name. 2 The Save button.*
+6. The manager gets an email. It is a card with everything needed to decide - the customer,
+   the lines, the discount, the margin, the total and the policy floor - and two buttons,
+   Approve and Reject.
 
-6. A workflow - iMBrace's engine for steps that run on their own once triggered - picks up
-   the approval by itself and marks the quotation final. The sales person then asks the
-   agent for the finished quotation as a document, ready to send.
+Screen: The manager's approval email: a card with the customer, discount, margin, total and policy floor, and Approve and Reject buttons
+*1 The card: the customer, discount, margin, total and policy floor. 2 The Approve and Reject buttons.*
 
-Screen: The SQ Quotations board with the row's status now approved
-*The quotation's status flipped to approved.*
+7. Each button opens a page that shows the choice. Opening it decides nothing; only the
+   page's Confirm button records the decision. Once one answer is confirmed, the other button
+   stops working, so a quotation gets one answer.
 
-Screen: InsightsIQ's answer with the finished quotation's number and its document download links
-*The Sales Quoting agent's answer: the finished quotation number, with its PDF and XLSX download links.*
+Screen: The confirm page opened from the Approve button: the quotation, its customer and total, and a Confirm button
+*1 The choice and the quotation it applies to. 2 The Confirm button: nothing is decided until it is pressed.*
+
+Screen: The page shown after Confirm: the quotation approved and the documents on their way
+*The page after Confirm: the quotation is approved and the documents are on their way to the person who asked.*
+
+8. The same run picks up where it stopped. The platform records who approved and when -
+   Approved By and Approved At, which the agent cannot write - then composes the PDF and the
+   Excel file and emails them to the person who asked, or to the sales desk when no address
+   was given.
+
+Screen: The FlowOps list of runs with the same run now marked Succeeded
+*1 Actions > FlowOps in the sidebar. 2 The same run, now Succeeded: it picked up where it waited and finished.*
+
+Screen: The SQ Quotations board with the row's status approved, and Approved By and Approved At filled in
+*1 Knowledge > DataIQ in the sidebar. 2 The quotation's row: status approved, with Approved By and Approved At filled in.*
+
+Screen: The requester's email: the quotation approved and ready to send, with a PDF and an Excel file attached
+*1 The email telling the requester the quotation is approved and ready to send. 2 The two attachments, the PDF and the Excel file.*
+
+If the manager presses Reject instead, the rejection is recorded, no documents are made and
+the person who asked is told.
 
 ## Where people decide
 
-A quotation asking for a discount beyond the standard rule waits for a manager to approve
-it before it can go final. It sits there because a discount the rule does not already
-allow should always be a person's decision, checked the same way every time by iMBrace
-itself, rather than left to memory.
+A quotation whose margin is under the floor waits for a manager before anything goes out. It
+sits there because a discount the rule does not already allow should always be a person's
+decision, checked the same way every time by iMBrace itself, rather than left to memory.
+
+The manager decides from where they already work: their inbox, with the facts and the two
+buttons in front of them. Until they answer, nothing goes out. If nobody answers, the
+quotation stays paused and visible, on its board and in FlowOps, and no document is sent.
+When they do answer, the same run resumes - it does not start again - and finishes the job.
+
+That is what this use case shows: iMBrace holds the run's place while a person decides, and
+picks it up when they answer. What the run works with is people, messages and documents - a
+manager, an email and a finished quotation.
 
 ## What you can change without code
 
-The rule a discount is checked against, and everything Quillmoor sells, are both rows on a
+The rule a quotation is checked against, and everything Quillmoor sells, are both rows on a
 board.
 
 | Row | What it controls |
 |---|---|
-| Each rule on the SQ Pricing Rules board | The margin Quillmoor expects, and the discount level that needs a manager's approval. |
+| Each rule on the SQ Pricing Rules board | The margin Quillmoor expects, and the margin floor below which a manager has to approve. |
 | Each product on the SQ Catalogue board | What Quillmoor sells, and at what price. |
 | Each line on the SQ Terms board | The wording that appears on every quotation, such as validity, delivery and payment. |
 
@@ -522,9 +581,9 @@ Change a row, and the next quotation written reads the update - no rebuild neede
 
 If you are a partner, your practice organisation arrives with Sales Quoting already
 installed, using Quillmoor Components' catalogue and pricing rules, and the demo script in
-your partner kit walks you through running it live, from the first request through to
-manager approval and the finished quotation. Anyone else can ask their iMBrace contact to
-see it running on an organisation of their own.
+your partner kit walks you through running it live, from the first request, through the
+manager's approval by email, to the finished quotation in the requester's inbox. Anyone else
+can ask their iMBrace contact to see it running on an organisation of their own.
 
 
 ==================== build-it/index.md ====================
@@ -542,15 +601,19 @@ This level has you build one yourself.
 
 ## What this level gets you
 
-By the end you can build a small working agent on a test organisation, with whatever AI
-coding tool you already use. Nobody needs to hand you source code to get there - you need
-a test organisation, a key, and your coding tool connected over MCP.
+By the end you can build a small working return desk on a test organisation, and make it
+wait for a person's decision, with whatever AI coding tool you already use. Nobody needs to
+hand you source code to get there - you need a test organisation, a key, and your coding
+tool connected over MCP.
 
-- [Getting started](/learn/build-it/getting-started.md) - a test organisation, the SDK, credentials, and
+- [Set up your coding tool](/learn/build-it/set-up-your-coding-tool.md) - a test organisation and key, and
   your coding tool connected to the organisation. Do this first.
 - [Vibe coding on iMBrace - Build it](/learn/build-it/vibe-coding-tutorial.md) - the written tutorial.
   Follow it in order; it is written to be followed once, start to finish, on a real test
   organisation.
+- [Make it wait for a person](/learn/build-it/make-it-wait-for-a-person.md) - a second sitting that starts
+  from the finished desk and makes it ask a person by email and wait for the answer before
+  anything is promised to the customer.
 - [Working with an AI coding tool](/learn/build-it/working-with-ai.md) - the stance and guardrails that keep
   what your tool builds trustworthy.
 
@@ -559,7 +622,8 @@ a test organisation, a key, and your coding tool connected over MCP.
 - A test organisation and an API key. Never a production key.
 - Any AI coding tool that can hold an MCP connection and read a text file. This tutorial
   names none, on purpose - it works with whichever one you already use.
-- About an hour.
+- About an hour for the tutorial. Make it wait for a person is a second sitting, and needs
+  two email addresses you can read.
 
 ## After this level
 
@@ -568,7 +632,7 @@ matters, what it looks like when it is missing, and how to tell the difference b
 customer does. Level 2 gets you a working agent. Level 3 is what makes one worth shipping.
 
 
-==================== build-it/getting-started.md ====================
+==================== build-it/set-up-your-coding-tool.md ====================
 
 ---
 level: '2'
@@ -577,16 +641,15 @@ track:
 verified_on: 2026-09-29
 ---
 
-# Getting started
+# Set up your coding tool
 
-Six steps, about twenty minutes. At the end, your AI coding tool can see what exists in a
+Five steps, about fifteen minutes. At the end, your AI coding tool can see what exists in a
 test organisation and write code against the SDK without guessing.
 
 **Direction here, facts there.** The SDK, CLI and MCP documentation lives at
 [engineer.imbrace.co](https://engineer.imbrace.co) and changes on its own schedule. This page
-names the page to read for each step and copies almost nothing: only the two install commands
-and the two credential names, because a copied reference goes stale and a stale reference is
-worse than none.
+names the page to read for each step and copies nothing, because a copied reference goes
+stale and a stale reference is worse than none.
 
 *Last checked against the site: 23 September 2026.*
 
@@ -605,35 +668,11 @@ guide](https://engineer.imbrace.co/guides/api-key/).
 Screen: Settings Generate External Token tab with the expiration field and Generate Token button
 *1 Settings > Generate External Token tab. 2 The Generate Token button.*
 
-## 2. Install the SDK
+## 2. Install the SDK and set its credentials
 
-For the language you build in:
+Follow the docs' [Setup Guide](https://engineer.imbrace.co/getting-started/setup/): it installs the SDK, sets the credentials and points the client at your organisation. Keep the key in a `.env` file that is never committed, and give your coding tool the variable names, not the values: a live key pasted into a chat with a coding tool is a key you no longer control.
 
-```bash
-npm install @imbrace/sdk        # TypeScript / JavaScript
-pip install imbrace             # Python
-```
-
-Versions and requirements: the [installation page](https://engineer.imbrace.co/sdk/installation/).
-
-## 3. Keep the credentials out of the code
-
-Put them in a `.env` file that is never committed:
-
-```
-IMBRACE_API_KEY=...
-IMBRACE_ORGANIZATION_ID=...
-```
-
-Those are the SDK's own names. Point the client at where your organisation lives: the
-[setup guide](https://engineer.imbrace.co/getting-started/setup/) shows the environment setting
-for iMBrace's cloud, and the gateway URL variable for your own installation's address, and how
-to pass the values to the client.
-
-Give your coding tool the variable names, not the values. A live key pasted into a chat
-with a coding tool is a key you no longer control.
-
-## 4. Connect your coding tool to the organisation
+## 3. Connect your coding tool to the organisation
 
 The platform's gateway hosts a Model Context Protocol (MCP) server, so there is nothing to
 install or run. You give your tool the server's address and your key, and it then sees
@@ -658,7 +697,7 @@ With the connection in place your tool has both halves: this guide answers "how 
 be built", and the organisation answers "what exists here" and "what did that workflow do on
 its last run".
 
-## 5. Give your tool the SDK's own map
+## 4. Give your tool the SDK's own map
 
 When your tool writes code against the SDK, it should fetch the site's
 [llms.txt](https://engineer.imbrace.co/llms.txt) and read the page it points to, rather than
@@ -670,7 +709,7 @@ installed carries its own description of every method: type definitions in the T
 package, readable source in the Python one. Your tool can read those instead. Either way, it
 must never guess a method name.
 
-## 6. Prove the setup
+## 5. Prove the setup
 
 Ask your tool two things, then check both yourself:
 
@@ -703,22 +742,28 @@ verified_on: 2026-09-30
 This is Level 2 of the course: Build it. Earlier levels show a use case working end
 to end; this page has you build one yourself.
 
-By the end you will have a small agent running on your own test organisation. It is
-small on purpose. The point is not the agent - it is five habits that make anything you
-build on iMBrace easy to trust, which Level 3 (Build it well) then covers in depth.
+By the end you will have a small working return desk on your own test organisation: two
+boards, a refund rule anyone can edit, a calculation and an assistant that takes a return in
+conversation. It is small on purpose. The point is not the desk - it is four habits that make anything
+you build on iMBrace easy to trust, which Level 3 (Build it well) then covers in depth.
+The next lesson, [Make it wait for a person](/learn/build-it/make-it-wait-for-a-person.md), builds on this
+desk and adds the fifth: a person decides before anything is promised to the customer.
 
 ## What you will build
 
 Imagine a fictional company, Harbor Bicycle Co., that sells and services bicycles online.
-You are building their return-desk agent. A customer writes in asking to return an item.
-The agent should:
+You are building their return desk. A customer writes in asking to return an item. The
+desk should:
 
 1. Log the request as a row on a board, instead of leaving it in a chat transcript.
 2. Work out the refund amount from a rule anyone at Harbor could edit, not from the
    model's own arithmetic.
-3. Wait for a person to approve the row before anything is promised to the customer.
-4. Only after that approval, send the customer a confirmation - using the platform's own
-   connection for email, never a credential sitting inside your workflow.
+3. Have an assistant take the return in conversation: it logs the return, names no refund
+   figure and promises nothing - a person has not decided yet.
+
+The desk stops there on purpose. Decision, Decided by and Decided at stay empty: they are
+the record that [Make it wait for a person](/learn/build-it/make-it-wait-for-a-person.md) fills in when a
+person answers an email - never by typing into a cell.
 
 Nothing here is Harbor Bicycle Co.'s real system - it does not exist. Swap the company,
 the items and the rule for your own before you show this to anyone.
@@ -733,7 +778,7 @@ the items and the rule for your own before you show this to anyone.
   that can hold an MCP connection and read a text file works. The [MCP
   guide](https://engineer.imbrace.co/mcp/overview/) has the exact connection steps for
   your tool - do that first, before Step 1 below. If MCP is not enabled on your installation,
-  [Getting started](/learn/build-it/getting-started.md) shows the SDK route.
+  [Set up your coding tool](/learn/build-it/set-up-your-coding-tool.md) shows the SDK route.
 - If your tool prefers to write real SDK code rather than call the platform directly, install
   the SDK for your language:
 
@@ -774,9 +819,11 @@ Do not open an editor yet. Ask your coding tool what already exists.
 failure. On an organisation that already holds other work, other boards appear at this first
 check instead - that is fine too; once you create yours in Step 2, look for it there by name.
 Either way you should also see a short list of native steps for email, likely alongside other
-channels you did not ask about. Read the list. This is the habit: find the node the platform
-already ships before you consider writing one yourself. A step your tool writes from scratch
-costs you a credential to hold and a piece of code to maintain; a native step costs neither.
+channels you did not ask about. Read the list. This is the first habit: find the node the
+platform already ships before you consider writing one yourself. A step your tool writes from
+scratch costs you a credential to hold and a piece of code to maintain; a native step costs
+neither. The email steps on that list are the ones [Make it wait for a
+person](/learn/build-it/make-it-wait-for-a-person.md) uses.
 
 ### 2. Create the board that holds return requests
 
@@ -787,7 +834,9 @@ costs you a credential to hold and a piece of code to maintain; a native step co
 
 **You should see**: a new board in your organisation with those nine columns and no rows yet.
 Open it in the platform and check the column names and types by eye - do not just trust
-your tool's summary of what it did.
+your tool's summary of what it did. The last three columns, Decision, Decided by and Decided
+at, are the record of a person's answer: nothing in this lesson fills them in, and [Make it
+wait for a person](/learn/build-it/make-it-wait-for-a-person.md) does.
 
 If your tool says it cannot create anything, its MCP connection is read-only - that is the
 default. Add write access as the MCP page describes (a flag on the connection address), and
@@ -811,11 +860,11 @@ Screen: Return Requests board open, showing its columns and two rows
 
 ### 4. Put the refund rule where a person can change it, not in a sentence
 
-This is the habit that matters most on this page. It would be faster to tell the agent
-"refund in full if unopened, half if used" in its instructions. Do not. A rule written into
-an agent's instructions cannot be edited by anyone who is not editing the agent, cannot be
-quoted back to a customer, and cannot be audited later. A rule that lives as a row can be
-all three.
+This is the second habit, and the one that matters most on this page. It would be faster to
+tell the agent "refund in full if unopened, half if used" in its instructions. Do not. A
+rule written into an agent's instructions cannot be edited by anyone who is not editing the
+agent, cannot be quoted back to a customer, and cannot be audited later. A rule that lives
+as a row can be all three.
 
 **You type**:
 
@@ -849,72 +898,11 @@ for the unopened helmet and 14 for the used lock.
 Screen: Calculate refund amount workflow: the board read, the calculation step and the board write, top to bottom
 *1 Find the matching row on Refund Rules (native). 2 Calculate refund - the one step written by hand. 3 Write Refund amount back to the row (native).*
 
-This is the second habit: a model is good at deciding which rule applies and bad at being
+This is the third habit: a model is good at deciding which rule applies and bad at being
 trusted to multiply correctly under pressure, silently, every single time. Let a
 calculating step do the arithmetic. Ask the model to decide; let code compute.
 
-### 6. Add the approval gate
-
-**You type**:
-
-> Build a second workflow called Apply return decision on Return Requests that runs when the
-> Decision column changes. It must do nothing unless Decision is Approved and Decided by
-> holds a name; it then records the time in Decided at. A row with no decision, or a decision
-> with no name, must go no further.
-
-**You should see**: nothing happens for either row yet - neither has a decision. Open the
-board yourself and, on the unopened-helmet row only, set Decision to Approved and put your
-name in Decided by. Then press **Save**: a board edit is held until it is saved, and nothing
-fires before that. Leave the used-lock row alone. Decided at fills in on the approved row
-only.
-
-Screen: Return Requests scrolled to Decision, Decided by and Decided at - one row approved, one still blank
-*1 Knowledge > DataIQ in the sidebar. 2 Decision, Decided by and Decided at columns.*
-
-This is the third habit: a decision is a value written on a row, with who and when, not a
-person typing "looks fine" into a chat with the agent. If nobody set Decision, nothing
-downstream should move - and after this step, nothing does.
-
-### 7. Send the confirmation the safe way
-
-**You type**:
-
-> Add a Customer email column to Return Requests, then extend the approval workflow: once
-> it has recorded the decision, send a short confirmation to that address, naming the
-> refund amount, using the platform's own connected email step. Do not put an email
-> password or API key anywhere in this workflow - use the organisation's existing
-> connection, or set one up first if none exists.
-
-**You should see**: in the workflow, a Send Email (Gmail) step after the step that records
-Decided at, on the approved branch only. Approve the unopened-helmet row and press **Save**:
-the workflow runs once and the confirmation goes to that row's Customer email, naming the
-refund amount. The still-pending row starts no run, so nothing is sent for it.
-
-Screen: Apply return decision workflow with the new Send Email (Gmail) step after the step that records Decided at
-*1 FlowOps in the sidebar. 2 The Send Email (Gmail) step, after the step that records Decided at, on the approved branch.*
-
-To check the credential, open Actions > FlowOps > More > Connections. The email credential
-is there as its own named connection, Gmail, and no step of the workflow holds it. This is
-the habit from Step 1 carried all the way through: a credential belongs to the platform's own
-connection store, never to a workflow. If you export this workflow later, open the exported
-file and confirm no key or password is inside it.
-
-Screen: FlowOps Connections list showing one connection named Gmail
-*1 FlowOps > More > Connections. 2 The one connection named Gmail.*
-
-The board itself shows nothing about a sent email. To see it, open the workflow's run
-history: the run for the approved row finished, and its Send Email (Gmail) step is marked
-succeeded. The recipient's inbox holds the email itself.
-
-Screen: A finished run of Apply return decision, its Send Email (Gmail) step marked succeeded
-*1 FlowOps in the sidebar. 2 The Send Email (Gmail) step of the run, marked succeeded.*
-
-Which email connection to use: a mail-server (SMTP) connection is set up once with the
-server's details. A hosted mail service such as Gmail needs a person to sign in to the
-provider once, in each organisation. An installation with no internet access uses a
-mail-server (SMTP) connection on its own network.
-
-### 8. Create the agent
+### 6. Create the agent
 
 Agents are created with the SDK's AI agent methods (the site has them) or in the platform's
 agent screens, so this step uses one of those. Either way, your tool can write the agent's
@@ -935,9 +923,11 @@ Screen: AgentIQ's agent list, the Return Desk Assistant card
 
 Why a tool and not the board: an agent given the whole board can write any column on it,
 including Decision - it could approve its own request. The tool can only write the five
-columns a customer supplies, so the decision stays with a person.
+columns a customer supplies, so the decision stays with a person (the next lesson builds how
+a person decides). This is the fourth habit: give an agent one narrow tool for the one thing
+it must do.
 
-One more habit worth building into the agent's own instructions: Refund Rules is matched by
+One more point worth building into the agent's own instructions: Refund Rules is matched by
 an exact value, so tell the agent to write Condition using the rule's own two words -
 "unopened" or "used" - never the customer's own phrasing or a translation of it. Any board a
 natural-language agent writes to, when a workflow looks a row up by exact match, needs the
@@ -947,10 +937,13 @@ same care.
 order HB-2044, a helmet, still unopened. My name is Morgan Ellery and it cost 39" produces a
 new row on Return Requests with those details filled in, and a reply along the lines of
 "your return request has been logged and is being reviewed by the team" - no number, no
-promise. If your tool's draft instructions let the agent guess a refund figure itself, that
-is worth catching here: send it back and ask for the number to be removed from what the
-agent is allowed to say. Then ask it to approve the request itself: it must not be able to,
-because nothing in its tool can write Decision.
+promise. A few seconds later Refund amount fills in on that row by itself: 39 for the
+unopened helmet. Nobody reviews the request yet; [Make it wait for a
+person](/learn/build-it/make-it-wait-for-a-person.md) adds the person who does. If your tool's draft
+instructions let the agent guess a refund figure itself, that is worth catching here: send it
+back and ask for the number to be removed from what the agent is allowed to say. Then ask it
+to approve the request itself: it must not be able to, because nothing in its tool can write
+Decision.
 
 Screen: Return Desk Assistant's reply: logged and under review, no figure, no promise
 *1 InsightsIQ in the sidebar. 2 The assistant's reply names no refund figure and makes no promise.*
@@ -960,35 +953,494 @@ Screen: Return Desk Assistant's reply: logged and under review, no figure, no pr
 Do not take your coding tool's summary of what it did as proof. A plausible account of a
 working build is easy to produce and easy to mistake for a real one - go and look.
 
-- Open Return Requests. Both rows should show a correct Refund amount: 45 and 14.
-- Only the row you approved should have a run with a succeeded Send Email (Gmail) step; the
-  pending row should have no run at all.
-- Open the workflow's run history and read the actual status of each run, not a summary of
-  it - a run that is still waiting looks different from one that finished.
-- Open Actions > FlowOps > More > Connections and confirm the email credential is a named
-  connection, not text inside a step.
-- Talk to the Return Desk Assistant with a new, made-up return. Confirm a row appears and
-  the agent's reply carries no figure and no promise.
+- Open Return Requests. Both rows should show a correct Refund amount: 45 and 14. Decision,
+  Decided by and Decided at are empty on both.
+- Open the run history of Calculate refund amount and read the actual status of each run,
+  not a summary of it: each run shows as finished.
+- Talk to the Return Desk Assistant with a new, made-up return. Confirm a row appears, its
+  Refund amount fills in by itself a few seconds later, and the agent's reply carries no
+  figure and no promise.
 - Ask the assistant to approve a request. Confirm Decision stays empty: the agent has no way
   to write it.
-- Now approve the used-lock row too, and confirm its confirmation sends as well - proving
-  the gate was real, not decorative.
 
 If any of these do not hold, that is more useful than a build that looked fine and was
 not. Fix the one thing that failed and check again.
 
 ## What to do next
 
+- Go on to [Make it wait for a person](/learn/build-it/make-it-wait-for-a-person.md), a second sitting. It
+  starts from this desk and makes it ask a person by email before anything is promised to the
+  customer.
 - Try a second condition - a part returned with a missing box, say - and a second rule row.
   Confirm you can change the refund rate without touching the workflow or the agent.
-- Try approving nothing, ever, for a row - confirm the customer never receives a refund
-  figure, however long you leave it.
-- Read Level 3, Build it well, for the fuller method behind these five habits - it covers
+- Read Level 3, Build it well, for the fuller method behind these habits - it covers
   what makes a build like this one survive being handed to a real customer, not just a
   test organisation.
 - For anything about the SDK, the CLI or the MCP connection itself, [engineer.imbrace.co](https://engineer.imbrace.co)
-  is the source that stays current - this page will drift before that one does. [Getting
-  started](/learn/build-it/getting-started.md) has the set-up in full.
+  is the source that stays current - this page will drift before that one does. [Set up
+  your coding tool](/learn/build-it/set-up-your-coding-tool.md) has the set-up in full.
+
+
+==================== build-it/make-it-wait-for-a-person.md ====================
+
+---
+level: '2'
+track:
+- build
+verified_on: 2026-10-02
+---
+
+# Make it wait for a person
+
+This lesson makes the return desk from [the tutorial](/learn/build-it/vibe-coding-tutorial.md) wait for a
+person. A new return sends the duty manager an email with two buttons, Approve and Reject,
+and nothing is promised to the customer until they answer. When they do, the same workflow
+run carries on: it writes the decision, the reviewer's name and the time on the row, then
+tells the customer.
+
+It is a second sitting. Start from the finished desk; nothing you built in the tutorial is
+thrown away.
+
+## What you will build
+
+A return that waits for a person before anything reaches the customer. You play the
+reviewer, Jordan Vance, the duty manager at Harbor Bicycle Co., from your own inbox.
+
+1. A new return lands on the board and its refund is worked out, as before.
+2. The desk emails the reviewer the facts of the return with two buttons, Approve and
+   Reject, and pauses. While it waits, nothing goes to the customer.
+3. Each button opens a page that shows the choice. Opening it decides nothing; only the
+   page's Confirm button does.
+4. When the reviewer confirms, the same run carries on: it writes Decision, Decided by and
+   Decided at on the row, then emails the customer - the refund amount if approved, a plain
+   apology with no figure if not.
+
+Nobody types into a cell to decide. Nothing here is Harbor Bicycle Co.'s real system - swap
+the company, the reviewer and the wording for your own before you show this to anyone.
+
+## What you need
+
+- The desk you finished in [the tutorial](/learn/build-it/vibe-coding-tutorial.md), on the same test
+  organisation: the Return Requests and Refund Rules boards, the Calculate refund amount
+  workflow (a new row gets its Refund amount by itself) and the Return Desk Assistant.
+- The same AI coding tool, connected to that organisation over MCP with write access, as in
+  the tutorial.
+- Two email addresses you can read: one to play the reviewer, one to play the customer.
+  Two addresses that reach one inbox will do, such as an alias of your mail account. Use only
+  your own addresses - never a real customer's, never a colleague's.
+- An email connection named Gmail on the organisation, or a person who can sign in to make
+  it. Step 1 shows where to look.
+
+A few words this page uses: a **run** is one go of a workflow, and a run that is **paused**
+has stopped at its wait and carries on from the same place once someone answers. The
+**reviewer** is the person the email goes to; Decided by records their name. A **one-time
+link** is an address that works for one answer and ends in a random code; the desk keeps
+only a **fingerprint** of that code, a one-way scramble that can check a code but never give
+it back. After the answer, the link says the return is already decided. The **confirm page**
+is the page a button in the email opens: it shows the choice, and only its Confirm button
+records it. An **approval task** is the item the run creates and waits on, with two answers,
+Approve and Reject; the person answering never has to see it. A **decision link** is the
+approval task's own link for one answer: it decides the moment it is opened, so it stays on
+a private board (Step 2 builds it) and never goes in an email. A **code step** is a small
+step your tool writes, as against a native step the platform ships.
+
+## Steps
+
+In the prompts below, square brackets mark a value your tool fills in. The only ones you
+supply are the two email addresses you read: the reviewer's in Step 3 and the customer's in
+Steps 4 and 5.
+
+### 1. Get the desk ready
+
+Two small things first: a place for the customer's address, and the email connection.
+
+**You type**:
+
+> Add a Customer email column (plain text) to Return Requests. Leave every row as it is.
+
+The confirmation email goes to the address on the row, so the desk needs that column. The
+email itself goes out through the platform's own connection, never through anything inside
+a workflow. Open Actions > FlowOps > More > Connections: the email credential is there as its
+own named connection, Gmail. If it is not, a person has to sign in to Gmail once, in each
+organisation, to make it - do that before Step 3. Use the button the Connections list
+offers for a new connection and sign in with a Google account you can read; the desk's emails
+go out from that account.
+
+Screen: FlowOps Connections list showing one connection named Gmail
+*1 FlowOps > More > Connections. 2 The one connection named Gmail.*
+
+This lesson is written and checked for a Gmail connection. If you use another kind of email
+connection, replace the word Gmail in point 9 of Step 3 with its name before you paste, and
+check that both emails arrive before you trust the run.
+
+This is the tutorial's first habit, use what the platform ships, carried through: a credential
+belongs to the platform's own connection store, never to a workflow. If you export a workflow
+later, open the exported file and confirm no key or password is inside it.
+
+**You should now see**: Return Requests with ten columns, Customer email the last, empty on
+every row; and a Connections list with one connection named Gmail.
+
+### 2. Build the page where a decision is confirmed
+
+Before anyone can be asked to decide, decide where they answer. The reviewer will decide from
+an email with two buttons, and each button opens a page on iMBrace that shows the choice and
+asks them to confirm. This step builds that page and the private board of one-time links it
+checks. Step 3 builds the workflow that sends the email.
+
+Read the plain-words list under the prompt first, then paste the whole prompt. It is written
+for your tool, so you do not need to follow every technical word in it.
+
+**You paste**, in one message:
+
+> Build the place where a decision gets confirmed, in two pieces.
+>
+> First, a private board called Return Decision Links with these plain-text columns:
+> Fingerprint, Group, Action, Order reference, Decision link, Expires at, Used at, Used
+> action, Created at. No Link-type column. Decision link will hold the link that carries the
+> decision of an approval task, which the next step creates. Only workflows use this board;
+> do not give it to any agent.
+>
+> Second, a workflow called Confirm a return decision that answers as a public page - no
+> sign-in, no key. Use the trigger that answers the caller directly, and reply with raw HTML
+> (content type text/html). The page address takes a random code called t. It works like
+> this:
+>
+> 1. Take the code from t (from the address on a visit; from the form field named t when the
+>    page's own button is pressed). Work out a one-way fingerprint of it. Compare
+>    fingerprints only; never store or show the code.
+> 2. Find the row on Return Decision Links with that fingerprint. No code, or no row: show a
+>    plain page that says "This link is not valid." with no button.
+> 3. If there is a row, read every row that shares its Group, and read the return on Return
+>    Requests by Order reference. A link is fresh (not used, not expired), used (Used at is
+>    filled) or expired (past Expires at).
+> 4. A visit only shows a page and changes nothing. Fresh: "Approve return [order
+>    reference]?" (or "Reject return [order reference]?"), the customer, the item and the
+>    refund amount, one Confirm button that posts the code back, and the line "Nothing is
+>    decided until you press Confirm." Used: "This return has already been decided."
+>    Expired: "This link has expired."
+> 5. Only when Confirm is pressed on a fresh link: first use the link in Decision link (a
+>    plain GET with no credentials; carry on if it fails, so you can read its status). If the
+>    status is 200 to 299, mark BOTH rows of that Group used (Used at is now, Used action is
+>    the action) and show "Return [order reference] approved" (or "rejected") with a line
+>    saying the customer is being emailed. If it fails, change nothing, leave the links
+>    usable, and show "Your decision was not recorded. Try the button again in a minute."
+>
+> Every path ends in a page. Build the page in one small code step that only turns values
+> into text and escapes every value it inserts: no network call, no credential. Use native
+> steps for the board reads and writes, the call and the responses. When it is published,
+> tell me the page address.
+
+**In plain words.** The private board comes first. Each row holds one button's one-time link,
+kept as a fingerprint and never as the code itself, and that button's decision link, which
+Step 3 fills in. A Group ties a return's two buttons together. Only workflows use the board,
+so no agent is given it. Then the page, point by point:
+
+1. The page reads the code from the link and keeps only its fingerprint, so the code itself is
+   never stored anywhere.
+2. A link that matches nothing gets a plain "not valid" page and no button.
+3. A real link is judged fresh, used or expired from the private board; the return's own row
+   supplies the facts the page shows.
+4. A visit only shows the facts and a Confirm button. Mail scanners and previews open every
+   link they find, so opening one must decide nothing.
+5. Confirm is the only thing that decides. The page records the answer first, then retires
+   both buttons, so a return is decided once; if recording fails, nothing changes and the
+   page says so.
+
+Most steps are native. The rest are small code steps that only compute over what they are
+given; none makes a network call or holds a credential.
+
+**You should now see**: in Knowledge > DataIQ, a new board, Return Decision Links, with nine
+columns and no rows. In Actions > FlowOps, a published workflow, Confirm a return decision;
+open the workflow to reach its run history. Ask your tool for the page's address and open it
+in a private window with nothing after the address, then with `?t=` and nothing after it,
+then with `?t=notacode`. Each time you see one plain page that says "This link is not valid."
+with no button. In the run history each visit shows as a finished run, and no board has
+changed.
+
+Screen: The confirm page opened with no link: one plain sentence and no button
+*The page opened with no link: one plain sentence and no button.*
+
+That plain page is the right first answer: with no link there is nothing to decide, and no
+button to press. You meet the page with a real link in Step 4.
+
+If you see anything other than that one sentence, tell your tool exactly what you saw and ask
+it to make the workflow answer with a web page that needs no sign-in, then open the address
+again before you go on.
+
+The rule behind the page: a link in an email is not a decision. Opening the link only shows a
+page; only Confirm decides. The random code is never stored, only its fingerprint, and the
+board that holds the fingerprints is private. [Human approval](/learn/build-it-well/human-approval.md)
+sets out why.
+
+### 3. Ask by email, wait for the answer, then tell the customer
+
+This is the step where the desk starts to wait. One workflow asks a person by email, stops at
+a wait, and only when they confirm does the same run write the decision on the row and tell
+the customer. Give your tool the whole prompt in one message - the asking half and the
+finishing half belong together - and add no return until it says the workflow is published.
+The one value you supply here is the reviewer's address. As in Step 2, read the plain-words
+list under the prompt first: the prompt is written for your tool.
+
+**You paste**, in one message:
+
+> Build a workflow called Apply return decision that asks a person to decide by email, waits
+> for the answer, then finishes the job. It starts when a Return Requests row's Refund amount
+> is written - a "column updated" automation on Refund amount, not "row created". The
+> reviewer is Jordan Vance, at [your own address]. Do this, in order:
+>
+> 1. Read the row. Do nothing unless Order reference and Refund amount are filled in and
+>    Decision is empty.
+> 2. Read Return Decision Links for this Order reference, newest Created at first, one row.
+>    If a row comes back and its Used at is empty, or the read fails, someone is already
+>    being asked: stop here. No second task, no second email.
+> 3. Get the current time (UTC) with the platform's own date step.
+> 4. One small code step turns the row into the decision card: the title "Return [order
+>    reference] needs a decision", a one-line summary, and a table of Customer, Order
+>    reference, Item, Condition, Price and Refund amount. No decide-by time on it.
+> 5. Create an approval task with the platform's own task step: that card as its description
+>    and two options, Approve (green) and Reject (red). Assign it to the user my API key
+>    acts as. Never leave the assignee empty and never assign it to a colleague.
+> 6. One small code step makes two random codes, one for Approve and one for Reject, and a
+>    one-way fingerprint of each - the same method the confirm page uses. Each one-time link
+>    is the Confirm a return decision page address plus ?t= and its code, valid for seven
+>    days. The approval task also has its own decision link for each answer, the link that
+>    carries the decision: read those in this point and nowhere else, and never put them in
+>    an email, a page, a Return Requests row or a reply.
+> 7. Write two rows to Return Decision Links with native board steps, one per button: the
+>    fingerprint, Group (the task's id, the same for both), Action, Order reference, Decision
+>    link (the approval task's decision link for that answer, as plain text), Expires at and
+>    Created at. Used at and Used action stay empty. Never store a code.
+> 8. One small code step renders the same card as an HTML email with two buttons, Approve
+>    (green) and Reject (red), each pointing only at its one-time link from point 6, never
+>    at a decision link, plus the line "Each button opens a page where you confirm. Nothing
+>    is decided by opening a link."
+> 9. Send it with the platform's own Send Email step for Gmail, through the organisation's
+>    Gmail connection, using the newest version of that step the organisation offers. If
+>    there is no email connection yet, stop and tell me: a person has to sign in to make it.
+>    Sender name "Harbor Bicycle Returns Desk", with no comma in it. Subject "Return [order
+>    reference] needs your decision".
+> 10. Wait for the approval task (the task step that waits for the answer). Points 5 to 10
+>     must run back to back: nothing between them, and nothing anywhere before point 10 that
+>     pauses or sleeps.
+>
+> When the answer comes back and the run carries on:
+>
+> 11. Read the return again by Order reference.
+> 12. Act on the answer. Approve or Reject only counts if Decision is still empty and the row
+>     you just read is the row that started the run; anything else writes nothing. Approve:
+>     get the time (UTC); write Decision "Approved", Decided by "Jordan Vance (confirmed by
+>     email)" and Decided at on the row; only then email the customer at Customer email,
+>     subject "Your Harbor Bicycle return is approved", plain text naming the refund amount.
+>     Reject: the same with Decision "Rejected", subject "Your Harbor Bicycle return was not
+>     approved", and a plain apology that names no refund amount and says to contact the
+>     returns desk.
+>
+> Use native steps for every board read and write, the task, the wait, the clock and the
+> emails. Small code steps only for points 4, 6 and 8.
+
+**In plain words**, point by point. The asking half:
+
+1. Do nothing unless the return is ready: it has an order reference and a refund, and nobody
+   has decided it yet.
+2. One ask at a time: if this return is already waiting for an answer, stop, so a second
+   write to the row does not start a second ask.
+3. Read the clock, so the links get an expiry time.
+4. Put the facts the reviewer needs on one card.
+5. Create the approval task the run will wait on: an item with two answers, Approve and
+   Reject, owned by the user your API key acts as.
+6. Make the two one-time links, one per button, and take the approval task's own decision
+   links. Only this point takes them from the approval task; from then on they live only on
+   the private board, and only the confirm page uses them.
+7. Save each button's fingerprint and its decision link on the private board, where the
+   confirm page finds them.
+8. Turn the card into an email with the two buttons.
+9. Send it to the reviewer through the organisation's Gmail connection.
+10. Wait. The run pauses here and holds its place until the reviewer answers.
+
+The finishing half, after the answer:
+
+11. Read the return again, so the run works from the row as it is now.
+12. Write Decision, Decided by and Decided at first, then email the customer. Only a first
+    answer for the same row counts; anything else writes nothing.
+
+Points 4, 6 and 8 are small code steps of the same kind as the tutorial's calculation: each
+only computes over what it is given, makes no network call and holds no credential.
+
+**You should now see**: in Actions > FlowOps, Apply return decision published, and Calculate
+refund amount unchanged. Open Apply return decision and read it from the top: the step that
+creates the approval task, the step that sends the email through Gmail and the step that
+waits come in that order, with nothing that pauses before the wait. To check it, ask your
+tool to list the steps of Apply return decision in order, names only, and compare the list
+with the canvas. Ask it also to confirm that the fingerprint made here uses the same method
+as the one in Confirm a return decision. Do not add a return yet; Step 4 does that.
+
+If your tool asks a question, answer it. If it builds something that does not match the
+numbered points, ask it to change the workflow to match them, then read the steps again.
+
+Read a run by the status of each step. A step's contents can hold the links that decide, so
+you never need to open one. On a real organisation, let only the people who review builds
+open the run history and the Return Decision Links board, and clear old runs.
+
+Screen: Apply return decision workflow: the step that emails the reviewer, then the step that waits
+*1 FlowOps in the sidebar. 2 The step that emails the reviewer. 3 The step that waits for the decision.*
+
+### 4. Try an approval
+
+Now run it the way the reviewer would. Use a new order reference for every test return, one
+that is not already on the board: the desk tracks each return by its order reference.
+
+**You type**:
+
+> Add a row to Return Requests: customer Morgan Ellery, order reference HB-3001, item
+> helmet, condition unopened, price 45, Customer email [the address you play the customer
+> from]. Leave Refund amount, Decision, Decided by and Decided at blank.
+
+**You should now see**, one moment at a time:
+
+1. Within seconds Refund amount fills in on the row: 45. Decision, Decided by and Decided at
+   are still empty. In Actions > FlowOps, the run history of Apply return decision shows one
+   new run, and the run is paused. The steps that create the approval task and send the
+   email are marked succeeded. While it waits, ask your tool for the approval task's status
+   and assignee only: it is open and assigned.
+
+Screen: Apply return decision run history: the new run is paused
+*1 FlowOps in the sidebar. 2 The new run of Apply return decision, paused.*
+
+2. The reviewer's inbox holds one email, with the subject you asked for. It gives the facts of
+   the return - customer, order reference, item, condition, price and refund amount - and two
+   buttons, Approve and Reject. Return Decision Links now has two rows, one per button, with
+   Used at empty.
+
+Screen: The reviewer's email with its Approve and Reject buttons
+*The reviewer's email: the facts of the return and the two buttons, Approve and Reject.*
+
+3. Open Approve. A page shows the choice: the customer, the item and the refund amount, with
+   one Confirm button. Nothing has changed. Open it a second time if you like: the run is
+   still paused and the row still has no decision.
+
+Screen: The confirm page reached from the Approve button
+*The confirm page: the facts of the return and one Confirm button. Nothing is decided until it is pressed.*
+
+4. Press Confirm. The page says the return is approved and that the customer is being
+   emailed. In FlowOps the run that was paused is the one that finishes, and no run is left
+   paused for this return. On the board the row now reads Decision Approved, Decided by
+   Jordan Vance (confirmed by email) and a Decided at time. The customer's inbox holds an
+   email that names the refund amount, and both rows on Return Decision Links have Used at
+   filled in.
+
+Screen: Return Requests scrolled to Decision, Decided by and Decided at, written by the run
+*1 Knowledge > DataIQ in the sidebar. 2 Decision, Decided by and Decided at, written by the run.*
+
+Screen: The same run of Apply return decision, finished, with its two Send Email (Gmail) steps marked succeeded
+*1 FlowOps in the sidebar. 2 The same run, finished, with its two Send Email (Gmail) steps marked succeeded.*
+
+5. Back in the reviewer's email, open Reject. The page says this return has already been
+   decided. Both buttons retire together, so a return is decided once.
+
+This is the fifth habit: a decision is a value written on a row by the run that asked - the
+answer, the reviewer's name and the time - not a person typing "looks fine" into a chat, and
+not a cell someone edits. Until somebody answers, nothing goes to the customer and the run
+simply waits.
+
+Decided by shows the reviewer you named followed by "(confirmed by email)": the decision was
+confirmed from that reviewer's own email, so keep the email to yourself and do not forward it.
+
+If a check in this step does not hold, work back one link at a time. Is Refund amount filled in? Is there
+a new run of Apply return decision, and is it paused rather than failed? Are the steps that
+create the task and send the email marked succeeded? Then look in your spam folder. Tell your
+tool which check stopped and ask it to fix that one thing.
+
+### 5. Try a rejection
+
+Answer a second return the other way.
+
+**You type**:
+
+> Add a row to Return Requests: customer Riley Okafor, order reference HB-3002, item bike
+> lock, condition used, price 28, Customer email [the same customer address]. Leave Refund
+> amount, Decision, Decided by and Decided at blank.
+
+**You should now see**:
+
+1. The same start as before: within seconds a new paused run, and one email with two buttons
+   in the reviewer's inbox.
+2. Open Reject, then press Confirm. The page says the return is rejected. The same run goes
+   from paused to finished, and the row reads Decision Rejected, with Decided by and Decided
+   at filled in.
+3. The customer's inbox holds an email that says the return was not approved: a plain
+   apology and a line to contact the returns desk, with no refund figure.
+4. Open Approve in the same email: the page says the return has already been decided. No
+   approval email went to the customer for this return.
+
+## How to check it worked
+
+Do not take your coding tool's summary of what it did as proof. A plausible account of a
+working build is easy to produce and easy to mistake for a real one - go and look. You have
+already run most of these checks in Steps 4 and 5. The extras are the button-address check,
+the approval-task read-back, one ask at a time, the connection and the assistant. If you run
+a return again, use a new order reference.
+
+### Approve
+
+1. **It waits.** A new run of Apply return decision is paused within seconds, and its steps
+   that create the approval task and send the email are marked succeeded. On the row, Refund
+   amount is filled in, and Decision, Decided by and Decided at are empty. While it waits,
+   ask your tool for the approval task's status and assignee only: it is open and assigned.
+2. **One email, no shortcut.** Exactly one email arrived for the return, with two buttons.
+   Ask your tool to print the two button addresses from the email you received, with each code
+   shortened. Each is the confirm page's address followed by `?t=` and one code, and nothing
+   more. Keep the codes to yourself.
+3. **A visit decides nothing.** Open Approve twice. You get a page with one button, the run is
+   still paused, and both rows on Return Decision Links still have Used at empty.
+4. **Confirm decides.** Press Confirm. The run that was paused finishes, and no run is left
+   paused for this return. Decision is Approved, Decided by is the reviewer's name followed
+   by "(confirmed by email)", Decided at is a time, and the customer's address received the
+   email naming the refund amount. Both rows on Return Decision Links have Used at filled in.
+5. **The other button retires.** Reject from the same email says the return has already been
+   decided.
+6. **The approval task agrees.** Ask your tool for its status only: it now shows answered as
+   Approve. Never print its links.
+
+### Reject
+
+1. **The same start.** A paused run and one email with two buttons.
+2. **Reject decides.** Press Reject, then Confirm. The same run goes from paused to
+   finished. Decision is Rejected, Decided by and Decided at are filled in, and the approval
+   task shows answered as Reject.
+3. **No figure goes to the customer.** The customer's email says the return was not approved:
+   a plain apology and a line to contact the returns desk. Read it for a refund figure - it
+   carries no mention of a refund amount and no amount equal to the price.
+4. **No approval went out.** The customer received no approval email for this return, and
+   the Approve button now says the return has already been decided.
+
+### One ask at a time, the connection and the assistant
+
+- Add one more return and leave it waiting. Use this return only for this check and leave it
+  unanswered. Change its Condition. No second email arrives and the first run is still
+  paused. A second, short run may appear and finish at once: point 2 of Step 3 stops it.
+- Open Actions > FlowOps > More > Connections and confirm the email credential is a named
+  connection, Gmail, not text inside a step.
+- Ask your tool to read the Return Desk Assistant's setup back: one skill, Log return
+  request, and no board, so the links and the decision stay with the workflows.
+
+If any of these do not hold, that is more useful than a build that looked fine and was not.
+Fix the one thing that failed and check again.
+
+## What to do next
+
+- Leave a return unanswered. The run stays paused and nothing goes to the customer while it
+  waits. The links you asked for in Step 3 are valid for seven days.
+- Talk to the Return Desk Assistant with a new, made-up return and watch the run history of
+  Apply return decision. Before you decide a return the assistant logged, add the customer
+  address in Customer email on its row.
+- Read [Human approval](/learn/build-it-well/human-approval.md) for the method behind this lesson:
+  where a decision is placed, what makes a gate hold, and how to prove it is wired end to end.
+- See [The building blocks](/learn/build-it/building-blocks.md) for where each part of the desk lives on
+  screen: the boards, the workflows, the agent and the email connection.
+- For anything about the SDK, the CLI or the MCP connection itself,
+  [engineer.imbrace.co](https://engineer.imbrace.co) is the source that stays current - this
+  page will drift before that one does. [Set up your coding tool](/learn/build-it/set-up-your-coding-tool.md)
+  has the set-up in full.
 
 
 ==================== build-it/working-with-ai.md ====================
@@ -1030,7 +1482,7 @@ Nobody is judged for "built". Writing "live" for something that never ran is the
 - **The SDK's own map**, fetched fresh from [engineer.imbrace.co](https://engineer.imbrace.co/llms.txt)
   when it writes SDK code. Never an old copy.
 - **The organisation itself**, over the MCP connection, when the question is about what
-  exists or what happened - see [Getting started](/learn/build-it/getting-started.md).
+  exists or what happened - see [Set up your coding tool](/learn/build-it/set-up-your-coding-tool.md).
 
 ## The guardrails
 
@@ -1221,7 +1673,7 @@ writing a line of anything.
 In the sidebar this lives under **Actions > ConnectIQ**, on the **MCP** tab, and it opens
 the very guide you would read directly at
 [engineer.imbrace.co/mcp/overview](https://engineer.imbrace.co/mcp/overview/).
-[Getting started](/learn/build-it/getting-started.md) walks through connecting a coding tool to a test
+[Set up your coding tool](/learn/build-it/set-up-your-coding-tool.md) walks through connecting a coding tool to a test
 organisation this way, step by step.
 
 Screen: ConnectIQ MCP tab opening the MCP connection guide
@@ -1248,13 +1700,16 @@ Do it in code: [SDK overview](https://engineer.imbrace.co/sdk/overview/).
 
 ## How they fit together
 
-Harbor Bicycle Co.'s return desk, from the tutorial, uses every block at once. A customer
+Harbor Bicycle Co.'s return desk, from the tutorial and [Make it wait for a
+person](/learn/build-it/make-it-wait-for-a-person.md), uses every block at once. A customer
 talks to the Return Desk Assistant. The agent listens, and its one skill - a workflow
 called Log return request - writes a new row on the Return Requests board. A second
-workflow watches that same board: once a person sets Decision to Approved, it records who
-decided and when, then sends the customer a confirmation by email. Nothing here needed a
-document model, because nothing arrived as a file - a return that came in as a scanned
-packing slip would be read by a document model first, and land as a row on that same
+workflow works out the refund from the Refund Rules board. A further workflow asks the duty
+manager: it emails a card with Approve and Reject buttons and waits. Each button opens a page
+where the manager confirms; then the workflow carries on from where it paused, records the
+decision, the reviewer's name and the time on the row, and emails the customer. Nothing here
+needed a document model, because nothing arrived as a file - a return that came in as a
+scanned packing slip would be read by a document model first, and land as a row on that same
 board.
 
 Every one of Harbor's blocks could be packaged as a single module and installed into a
@@ -1263,7 +1718,8 @@ travelling together for that organisation's own admin to open and adjust. And th
 connection that let a coding tool build all of it in the first place is what lets it check
 the result afterwards: list the board, read the workflow's last run.
 
-Build it yourself, one step at a time, in [the tutorial](/learn/build-it/vibe-coding-tutorial.md).
+Build it yourself, one step at a time, in [the tutorial](/learn/build-it/vibe-coding-tutorial.md), then make
+it wait for a person in [Make it wait for a person](/learn/build-it/make-it-wait-for-a-person.md).
 
 
 ==================== build-guide.md ====================
@@ -1277,9 +1733,10 @@ track:
 # Build guide for AI tools
 
 The iMBrace build guide is this course's [Build it well](/learn/build-it-well/index.md) pages, the
-principles behind every good iMBrace build, plus [getting started](/learn/build-it/getting-started.md)
-and [the tutorial](/learn/build-it/vibe-coding-tutorial.md) - packaged as plain files an AI coding tool
-reads itself, instead of a page you read and explain to it.
+principles behind every good iMBrace build, plus [setting up your coding tool](/learn/build-it/set-up-your-coding-tool.md),
+[the tutorial](/learn/build-it/vibe-coding-tutorial.md) and
+[Make it wait for a person](/learn/build-it/make-it-wait-for-a-person.md) - packaged as plain files
+an AI coding tool reads itself, instead of a page you read and explain to it.
 
 ## Who it's for
 
@@ -1313,8 +1770,9 @@ the page it points to. Connect your tool to a test organisation the same way: se
 
 ## Downloads
 
-- **The zip** -
-  [imbrace-build-guide-community.zip](https://engineer.imbrace.co/learn/imbrace-build-guide-community.zip)
+- [Build guide for AI coding tools (.zip)](https://engineer.imbrace.co/learn/imbrace-build-guide-community.zip)
+- [The whole course for AI tools (llms-full.txt)](https://engineer.imbrace.co/learn/llms-full.txt)
+
 - **The browsable files** - `AGENTS.md` and the rest, under
   [engineer.imbrace.co/learn/agent-pack/README.md](https://engineer.imbrace.co/learn/agent-pack/README.md)
 - **The whole guide in one file**, for a tool that reads a single document instead of a
@@ -1368,7 +1826,7 @@ build's own configuration.
 |---|---|
 | [The eight principles](/learn/build-it-well/the-eight-principles.md) | Each principle in full: what it means, what good looks like, how it goes wrong, and the questions to ask of your own build. |
 | [Use-case shapes](/learn/build-it-well/use-case-shapes.md) | Nine recurring shapes a business use case takes, and the kinds of parts each one is typically assembled from. |
-| [Human approval](/learn/build-it-well/human-approval.md) | One decision, five places a person can actually make it - and why a chat reply is not one of them. |
+| [Human approval](/learn/build-it-well/human-approval.md) | How a person decides from an email with Approve and Reject buttons, confirmed on a page - and why a chat reply is not a decision. |
 | [Native-first](/learn/build-it-well/native-first.md) | Why you reach for the platform's own capability before writing code, and what that buys you. |
 | [Document models](/learn/build-it-well/document-models.md) | How to choose what DocIQ extracts from a document: adopt the default, extend it, write your own last. |
 | [Anti-patterns](/learn/build-it-well/anti-patterns.md) | The mistakes that get built again and again, what each one costs, and the fix. |
@@ -1384,7 +1842,7 @@ of you, use its questions, and move on.
 level: '3'
 track:
 - build
-verified_on: '2026-09-25'
+verified_on: '2026-09-30'
 ---
 
 # The eight principles
@@ -1531,14 +1989,17 @@ configuration, supplied alongside the core rather than baked into it.
 
 **What it means.** A gate is a recorded decision on a specific item - who decided, what they
 decided, and when - and it fails closed. No decision recorded means no output goes out. The
-surface a person uses to decide is a design choice per use case; that the decision gets
-recorded is not.
+person decides from where they already work - by default an email with Approve and Reject
+buttons, each opening a confirm page - and that the decision gets recorded is not optional.
 
 **What good looks like.**
 - The gate works out its own answer from the underlying data, rather than trusting whatever
   the AI just said in the same turn.
 - The decision is written down with who decided, what they decided, and when - captured by
   the system itself, not just visible in a chat transcript.
+- The person decides from where they already work, with the document in front of them: an
+  email whose buttons open a confirm page. Opening the link decides nothing; only the page's
+  Confirm does.
 - Nothing consequential is auto-approved. A missing decision blocks the output rather than
   letting it through by default.
 - The ask pauses the process, it does not end it. Once the decision lands, the same run
@@ -1549,6 +2010,11 @@ recorded is not.
 - **The gate with nothing behind it.** A status field a person is meant to update, with
   nothing actually watching it or acting on the change. It looks like oversight and provides
   none.
+- **The decision typed into a cell.** The person is asked to approve by picking a value in a
+  data board. It sits in a grid they have no reason to open, does nothing until it is saved,
+  and does not feel like deciding.
+- **The link that decides when opened.** A button that records the decision on a plain visit
+  is decided by the first mail scanner or preview that opens it.
 - **The conversational yes.** A person types "yes" to an AI and nothing is recorded anywhere
   durable, so the decision exists only in a transcript nobody will read again.
 - **The trusting gate.** The approval step reads the number the AI proposed instead of
@@ -1567,14 +2033,16 @@ recorded is not.
 1. Show the record of the last decision that was made. Who, what, when?
 2. If the approver were unavailable, would anything still go out?
 3. Does the gate work out its own answer, or does it trust a number it was handed?
-4. What happens if the same decision arrives twice?
-5. Can the agent write the columns that record a decision?
-6. What does a later step do when the check has not stamped the record yet?
-7. Approve it, reject it, and leave one unanswered. In each case, does the process carry on
+4. Where does the reviewer already work, what do they see, and was that exact route walked
+   end to end as that person? Does opening the link alone decide anything?
+5. What happens if the same decision arrives twice?
+6. Can the agent write the columns that record a decision?
+7. What does a later step do when the check has not stamped the record yet?
+8. Approve it, reject it, and leave one unanswered. In each case, does the process carry on
    by itself - the job finished or the outcome reported - with nobody having to ask twice?
 
-See [Human approval](/learn/build-it-well/human-approval.md) for the five places a person can actually make a
-decision, and why a chat reply on its own is not one of them.
+See [Human approval](/learn/build-it-well/human-approval.md) for how a person decides from an email, what the
+confirm page does, and why a chat reply on its own is not a decision.
 
 ## 6. Native-first
 
@@ -1710,7 +2178,7 @@ document, and never handed to an AI coding tool as part of its working context.
 level: '3'
 track:
 - build
-verified_on: '2026-09-23'
+verified_on: '2026-09-30'
 ---
 
 # Use-case shapes
@@ -1736,7 +2204,7 @@ a booking, a specific option worked out for them.
 - a skill that runs the calculation, showing every input it used
 - a skill that saves the resulting record
 - a skill that puts together a document from a template
-- a skill that asks a person to approve before anything goes out
+- a skill that asks a person to approve, by email with a confirm page, before anything goes out
 - a skill that sends the finished document to the requester
 - where capacity is limited, a skill that reserves a slot against what is genuinely still
   available, not just against a raw quantity
@@ -1880,14 +2348,14 @@ masking, and audit, rather than any one transaction.
 level: '3'
 track:
 - build
-verified_on: '2026-09-25'
+verified_on: '2026-09-30'
 ---
 
 # Human approval
 
 Every build that matters has a moment where a person needs to say yes before something goes
-out. The decision itself is always the same kind of thing. Where a person makes it can be
-different for every use case.
+out. Design that moment first: who is asked, where they already work, which document is in
+front of them, what they see, and what happens after they answer.
 
 ## The decision is one thing, the surface is another
 
@@ -1895,55 +2363,56 @@ The decision part works out what should happen from the underlying records, refu
 proceed if nobody has decided, and writes down who decided, what they decided, and when.
 That part does not change from build to build.
 
-The surface - where and how a person actually makes that decision - is a design choice, made
-per use case, based on where the person already is and how the build needs to behave while
-it waits.
+The surface - where and how a person actually makes that decision - is chosen per use case,
+but the default is not a free choice: a person decides from where they already work. For most
+reviewers that is their inbox.
 
-## Five places a person can make it
+## The default: an email with Approve and Reject
+
+The reviewer gets an email that carries everything needed to decide: the facts, the document
+itself (the quotation, the CV, the contract) linked or attached, and the recommended action.
+Below it are two buttons, Approve and Reject.
+
+1. The build pauses and emails the reviewer. While it waits, nothing goes out.
+2. The reviewer reads the email, with the document in front of them.
+3. A button opens a confirm page that shows the choice. Opening it decides nothing.
+4. Only the page's Confirm records the decision. The other button then stops working, so one
+   person gives one answer.
+5. The same run carries on: it finishes the job - for example the documents go to the rep -
+   and tells the person who asked what happened.
+
+Write the moment in five lines before you build anything: who is asked, where they already
+work, which document is in front of them, what they see, and what happens after they answer.
+Then keep three things in mind.
+
+- **People, messages and documents lead.** The moment is a person, an email and the document,
+  not a grid. The board holds the record behind it.
+- **The email is a card, not a notice.** If the reviewer has to open something else to decide,
+  the card is missing a fact.
+- **Every branch ends somewhere the requester can see:** approved, rejected, expired, no
+  answer.
+
+## Other ways, and when to use them
 
 | Surface | How it works | Use it when |
 |---|---|---|
-| **A field on a record** | a person flips a status field on a board or list; the next step fires automatically once it changes | the reviewer already works from that board day to day. No custom interface needed, and the most common surface by far |
-| **A pause that genuinely waits** | the build actually suspends the run until someone resolves it, rather than polling or guessing | the process must not continue at all until a person acts |
-| **A single-use link** | a signed link, one per possible outcome; visiting it shows the details, and confirming on it writes the decision | the reviewer is somewhere else entirely, and building them a portal is overkill |
-| **An approval card in chat** | the build posts a message with buttons in the channel the reviewer already uses; the run resumes on the click | the reviewer lives in that channel already |
-| **A command in a conversation** | a verified person types an approval, referencing the specific item; the system records it against that item | the reviewer is already talking with an agent, and the channel can verify who they are |
+| **An email with a confirm page** | one button per outcome; opening a button shows a page, and confirming on it writes the decision | the default, for every reviewer who works in their inbox |
+| **A field on a record** | a person flips a status field on a board; the next step fires once it is saved | a fallback, only when the reviewer already works from that board every day. Not for a business person |
 
-All five end at the same place: a recorded decision, tied to a specific item, with who
-decided and when.
-
-Recording the decision is not the last step. Whichever surface was used, the process picks
-back up on its own once the decision lands - finishing the job it was waiting on, or telling
-the person who asked what happened - without anyone having to notice and come back to ask
-again.
+Do not ask a business person to approve by picking a value in a data board. It sits in a
+grid they have no reason to open, does nothing until it is saved, and does not feel like
+deciding.
 
 Which surfaces are available depends on your installation and version; your iMBrace contact
-can confirm them. The field on a record is the most widely used and the simplest place to
-start. Whatever surface you choose, walk the path as the reviewer before you rely on it: they
-are told, they open the item, they record the decision.
-
-## A proven combination: a board column that resumes a paused workflow
-
-When the process must genuinely wait and the reviewer works from a board, combine the first
-two surfaces. The workflow creates a task (the Todos step), notifies the reviewer - for
-example by email, with a link to the record, never a link that decides - and then pauses to
-wait. The reviewer picks approve or reject in a single-choice column on the record. An
-automation bound to that one column resumes the paused task. The workflow - not the edit -
-then writes the outcome, so there is exactly one writer for the decision.
-
-Notify the reviewer directly. A waiting task only moves when the reviewer knows it is there,
-so the message with a link to the record is a required step of the pattern, not an extra.
+can confirm them. Whatever you choose, walk the path as the reviewer before you rely on it:
+they get the email, open it, confirm, and the build finishes.
 
 ## The rule that does not bend
 
-**A friendly "yes" typed into a chat is not, by itself, a decision.** It is flow control -
-it might tell the conversation to keep going - but on its own it leaves no durable record
-that anyone can point to later and say: this was approved, by this person, at this time.
-
-The command surface above is not an exception to that rule. It is what makes a chat message
-count as a decision: the system captures it as a structured record against a specific item,
-with a verified sender, rather than leaving it sitting in a transcript. A bare "yes" with
-nothing to tie it to a specific item is not accepted as a decision at all.
+**A friendly "yes" typed into a chat is not, by itself, a decision.** It is flow control - it
+might tell the conversation to keep going - but it leaves no durable record that anyone can
+point to later and say: this was approved, by this person, at this time. A decision is a
+recorded answer tied to a specific item, with who decided and when.
 
 Two more rules worth holding onto:
 
@@ -1953,28 +2422,33 @@ Two more rules worth holding onto:
 - **No decision means no output.** Not a default. Not a timeout that lets things through
   after a while. If nobody has decided, nothing goes out.
 
-## Four details that make a gate hold
+## Details that make a gate hold
 
-- **A board edit takes effect when it is saved.** Test the gate from the saved state, and
-  include "press Save" in the reviewer's instructions.
-- **A decision link shows first and acts only on confirm.** Opening a link - by a person, a
-  mail scanner or a preview - must never be enough to record a decision. Send decision links
-  only to the reviewer, and keep them, and any identifier that could make the decision, off
-  the record itself.
+- **Opening a link decides nothing.** A person, a mail scanner or a preview may open it. A
+  visit shows the page; only the confirming step decides.
+- **One email per person, one set of buttons per person.** Record on your own row whose
+  buttons they were and when they confirmed, so "approved by" always comes from your record.
+- **A second answer changes nothing.** Once one answer is confirmed, the other outcome is
+  retired, and the step after the pause is safe to run twice.
+- **The confirm page tells the truth.** It shows "done" only after the decision was recorded,
+  and says so plainly if it was not.
+- **Send the email only once the build is waiting for the answer.**
 - **The agent must never be able to write the decision.** Build the columns that record a
   decision so they take their starting value when the record is created and refuse every later
   write from the agent - give the agent narrow tools that cannot reach them.
 - **"No verdict yet" must never read as a pass.** A check that has not run, or that failed,
   leaves the record looking exactly like one that passed. Stamp a verdict on every record,
   clear ones included, and make every later step wait for it and refuse without it.
+- **A board edit takes effect when it is saved.** If a reviewer does use the board, test the
+  gate from the saved state and include "press Save" in their instructions.
 
 ## Prove the gate is wired, not just present
 
-A control point is only as good as what is bound to it. Confirm the status field triggers a
-real automation on every value it can take, not only the ones you expect.
-
-Wire the surface to something that genuinely depends on it, and exercise the whole path end
-to end - including the "nobody decided yet" case - before calling the approval step done.
+A control point is only as good as what is bound to it. Wire the surface to something that
+genuinely depends on it, and exercise the whole path end to end as the reviewer: for each
+outcome - approve, reject and no answer - start the run, answer from the email they would
+really get, and check that the job finished or the requester was told, with no further prompt
+from anyone. A gate is not built until that has been done.
 
 
 ==================== build-it-well/native-first.md ====================
@@ -2136,7 +2610,7 @@ Check each of these with a few of your own documents before a design depends on 
 level: '3'
 track:
 - build
-verified_on: '2026-09-26'
+verified_on: '2026-09-30'
 ---
 
 # Anti-patterns
@@ -2151,6 +2625,15 @@ the change. **What it costs:** it looks like oversight in a review and provides 
 production - things go out with nobody having genuinely approved them. **The fix:** wire the
 surface to something that truly depends on it, and exercise the full path - including the
 "nobody decided yet" case - end to end before calling it done.
+
+## The decision typed into a cell
+
+A person is asked to approve by editing a value in a data board. **What it costs:** the value
+sits in a grid the person has no reason to open, does nothing until it is saved, and no
+business person thinks of it as deciding - so approvals arrive late or not at all. **The fix:**
+ask them where they already work: an email card whose buttons open a confirm page, with the
+document in front of them, and record the decision on the row afterwards. See [Human
+approval](/learn/build-it-well/human-approval.md).
 
 ## The ask that hangs up
 
@@ -2299,7 +2782,7 @@ do not label something reusable until at least two real, separate, named needs f
 level: '3'
 track:
 - build
-verified_on: '2026-09-25'
+verified_on: '2026-09-30'
 ---
 
 # Review checklist
@@ -2378,10 +2861,11 @@ the thing being reviewed.
 | 1 | Show the record of the last decision made. Who, what, when? | | | |
 | 2 | If the approver were unavailable, would anything still go out? | | | |
 | 3 | Does the gate work out its own answer, or trust one it was handed? | | | |
-| 4 | What happens when the same decision arrives twice? | | | |
-| 5 | Can the agent write the columns that record a decision? | | | |
-| 6 | What does a later step do when the check has not stamped the record yet? | | | |
-| 7 | Approve it, reject it, and leave one unanswered. Does the process carry on by itself each time? | | | |
+| 4 | Where does the reviewer already work, and was that exact route walked end to end, as them? Does opening the link alone decide anything? | | | |
+| 5 | What happens when the same decision arrives twice? | | | |
+| 6 | Can the agent write the columns that record a decision? | | | |
+| 7 | What does a later step do when the check has not stamped the record yet? | | | |
+| 8 | Approve it, reject it, and leave one unanswered. Does the process carry on by itself each time? | | | |
 
 ## 6. Native-first
 

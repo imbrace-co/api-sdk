@@ -77,9 +77,10 @@ their own servers or in a private cloud. Ask the person which, before you design
    anything done.
 
 When the person is following the tutorial (`build-it/vibe-coding-tutorial.md`), follow its
-steps in order instead; this read order is for designing a new build. New to the platform:
-`build-it/getting-started.md` first. How to work with the person:
-`build-it/working-with-ai.md`.
+steps in order instead; this read order is for designing a new build. When they go on to
+make the desk wait for a person, follow `build-it/make-it-wait-for-a-person.md` in the same
+way. New to the platform: `build-it/set-up-your-coding-tool.md` first. How to work with the
+person: `build-it/working-with-ai.md`.
 
 ## Rules for every build
 
@@ -92,7 +93,11 @@ steps in order instead; this read order is for designing a new build. New to the
 5. **Every number in an answer carries its source**, or the answer says plainly that it is not
    in the data.
 6. **A decision that matters is a recorded value on a row** - who, what, when - and nothing
-   downstream runs without it. A reply in a chat is not an approval. The agent must never be
+   downstream runs without it. The person decides from where they already work: an email with
+   Approve and Reject buttons, each opening a confirm page, where only the page's Confirm
+   decides (opening a link decides nothing) - never by editing a cell in a board. The run
+   pauses while it waits, then the same run carries on and tells the requester. A reply in a
+   chat is not an approval. The agent must never be
    able to write the decision itself: give an agent narrow tools that write only what it owns,
    never a whole board.
 7. **A code step is pure** - inputs in, a result out, no network call, no key - or it says
@@ -131,4 +136,4 @@ the most useful place to send it.
 
 ---
 
-*Edition 1.0.1, 30 September 2026. Community edition, published on engineer.imbrace.co - a method guide for building on iMBrace with an AI coding tool.*
+*Edition 1.0.3, 4 October 2026. Community edition, published on engineer.imbrace.co - a method guide for building on iMBrace with an AI coding tool.*

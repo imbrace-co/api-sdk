@@ -24,7 +24,7 @@ description: 要讓一個 iMBrace 建置成果禁得起真實使用、真實負�
 |---|---|
 | [八大原則](/learn/build-it-well/the-eight-principles/) | 完整說明每一項原則：它的意思、做得好是什麼樣子、做壞了會是什麼樣子，以及你該問自己建置成果的問題。 |
 | [使用案例的形狀](/learn/build-it-well/use-case-shapes/) | 業務使用案例常見的九種形狀，以及每一種通常由哪些元件組裝而成。 |
-| [人工核准](/learn/build-it-well/human-approval/) | 同一個決定，五個人員實際可以做出它的地方——以及為什麼聊天室裡的一句回覆並不算數。 |
+| [人工核准](/learn/build-it-well/human-approval/) | 一個人如何從附有「核准」與「拒絕」按鈕的電子郵件做出決定，並在頁面上確認——以及為什麼聊天室裡的一句回覆並不算是決定。 |
 | [原生優先](/learn/build-it-well/native-first/) | 為什麼要先動用平台本身的能力，再考慮寫程式碼，以及這麼做能帶來什麼好處。 |
 | [文件模型](/learn/build-it-well/document-models/) | 如何選擇「文件模組」（DocIQ）要從文件中擷取什麼：優先採用預設設定、視需要擴充，最後才考慮自行撰寫。 |
 | [反模式](/learn/build-it-well/anti-patterns/) | 一再被建置出來的錯誤、每一種的代價，以及修正方式。 |

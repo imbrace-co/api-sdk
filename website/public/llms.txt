@@ -61,22 +61,23 @@
 
 ## Learn
 
-- [Start here](https://developer.imbrace.co/learn/index.md) - The iMBrace course in one page - pick the path that fits you and follow the links in order.
+- [About the course](https://developer.imbrace.co/learn/index.md) - What the iMBrace course is, what you can download for your AI coding tool, and four paths through it.
 - [What iMBrace is](https://developer.imbrace.co/learn/understand/overview.md) - What iMBrace is, how it keeps AI dependable, and what governs it - enough to explain to a customer who might fit.
 - [What iMBrace does today](https://developer.imbrace.co/learn/understand/capability-truth-table.md) - A capability-by-capability list of what iMBrace can do right now, with a page or a screen where you can check each one yourself.
 - [A tour of the platform](https://developer.imbrace.co/learn/see-it-work/platform-tour.md) - Walk the sidebar of a live iMBrace organisation, area by area, so you know what to open and what to show a customer in each one.
 - [CV screening, end to end](https://developer.imbrace.co/learn/see-it-work/cv-screening.md) - See how iMBrace turns a recruiter's job description and a stack of CVs into a ranked, evidenced shortlist.
-- [Sales quoting](https://developer.imbrace.co/learn/see-it-work/sales-quoting.md) - See how iMBrace turns a plain-words request into a priced Quillmoor Components quotation, approved by the right person.
-- [Build it](https://developer.imbrace.co/learn/build-it/index.md) - Level 2 of the iMBrace course - build a small working agent on a test organisation.
-- [Getting started](https://developer.imbrace.co/learn/build-it/getting-started.md) - Set up an AI coding tool to build on iMBrace - a test organisation, the SDK, credentials, and a live connection to the organisation.
+- [Sales quoting](https://developer.imbrace.co/learn/see-it-work/sales-quoting.md) - See how iMBrace turns a plain-words request into a priced Quillmoor Components quotation, asks the right person to approve it by email when the margin is thin, and sends the finished documents to the person who asked.
+- [Build it](https://developer.imbrace.co/learn/build-it/index.md) - Level 2 of the iMBrace course - build a small working return desk on a test organisation, then make it wait for a person.
+- [Set up your coding tool](https://developer.imbrace.co/learn/build-it/set-up-your-coding-tool.md) - Connect an AI coding tool to a test organisation over MCP and give it the SDK's map - a test organisation and key, the MCP connection, and a check that it all works.
 - [Vibe coding on iMBrace - Build it](https://developer.imbrace.co/learn/build-it/vibe-coding-tutorial.md) - Build a small working agent on a test organisation, with any AI coding tool.
+- [Make it wait for a person](https://developer.imbrace.co/learn/build-it/make-it-wait-for-a-person.md) - Make the return desk ask a person by email and wait for the answer, so the same run records the decision and tells the customer.
 - [Working with an AI coding tool](https://developer.imbrace.co/learn/build-it/working-with-ai.md) - The stance, habits and guardrails that keep what an AI coding tool builds on iMBrace trustworthy.
 - [The building blocks](https://developer.imbrace.co/learn/build-it/building-blocks.md) - Recognise the five things every iMBrace build is made from, plus the three ways to extend and deliver them, by name and by where each one lives on screen.
 - [Build guide for AI tools](https://developer.imbrace.co/learn/build-guide.md) - Give your AI coding tool the iMBrace build guide - the method behind every good iMBrace build, as plain files it reads itself.
 - [Build it well](https://developer.imbrace.co/learn/build-it-well/index.md) - What it takes to design an iMBrace build that survives contact with real use, real load, and real oversight.
 - [The eight principles](https://developer.imbrace.co/learn/build-it-well/the-eight-principles.md) - The eight principles behind a build that survives contact with real use - what each one means, what good looks like, and how it goes wrong.
 - [Use-case shapes](https://developer.imbrace.co/learn/build-it-well/use-case-shapes.md) - Nine recurring shapes a business use case takes on iMBrace, and the kinds of parts each one is assembled from.
-- [Human approval](https://developer.imbrace.co/learn/build-it-well/human-approval.md) - One decision, five places a person can actually make it - and why a chat reply is not one of them.
+- [Human approval](https://developer.imbrace.co/learn/build-it-well/human-approval.md) - How a person decides from where they already work - an email with Approve and Reject buttons, confirmed on a page - and how the build carries on afterwards.
 - [Native-first](https://developer.imbrace.co/learn/build-it-well/native-first.md) - Why you reach for the platform's own building blocks before writing code, and what that buys you.
 - [Document models](https://developer.imbrace.co/learn/build-it-well/document-models.md) - How to choose what DocIQ extracts from a document - adopt the platform's default model, extend it, and write your own only as a last resort.
 - [Anti-patterns](https://developer.imbrace.co/learn/build-it-well/anti-patterns.md) - The mistakes that get built again and again, what each one costs, and the fix.

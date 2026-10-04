@@ -145,14 +145,17 @@ configuration, supplied alongside the core rather than baked into it.
 
 **What it means.** A gate is a recorded decision on a specific item - who decided, what they
 decided, and when - and it fails closed. No decision recorded means no output goes out. The
-surface a person uses to decide is a design choice per use case; that the decision gets
-recorded is not.
+person decides from where they already work - by default an email with Approve and Reject
+buttons, each opening a confirm page - and that the decision gets recorded is not optional.
 
 **What good looks like.**
 - The gate works out its own answer from the underlying data, rather than trusting whatever
   the AI just said in the same turn.
 - The decision is written down with who decided, what they decided, and when - captured by
   the system itself, not just visible in a chat transcript.
+- The person decides from where they already work, with the document in front of them: an
+  email whose buttons open a confirm page. Opening the link decides nothing; only the page's
+  Confirm does.
 - Nothing consequential is auto-approved. A missing decision blocks the output rather than
   letting it through by default.
 - The ask pauses the process, it does not end it. Once the decision lands, the same run
@@ -163,6 +166,11 @@ recorded is not.
 - **The gate with nothing behind it.** A status field a person is meant to update, with
   nothing actually watching it or acting on the change. It looks like oversight and provides
   none.
+- **The decision typed into a cell.** The person is asked to approve by picking a value in a
+  data board. It sits in a grid they have no reason to open, does nothing until it is saved,
+  and does not feel like deciding.
+- **The link that decides when opened.** A button that records the decision on a plain visit
+  is decided by the first mail scanner or preview that opens it.
 - **The conversational yes.** A person types "yes" to an AI and nothing is recorded anywhere
   durable, so the decision exists only in a transcript nobody will read again.
 - **The trusting gate.** The approval step reads the number the AI proposed instead of
@@ -181,14 +189,16 @@ recorded is not.
 1. Show the record of the last decision that was made. Who, what, when?
 2. If the approver were unavailable, would anything still go out?
 3. Does the gate work out its own answer, or does it trust a number it was handed?
-4. What happens if the same decision arrives twice?
-5. Can the agent write the columns that record a decision?
-6. What does a later step do when the check has not stamped the record yet?
-7. Approve it, reject it, and leave one unanswered. In each case, does the process carry on
+4. Where does the reviewer already work, what do they see, and was that exact route walked
+   end to end as that person? Does opening the link alone decide anything?
+5. What happens if the same decision arrives twice?
+6. Can the agent write the columns that record a decision?
+7. What does a later step do when the check has not stamped the record yet?
+8. Approve it, reject it, and leave one unanswered. In each case, does the process carry on
    by itself - the job finished or the outcome reported - with nobody having to ask twice?
 
-See [Human approval](/learn/build-it-well/human-approval/) for the five places a person can actually make a
-decision, and why a chat reply on its own is not one of them.
+See [Human approval](/learn/build-it-well/human-approval/) for how a person decides from an email, what the
+confirm page does, and why a chat reply on its own is not a decision.
 
 ## 6. Native-first
 

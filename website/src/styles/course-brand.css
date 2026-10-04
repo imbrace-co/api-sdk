@@ -99,3 +99,89 @@ html[lang='zh-TW']:has(link[rel='canonical'][href*='/learn/']) .sl-markdown-cont
 html[lang='zh-CN']:has(link[rel='canonical'][href*='/learn/']) .sl-markdown-content em {
   font-style: normal;
 }
+
+/* --- Download buttons (Learn front page and build guide) ------- */
+
+/* Starlight 0.23 ships no LinkButton, so the "site:buttons" blocks in the lessons are drawn
+   as plain links in this scoped class. Built from Starlight's own tokens so both themes work. */
+.imb-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1.25rem 0;
+}
+
+.imb-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.25rem;
+  border: 1px solid var(--sl-color-text-accent);
+  border-radius: 0.5rem;
+  background: var(--sl-color-text-accent);
+  color: var(--sl-color-black);
+  font-size: var(--sl-text-base);
+  font-weight: 600;
+  line-height: 1.3;
+  text-decoration: none;
+}
+
+.imb-button:hover,
+.imb-button:focus-visible {
+  background: var(--sl-color-accent-high);
+  border-color: var(--sl-color-accent-high);
+  color: var(--sl-color-black);
+}
+
+/* the second button is the quieter of the pair */
+.imb-button:nth-child(n + 2) {
+  background: transparent;
+  color: var(--sl-color-text-accent);
+}
+
+.imb-button:nth-child(n + 2):hover,
+.imb-button:nth-child(n + 2):focus-visible {
+  background: var(--sl-color-accent-low);
+  color: var(--sl-color-text-accent);
+}
+
+@media (max-width: 480px) {
+  .imb-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* --- Unlinked card (Learn front page) -------------------------- */
+
+/* A Starlight LinkCard draws its own look from styles scoped to that component, which cannot be
+   reused. The "site:cards" item that has nowhere to link to yet (the partner kit is not public)
+   is a div in this class instead: the same box, title and text as a LinkCard, with no arrow and
+   no link. Values are LinkCard's own, so both themes work. Scoped to this class only. */
+.imb-card-static {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  box-shadow: var(--sl-shadow-sm);
+  position: relative;
+}
+
+.imb-card-static .stack {
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.imb-card-static .title {
+  color: var(--sl-color-white);
+  font-weight: 600;
+  font-size: var(--sl-text-lg);
+  line-height: var(--sl-line-height-headings);
+}
+
+.imb-card-static .description {
+  color: var(--sl-color-gray-3);
+  line-height: 1.5;
+}

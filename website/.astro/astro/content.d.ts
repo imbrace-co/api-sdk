@@ -306,16 +306,23 @@ declare module 'astro:content' {
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".md"] };
-"learn/build-it/getting-started.md": {
-	id: "learn/build-it/getting-started.md";
-  slug: "learn/build-it/getting-started";
+"learn/build-it/index.md": {
+	id: "learn/build-it/index.md";
+  slug: "learn/build-it";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".md"] };
-"learn/build-it/index.md": {
-	id: "learn/build-it/index.md";
-  slug: "learn/build-it";
+"learn/build-it/make-it-wait-for-a-person.md": {
+	id: "learn/build-it/make-it-wait-for-a-person.md";
+  slug: "learn/build-it/make-it-wait-for-a-person";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"learn/build-it/set-up-your-coding-tool.md": {
+	id: "learn/build-it/set-up-your-coding-tool.md";
+  slug: "learn/build-it/set-up-your-coding-tool";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
@@ -334,13 +341,13 @@ declare module 'astro:content' {
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".md"] };
-"learn/index.md": {
-	id: "learn/index.md";
+"learn/index.mdx": {
+	id: "learn/index.mdx";
   slug: "learn";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
-} & { render(): Render[".md"] };
+} & { render(): Render[".mdx"] };
 "learn/see-it-work/cv-screening.md": {
 	id: "learn/see-it-work/cv-screening.md";
   slug: "learn/see-it-work/cv-screening";
@@ -922,16 +929,23 @@ declare module 'astro:content' {
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".md"] };
-"zh-cn/learn/build-it/getting-started.md": {
-	id: "zh-cn/learn/build-it/getting-started.md";
-  slug: "zh-cn/learn/build-it/getting-started";
+"zh-cn/learn/build-it/index.md": {
+	id: "zh-cn/learn/build-it/index.md";
+  slug: "zh-cn/learn/build-it";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".md"] };
-"zh-cn/learn/build-it/index.md": {
-	id: "zh-cn/learn/build-it/index.md";
-  slug: "zh-cn/learn/build-it";
+"zh-cn/learn/build-it/make-it-wait-for-a-person.md": {
+	id: "zh-cn/learn/build-it/make-it-wait-for-a-person.md";
+  slug: "zh-cn/learn/build-it/make-it-wait-for-a-person";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-cn/learn/build-it/set-up-your-coding-tool.md": {
+	id: "zh-cn/learn/build-it/set-up-your-coding-tool.md";
+  slug: "zh-cn/learn/build-it/set-up-your-coding-tool";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
@@ -950,13 +964,13 @@ declare module 'astro:content' {
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".md"] };
-"zh-cn/learn/index.md": {
-	id: "zh-cn/learn/index.md";
+"zh-cn/learn/index.mdx": {
+	id: "zh-cn/learn/index.mdx";
   slug: "zh-cn/learn";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
-} & { render(): Render[".md"] };
+} & { render(): Render[".mdx"] };
 "zh-cn/learn/see-it-work/cv-screening.md": {
 	id: "zh-cn/learn/see-it-work/cv-screening.md";
   slug: "zh-cn/learn/see-it-work/cv-screening";
@@ -1300,16 +1314,23 @@ declare module 'astro:content' {
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".md"] };
-"zh-tw/learn/build-it/getting-started.md": {
-	id: "zh-tw/learn/build-it/getting-started.md";
-  slug: "zh-tw/learn/build-it/getting-started";
+"zh-tw/learn/build-it/index.md": {
+	id: "zh-tw/learn/build-it/index.md";
+  slug: "zh-tw/learn/build-it";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".md"] };
-"zh-tw/learn/build-it/index.md": {
-	id: "zh-tw/learn/build-it/index.md";
-  slug: "zh-tw/learn/build-it";
+"zh-tw/learn/build-it/make-it-wait-for-a-person.md": {
+	id: "zh-tw/learn/build-it/make-it-wait-for-a-person.md";
+  slug: "zh-tw/learn/build-it/make-it-wait-for-a-person";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".md"] };
+"zh-tw/learn/build-it/set-up-your-coding-tool.md": {
+	id: "zh-tw/learn/build-it/set-up-your-coding-tool.md";
+  slug: "zh-tw/learn/build-it/set-up-your-coding-tool";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
@@ -1328,13 +1349,13 @@ declare module 'astro:content' {
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".md"] };
-"zh-tw/learn/index.md": {
-	id: "zh-tw/learn/index.md";
+"zh-tw/learn/index.mdx": {
+	id: "zh-tw/learn/index.mdx";
   slug: "zh-tw/learn";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
-} & { render(): Render[".md"] };
+} & { render(): Render[".mdx"] };
 "zh-tw/learn/see-it-work/cv-screening.md": {
 	id: "zh-tw/learn/see-it-work/cv-screening.md";
   slug: "zh-tw/learn/see-it-work/cv-screening";

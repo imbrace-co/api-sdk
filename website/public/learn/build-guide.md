@@ -7,9 +7,10 @@ track:
 # Build guide for AI tools
 
 The iMBrace build guide is this course's [Build it well](/learn/build-it-well/index.md) pages, the
-principles behind every good iMBrace build, plus [getting started](/learn/build-it/getting-started.md)
-and [the tutorial](/learn/build-it/vibe-coding-tutorial.md) - packaged as plain files an AI coding tool
-reads itself, instead of a page you read and explain to it.
+principles behind every good iMBrace build, plus [setting up your coding tool](/learn/build-it/set-up-your-coding-tool.md),
+[the tutorial](/learn/build-it/vibe-coding-tutorial.md) and
+[Make it wait for a person](/learn/build-it/make-it-wait-for-a-person.md) - packaged as plain files
+an AI coding tool reads itself, instead of a page you read and explain to it.
 
 ## Who it's for
 
@@ -43,8 +44,9 @@ the page it points to. Connect your tool to a test organisation the same way: se
 
 ## Downloads
 
-- **The zip** -
-  [imbrace-build-guide-community.zip](https://engineer.imbrace.co/learn/imbrace-build-guide-community.zip)
+- [Build guide for AI coding tools (.zip)](https://engineer.imbrace.co/learn/imbrace-build-guide-community.zip)
+- [The whole course for AI tools (llms-full.txt)](https://engineer.imbrace.co/learn/llms-full.txt)
+
 - **The browsable files** - `AGENTS.md` and the rest, under
   [engineer.imbrace.co/learn/agent-pack/README.md](https://engineer.imbrace.co/learn/agent-pack/README.md)
 - **The whole guide in one file**, for a tool that reads a single document instead of a

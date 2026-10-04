@@ -4,7 +4,7 @@ description: Nine recurring shapes a business use case takes on iMBrace, and the
 level: '3'
 track:
 - build
-verified_on: '2026-09-23'
+verified_on: '2026-09-30'
 ---
 
 # Use-case shapes
@@ -30,7 +30,7 @@ a booking, a specific option worked out for them.
 - a skill that runs the calculation, showing every input it used
 - a skill that saves the resulting record
 - a skill that puts together a document from a template
-- a skill that asks a person to approve before anything goes out
+- a skill that asks a person to approve, by email with a confirm page, before anything goes out
 - a skill that sends the finished document to the requester
 - where capacity is limited, a skill that reserves a slot against what is genuinely still
   available, not just against a raw quantity
@@ -169,4 +169,4 @@ masking, and audit, rather than any one transaction.
 
 ---
 
-*Edition 1.0.1, 30 September 2026. Community edition, published on engineer.imbrace.co - a method guide for building on iMBrace with an AI coding tool.*
+*Edition 1.0.3, 4 October 2026. Community edition, published on engineer.imbrace.co - a method guide for building on iMBrace with an AI coding tool.*

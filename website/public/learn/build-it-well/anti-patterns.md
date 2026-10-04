@@ -2,7 +2,7 @@
 level: '3'
 track:
 - build
-verified_on: '2026-09-26'
+verified_on: '2026-09-30'
 ---
 
 # Anti-patterns
@@ -17,6 +17,15 @@ the change. **What it costs:** it looks like oversight in a review and provides 
 production - things go out with nobody having genuinely approved them. **The fix:** wire the
 surface to something that truly depends on it, and exercise the full path - including the
 "nobody decided yet" case - end to end before calling it done.
+
+## The decision typed into a cell
+
+A person is asked to approve by editing a value in a data board. **What it costs:** the value
+sits in a grid the person has no reason to open, does nothing until it is saved, and no
+business person thinks of it as deciding - so approvals arrive late or not at all. **The fix:**
+ask them where they already work: an email card whose buttons open a confirm page, with the
+document in front of them, and record the decision on the row afterwards. See [Human
+approval](/learn/build-it-well/human-approval.md).
 
 ## The ask that hangs up
 
