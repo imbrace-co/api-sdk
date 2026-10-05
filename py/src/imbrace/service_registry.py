@@ -43,7 +43,7 @@ def resolve_service_urls(
         ai=gw,
         marketplaces=f"{gw}/marketplaces/v2",
         file_service=f"{gw}/files/v1",
-        message_suggestion=f"{gw}/v1/message-suggestion",
+        message_suggestion=f"{gw}/ai-agent/suggestions",
         predict=f"{gw}/predict",
         workflow_engine=f"{gw}/activepieces",
         ai_agent=f"{gw}/ai-agent",

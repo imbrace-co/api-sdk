@@ -38,6 +38,11 @@ from .resources.ai_agent import AsyncAiAgentResource
 from .resources.document_ai import AsyncDocumentAIResource
 from .resources.templates import AsyncTemplatesResource
 from .resources.license import AsyncLicenseResource
+from .resources.document_models import AsyncDocumentModelsResource
+from .resources.crm_automation import AsyncCrmAutomationResource
+from .resources.api_keys import AsyncApiKeysResource
+from .resources.roles import AsyncRolesResource
+from .resources.audit_logs import AsyncAuditLogsResource
 
 
 class AsyncImbraceClient:
@@ -108,7 +113,7 @@ class AsyncImbraceClient:
         # endpoints moved off the legacy backend in v1.2.
         self.auth          = AsyncAuthResource(self.http, urls.platform, urls.gateway)
         self.account       = AsyncAccountResource(self.http, urls.platform)
-        self.platform      = AsyncPlatformResource(self.http, urls.platform)
+        self.platform      = AsyncPlatformResource(self.http, urls.platform, urls.channel_service)
         self.organizations = AsyncOrganizationsResource(self.http, urls.platform)
         self.teams         = AsyncTeamsResource(self.http, urls.platform)
         self.settings      = AsyncSettingsResource(self.http, urls.channel_service, urls.platform)
@@ -120,10 +125,10 @@ class AsyncImbraceClient:
         self.categories    = AsyncCategoriesResource(self.http, urls.gateway)
         self.workflows     = AsyncWorkflowsResource(self.http, urls.backend, urls.workflow_engine, urls.channel_service)
 
-        self.boards        = AsyncBoardsResource(self.http, urls.data_board, urls.backend)
+        self.boards        = AsyncBoardsResource(self.http, urls.data_board, urls.backend, urls.platform)
         self.ips           = AsyncIpsResource(self.http, urls.ips, urls.data_board, urls.channel_service)
         self.ai            = AsyncAiResource(self.http, urls.ai)
-        self.marketplace   = AsyncMarketplaceResource(self.http, urls.marketplaces)
+        self.marketplace   = AsyncMarketplaceResource(self.http, urls.marketplaces, urls.gateway)
         self.templates     = AsyncTemplatesResource(self.http, f"{urls.gateway}/v3/marketplaces/use-cases")
         self.agent         = AsyncAgentResource(self.http, urls.marketplaces)
 
@@ -132,7 +137,7 @@ class AsyncImbraceClient:
         self.schedule      = AsyncScheduleResource(self.http, f"{urls.data_board}/v1")
         self.campaign      = AsyncCampaignsResource(self.http, urls.channel_service)
         self.data_files    = AsyncDataFilesResource(self.http, urls.data_board)
-        self.folders       = AsyncFoldersResource(self.http, urls.data_board)
+        self.folders       = AsyncFoldersResource(self.http, urls.data_board, urls.platform)
         self.outbound          = AsyncOutboundsResource(self.http, urls.channel_service)
         self.message_suggestion = AsyncMessageSuggestionResource(self.http, urls.message_suggestion)
         self.predict           = AsyncPredictResource(self.http, urls.predict)
@@ -146,6 +151,13 @@ class AsyncImbraceClient:
             boards=self.boards, templates=self.templates,
         )
         self.license       = AsyncLicenseResource(self.http, urls.gateway)
+
+        # Admin (platform) and DocIQ / CRM automation (data-board)
+        self.api_keys        = AsyncApiKeysResource(self.http, urls.platform)
+        self.roles           = AsyncRolesResource(self.http, urls.platform)
+        self.audit_logs      = AsyncAuditLogsResource(self.http, urls.platform)
+        self.document_models = AsyncDocumentModelsResource(self.http, urls.data_board)
+        self.crm_automation  = AsyncCrmAutomationResource(self.http, f"{urls.data_board}/v1")
 
         # —— Convenience auth
 

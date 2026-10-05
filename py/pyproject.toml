@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "imbrace"
-version = "1.2.1"
+version = "1.2.2"
 description = "Official Python SDK for Imbrace — dual auth (API Key + Access Token)"
 readme = "README.md"
 license = { text = "MIT" }

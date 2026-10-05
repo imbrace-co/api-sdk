@@ -1,5 +1,9 @@
 from typing import Any, Dict, List, Optional
 from ..http import HttpTransport, AsyncHttpTransport
+from .platform import add_team_users_body, json_or_success, team_list_params
+from .retired import retired
+
+_RETIRED = "its route was removed when the legacy backend was retired"
 
 
 class TeamsResource:
@@ -20,15 +24,16 @@ class TeamsResource:
     def upload_icon(self, files: Any) -> Dict[str, Any]:
         return self._http.request("POST", f"{self._v1}/teams/_fileupload", files=files).json()
 
-    def list(self, limit: Optional[int] = None, skip: Optional[int] = None, q: Optional[str] = None) -> Dict[str, Any]:
-        params: Dict[str, Any] = {}
-        if limit is not None:
-            params["limit"] = limit
-        if skip is not None:
-            params["skip"] = skip
-        if q:
-            params["q"] = q
-        return self._http.request("GET", f"{self._v1}/teams", params=params).json()
+    def list(self, q: str, type: Optional[str] = None, limit: Optional[int] = None,
+             skip: Optional[int] = None, search: Optional[str] = None) -> Dict[str, Any]:
+        """Teams of a business unit.
+
+        platform-service requires the business unit id as ``q`` (with
+        ``type="business_unit_id"``, the default). Returns the platform list
+        envelope (``count`` is the grand total, ``total`` the page size).
+        """
+        params = team_list_params("business_unit_id", q, type, limit, skip, search)
+        return self._http.request("GET", f"{self._v2}/teams", params=params).json()
 
     def list_my(self) -> Dict[str, Any]:
         return self._http.request("GET", f"{self._v2}/teams/my").json()
@@ -40,23 +45,35 @@ class TeamsResource:
         return self._http.request("PUT", f"{self._v2}/teams/{team_id}", json=body).json()
 
     def delete(self, team_id: str) -> Dict[str, Any]:
-        return self._http.request("DELETE", f"{self._v2}/teams/{team_id}").json()
+        # platform-service answers 200 with an empty body
+        return json_or_success(self._http.request("DELETE", f"{self._v2}/teams/{team_id}").text)
 
-    def add_users(self, team_id: str, user_ids: List[str]) -> Dict[str, Any]:
-        return self._http.request("POST", f"{self._v2}/teams/_add_users",
+    def add_users(self, team_id: str, user_ids: Optional[List[str]] = None, role: str = "member",
+                  users: Optional[List[Dict[str, str]]] = None,
+                  reserve_leave: Optional[bool] = None) -> Dict[str, Any]:
+        """Add members to a team.
+
+        Pass ``users=[{"user_id": ..., "role": ...}]`` or the shorthand
+        ``user_ids`` (all added with ``role``). Users with an unknown role are
+        silently skipped by the server.
+        """
+        body = add_team_users_body(team_id, users=users, user_ids=user_ids, role=role,
+                                   reserve_leave=reserve_leave)
+        return self._http.request("POST", f"{self._v2}/teams/_add_users", json=body).json()
+
+    def remove_users(self, team_id: str, user_ids: List[str]) -> Dict[str, Any]:
+        return self._http.request("POST", f"{self._v2}/teams/_remove_users",
                                   json={"team_id": team_id, "user_ids": user_ids}).json()
 
-    def remove_users(self, user_ids: List[str]) -> Dict[str, Any]:
-        return self._http.request("POST", f"{self._v2}/teams/_remove_users",
-                                  json={"user_ids": user_ids}).json()
-
     def get_users(self, team_id: str) -> Dict[str, Any]:
+        """Members of a team — ``GET /platform/v1/team_users?type=team_id&q={team_id}``."""
         return self._http.request("GET", f"{self._v1}/team_users",
-                                  params={"team_id": team_id}).json()
+                                  params=team_list_params("team_id", team_id)).json()
 
     # --- Membership actions ---
     def get_workflows(self, team_id: str) -> Any:
-        return self._http.request("GET", f"{self._v1}/teams/{team_id}/workflows").json()
+        """Deprecated — raises."""
+        retired("teams.get_workflows", _RETIRED)
 
     def join(self, body: Dict[str, Any]) -> Dict[str, Any]:
         return self._http.request("POST", f"{self._v2}/teams/_join_team", json=body).json()
@@ -100,15 +117,11 @@ class AsyncTeamsResource:
         res = await self._http.request("POST", f"{self._v1}/teams/_fileupload", files=files)
         return res.json()
 
-    async def list(self, limit: Optional[int] = None, skip: Optional[int] = None, q: Optional[str] = None) -> Dict[str, Any]:
-        params: Dict[str, Any] = {}
-        if limit is not None:
-            params["limit"] = limit
-        if skip is not None:
-            params["skip"] = skip
-        if q:
-            params["q"] = q
-        res = await self._http.request("GET", f"{self._v1}/teams", params=params)
+    async def list(self, q: str, type: Optional[str] = None, limit: Optional[int] = None,
+                   skip: Optional[int] = None, search: Optional[str] = None) -> Dict[str, Any]:
+        """Teams of a business unit. Requires the business unit id as ``q``."""
+        params = team_list_params("business_unit_id", q, type, limit, skip, search)
+        res = await self._http.request("GET", f"{self._v2}/teams", params=params)
         return res.json()
 
     async def list_my(self) -> Dict[str, Any]:
@@ -124,18 +137,23 @@ class AsyncTeamsResource:
         return res.json()
 
     async def delete(self, team_id: str) -> Dict[str, Any]:
+        # platform-service answers 200 with an empty body
         res = await self._http.request("DELETE", f"{self._v2}/teams/{team_id}")
-        return res.json()
+        return json_or_success(res.text)
 
-    async def add_users(self, team_id: str, user_ids: List[str]) -> Dict[str, Any]:
-        res = await self._http.request("POST", f"{self._v2}/teams/_add_users",
-                                       json={"team_id": team_id, "user_ids": user_ids})
+    async def add_users(self, team_id: str, user_ids: Optional[List[str]] = None, role: str = "member",
+                        users: Optional[List[Dict[str, str]]] = None,
+                        reserve_leave: Optional[bool] = None) -> Dict[str, Any]:
+        """Add members to a team. See :meth:`TeamsResource.add_users`."""
+        body = add_team_users_body(team_id, users=users, user_ids=user_ids, role=role,
+                                   reserve_leave=reserve_leave)
+        res = await self._http.request("POST", f"{self._v2}/teams/_add_users", json=body)
         return res.json()
 
     # --- Membership actions ---
     async def get_workflows(self, team_id: str) -> Any:
-        res = await self._http.request("GET", f"{self._v1}/teams/{team_id}/workflows")
-        return res.json()
+        """Deprecated — raises."""
+        retired("teams.get_workflows", _RETIRED)
 
     async def join(self, body: Dict[str, Any]) -> Dict[str, Any]:
         res = await self._http.request("POST", f"{self._v2}/teams/_join_team", json=body)
@@ -164,12 +182,13 @@ class AsyncTeamsResource:
         )
         return res.json()
 
-    async def remove_users(self, user_ids: List[str]) -> Dict[str, Any]:
+    async def remove_users(self, team_id: str, user_ids: List[str]) -> Dict[str, Any]:
         res = await self._http.request("POST", f"{self._v2}/teams/_remove_users",
-                                       json={"user_ids": user_ids})
+                                       json={"team_id": team_id, "user_ids": user_ids})
         return res.json()
 
     async def get_users(self, team_id: str) -> Dict[str, Any]:
+        """Members of a team — ``GET /platform/v1/team_users?type=team_id&q={team_id}``."""
         res = await self._http.request("GET", f"{self._v1}/team_users",
-                                       params={"team_id": team_id})
+                                       params=team_list_params("team_id", team_id))
         return res.json()

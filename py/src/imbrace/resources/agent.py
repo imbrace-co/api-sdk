@@ -7,13 +7,13 @@ def _with_defaults(body: Dict[str, Any]) -> Dict[str, Any]:
 
     Without these, marketplace creates the assistant but ai-agent later
     returns 500 "Assistant is missing model_id/provider_id configuration"
-    on chat. Mirrors the TS SDK behavior.
+    on chat. Defaults to the org's default chat model. Mirrors the TS SDK behavior.
     """
     asst = dict(body.get("assistant") or {})
     if not asst.get("provider_id"):
-        asst["provider_id"] = "system"
+        asst["provider_id"] = "default"
     if not asst.get("model_id"):
-        asst["model_id"] = "gpt-4o"
+        asst["model_id"] = "Default"
     return {**body, "assistant": asst}
 
 
@@ -67,7 +67,7 @@ class AgentResource:
         """Create a use-case (atomic — usecase + assistant + workflow + channel).
 
         Expected body shape: `{"usecase": {"title": ...}, "assistant": {"name": ...}}`.
-        SDK auto-fills `assistant.provider_id = "system"` and `assistant.model_id = "gpt-4o"`
+        SDK auto-fills `assistant.provider_id = "default"` and `assistant.model_id = "Default"` (the org's default chat model)
         when empty/missing.
         """
         return self._http.request("POST", f"{self._use_cases}/v2/custom", json=_with_defaults(body)).json()

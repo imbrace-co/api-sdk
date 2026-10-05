@@ -1,7 +1,11 @@
 from typing import Any, Dict, List, Optional, TypedDict
 from urllib.parse import urlencode, quote
 from uuid import uuid4
+from ..exceptions import ImbraceError
 from ..http import HttpTransport, AsyncHttpTransport
+from .retired import retired
+
+_EMBEDDING_RETIRED = "the ai-agent embedding routes were removed"
 
 
 def _qs(params: Dict[str, Any]) -> str:
@@ -48,19 +52,25 @@ class AiAgentResource:
     def get_version(self) -> Dict[str, Any]:
         return self._http.request("GET", f"{self._base}/version").json()
 
-    # --- Chat v1 ---
+    # --- Chat history ---
+    # The /ai-agent/chat list/get/delete routes were removed from ai-agent; these now
+    # use the chat-client store (same as list_client_chats / get_client_chat / delete_client_chat).
 
     def list_chats(self, organization_id: Optional[str] = None, user_id: Optional[str] = None, limit: Optional[int] = None) -> Dict[str, Any]:
-        """List chats. organization_id falls back to the client's configured org."""
-        org = organization_id or self._http.organization_id
-        return self._http.request("GET", f"{self._base}/chat{_qs({'organization_id': org, 'user_id': user_id, 'limit': limit})}").json()
+        """List chats — ``GET /ai-agent/chat-client/chats``.
+
+        ``organization_id`` falls back to the client's configured org;
+        ``user_id`` is kept for callers and ignored.
+        """
+        return self.list_client_chats(organization_id=organization_id or self._http.organization_id, limit=limit)
 
     def get_chat(self, chat_id: str, include_messages: bool = False) -> Dict[str, Any]:
-        return self._http.request("GET", f"{self._base}/chat/{chat_id}{_qs({'include_messages': True if include_messages else None})}").json()
+        """Get a chat — ``GET /ai-agent/chat-client/chats/{id}``. ``include_messages`` is ignored."""
+        return self.get_client_chat(chat_id)
 
     def delete_chat(self, chat_id: str, organization_id: Optional[str] = None, user_id: Optional[str] = None) -> Any:
-        org = organization_id or self._http.organization_id
-        return self._http.request("DELETE", f"{self._base}/chat/{chat_id}{_qs({'organization_id': org, 'user_id': user_id})}").json()
+        """Delete a chat — ``DELETE /ai-agent/chat-client/chats/{id}``. Extra args are ignored."""
+        return self.delete_client_chat(chat_id)
 
     # --- Chat v2 (streaming — returns raw httpx.Response; iterate with .iter_lines()) ---
 
@@ -81,7 +91,8 @@ class AiAgentResource:
         """Generator yielding each text chunk as it arrives.
 
         Wraps `stream_chat` and parses the Vercel-AI-SDK SSE event stream
-        (`data: {"type": "text-delta", "delta": "..."}`). Use:
+        (`data: {"type": "text-delta", "delta": "..."}`). Raises ImbraceError if the
+        server streams an `error` event (e.g. an invalid model). Use:
 
             for chunk in client.ai_agent.stream_chat_text({"assistant_id": ..., "messages": [...]}):
                 print(chunk, end="", flush=True)
@@ -103,7 +114,12 @@ class AiAgentResource:
             try:
                 evt = _json.loads(payload)
             except Exception:
+                continue  # non-JSON heartbeats
+            if not isinstance(evt, dict):
                 continue
+            if evt.get("type") == "error":
+                # e.g. an invalid model — would otherwise yield nothing
+                raise ImbraceError(f"stream_chat_text: {evt.get('errorText') or 'stream error'}")
             # Vercel AI SDK shape: {type: "text-delta", delta: "..."}
             if evt.get("type") == "text-delta" and isinstance(evt.get("delta"), str):
                 yield evt["delta"]
@@ -133,28 +149,37 @@ class AiAgentResource:
     def get_agent_prompt_suggestion(self, assistant_id: str) -> Dict[str, Any]:
         return self._http.request("GET", f"{self._base}/chat/get-agent-prompt-suggestion{_qs({'assistant_id': assistant_id})}").json()
 
-    # --- Embeddings / files ---
+    # --- Embeddings / files (retired) ---
+    # ai-agent no longer serves /embedding/*. RAG files are handled by client.ai
+    # (list_rag_files, get_rag_file, upload_rag_file, delete_rag_file).
 
     def process_embedding(self, file_id: str, options: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        return self._http.request("POST", f"{self._base}/embedding/process", json={"fileId": file_id, "options": options or {}}).json()
+        """Deprecated — raises. Use ``client.ai.upload_rag_file()``."""
+        retired("ai_agent.process_embedding", _EMBEDDING_RETIRED, "Use client.ai.upload_rag_file() instead.")
 
     def list_embedding_files(self, **params) -> Any:
-        return self._http.request("GET", f"{self._base}/embedding/files{_qs(params)}").json()
+        """Deprecated — raises. Use ``client.ai.list_rag_files()``."""
+        retired("ai_agent.list_embedding_files", _EMBEDDING_RETIRED, "Use client.ai.list_rag_files() instead.")
 
     def get_embedding_file(self, file_id: str) -> Dict[str, Any]:
-        return self._http.request("GET", f"{self._base}/embedding/files/{file_id}").json()
+        """Deprecated — raises. Use ``client.ai.get_rag_file()``."""
+        retired("ai_agent.get_embedding_file", _EMBEDDING_RETIRED, "Use client.ai.get_rag_file() instead.")
 
     def preview_embedding_file(self, **params) -> Any:
-        return self._http.request("GET", f"{self._base}/embedding/files/preview{_qs(params)}").json()
+        """Deprecated — raises."""
+        retired("ai_agent.preview_embedding_file", _EMBEDDING_RETIRED)
 
     def update_embedding_file_status(self, file_id: str, status: str) -> Dict[str, Any]:
-        return self._http.request("PUT", f"{self._base}/embedding/files/{file_id}/status", json={"status": status}).json()
+        """Deprecated — raises."""
+        retired("ai_agent.update_embedding_file_status", _EMBEDDING_RETIRED)
 
     def delete_embedding_file(self, file_id: str) -> Any:
-        return self._http.request("DELETE", f"{self._base}/embedding/files/{file_id}").json()
+        """Deprecated — raises. Use ``client.ai.delete_rag_file()``."""
+        retired("ai_agent.delete_embedding_file", _EMBEDDING_RETIRED, "Use client.ai.delete_rag_file() instead.")
 
     def classify_file(self, **params) -> Any:
-        return self._http.request("GET", f"{self._base}/embedding/classify{_qs(params)}").json()
+        """Deprecated — raises."""
+        retired("ai_agent.classify_file", _EMBEDDING_RETIRED)
 
     # --- Data Board ---
 
@@ -320,19 +345,19 @@ class AsyncAiAgentResource:
         res = await self._http.request("GET", f"{self._base}/version")
         return res.json()
 
-    # --- Chat v1 ---
+    # --- Chat history (chat-client store; the /ai-agent/chat routes were removed) ---
 
-    async def list_chats(self, organization_id: str, user_id: Optional[str] = None, limit: Optional[int] = None) -> Dict[str, Any]:
-        res = await self._http.request("GET", f"{self._base}/chat{_qs({'organization_id': organization_id, 'user_id': user_id, 'limit': limit})}")
-        return res.json()
+    async def list_chats(self, organization_id: Optional[str] = None, user_id: Optional[str] = None, limit: Optional[int] = None) -> Dict[str, Any]:
+        """List chats — ``GET /ai-agent/chat-client/chats``. ``organization_id`` falls back to the client's org."""
+        return await self.list_client_chats(organization_id=organization_id or self._http.organization_id, limit=limit)
 
     async def get_chat(self, chat_id: str, include_messages: bool = False) -> Dict[str, Any]:
-        res = await self._http.request("GET", f"{self._base}/chat/{chat_id}{_qs({'include_messages': True if include_messages else None})}")
-        return res.json()
+        """Get a chat — ``GET /ai-agent/chat-client/chats/{id}``. ``include_messages`` is ignored."""
+        return await self.get_client_chat(chat_id)
 
-    async def delete_chat(self, chat_id: str, organization_id: str, user_id: Optional[str] = None) -> Any:
-        res = await self._http.request("DELETE", f"{self._base}/chat/{chat_id}{_qs({'organization_id': organization_id, 'user_id': user_id})}")
-        return res.json()
+    async def delete_chat(self, chat_id: str, organization_id: Optional[str] = None, user_id: Optional[str] = None) -> Any:
+        """Delete a chat — ``DELETE /ai-agent/chat-client/chats/{id}``. Extra args are ignored."""
+        return await self.delete_client_chat(chat_id)
 
     # --- Chat v2 (streaming — returns raw httpx.Response; iterate with .aiter_lines()) ---
 
@@ -359,35 +384,35 @@ class AsyncAiAgentResource:
         res = await self._http.request("GET", f"{self._base}/chat/get-agent-prompt-suggestion{_qs({'assistant_id': assistant_id})}")
         return res.json()
 
-    # --- Embeddings / files ---
+    # --- Embeddings / files (retired; use client.ai RAG file methods) ---
 
     async def process_embedding(self, file_id: str, options: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        res = await self._http.request("POST", f"{self._base}/embedding/process", json={"fileId": file_id, "options": options or {}})
-        return res.json()
+        """Deprecated — raises. Use ``client.ai.upload_rag_file()``."""
+        retired("ai_agent.process_embedding", _EMBEDDING_RETIRED, "Use client.ai.upload_rag_file() instead.")
 
     async def list_embedding_files(self, **params) -> Any:
-        res = await self._http.request("GET", f"{self._base}/embedding/files{_qs(params)}")
-        return res.json()
+        """Deprecated — raises. Use ``client.ai.list_rag_files()``."""
+        retired("ai_agent.list_embedding_files", _EMBEDDING_RETIRED, "Use client.ai.list_rag_files() instead.")
 
     async def get_embedding_file(self, file_id: str) -> Dict[str, Any]:
-        res = await self._http.request("GET", f"{self._base}/embedding/files/{file_id}")
-        return res.json()
+        """Deprecated — raises. Use ``client.ai.get_rag_file()``."""
+        retired("ai_agent.get_embedding_file", _EMBEDDING_RETIRED, "Use client.ai.get_rag_file() instead.")
 
     async def preview_embedding_file(self, **params) -> Any:
-        res = await self._http.request("GET", f"{self._base}/embedding/files/preview{_qs(params)}")
-        return res.json()
+        """Deprecated — raises."""
+        retired("ai_agent.preview_embedding_file", _EMBEDDING_RETIRED)
 
     async def update_embedding_file_status(self, file_id: str, status: str) -> Dict[str, Any]:
-        res = await self._http.request("PUT", f"{self._base}/embedding/files/{file_id}/status", json={"status": status})
-        return res.json()
+        """Deprecated — raises."""
+        retired("ai_agent.update_embedding_file_status", _EMBEDDING_RETIRED)
 
     async def delete_embedding_file(self, file_id: str) -> Any:
-        res = await self._http.request("DELETE", f"{self._base}/embedding/files/{file_id}")
-        return res.json()
+        """Deprecated — raises. Use ``client.ai.delete_rag_file()``."""
+        retired("ai_agent.delete_embedding_file", _EMBEDDING_RETIRED, "Use client.ai.delete_rag_file() instead.")
 
     async def classify_file(self, **params) -> Any:
-        res = await self._http.request("GET", f"{self._base}/embedding/classify{_qs(params)}")
-        return res.json()
+        """Deprecated — raises."""
+        retired("ai_agent.classify_file", _EMBEDDING_RETIRED)
 
     # --- Data Board ---
 
@@ -589,7 +614,12 @@ class AsyncAiAgentResource:
             try:
                 evt = _json.loads(payload)
             except Exception:
+                continue  # non-JSON heartbeats
+            if not isinstance(evt, dict):
                 continue
+            if evt.get("type") == "error":
+                # e.g. an invalid model — would otherwise yield nothing
+                raise ImbraceError(f"stream_chat_text: {evt.get('errorText') or 'stream error'}")
             if evt.get("type") == "text-delta" and isinstance(evt.get("delta"), str):
                 yield evt["delta"]
             else:

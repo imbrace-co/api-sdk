@@ -1,5 +1,17 @@
 from typing import Any, Dict, List, Literal, Optional
+from ..exceptions import ImbraceError
 from ..http import HttpTransport, AsyncHttpTransport
+
+_NO_PROJECT = (
+    "workflows.resolve_project_id: no workflow project found for this org — cannot derive project_id. "
+    "Pass it explicitly to the calling method (e.g. list_mcp_servers(project_id))."
+)
+
+
+def _first_flow_project(r: Any) -> Optional[str]:
+    flows = r.get("data", []) if isinstance(r, dict) else []
+    flow = flows[0] if flows else {}
+    return flow.get("projectId") or flow.get("project_id")
 
 
 def _json_or_none(res) -> Any:
@@ -161,22 +173,24 @@ class WorkflowsResource:
     _cached_project_id: Optional[str] = None
 
     def resolve_project_id(self) -> str:
-        """Resolve the Workflow project id by listing first flow.
+        """Resolve the org's Workflow project id.
 
-        Caches the result so repeated calls don't refetch. Raises if the org
-        has no flows yet (caller must pass ``project_id`` explicitly).
+        Uses ``GET /v1/users/projects/current`` (the engine answers with the
+        caller's org project), so orgs with no flows work; older engines without
+        that route fall back to the first flow. Cached after the first call.
+        Raises if no project can be found (pass ``project_id`` explicitly).
         """
         if self._cached_project_id:
             return self._cached_project_id
-        r = self.list_flows(limit=1)
-        flows = r.get("data", []) if isinstance(r, dict) else []
-        flow = flows[0] if flows else {}
-        pid = flow.get("projectId") or flow.get("project_id")
+        try:
+            project = self._ap_get("/v1/users/projects/current")
+        except (ImbraceError, ValueError):
+            project = None
+        pid = project.get("id") if isinstance(project, dict) else None
         if not pid:
-            raise RuntimeError(
-                "workflows.resolve_project_id: org has no flows yet — cannot derive project_id. "
-                "Pass it explicitly to the calling method (e.g. list_mcp_servers(project_id))."
-            )
+            pid = _first_flow_project(self.list_flows(limit=1))
+        if not pid:
+            raise RuntimeError(_NO_PROJECT)
         self._cached_project_id = pid
         return pid
 
@@ -190,7 +204,17 @@ class WorkflowsResource:
         return self._ap_get(f"/v1/mcp-servers/{mcp_server_id}")
 
     def create_mcp_server(self, body: Dict[str, Any]) -> Dict[str, Any]:
-        return self._ap_post("/v1/mcp-servers", body)
+        """Create an MCP server (``{name, projectId?}``). ``projectId`` is resolved automatically when omitted."""
+        project_id = body.get("projectId") or self.resolve_project_id()
+        return self._ap_post("/v1/mcp-servers", {**body, "projectId": project_id})
+
+    def update_mcp_server(self, mcp_server_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
+        """Rename an MCP server or replace its tools (``{name?, tools?}``).
+
+        ``tools`` replaces the full list: ``{type: "PIECE", toolName, pieceMetadata}``
+        or ``{type: "FLOW", toolName, flowId}``. The engine updates with POST, not PUT.
+        """
+        return self._ap_post(f"/v1/mcp-servers/{mcp_server_id}", body)
 
     def delete_mcp_server(self, mcp_server_id: str) -> None:
         self._ap_delete(f"/v1/mcp-servers/{mcp_server_id}")
@@ -362,14 +386,22 @@ class AsyncWorkflowsResource:
 
     # ── MCP Servers ────────────────────────────────────────────────────────────
 
-    async def list_mcp_servers(self, project_id: str) -> Dict[str, Any]:
-        return await self._ap_get("/v1/mcp-servers", {"projectId": project_id})
+    async def list_mcp_servers(self, project_id: Optional[str] = None) -> Dict[str, Any]:
+        """List MCP servers for a project; ``project_id`` is auto-resolved when omitted."""
+        pid = project_id if project_id is not None else await self.resolve_project_id()
+        return await self._ap_get("/v1/mcp-servers", {"projectId": pid})
 
     async def get_mcp_server(self, mcp_server_id: str) -> Dict[str, Any]:
         return await self._ap_get(f"/v1/mcp-servers/{mcp_server_id}")
 
     async def create_mcp_server(self, body: Dict[str, Any]) -> Dict[str, Any]:
-        return await self._ap_post("/v1/mcp-servers", body)
+        """Create an MCP server. ``projectId`` is resolved automatically when omitted."""
+        project_id = body.get("projectId") or await self.resolve_project_id()
+        return await self._ap_post("/v1/mcp-servers", {**body, "projectId": project_id})
+
+    async def update_mcp_server(self, mcp_server_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
+        """Rename an MCP server or replace its tools. The engine updates with POST, not PUT."""
+        return await self._ap_post(f"/v1/mcp-servers/{mcp_server_id}", body)
 
     async def delete_mcp_server(self, mcp_server_id: str) -> None:
         await self._ap_delete(f"/v1/mcp-servers/{mcp_server_id}")
@@ -392,21 +424,17 @@ class AsyncWorkflowsResource:
     _cached_project_id: Optional[str] = None
 
     async def resolve_project_id(self) -> str:
-        """Resolve the Workflow project id by listing the first flow (async).
-
-        Caches the result so repeated calls don't refetch. Raises if the org
-        has no flows yet (caller must pass ``project_id`` explicitly).
-        """
+        """Resolve the org's Workflow project id (async). See :meth:`WorkflowsResource.resolve_project_id`."""
         if self._cached_project_id:
             return self._cached_project_id
-        r = await self.list_flows(limit=1)
-        flows = r.get("data", []) if isinstance(r, dict) else []
-        flow = flows[0] if flows else {}
-        pid = flow.get("projectId") or flow.get("project_id")
+        try:
+            project = await self._ap_get("/v1/users/projects/current")
+        except (ImbraceError, ValueError):
+            project = None
+        pid = project.get("id") if isinstance(project, dict) else None
         if not pid:
-            raise RuntimeError(
-                "workflows.resolve_project_id: org has no flows yet — cannot derive project_id. "
-                "Pass it explicitly to the calling method (e.g. list_mcp_servers(project_id))."
-            )
+            pid = _first_flow_project(await self.list_flows(limit=1))
+        if not pid:
+            raise RuntimeError(_NO_PROJECT)
         self._cached_project_id = pid
         return pid

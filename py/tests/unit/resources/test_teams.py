@@ -12,8 +12,10 @@ def client():
 
 
 def test_list_teams(httpx_mock: HTTPXMock, client):
-    httpx_mock.add_response(url=f"{PL}/v1/teams", json={"data": []})
-    res = client.teams.list()
+    """platform-service rejects the list without type + q (the business unit id)."""
+    httpx_mock.add_response(url=f"{PL}/v2/teams?type=business_unit_id&q=bu_1&limit=5",
+                            json={"data": [], "count": 0, "total": 0})
+    res = client.teams.list("bu_1", limit=5)
     assert isinstance(res["data"], list)
 
 
@@ -43,9 +45,11 @@ def test_delete_team(httpx_mock: HTTPXMock, client):
 
 # ── membership actions ────────────────────────────────────────────────────────
 
-def test_get_workflows(httpx_mock: HTTPXMock, client):
-    httpx_mock.add_response(url=f"{PL}/v1/teams/t_1/workflows", json=[{"id": "wf_1"}])
-    assert client.teams.get_workflows("t_1")[0]["id"] == "wf_1"
+def test_get_workflows_is_retired(httpx_mock: HTTPXMock, client):
+    from imbrace.exceptions import ImbraceError
+    with pytest.raises(ImbraceError, match=r"teams\.get_workflows\(\) is no longer available"):
+        client.teams.get_workflows("t_1")
+    assert httpx_mock.get_requests() == []
 
 
 def test_join(httpx_mock: HTTPXMock, client):

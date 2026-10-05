@@ -9,6 +9,45 @@ from ..http import HttpTransport, AsyncHttpTransport
 # and reject ``x-api-key`` / ``x-access-token`` auth.
 
 
+def _sub_agent_ids(items: Any) -> Optional[List[str]]:
+    """``sub_agents`` comes back as ids or ``{assistant_id, name}`` objects."""
+    if not isinstance(items, list):
+        return None
+    ids = [x if isinstance(x, str) else ((x or {}).get("assistant_id") or (x or {}).get("id")) for x in items]
+    return [i for i in ids if i]
+
+
+def _with_model_defaults(body: Dict[str, Any]) -> Dict[str, Any]:
+    """Default to the org's default chat model when provider/model are omitted.
+
+    The ``"system"`` provider falls back to env-configured hosts and fails on
+    orgs without them, so ``"default"`` / ``"Default"`` is used instead.
+    """
+    return {
+        **body,
+        "provider_id": body.get("provider_id") or "default",
+        "model_id":    body.get("model_id")    or "Default",
+    }
+
+
+def _keep_fields(current: Dict[str, Any], body: Dict[str, Any]) -> Dict[str, Any]:
+    """Fields the full-replace update route would otherwise drop, taken from the current agent."""
+    keep = {
+        "name": current.get("name"),
+        "workflow_name": current.get("workflow_name"),
+        "agent_type": current.get("agent_type"),
+        "sub_agents": _sub_agent_ids(current.get("sub_agents")),
+    }
+    return {**{k: v for k, v in keep.items() if v is not None}, **body}
+
+
+def _tool_servers(agent: Dict[str, Any]) -> List[Dict[str, Any]]:
+    metadata = agent.get("metadata") or {}
+    if metadata.get("tool_servers") is not None:
+        return metadata["tool_servers"]
+    return [metadata["tool_server"]] if metadata.get("tool_server") else []
+
+
 class ChatAiResource:
     def __init__(self, http: HttpTransport, base: str):
         self._http = http
@@ -80,21 +119,62 @@ class ChatAiResource:
     def create_ai_agent(self, body: Dict[str, Any]) -> Dict[str, Any]:
         """Create a new AI agent. Required: name, workflow_name.
 
-        provider_id/model_id auto-default to {"system", "Default"} when omitted.
-        "Default" routes to whatever the org has configured as its system default
-        model. A literal name like "gpt-4o" is brittle because not every org's
-        system provider exposes it (e.g. orgs wired to a Bedrock-only provider).
+        provider_id/model_id default to ``"default"`` / ``"Default"`` (the org's
+        default chat model) when omitted. Pass a provider UUID and that
+        provider's model id to pin one.
         """
-        wire = {
-            **body,
-            "provider_id": body.get("provider_id") or "system",
-            "model_id":    body.get("model_id")    or "Default",
-        }
-        return self._http.request("POST", f"{self._base}/assistant_apps", json=wire).json()
+        return self._http.request("POST", f"{self._base}/assistant_apps", json=_with_model_defaults(body)).json()
 
     def update_ai_agent(self, ai_agent_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
-        """Update AI agent by UUID."""
-        return self._http.request("PUT", f"{self._base}/assistant_apps/{ai_agent_id}", json=body).json()
+        """Update an AI agent. Only the fields you pass change.
+
+        The server replaces the whole agent on this route (a missing
+        ``sub_agents`` would turn a team lead back into a plain agent), so
+        ``name``, ``workflow_name``, ``agent_type`` and ``sub_agents`` are filled
+        from the current agent when you leave them out.
+        """
+        current = self.get_ai_agent(ai_agent_id)
+        return self._http.request(
+            "PUT", f"{self._base}/assistant_apps/{ai_agent_id}", json=_keep_fields(current, body)
+        ).json()
+
+    # --- Orchestrator (team lead + sub-agents) ---
+
+    def create_orchestrator(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        """Create an orchestrator: an agent that hands questions to its sub-agents.
+
+        ``body`` is as for :meth:`create_ai_agent` plus ``sub_agents`` (existing
+        AI agent ids). Whether it may delegate at chat time depends on the org's
+        plan (the "Orchestrator" feature).
+        """
+        return self.create_ai_agent({**body, "agent_type": "team_lead"})
+
+    def set_sub_agents(self, ai_agent_id: str, sub_agents: List[str]) -> Dict[str, Any]:
+        """Replace the sub-agents of an agent and make it a team lead."""
+        return self._update_assistant(ai_agent_id, {"agent_type": "team_lead", "sub_agents": sub_agents})
+
+    # --- Tool servers (MCP) ---
+
+    def set_tool_servers(self, ai_agent_id: str, servers: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Replace the MCP / OpenAPI tool servers an agent can call.
+
+        Each server: ``{enabled, url, type?, key?, path?, auth_type?, enabled_tools?}``.
+        For a workflow MCP server, ``url`` is its SSE URL (contains the server's token).
+        """
+        current = self.get_ai_agent(ai_agent_id)
+        metadata = {**(current.get("metadata") or {}), "tool_servers": servers}
+        return self.update_ai_agent(ai_agent_id, {"metadata": metadata})
+
+    def list_tool_servers(self, ai_agent_id: str) -> List[Dict[str, Any]]:
+        """The tool servers configured on an agent (``metadata.tool_servers``)."""
+        return _tool_servers(self.get_ai_agent(ai_agent_id))
+
+    def _update_assistant(self, ai_agent_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
+        """Partial update on ``/assistants/{id}``, which keeps the fields you leave out."""
+        current = self.get_ai_agent(ai_agent_id)
+        return self._http.request(
+            "PUT", f"{self._base}/assistants/{ai_agent_id}", json={"name": current.get("name"), **body}
+        ).json()
 
     def delete_ai_agent(self, ai_agent_id: str) -> bool:
         """Delete AI agent by UUID."""
@@ -183,16 +263,45 @@ class AsyncChatAiResource:
         return res.json()
 
     async def create_ai_agent(self, body: Dict[str, Any]) -> Dict[str, Any]:
-        wire = {
-            **body,
-            "provider_id": body.get("provider_id") or "system",
-            "model_id":    body.get("model_id")    or "Default",
-        }
-        res = await self._http.request("POST", f"{self._base}/assistant_apps", json=wire)
+        """Create a new AI agent; provider/model default to ``"default"`` / ``"Default"``."""
+        res = await self._http.request("POST", f"{self._base}/assistant_apps", json=_with_model_defaults(body))
         return res.json()
 
     async def update_ai_agent(self, ai_agent_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
-        res = await self._http.request("PUT", f"{self._base}/assistant_apps/{ai_agent_id}", json=body)
+        """Update an AI agent; see :meth:`ChatAiResource.update_ai_agent`."""
+        current = await self.get_ai_agent(ai_agent_id)
+        res = await self._http.request(
+            "PUT", f"{self._base}/assistant_apps/{ai_agent_id}", json=_keep_fields(current, body)
+        )
+        return res.json()
+
+    # --- Orchestrator (team lead + sub-agents) ---
+
+    async def create_orchestrator(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        """Create an orchestrator (``agent_type="team_lead"``) with ``sub_agents``."""
+        return await self.create_ai_agent({**body, "agent_type": "team_lead"})
+
+    async def set_sub_agents(self, ai_agent_id: str, sub_agents: List[str]) -> Dict[str, Any]:
+        """Replace the sub-agents of an agent and make it a team lead."""
+        return await self._update_assistant(ai_agent_id, {"agent_type": "team_lead", "sub_agents": sub_agents})
+
+    # --- Tool servers (MCP) ---
+
+    async def set_tool_servers(self, ai_agent_id: str, servers: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Replace the MCP / OpenAPI tool servers an agent can call."""
+        current = await self.get_ai_agent(ai_agent_id)
+        metadata = {**(current.get("metadata") or {}), "tool_servers": servers}
+        return await self.update_ai_agent(ai_agent_id, {"metadata": metadata})
+
+    async def list_tool_servers(self, ai_agent_id: str) -> List[Dict[str, Any]]:
+        """The tool servers configured on an agent (``metadata.tool_servers``)."""
+        return _tool_servers(await self.get_ai_agent(ai_agent_id))
+
+    async def _update_assistant(self, ai_agent_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
+        current = await self.get_ai_agent(ai_agent_id)
+        res = await self._http.request(
+            "PUT", f"{self._base}/assistants/{ai_agent_id}", json={"name": current.get("name"), **body}
+        )
         return res.json()
 
     async def delete_ai_agent(self, ai_agent_id: str) -> bool:

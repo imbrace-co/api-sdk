@@ -38,6 +38,11 @@ from .resources.ai_agent import AiAgentResource
 from .resources.document_ai import DocumentAIResource
 from .resources.templates import TemplatesResource
 from .resources.license import LicenseResource
+from .resources.document_models import DocumentModelsResource
+from .resources.crm_automation import CrmAutomationResource
+from .resources.api_keys import ApiKeysResource
+from .resources.roles import RolesResource
+from .resources.audit_logs import AuditLogsResource
 
 
 class ImbraceClient:
@@ -106,7 +111,7 @@ class ImbraceClient:
         self.account       = AccountResource(self.http, urls.platform)
 
         # Platform group
-        self.platform      = PlatformResource(self.http, urls.platform)
+        self.platform      = PlatformResource(self.http, urls.platform, urls.channel_service)
         self.organizations = OrganizationsResource(self.http, urls.platform)
         self.teams         = TeamsResource(self.http, urls.platform)
         self.settings      = SettingsResource(self.http, urls.channel_service, urls.platform)
@@ -122,12 +127,12 @@ class ImbraceClient:
         self.workflows     = WorkflowsResource(self.http, urls.backend, urls.workflow_engine, urls.channel_service)
 
         # Dedicated services
-        self.boards        = BoardsResource(self.http, urls.data_board, urls.backend)
+        self.boards        = BoardsResource(self.http, urls.data_board, urls.backend, urls.platform)
         self.ips           = IpsResource(self.http, urls.ips, urls.data_board, urls.channel_service)
         self.ai            = AiResource(self.http, urls.ai)
 
         # Marketplace: standalone service + platform/v2 sub-paths
-        self.marketplace   = MarketplaceResource(self.http, urls.marketplaces)
+        self.marketplace   = MarketplaceResource(self.http, urls.marketplaces, urls.gateway)
 
         # Use Case Templates — marketplace v3 (legacy /v2/backend/templates is gone)
         self.templates     = TemplatesResource(self.http, f"{urls.gateway}/v3/marketplaces/use-cases")
@@ -141,7 +146,7 @@ class ImbraceClient:
         self.schedule      = ScheduleResource(self.http, f"{urls.data_board}/v1")
         self.campaign      = CampaignsResource(self.http, urls.channel_service)
         self.data_files    = DataFilesResource(self.http, urls.data_board)
-        self.folders       = FoldersResource(self.http, urls.data_board)
+        self.folders       = FoldersResource(self.http, urls.data_board, urls.platform)
         self.outbound          = OutboundsResource(self.http, urls.channel_service)
         self.message_suggestion = MessageSuggestionResource(self.http, urls.message_suggestion)
         self.predict           = PredictResource(self.http, urls.predict)
@@ -155,6 +160,13 @@ class ImbraceClient:
             boards=self.boards, templates=self.templates,
         )
         self.license       = LicenseResource(self.http, urls.gateway)
+
+        # Admin (platform) and DocIQ / CRM automation (data-board)
+        self.api_keys        = ApiKeysResource(self.http, urls.platform)
+        self.roles           = RolesResource(self.http, urls.platform)
+        self.audit_logs      = AuditLogsResource(self.http, urls.platform)
+        self.document_models = DocumentModelsResource(self.http, urls.data_board)
+        self.crm_automation  = CrmAutomationResource(self.http, f"{urls.data_board}/v1")
 
         if check_health:
             self.init()
