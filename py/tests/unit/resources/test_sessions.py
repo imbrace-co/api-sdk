@@ -1,8 +1,6 @@
 import pytest
-from pytest_httpx import HTTPXMock
-from imbrace import ImbraceClient
-
-GW = "https://app-gatewayv2.imbrace.co"
+from imbrace import ImbraceClient, AsyncImbraceClient
+from imbrace.exceptions import ImbraceError
 
 
 @pytest.fixture
@@ -10,25 +8,21 @@ def client():
     return ImbraceClient(api_key="test_key")
 
 
-def test_list_sessions(httpx_mock: HTTPXMock, client):
-    httpx_mock.add_response(url=f"{GW}/session", json={"data": []})
-    res = client.sessions.list()
-    assert isinstance(res["data"], list)
+@pytest.mark.parametrize("call", [
+    lambda c: c.sessions.list(),
+    lambda c: c.sessions.get("s_1"),
+    lambda c: c.sessions.create(),
+    lambda c: c.sessions.delete("s_1"),
+])
+def test_sessions_are_retired(httpx_mock, client, call):
+    """The gateway no longer serves /session; every method raises without a request."""
+    with pytest.raises(ImbraceError, match=r"sessions\.\w+\(\) is no longer available: no iMBrace service serves /session anymore"):
+        call(client)
+    assert httpx_mock.get_requests() == []
 
 
-def test_get_session(httpx_mock: HTTPXMock, client):
-    httpx_mock.add_response(url=f"{GW}/session/s_1", json={"id": "s_1"})
-    res = client.sessions.get("s_1")
-    assert res["id"] == "s_1"
-
-
-def test_create_session(httpx_mock: HTTPXMock, client):
-    httpx_mock.add_response(url=f"{GW}/session", method="POST", json={"id": "s_2"})
-    res = client.sessions.create()
-    assert res["id"] == "s_2"
-
-
-def test_delete_session(httpx_mock: HTTPXMock, client):
-    httpx_mock.add_response(url=f"{GW}/session/s_1", method="DELETE", json={"success": True})
-    res = client.sessions.delete("s_1")
-    assert res["success"] is True
+async def test_async_sessions_are_retired(httpx_mock):
+    client = AsyncImbraceClient(api_key="test_key")
+    with pytest.raises(ImbraceError, match="sessions.list"):
+        await client.sessions.list()
+    assert httpx_mock.get_requests() == []

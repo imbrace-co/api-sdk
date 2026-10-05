@@ -1,30 +1,93 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
+from ..exceptions import ApiError
 from ..http import HttpTransport, AsyncHttpTransport
+from .retired import unwrap_data
+
+
+def _unwrap(res: Any) -> Any:
+    """data-board wraps single boards, items, folders and drive results in ``{data}``."""
+    return unwrap_data(res)
+
+
+def _pick_field(res: Any, find: Callable[[List[Dict[str, Any]]], Optional[Dict[str, Any]]]) -> Any:
+    """Field endpoints return the parent board; pick the field out of ``board.fields``."""
+    if isinstance(res, dict) and isinstance(res.get("fields"), list):
+        found = find(res["fields"])
+        return found if found is not None else res
+    return res
+
+
+def _find_created_field(name: Any) -> Callable[[List[Dict[str, Any]]], Optional[Dict[str, Any]]]:
+    return lambda fields: next((f for f in reversed(fields) if f.get("name") == name), None)
+
+
+def _find_field_by_id(field_id: str) -> Callable[[List[Dict[str, Any]]], Optional[Dict[str, Any]]]:
+    return lambda fields: next((f for f in fields if (f.get("id") or f.get("_id")) == field_id), None)
+
+
+def org_from_account(me: Any) -> Optional[str]:
+    """``organization_id`` from a ``GET /platform/v1/account`` response."""
+    if not isinstance(me, dict):
+        return None
+    data = me.get("data")
+    return me.get("organization_id") or (data.get("organization_id") if isinstance(data, dict) else None)
+
+
+def folder_create_body(body: Dict[str, Any], organization_id: Optional[str]) -> Dict[str, Any]:
+    """Wire body for ``POST /folders``.
+
+    The server needs ``organization_id``, ``source_type`` and ``parent_folder_id``;
+    ``parent_id`` is accepted as an alias of ``parent_folder_id``.
+    """
+    rest = {k: v for k, v in body.items() if k != "parent_id"}
+    wire: Dict[str, Any] = {"source_type": "upload", **rest}
+    wire["parent_folder_id"] = body.get("parent_folder_id") or body.get("parent_id") or "root"
+    org = body.get("organization_id") or organization_id
+    if org is not None:
+        wire["organization_id"] = org
+    return wire
+
+
+def default_platform_base(data_board: str) -> Optional[str]:
+    if data_board.endswith("/data-board"):
+        return data_board[: -len("/data-board")] + "/platform"
+    return None
 
 
 class BoardsResource:
     """Boards / Knowledge Hub / External Drive — Sync.
 
-    All board CRUD/items/fields/segments/search/link-unlink now hit data-board.
-    `backend` is kept for the one remaining call (link preview) and for
-    forward-compat with new follow-up migrations.
+    Everything hits data-board. Single boards, items, folders and drive results
+    are unwrapped from data-board's ``{data}`` envelope.
 
     @param http     - HTTP transport
     @param base     - data-board base URL (`{gateway}/data-board`)
-    @param backend  - legacy backend base URL (`{gateway}/v1/backend`)
+    @param backend  - legacy backend base URL (`{gateway}/v1/backend`), unused, kept for callers
+    @param platform - platform base URL (`{gateway}/platform`), used to look up the caller's org
     """
 
-    def __init__(self, http: HttpTransport, base: str, backend: str):
+    def __init__(self, http: HttpTransport, base: str, backend: str = "", platform: Optional[str] = None):
         self._http = http
         self._base = base.rstrip("/")
         self._backend = backend.rstrip("/")
+        self._platform = (platform or default_platform_base(self._base) or "").rstrip("/") or None
+        self._org_id: Optional[str] = None
+
+    def _resolve_org_id(self) -> Optional[str]:
+        """The caller's organization: the client's configured org, else the account's."""
+        if self._org_id:
+            return self._org_id
+        self._org_id = self._http.organization_id
+        if not self._org_id and self._platform:
+            self._org_id = org_from_account(self._http.request("GET", f"{self._platform}/v1/account").json())
+        return self._org_id
 
     # --- Boards ---
     def list(self, limit: int = 20, skip: int = 0) -> Dict[str, Any]:
         return self._http.request("GET", f"{self._base}/boards", params={"limit": limit, "skip": skip}).json()
 
     def get(self, board_id: str) -> Dict[str, Any]:
-        return self._http.request("GET", f"{self._base}/boards/{board_id}").json()
+        return _unwrap(self._http.request("GET", f"{self._base}/boards/{board_id}").json())
 
     def create(
         self,
@@ -54,10 +117,10 @@ class BoardsResource:
         if show_id is not None:
             body["show_id"] = show_id
         body.update(extra)
-        return self._http.request("POST", f"{self._base}/boards", json=body).json()
+        return _unwrap(self._http.request("POST", f"{self._base}/boards", json=body).json())
 
     def update(self, board_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
-        return self._http.request("PATCH", f"{self._base}/boards/{board_id}", json=body).json()
+        return _unwrap(self._http.request("PATCH", f"{self._base}/boards/{board_id}", json=body).json())
 
     def delete(self, board_id: str) -> None:
         self._http.request("DELETE", f"{self._base}/boards/{board_id}")
@@ -85,10 +148,14 @@ class BoardsResource:
 
     # --- Fields ---
     def create_field(self, board_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
-        return self._http.request("POST", f"{self._base}/boards/{board_id}/fields", json=body).json()
+        """Add a field. data-board responds with the whole board; the new field is returned."""
+        res = self._http.request("POST", f"{self._base}/boards/{board_id}/fields", json=body).json()
+        return _pick_field(_unwrap(res), _find_created_field(body.get("name")))
 
     def update_field(self, board_id: str, field_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
-        return self._http.request("PATCH", f"{self._base}/boards/{board_id}/fields/{field_id}", json=body).json()
+        """Update a field. data-board responds with the whole board; the updated field is returned."""
+        res = self._http.request("PATCH", f"{self._base}/boards/{board_id}/fields/{field_id}", json=body).json()
+        return _pick_field(_unwrap(res), _find_field_by_id(field_id))
 
     def delete_field(self, board_id: str, field_id: str) -> None:
         self._http.request("DELETE", f"{self._base}/boards/{board_id}/fields/{field_id}")
@@ -105,14 +172,14 @@ class BoardsResource:
                                   params={"limit": limit, "skip": skip}).json()
 
     def get_item(self, board_id: str, item_id: str) -> Dict[str, Any]:
-        return self._http.request("GET", f"{self._base}/boards/{board_id}/items/{item_id}").json()
+        return _unwrap(self._http.request("GET", f"{self._base}/boards/{board_id}/items/{item_id}").json())
 
     def create_item(self, board_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
-        return self._http.request("POST", f"{self._base}/boards/{board_id}/items", json=body).json()
+        return _unwrap(self._http.request("POST", f"{self._base}/boards/{board_id}/items", json=body).json())
 
     def update_item(self, board_id: str, item_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
         """Update a board item. data-board accepts both `{fields: {fieldId: value}}` and `{data: [{key, value}]}`."""
-        return self._http.request("PATCH", f"{self._base}/boards/{board_id}/items/{item_id}", json=body).json()
+        return _unwrap(self._http.request("PATCH", f"{self._base}/boards/{board_id}/items/{item_id}", json=body).json())
 
     def delete_item(self, board_id: str, item_id: str) -> None:
         self._http.request("DELETE", f"{self._base}/boards/{board_id}/items/{item_id}")
@@ -158,6 +225,13 @@ class BoardsResource:
         self._http.request("DELETE", f"{self._base}/boards/{board_id}/segmentation/{segment_id}")
 
     # --- Folders (KnowledgeHub) ---
+    def list_folders(self, ignore_assistant: Optional[bool] = None) -> List[Dict[str, Any]]:
+        """All Knowledge Hub folders of the org."""
+        params: Dict[str, str] = {}
+        if ignore_assistant is not None:
+            params["ignore_assistant"] = str(ignore_assistant).lower()
+        return _unwrap(self._http.request("GET", f"{self._base}/folders", params=params).json())
+
     def search_folders(self, organization_id: Optional[str] = None, q: Optional[str] = None) -> list:
         params: Dict[str, str] = {}
         if organization_id:
@@ -176,17 +250,25 @@ class BoardsResource:
         return data.get("folder", data) if isinstance(data, dict) else data
 
     def create_folder(self, body: Dict[str, Any]) -> Dict[str, Any]:
-        wire: Dict[str, Any] = {
-            "source_type": "upload",
-            "parent_folder_id": "root",
-            **body,
-        }
-        r = self._http.request("POST", f"{self._base}/folders", json=wire).json()
-        return r.get("data", r)
+        """Create a Knowledge Hub folder.
+
+        The server needs ``organization_id``, ``source_type`` and
+        ``parent_folder_id``; they default to the caller's org, ``"upload"`` and
+        ``"root"``. ``parent_id`` is sent as ``parent_folder_id``.
+        """
+        org = None if body.get("organization_id") else self._resolve_org_id()
+        r = self._http.request("POST", f"{self._base}/folders", json=folder_create_body(body, org)).json()
+        return _unwrap(r)
 
     def update_folder(self, folder_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
         r = self._http.request("PUT", f"{self._base}/folders/{folder_id}", json=body).json()
         return r.get("data", r)
+
+    def set_folder_sync(self, folder_id: str, enabled: bool) -> Dict[str, Any]:
+        """Turn syncing of an external (Drive) folder on or off."""
+        r = self._http.request("PATCH", f"{self._base}/folders/{folder_id}/sync",
+                               json={"is_sync_enabled": enabled}).json()
+        return _unwrap(r)
 
     def delete_folders(self, ids: list) -> Dict[str, Any]:
         return self._http.request("POST", f"{self._base}/folders/delete", json={"ids": ids}).json()
@@ -209,6 +291,11 @@ class BoardsResource:
         return r.get("data", r)
 
     def upload_file(self, files: Any) -> Dict[str, Any]:
+        """Upload a Knowledge Hub file.
+
+        Returns the file record (``id``, ``_id``, ``name``, ``folder_id``, ``key``).
+        data-board does not return ``url`` or ``file_id``; use ``id``.
+        """
         r = self._http.request("POST", f"{self._base}/files/upload", files=files).json()
         return r.get("data", r)
 
@@ -229,40 +316,77 @@ class BoardsResource:
     def get_link_preview(self, url: str) -> Dict[str, Any]:
         return self._http.request("POST", f"{self._base}/link_preview/getWebsiteInfo", json={"url": url}).json()
 
-    # --- External Drive ---
+    # --- External Drive (drive_type: "google-drive" or "onedrive") ---
+    def list_drive_providers(self) -> List[Dict[str, Any]]:
+        """Which drive providers are configured on the server (``[{provider, configured}]``)."""
+        return _unwrap(self._http.request("GET", f"{self._base}/providers").json())
+
     def initiate_drive_auth(self, drive_type: str) -> Dict[str, Any]:
-        return self._http.request("GET", f"{self._base}/auth/{drive_type}/initiate").json()
+        """Start the OAuth flow for a drive; returns ``auth_url`` and ``session_id``."""
+        org = self._resolve_org_id()
+        params = {"organizationId": org} if org else {}
+        return _unwrap(self._http.request("GET", f"{self._base}/auth/{drive_type}/initiate", params=params).json())
 
-    def list_drive_folders(self, drive_type: str, params: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
-        return self._http.request("GET", f"{self._base}/{drive_type}/folders", params=params or {}).json()
+    def get_drive_session_status(self, drive_type: str, session_id: str) -> Dict[str, Any]:
+        """Whether the user finished the OAuth flow for ``session_id`` (``connected: False`` until they do)."""
+        try:
+            r = self._http.request("GET", f"{self._base}/auth/{drive_type}/session/status",
+                                   params={"sessionId": session_id}).json()
+        except ApiError as e:
+            # the server only stores the session once the user has signed in
+            if e.status_code == 404:
+                return {"connected": False, "session_id": session_id}
+            raise
+        return {"connected": True, **_unwrap(r)}
 
-    def list_drive_files(self, drive_type: str, params: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
-        return self._http.request("GET", f"{self._base}/{drive_type}/files", params=params or {}).json()
+    def list_drive_folders(self, drive_type: str, params: Optional[Dict[str, str]] = None) -> Any:
+        """Folders in the drive. Params: ``sessionId`` (required), ``parentId`` (Google) or ``folderId`` (OneDrive), ``q``, ``skip``, ``limit``."""
+        return _unwrap(self._http.request("GET", f"{self._base}/{drive_type}/folders", params=params or {}).json())
+
+    def list_drive_files(self, drive_type: str, params: Optional[Dict[str, str]] = None) -> Any:
+        """Files in the drive. Params: ``sessionId`` (required), ``parentId`` (Google) or ``folderId`` (OneDrive), ``recursive``."""
+        return _unwrap(self._http.request("GET", f"{self._base}/{drive_type}/files", params=params or {}).json())
+
+    def get_drive_sync_status(self, drive_type: str) -> Dict[str, Any]:
+        """Background sync state of a drive."""
+        return _unwrap(self._http.request("GET", f"{self._base}/{drive_type}/sync/status").json())
 
     def download_drive_file(self, drive_type: str, params: Optional[Dict[str, str]] = None) -> Any:
         return self._http.request("GET", f"{self._base}/{drive_type}/files/download", params=params or {})
 
-    def get_onedrive_session_status(self) -> Dict[str, Any]:
-        return self._http.request("GET", f"{self._base}/auth/onedrive/files/session/status").json()
+    def get_onedrive_session_status(self, session_id: str) -> Dict[str, Any]:
+        """Deprecated alias of ``get_drive_session_status("onedrive", session_id)``."""
+        return self.get_drive_session_status("onedrive", session_id)
 
     def export_csv_via_mail(self, board_id: str, params: Optional[Dict[str, str]] = None) -> Any:
         return self._http.request(
             "POST", f"{self._base}/boards/{board_id}/export_csv", params=params or {}
         ).json()
 
-    def get_one_drive_session_status(self) -> Dict[str, Any]:
-        return self._http.request(
-            "GET", f"{self._base}/auth/onedrive/files/session/status"
-        ).json()
+    def get_one_drive_session_status(self, session_id: str) -> Dict[str, Any]:
+        """Deprecated alias of ``get_drive_session_status("onedrive", session_id)``."""
+        return self.get_drive_session_status("onedrive", session_id)
 
 
 class AsyncBoardsResource:
     """Boards / Knowledge Hub / External Drive — Async."""
 
-    def __init__(self, http: AsyncHttpTransport, base: str, backend: str):
+    def __init__(self, http: AsyncHttpTransport, base: str, backend: str = "", platform: Optional[str] = None):
         self._http = http
         self._base = base.rstrip("/")
         self._backend = backend.rstrip("/")
+        self._platform = (platform or default_platform_base(self._base) or "").rstrip("/") or None
+        self._org_id: Optional[str] = None
+
+    async def _resolve_org_id(self) -> Optional[str]:
+        """The caller's organization: the client's configured org, else the account's."""
+        if self._org_id:
+            return self._org_id
+        self._org_id = self._http.organization_id
+        if not self._org_id and self._platform:
+            res = await self._http.request("GET", f"{self._platform}/v1/account")
+            self._org_id = org_from_account(res.json())
+        return self._org_id
 
     async def list(self, limit: int = 20, skip: int = 0) -> Dict[str, Any]:
         res = await self._http.request("GET", f"{self._base}/boards", params={"limit": limit, "skip": skip})
@@ -270,7 +394,7 @@ class AsyncBoardsResource:
 
     async def get(self, board_id: str) -> Dict[str, Any]:
         res = await self._http.request("GET", f"{self._base}/boards/{board_id}")
-        return res.json()
+        return _unwrap(res.json())
 
     async def create(
         self,
@@ -296,11 +420,11 @@ class AsyncBoardsResource:
             body["show_id"] = show_id
         body.update(extra)
         res = await self._http.request("POST", f"{self._base}/boards", json=body)
-        return res.json()
+        return _unwrap(res.json())
 
     async def update(self, board_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
         res = await self._http.request("PATCH", f"{self._base}/boards/{board_id}", json=body)
-        return res.json()
+        return _unwrap(res.json())
 
     async def delete(self, board_id: str) -> None:
         await self._http.request("DELETE", f"{self._base}/boards/{board_id}")
@@ -312,15 +436,15 @@ class AsyncBoardsResource:
 
     async def get_item(self, board_id: str, item_id: str) -> Dict[str, Any]:
         res = await self._http.request("GET", f"{self._base}/boards/{board_id}/items/{item_id}")
-        return res.json()
+        return _unwrap(res.json())
 
     async def create_item(self, board_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
         res = await self._http.request("POST", f"{self._base}/boards/{board_id}/items", json=body)
-        return res.json()
+        return _unwrap(res.json())
 
     async def update_item(self, board_id: str, item_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
         res = await self._http.request("PATCH", f"{self._base}/boards/{board_id}/items/{item_id}", json=body)
-        return res.json()
+        return _unwrap(res.json())
 
     async def delete_item(self, board_id: str, item_id: str) -> None:
         await self._http.request("DELETE", f"{self._base}/boards/{board_id}/items/{item_id}")
@@ -335,6 +459,14 @@ class AsyncBoardsResource:
     async def export_csv(self, board_id: str) -> str:
         res = await self._http.request("GET", f"{self._base}/boards/{board_id}/export_csv")
         return res.text
+
+    async def list_folders(self, ignore_assistant: Optional[bool] = None) -> List[Dict[str, Any]]:
+        """All Knowledge Hub folders of the org."""
+        params: Dict[str, str] = {}
+        if ignore_assistant is not None:
+            params["ignore_assistant"] = str(ignore_assistant).lower()
+        res = await self._http.request("GET", f"{self._base}/folders", params=params)
+        return _unwrap(res.json())
 
     async def search_folders(self, organization_id: Optional[str] = None, q: Optional[str] = None) -> list:
         params: Dict[str, str] = {}
@@ -356,15 +488,21 @@ class AsyncBoardsResource:
         return data.get("folder", data) if isinstance(data, dict) else data
 
     async def create_folder(self, body: Dict[str, Any]) -> Dict[str, Any]:
-        wire: Dict[str, Any] = {"source_type": "upload", "parent_folder_id": "root", **body}
-        res = await self._http.request("POST", f"{self._base}/folders", json=wire)
-        r = res.json()
-        return r.get("data", r)
+        """Create a Knowledge Hub folder. See :meth:`BoardsResource.create_folder`."""
+        org = None if body.get("organization_id") else await self._resolve_org_id()
+        res = await self._http.request("POST", f"{self._base}/folders", json=folder_create_body(body, org))
+        return _unwrap(res.json())
 
     async def update_folder(self, folder_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
         res = await self._http.request("PUT", f"{self._base}/folders/{folder_id}", json=body)
         r = res.json()
         return r.get("data", r)
+
+    async def set_folder_sync(self, folder_id: str, enabled: bool) -> Dict[str, Any]:
+        """Turn syncing of an external (Drive) folder on or off."""
+        res = await self._http.request("PATCH", f"{self._base}/folders/{folder_id}/sync",
+                                       json={"is_sync_enabled": enabled})
+        return _unwrap(res.json())
 
     async def delete_folders(self, ids: list) -> Dict[str, Any]:
         res = await self._http.request("POST", f"{self._base}/folders/delete", json={"ids": ids})
@@ -395,6 +533,7 @@ class AsyncBoardsResource:
         return res.json()
 
     async def upload_file(self, files: Any) -> Dict[str, Any]:
+        """Upload a Knowledge Hub file. Returns the file record (``id``, ``name``, ``folder_id``, ``key``)."""
         res = await self._http.request("POST", f"{self._base}/files/upload", files=files)
         r = res.json()
         return r.get("data", r)
@@ -405,11 +544,9 @@ class AsyncBoardsResource:
         )
         return res.json()
 
-    async def get_one_drive_session_status(self) -> Dict[str, Any]:
-        res = await self._http.request(
-            "GET", f"{self._base}/auth/onedrive/files/session/status"
-        )
-        return res.json()
+    async def get_one_drive_session_status(self, session_id: str) -> Dict[str, Any]:
+        """Deprecated alias of ``get_drive_session_status("onedrive", session_id)``."""
+        return await self.get_drive_session_status("onedrive", session_id)
 
     async def reorder(self, body: Dict[str, Any]) -> Dict[str, Any]:
         _r = await self._http.request("POST", f"{self._base}/boards/reorder", json=body)
@@ -436,12 +573,14 @@ class AsyncBoardsResource:
         return _r.json()
 
     async def create_field(self, board_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
+        """Add a field; the new field is picked out of the board the server returns."""
         _r = await self._http.request("POST", f"{self._base}/boards/{board_id}/fields", json=body)
-        return _r.json()
+        return _pick_field(_unwrap(_r.json()), _find_created_field(body.get("name")))
 
     async def update_field(self, board_id: str, field_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
+        """Update a field; the updated field is picked out of the board the server returns."""
         _r = await self._http.request("PATCH", f"{self._base}/boards/{board_id}/fields/{field_id}", json=body)
-        return _r.json()
+        return _pick_field(_unwrap(_r.json()), _find_field_by_id(field_id))
 
     async def delete_field(self, board_id: str, field_id: str) -> None:
         await self._http.request("DELETE", f"{self._base}/boards/{board_id}/fields/{field_id}")
@@ -510,21 +649,45 @@ class AsyncBoardsResource:
         _r = await self._http.request("POST", f"{self._base}/link_preview/getWebsiteInfo", json={"url": url})
         return _r.json()
 
+    async def list_drive_providers(self) -> List[Dict[str, Any]]:
+        """Which drive providers are configured on the server."""
+        _r = await self._http.request("GET", f"{self._base}/providers")
+        return _unwrap(_r.json())
+
     async def initiate_drive_auth(self, drive_type: str) -> Dict[str, Any]:
-        _r = await self._http.request("GET", f"{self._base}/auth/{drive_type}/initiate")
-        return _r.json()
+        """Start the OAuth flow for a drive; returns ``auth_url`` and ``session_id``."""
+        org = await self._resolve_org_id()
+        params = {"organizationId": org} if org else {}
+        _r = await self._http.request("GET", f"{self._base}/auth/{drive_type}/initiate", params=params)
+        return _unwrap(_r.json())
 
-    async def list_drive_folders(self, drive_type: str, params: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+    async def get_drive_session_status(self, drive_type: str, session_id: str) -> Dict[str, Any]:
+        """Whether the user finished the OAuth flow for ``session_id`` (``connected: False`` until they do)."""
+        try:
+            _r = await self._http.request("GET", f"{self._base}/auth/{drive_type}/session/status",
+                                          params={"sessionId": session_id})
+        except ApiError as e:
+            if e.status_code == 404:
+                return {"connected": False, "session_id": session_id}
+            raise
+        return {"connected": True, **_unwrap(_r.json())}
+
+    async def list_drive_folders(self, drive_type: str, params: Optional[Dict[str, str]] = None) -> Any:
         _r = await self._http.request("GET", f"{self._base}/{drive_type}/folders", params=params or {})
-        return _r.json()
+        return _unwrap(_r.json())
 
-    async def list_drive_files(self, drive_type: str, params: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+    async def list_drive_files(self, drive_type: str, params: Optional[Dict[str, str]] = None) -> Any:
         _r = await self._http.request("GET", f"{self._base}/{drive_type}/files", params=params or {})
-        return _r.json()
+        return _unwrap(_r.json())
+
+    async def get_drive_sync_status(self, drive_type: str) -> Dict[str, Any]:
+        """Background sync state of a drive."""
+        _r = await self._http.request("GET", f"{self._base}/{drive_type}/sync/status")
+        return _unwrap(_r.json())
 
     async def download_drive_file(self, drive_type: str, params: Optional[Dict[str, str]] = None) -> Any:
         return await self._http.request("GET", f"{self._base}/{drive_type}/files/download", params=params or {})
 
-    async def get_onedrive_session_status(self) -> Dict[str, Any]:
-        _r = await self._http.request("GET", f"{self._base}/auth/onedrive/files/session/status")
-        return _r.json()
+    async def get_onedrive_session_status(self, session_id: str) -> Dict[str, Any]:
+        """Deprecated alias of ``get_drive_session_status("onedrive", session_id)``."""
+        return await self.get_drive_session_status("onedrive", session_id)

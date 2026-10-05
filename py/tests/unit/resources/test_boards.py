@@ -155,7 +155,11 @@ def test_export_csv_via_mail(httpx_mock: HTTPXMock, client):
 
 
 def test_get_one_drive_session_status(httpx_mock: HTTPXMock, client):
+    """Deprecated alias of get_drive_session_status("onedrive", session_id)."""
     httpx_mock.add_response(
-        url=f"{DB}/auth/onedrive/files/session/status", json={"status": "active"}
+        url=f"{DB}/auth/onedrive/session/status?sessionId=s1",
+        json={"data": {"session_id": "s1", "is_expired": False}},
     )
-    assert client.boards.get_one_drive_session_status()["status"] == "active"
+    assert client.boards.get_one_drive_session_status("s1") == {
+        "connected": True, "session_id": "s1", "is_expired": False,
+    }

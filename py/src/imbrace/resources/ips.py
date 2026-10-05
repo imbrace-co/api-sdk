@@ -1,15 +1,11 @@
 import re
 from typing import Any, Dict, NoReturn, Optional, Tuple
-from ..exceptions import ImbraceError
 from ..http import HttpTransport, AsyncHttpTransport
-
-_NO_REPLACEMENT = "There is no replacement."
+from .retired import NO_REPLACEMENT as _NO_REPLACEMENT, retired as _retired_method
 
 
 def _retired(method: str, hint: str = _NO_REPLACEMENT) -> NoReturn:
-    raise ImbraceError(
-        f"ips.{method}() is no longer available: the IPS service has been retired. {hint}"
-    )
+    _retired_method(f"ips.{method}", "the IPS service has been retired", hint)
 
 
 def _service_bases(base: str, data_board: Optional[str],

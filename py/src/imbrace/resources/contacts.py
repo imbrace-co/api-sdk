@@ -28,6 +28,18 @@ class ContactsResource:
     def get(self, contact_id: str) -> Dict[str, Any]:
         return self._http.request("GET", f"{self._v1}/contacts/{contact_id}").json()
 
+    def create(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        """Create a contact. Every field is optional; ``channel_type`` defaults to ``web``.
+
+        Fields: ``display_name``, ``first_name``, ``last_name``, ``email``,
+        ``phone_number``, ``channel_id``, ``channel_type``, ``time_zone``,
+        ``avatar_url``, ``provider_user_id``, ``bu_id``.
+        """
+        return self._http.request("POST", f"{self._v1}/contacts", json=body).json()
+
+    def delete(self, contact_id: str) -> Dict[str, Any]:
+        return self._http.request("DELETE", f"{self._v1}/contacts/{contact_id}").json()
+
     def search(self, query: str) -> Dict[str, Any]:
         return self._http.request("GET", f"{self._v1}/contacts/_search",
                                   params={"q": query}).json()
@@ -115,6 +127,15 @@ class AsyncContactsResource:
 
     async def get(self, contact_id: str) -> Dict[str, Any]:
         res = await self._http.request("GET", f"{self._v1}/contacts/{contact_id}")
+        return res.json()
+
+    async def create(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        """Create a contact. Every field is optional; ``channel_type`` defaults to ``web``."""
+        res = await self._http.request("POST", f"{self._v1}/contacts", json=body)
+        return res.json()
+
+    async def delete(self, contact_id: str) -> Dict[str, Any]:
+        res = await self._http.request("DELETE", f"{self._v1}/contacts/{contact_id}")
         return res.json()
 
     async def search(self, query: str) -> Dict[str, Any]:

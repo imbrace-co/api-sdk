@@ -1,6 +1,7 @@
 import pytest
 from pytest_httpx import HTTPXMock
 from imbrace import ImbraceClient
+from imbrace.exceptions import ImbraceError
 
 BASE = "https://app-gatewayv2.imbrace.co"
 PL = f"{BASE}/platform"
@@ -40,18 +41,18 @@ def test_create_org(httpx_mock: HTTPXMock, client):
     assert res["id"] == "org_1"
 
 def test_list_teams(httpx_mock: HTTPXMock, client):
-    httpx_mock.add_response(url=f"{PL}/v2/teams", json={"data": []})
-    res = client.platform.list_teams()
+    httpx_mock.add_response(url=f"{PL}/v2/teams?type=business_unit_id&q=bu_1", json={"data": []})
+    res = client.platform.list_teams("bu_1")
     assert res == {"data": []}
 
-def test_grant_permission(httpx_mock: HTTPXMock, client):
-    httpx_mock.add_response(url=f"{PL}/v1/users/u_1/permissions", method="POST", json={"id": "p_1"})
-    res = client.platform.grant_permission("u_1", "resource", "action")
-    assert res["id"] == "p_1"
+def test_grant_permission_is_retired(httpx_mock: HTTPXMock, client):
+    with pytest.raises(ImbraceError, match="use platform.change_role"):
+        client.platform.grant_permission("u_1", "resource", "action")
+    assert httpx_mock.get_requests() == []
 
-def test_revoke_permission(httpx_mock: HTTPXMock, client):
-    httpx_mock.add_response(url=f"{PL}/v1/users/u_1/permissions/p_1", method="DELETE", status_code=204)
-    client.platform.revoke_permission("u_1", "p_1")
+def test_revoke_permission_is_retired(httpx_mock: HTTPXMock, client):
+    with pytest.raises(ImbraceError, match="use platform.change_role"):
+        client.platform.revoke_permission("u_1", "p_1")
 
 
 def test_list_users_includes_search_param(httpx_mock: HTTPXMock, client):
@@ -60,10 +61,10 @@ def test_list_users_includes_search_param(httpx_mock: HTTPXMock, client):
     assert httpx_mock.get_request().url.params["search"] == "ann"
 
 
-def test_archive_user(httpx_mock: HTTPXMock, client):
-    httpx_mock.add_response(url=f"{PL}/v1/users/_archive", method="POST", json={"ok": True})
-    res = client.platform.archive_user("u_1")
-    assert res["ok"] is True
+def test_archive_user_is_retired(httpx_mock: HTTPXMock, client):
+    with pytest.raises(ImbraceError, match=r"platform\.archive_user\(\) is no longer available: .*Use platform\.deactivate_user\(\) instead\."):
+        client.platform.archive_user("u_1")
+    assert httpx_mock.get_requests() == []
 
 
 def test_list_all_orgs(httpx_mock: HTTPXMock, client):
@@ -72,9 +73,9 @@ def test_list_all_orgs(httpx_mock: HTTPXMock, client):
     assert client.platform.list_all_orgs() == {"data": []}
 
 
-def test_list_permissions(httpx_mock: HTTPXMock, client):
-    httpx_mock.add_response(url=f"{PL}/v1/users/u_1/permissions", json={"data": []})
-    assert client.platform.list_permissions("u_1") == {"data": []}
+def test_list_permissions_is_retired(httpx_mock: HTTPXMock, client):
+    with pytest.raises(ImbraceError, match="get_effective_permissions"):
+        client.platform.list_permissions("u_1")
 
 
 def test_sends_api_key_header(httpx_mock: HTTPXMock, client):

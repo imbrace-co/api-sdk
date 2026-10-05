@@ -20,10 +20,10 @@ def aclient():
     return AsyncImbraceClient(api_key="test_key")
 
 
-async def test_async_platform_archive_user(httpx_mock: HTTPXMock, aclient):
+async def test_async_platform_reactivate_user(httpx_mock: HTTPXMock, aclient):
     """One of the 45 methods that existed only on the sync class."""
-    httpx_mock.add_response(url=f"{PL}/v1/users/_archive", method="POST", json={"ok": True})
-    res = await aclient.platform.archive_user("u_1")
+    httpx_mock.add_response(url=f"{PL}/v1/users/_reactivate", method="POST", json={"ok": True})
+    res = await aclient.platform.reactivate_user("u_1")
     assert res["ok"] is True
 
 
