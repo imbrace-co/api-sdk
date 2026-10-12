@@ -17,6 +17,13 @@ def _with_defaults(body: Dict[str, Any]) -> Dict[str, Any]:
     return {**body, "assistant": asst}
 
 
+
+def _unwrap_use_case(res: Any) -> Any:
+    """Marketplace answers ``{"data": use_case}``."""
+    if isinstance(res, dict) and "data" in res and "_id" not in res:
+        return res["data"]
+    return res
+
 class AgentResource:
     """Agent / UseCase templates — Sync.
 
@@ -61,7 +68,7 @@ class AgentResource:
         return self._http.request("GET", self._use_cases).json()
 
     def get_use_case(self, use_case_id: str) -> Dict[str, Any]:
-        return self._http.request("GET", f"{self._use_cases}/{use_case_id}").json()
+        return _unwrap_use_case(self._http.request("GET", f"{self._use_cases}/{use_case_id}").json())
 
     def create_use_case(self, body: Dict[str, Any]) -> Dict[str, Any]:
         """Create a use-case (atomic — usecase + assistant + workflow + channel).
@@ -122,7 +129,7 @@ class AsyncAgentResource:
 
     async def get_use_case(self, use_case_id: str) -> Dict[str, Any]:
         res = await self._http.request("GET", f"{self._use_cases}/{use_case_id}")
-        return res.json()
+        return _unwrap_use_case(res.json())
 
     async def create_use_case(self, body: Dict[str, Any]) -> Dict[str, Any]:
         res = await self._http.request("POST", f"{self._use_cases}/v2/custom", json=_with_defaults(body))

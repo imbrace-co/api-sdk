@@ -157,13 +157,28 @@ _CURRENT = {"id": "a1", "name": "Lead", "workflow_name": "lead_wf", "agent_type"
             "sub_agents": [{"assistant_id": "s1", "name": "Sub"}], "metadata": {"color": "red"}}
 
 
-def test_update_ai_agent_resends_core_fields(httpx_mock: HTTPXMock, client):
+def test_update_ai_agent_resends_every_updatable_field(httpx_mock: HTTPXMock, client):
     httpx_mock.add_response(json=_CURRENT, is_reusable=True)
     client.chat_ai.update_ai_agent("a1", {"description": "new"})
     put = next(r for r in httpx_mock.get_requests() if r.method == "PUT")
     assert str(put.url) == f"{AI}/assistant_apps/a1"
     assert _body(put) == {"name": "Lead", "workflow_name": "lead_wf", "agent_type": "team_lead",
-                          "sub_agents": ["s1"], "description": "new"}
+                          "sub_agents": ["s1"], "metadata": {"color": "red"}, "description": "new"}
+
+
+def test_update_ai_agent_keeps_model_fields_and_drops_team_leads(httpx_mock: HTTPXMock, client):
+    current = {**_CURRENT, "model_id": "gpt-x", "provider_id": "p1", "tone_and_style": "Friendly",
+               "streaming": True, "team_leads": [{"assistant_id": "t1", "name": "Lead"}]}
+    httpx_mock.add_response(json=current, is_reusable=True)
+    client.chat_ai.update_ai_agent("a1", {**current, "description": "new"})
+    body = _body(next(r for r in httpx_mock.get_requests() if r.method == "PUT"))
+    assert body["model_id"] == "gpt-x" and body["provider_id"] == "p1" and body["tone_and_style"] == "Friendly"
+    assert body["sub_agents"] == ["s1"] and "team_leads" not in body
+
+
+def test_get_use_case_unwraps_data(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(json={"data": {"_id": "uc1", "title": "T"}})
+    assert client.agent.get_use_case("uc1")["_id"] == "uc1"
 
 
 def test_create_orchestrator_marks_team_lead(httpx_mock: HTTPXMock, client):

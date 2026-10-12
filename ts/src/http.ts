@@ -46,6 +46,11 @@ export class HttpTransport {
     return (async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
       let retries = 0;
       const maxRetries = 3;
+      // POST/PATCH may already have run on the server when a response is lost or late, so
+      // only methods that are safe to repeat are retried on timeouts, network errors and 5xx.
+      // 429 and 503 mean the request was refused before it ran, so those are retried for all.
+      const method = (init?.method ?? "GET").toUpperCase();
+      const retrySafe = ["GET", "HEAD", "OPTIONS", "PUT", "DELETE"].includes(method);
 
       // eslint-disable-next-line no-constant-condition
       while (true) {
@@ -115,7 +120,7 @@ export class HttpTransport {
             throw new AuthError(`No credentials provided — set accessToken= (user login) or apiKey= (server-to-server)${suffix}`);
           }
 
-          if ((res.status === 429 || res.status >= 500) && retries < maxRetries) {
+          if ((res.status === 429 || res.status === 503 || (res.status >= 500 && retrySafe)) && retries < maxRetries) {
             await this.sleep(1000 * Math.pow(2, retries));
             retries++;
             continue;
@@ -137,7 +142,7 @@ export class HttpTransport {
                throw new NetworkError("Request aborted by user");
              }
              
-             if (retries < maxRetries) {
+             if (retrySafe && retries < maxRetries) {
                await this.sleep(1000 * Math.pow(2, retries));
                retries++;
                continue;
@@ -145,7 +150,7 @@ export class HttpTransport {
              throw new NetworkError(`Request timed out after ${this.opts.timeout}ms`);
           }
 
-          if (retries < maxRetries) {
+          if (retrySafe && retries < maxRetries) {
             await this.sleep(1000 * Math.pow(2, retries));
             retries++;
             continue;

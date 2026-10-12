@@ -105,3 +105,39 @@ describe("workflows MCP", () => {
     expect(calls[1].body).toEqual({ name: "tools", projectId: "p1" })
   })
 })
+
+describe("fixes found by the CLI audit", () => {
+  it("updateAiAgent keeps model, provider and behaviour fields and drops team_leads", async () => {
+    const current = {
+      id: "a1", name: "A", workflow_name: "a_wf", agent_type: "agent", sub_agents: [],
+      model_id: "gpt-x", provider_id: "p1", tone_and_style: "Friendly", category: ["General"], streaming: true,
+      team_leads: [{ assistant_id: "t1", name: "Lead" }], created_at: "x",
+    }
+    const calls = mockFetch(() => ({ body: current }))
+    await client().chatAi.updateAiAgent("a1", { ...current, description: "new" } as any)
+    const put = calls.find(x => x.method === "PUT")!
+    expect(put.body).toMatchObject({ model_id: "gpt-x", provider_id: "p1", tone_and_style: "Friendly", category: ["General"], streaming: true, description: "new" })
+    expect(put.body.team_leads).toBeUndefined()
+  })
+
+  it("agent.getUseCase unwraps { data }", async () => {
+    mockFetch(() => ({ body: { data: { _id: "uc1", title: "T" } } }))
+    expect((await client().agent.getUseCase("uc1"))._id).toBe("uc1")
+  })
+
+  it("does not retry a POST that failed with 500, but retries a GET", async () => {
+    vi.useFakeTimers()
+    try {
+      const calls = mockFetch(() => ({ status: 500, body: { error: "boom" } }))
+      const c = client()
+      await expect(c.dataiq.sql.run("select 1")).rejects.toThrow("[500]")
+      expect(calls.length).toBe(1)
+      const get = c.dataiq.boards.get("b1").catch(e => e)
+      await vi.runAllTimersAsync()
+      expect(String(await get)).toContain("[500]")
+      expect(calls.length).toBe(1 + 4)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+})

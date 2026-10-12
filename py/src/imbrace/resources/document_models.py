@@ -120,6 +120,24 @@ class DocumentModelsResource:
         """Child categories move up to the deleted category's parent."""
         self._req("DELETE", f"/categories/{category_id}")
 
+    # --- Settings ---
+    def get_settings(self, type: Optional[str] = None) -> Dict[str, Any]:
+        """The org's extraction settings for one product (``type``; DocIQ when omitted).
+
+        ``{id, organization_id, type, vlm_provider_id?, vlm_model?, llm_provider_id?, llm_model?,
+        source_languages?, handwriting_support?, time_offset?, continue_on_failure?, retry_time?,
+        max_token_limit?}``.
+        """
+        return _data(self._req("GET", "/document-settings", params={"type": type}))
+
+    def update_settings(self, body: Dict[str, Any], type: Optional[str] = None) -> Dict[str, Any]:
+        """Partial update: keys left out keep their value.
+
+        ``source_languages`` empty = detect the language; ``time_offset`` like ``UTC+08:00``;
+        ``retry_time`` 0-10 (0 never retries); ``max_token_limit`` thousands of tokens, 1-4096.
+        """
+        return _data(self._req("PUT", "/document-settings", body, params={"type": type}))
+
 
 class AsyncDocumentModelsResource:
     """DocIQ Document Models — Async. See :class:`DocumentModelsResource`."""
@@ -192,3 +210,11 @@ class AsyncDocumentModelsResource:
 
     async def delete_category(self, category_id: str) -> None:
         await self._req("DELETE", f"/categories/{category_id}")
+
+    async def get_settings(self, type: Optional[str] = None) -> Dict[str, Any]:
+        """See :meth:`DocumentModelsResource.get_settings`."""
+        return _data(await self._req("GET", "/document-settings", params={"type": type}))
+
+    async def update_settings(self, body: Dict[str, Any], type: Optional[str] = None) -> Dict[str, Any]:
+        """Partial update: keys left out keep their value."""
+        return _data(await self._req("PUT", "/document-settings", body, params={"type": type}))

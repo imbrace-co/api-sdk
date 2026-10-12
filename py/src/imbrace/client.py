@@ -40,6 +40,7 @@ from .resources.templates import TemplatesResource
 from .resources.license import LicenseResource
 from .resources.document_models import DocumentModelsResource
 from .resources.crm_automation import CrmAutomationResource
+from .resources.dataiq import DataIqResource
 from .resources.api_keys import ApiKeysResource
 from .resources.roles import RolesResource
 from .resources.audit_logs import AuditLogsResource
@@ -167,6 +168,9 @@ class ImbraceClient:
         self.audit_logs      = AuditLogsResource(self.http, urls.platform)
         self.document_models = DocumentModelsResource(self.http, urls.data_board)
         self.crm_automation  = CrmAutomationResource(self.http, f"{urls.data_board}/v1")
+
+        # DataIQ v2 — separate data from client.boards (v1); both can be used side by side
+        self.dataiq          = DataIqResource(self.http, urls.data_board_v2)
 
         if check_health:
             self.init()
