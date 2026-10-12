@@ -56,6 +56,9 @@ class HttpTransport:
     def request(self, method: str, url: str, **kwargs) -> httpx.Response:
         retries = 0
         max_retries = 3
+        # POST/PATCH may already have run when a response is lost or late, so only methods that
+        # are safe to repeat are retried on network errors, timeouts and 5xx.
+        retry_safe = method.upper() in ("GET", "HEAD", "OPTIONS", "PUT", "DELETE")
 
         headers = kwargs.pop("headers", {})
         token = self.token_manager.get_token()
@@ -84,9 +87,9 @@ class HttpTransport:
                     return res
                 if res.status_code in [401, 403]:
                     logger.error(f"Auth error {res.status_code} at {url}")
-                    raise self._auth_error(token)
+                    raise self._auth_error(token).with_response(res.status_code, res.text)
                 if (
-                    res.status_code == 429 or res.status_code >= 500
+                    res.status_code in (429, 503) or (res.status_code >= 500 and retry_safe)
                 ) and retries < max_retries:
                     wait_time = 2**retries
                     logger.warning(
@@ -99,7 +102,7 @@ class HttpTransport:
                 logger.error(f"API Error {res.status_code}: {res.text}")
                 raise ApiError(res.status_code, res.text)
             except httpx.RequestError as e:
-                if retries < max_retries:
+                if retry_safe and retries < max_retries:
                     wait_time = 2**retries
                     logger.warning(
                         f"Retry {retries + 1}/{max_retries} after {wait_time}s due to network error: {str(e)}"
@@ -177,6 +180,9 @@ class AsyncHttpTransport:
     async def request(self, method: str, url: str, **kwargs) -> httpx.Response:
         retries = 0
         max_retries = 3
+        # POST/PATCH may already have run when a response is lost or late, so only methods that
+        # are safe to repeat are retried on network errors, timeouts and 5xx.
+        retry_safe = method.upper() in ("GET", "HEAD", "OPTIONS", "PUT", "DELETE")
 
         headers = kwargs.pop("headers", {})
         token = self.token_manager.get_token()
@@ -202,9 +208,9 @@ class AsyncHttpTransport:
                 if res.status_code < 400:
                     return res
                 if res.status_code in [401, 403]:
-                    raise self._auth_error(token)
+                    raise self._auth_error(token).with_response(res.status_code, res.text)
                 if (
-                    res.status_code == 429 or res.status_code >= 500
+                    res.status_code in (429, 503) or (res.status_code >= 500 and retry_safe)
                 ) and retries < max_retries:
                     wait_time = 2**retries
                     retries += 1
@@ -212,7 +218,7 @@ class AsyncHttpTransport:
                     continue
                 raise ApiError(res.status_code, res.text)
             except httpx.RequestError as e:
-                if retries < max_retries:
+                if retry_safe and retries < max_retries:
                     wait_time = 2**retries
                     retries += 1
                     await asyncio.sleep(wait_time)

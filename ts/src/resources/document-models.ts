@@ -78,6 +78,33 @@ export interface ExtractAttributesInput {
   [key: string]: unknown
 }
 
+/** How Document AI reads files for one product (DocIQ, CommsIQ, …). */
+export interface UpdateDocumentSettingsInput {
+  /** Vision model used to read pages. */
+  vlm_provider_id?: string
+  vlm_model?: string
+  /** Language model used to fill the attributes. */
+  llm_provider_id?: string
+  llm_model?: string
+  /** Empty = detect the language. */
+  source_languages?: string[]
+  handwriting_support?: boolean
+  /** UTC offset label, e.g. `UTC+08:00`. */
+  time_offset?: string
+  continue_on_failure?: boolean
+  /** 0–10; 0 never retries. */
+  retry_time?: number
+  /** Thousands of tokens per extraction call, 1–4096. */
+  max_token_limit?: number
+}
+
+export interface DocumentSettings extends UpdateDocumentSettingsInput {
+  id: string
+  organization_id: string
+  type: string
+  [key: string]: unknown
+}
+
 export interface ProvisionBoardsInput {
   /** Link the new boards to this assistant. */
   assistant_id?: string
@@ -181,6 +208,18 @@ export class DocumentModelsResource {
   /** Child categories move up to the deleted category's parent. */
   async deleteCategory(id: string): Promise<void> {
     await this.json(`/categories/${id}`, "DELETE")
+  }
+
+  // ── Settings ──────────────────────────────────────────────────────────────
+
+  /** The org's extraction settings for one product; `type` defaults to DocIQ. */
+  async getSettings(type?: string): Promise<DocumentSettings> {
+    return this.json(`/document-settings${query({ type })}`, "GET").then(r => r.data)
+  }
+
+  /** Partial update: keys left out keep their value. */
+  async updateSettings(body: UpdateDocumentSettingsInput, type?: string): Promise<DocumentSettings> {
+    return this.json(`/document-settings${query({ type })}`, "PUT", body).then(r => r.data)
   }
 }
 

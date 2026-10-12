@@ -43,6 +43,7 @@ import { CrmAutomationResource } from "./resources/crm-automation.js"
 import { ApiKeysResource } from "./resources/api-keys.js"
 import { RolesResource } from "./resources/roles.js"
 import { AuditLogsResource } from "./resources/audit-logs.js"
+import { DataIqResource } from "./resources/dataiq.js"
 
 export interface ImbraceClientConfig {
 
@@ -102,6 +103,8 @@ export class ImbraceClient {
   public readonly apiKeys: ApiKeysResource
   public readonly roles: RolesResource
   public readonly auditLogs: AuditLogsResource
+  /** DataIQ v2 — separate from `boards` (v1); both can be used side by side. */
+  public readonly dataiq: DataIqResource
 
   /**
    * Every operation the services expose to agents (273 across 5 services),
@@ -177,6 +180,7 @@ export class ImbraceClient {
     this.boards        = new BoardsResource(this.http, urls.dataBoard, urls.backend, urls.platform)
     this.documentModels = new DocumentModelsResource(this.http, urls.dataBoard)
     this.crmAutomation = new CrmAutomationResource(this.http, `${urls.dataBoard}/v1`)
+    this.dataiq        = new DataIqResource(this.http, urls.dataBoardV2)
 
     // file-service
     this.fileService   = new FileServiceResource(this.http, urls.fileService)

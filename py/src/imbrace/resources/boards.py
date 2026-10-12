@@ -264,6 +264,28 @@ class BoardsResource:
         r = self._http.request("PUT", f"{self._base}/folders/{folder_id}", json=body).json()
         return r.get("data", r)
 
+    def get_team_access(self, team_id: str) -> Dict[str, Any]:
+        """What one team can do on each board and Knowledge folder that limits access.
+
+        ``{team_id, boards: [{id, name?, access}], folders: [...], open: {boards, folders}}``;
+        boards and folders open to the whole org are only counted in ``open``.
+        """
+        return self._http.request("GET", f"{self._base}/team-access/{team_id}").json()
+
+    def update_team_access(self, team_id: str, changes: List[Dict[str, Any]],
+                           team_name: Optional[str] = None,
+                           confirm_restrict: Optional[bool] = None) -> Dict[str, Any]:
+        """Set a team's access on boards and folders. Org owners and admins only.
+
+        ``changes``: ``[{kind: "board"|"folder", id, access: "none"|"read"|"write"}]``.
+        """
+        body: Dict[str, Any] = {"changes": changes}
+        if team_name is not None:
+            body["team_name"] = team_name
+        if confirm_restrict is not None:
+            body["confirm_restrict"] = confirm_restrict
+        return self._http.request("PUT", f"{self._base}/team-access/{team_id}", json=body).json()
+
     def set_folder_sync(self, folder_id: str, enabled: bool) -> Dict[str, Any]:
         """Turn syncing of an external (Drive) folder on or off."""
         r = self._http.request("PATCH", f"{self._base}/folders/{folder_id}/sync",
@@ -497,6 +519,23 @@ class AsyncBoardsResource:
         res = await self._http.request("PUT", f"{self._base}/folders/{folder_id}", json=body)
         r = res.json()
         return r.get("data", r)
+
+    async def get_team_access(self, team_id: str) -> Dict[str, Any]:
+        """See :meth:`BoardsResource.get_team_access`."""
+        res = await self._http.request("GET", f"{self._base}/team-access/{team_id}")
+        return res.json()
+
+    async def update_team_access(self, team_id: str, changes: List[Dict[str, Any]],
+                                 team_name: Optional[str] = None,
+                                 confirm_restrict: Optional[bool] = None) -> Dict[str, Any]:
+        """See :meth:`BoardsResource.update_team_access`."""
+        body: Dict[str, Any] = {"changes": changes}
+        if team_name is not None:
+            body["team_name"] = team_name
+        if confirm_restrict is not None:
+            body["confirm_restrict"] = confirm_restrict
+        res = await self._http.request("PUT", f"{self._base}/team-access/{team_id}", json=body)
+        return res.json()
 
     async def set_folder_sync(self, folder_id: str, enabled: bool) -> Dict[str, Any]:
         """Turn syncing of an external (Drive) folder on or off."""

@@ -30,15 +30,32 @@ def _with_model_defaults(body: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+# Fields ``PUT /assistant_apps/:id`` accepts (chat-ai ``validate_create_assistant_app_input``).
+# The route replaces the agent, so anything not sent falls back to its default.
+# ``team_leads`` is not accepted here (it is derived on read).
+_UPDATABLE_AGENT_FIELDS = (
+    "name", "description", "instructions", "file_ids", "folder_ids", "board_ids", "metadata",
+    "provider_id", "model_id", "workflow_name", "credential_id", "credential_name", "mode", "channel",
+    "category", "personality_role", "core_task", "tone_and_style", "response_length", "banned_words",
+    "knowledge_hubs", "workflow_function_call", "show_thinking_process", "preload_information",
+    "preload_information_type", "guardrail_id", "agent_type", "sub_agents", "streaming",
+    "temperature", "use_memory", "version", "document_ai",
+)
+
+
 def _keep_fields(current: Dict[str, Any], body: Dict[str, Any]) -> Dict[str, Any]:
-    """Fields the full-replace update route would otherwise drop, taken from the current agent."""
-    keep = {
-        "name": current.get("name"),
-        "workflow_name": current.get("workflow_name"),
-        "agent_type": current.get("agent_type"),
-        "sub_agents": _sub_agent_ids(current.get("sub_agents")),
-    }
-    return {**{k: v for k, v in keep.items() if v is not None}, **body}
+    """Every field the full-replace update route accepts, from the current agent, overridden by ``body``.
+
+    Sub-agents come back on read as ``{assistant_id, name}`` objects and are sent as ids; the
+    read-only ``team_leads`` is dropped from ``body`` (callers often spread a fetched agent into it).
+    """
+    keep = {k: current[k] for k in _UPDATABLE_AGENT_FIELDS if current.get(k) is not None}
+    if current.get("sub_agents") is not None:
+        keep["sub_agents"] = _sub_agent_ids(current.get("sub_agents"))
+    patch = {k: v for k, v in body.items() if k != "team_leads"}
+    if patch.get("sub_agents") is not None:
+        patch["sub_agents"] = _sub_agent_ids(patch["sub_agents"])
+    return {**keep, **patch}
 
 
 def _tool_servers(agent: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -128,10 +145,9 @@ class ChatAiResource:
     def update_ai_agent(self, ai_agent_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
         """Update an AI agent. Only the fields you pass change.
 
-        The server replaces the whole agent on this route (a missing
-        ``sub_agents`` would turn a team lead back into a plain agent), so
-        ``name``, ``workflow_name``, ``agent_type`` and ``sub_agents`` are filled
-        from the current agent when you leave them out.
+        The server replaces the whole agent on this route (a missing field falls
+        back to its default, a missing ``sub_agents`` turns a team lead back into a
+        plain agent), so every field you leave out is filled from the current agent.
         """
         current = self.get_ai_agent(ai_agent_id)
         return self._http.request(

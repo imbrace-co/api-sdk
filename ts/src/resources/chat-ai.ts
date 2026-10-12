@@ -47,6 +47,20 @@ export interface ToolServerConfig {
   [key: string]: unknown
 }
 
+/**
+ * Fields `PUT /assistant_apps/:id` accepts (chat-ai `validate_create_assistant_app_input`).
+ * The route replaces the agent, so anything not sent falls back to its default.
+ * `team_leads` is not accepted here (it is derived on read).
+ */
+const UPDATABLE_AGENT_FIELDS = [
+  "name", "description", "instructions", "file_ids", "folder_ids", "board_ids", "metadata",
+  "provider_id", "model_id", "workflow_name", "credential_id", "credential_name", "mode", "channel",
+  "category", "personality_role", "core_task", "tone_and_style", "response_length", "banned_words",
+  "knowledge_hubs", "workflow_function_call", "show_thinking_process", "preload_information",
+  "preload_information_type", "guardrail_id", "agent_type", "sub_agents", "streaming",
+  "temperature", "use_memory", "version", "document_ai",
+] as const
+
 /** `sub_agents` comes back as ids or `{ assistant_id, name }` objects. */
 function subAgentIds(list: unknown): string[] | undefined {
   if (!Array.isArray(list)) return undefined
@@ -160,18 +174,24 @@ export class ChatAiResource {
    * fields you leave out from the current agent.
    */
   async updateAiAgent(id: string, body: Partial<CreateAiAgentInput>): Promise<AiAgent> {
-    const current = await this.getAiAgent(id)
-    const keep: Record<string, unknown> = {
-      name: current.name,
-      workflow_name: current.workflow_name,
-      agent_type: current.agent_type,
-      sub_agents: subAgentIds(current.sub_agents),
+    const current = await this.getAiAgent(id) as Record<string, unknown>
+    // Re-send every field the route accepts, so a partial update does not reset the rest
+    // (model, provider, tone, category, streaming, …) to their defaults.
+    const keep: Record<string, unknown> = {}
+    for (const k of UPDATABLE_AGENT_FIELDS) {
+      if (current[k] !== undefined && current[k] !== null) keep[k] = current[k]
     }
-    for (const k of Object.keys(keep)) if (keep[k] === undefined || keep[k] === null) delete keep[k]
+    // The read returns sub-agents as { assistant_id, name } objects; the write takes ids.
+    if (current.sub_agents !== undefined) keep.sub_agents = subAgentIds(current.sub_agents)
+    // Callers often spread a fetched agent into `body`: normalise its sub-agents the same way
+    // and drop the read-only `team_leads` objects, which the route rejects.
+    const patch: Record<string, unknown> = { ...body }
+    delete patch.team_leads
+    if (patch.sub_agents !== undefined) patch.sub_agents = subAgentIds(patch.sub_agents)
     return this.http.getFetch()(`${this.base}/assistant_apps/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...keep, ...body }),
+      body: JSON.stringify({ ...keep, ...patch }),
     }).then(r => r.json())
   }
 

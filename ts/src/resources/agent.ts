@@ -127,7 +127,10 @@ export class AgentResource {
   }
 
   async getUseCase(useCaseId: string): Promise<UseCase> {
-    return this.http.getFetch()(`${this.useCases}/${useCaseId}`, { method: "GET" }).then(r => r.json())
+    // marketplace answers { data: useCase }
+    return this.http.getFetch()(`${this.useCases}/${useCaseId}`, { method: "GET" })
+      .then(r => r.json())
+      .then(r => (r && typeof r === "object" && "data" in r && !("_id" in r) ? r.data : r))
   }
 
   async createUseCase(body: CreateUseCaseInput): Promise<UseCase> {

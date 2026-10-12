@@ -309,6 +309,21 @@ export interface OneDriveSessionStatus {
   [key: string]: unknown
 }
 
+export interface TeamAccessChange {
+  kind: "board" | "folder"
+  id: string
+  access: "none" | "read" | "write"
+}
+
+export interface TeamAccess {
+  team_id: string
+  boards: Array<{ id: string; name?: string; access: "read" | "write"; [key: string]: unknown }>
+  folders: Array<{ id: string; name?: string; access: "read" | "write"; [key: string]: unknown }>
+  /** How many boards and folders are open to the whole org. */
+  open: { boards: number; folders: number }
+  [key: string]: unknown
+}
+
 export class BoardsResource {
   /**
    * @param base    - data-board base URL (`${gateway}/data-board`) — board CRUD,
@@ -620,6 +635,23 @@ export class BoardsResource {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     }).then(r => r.json()).then(r => r.data ?? r)
+  }
+
+  /**
+   * What one team can do on each board and Knowledge folder that limits access.
+   * Boards and folders open to the whole org are only counted in `open`.
+   */
+  async getTeamAccess(teamId: string): Promise<TeamAccess> {
+    return this.http.getFetch()(`${this.base}/team-access/${teamId}`, { method: "GET" }).then(r => r.json())
+  }
+
+  /** Set a team's access on boards and folders. Org owners and admins only. */
+  async updateTeamAccess(teamId: string, changes: TeamAccessChange[], opts: { teamName?: string; confirmRestrict?: boolean } = {}): Promise<TeamAccess> {
+    return this.http.getFetch()(`${this.base}/team-access/${teamId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ changes, team_name: opts.teamName, confirm_restrict: opts.confirmRestrict }),
+    }).then(r => r.json())
   }
 
   /** Turn syncing of an external (Drive) folder on or off. */

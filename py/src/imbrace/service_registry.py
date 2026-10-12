@@ -12,6 +12,8 @@ class ServiceUrls:
     platform: str
     ips: str
     data_board: str
+    # DataIQ v2: a rewrite with its own storage, not an alias of v1 (folders, files, drives stay on v1)
+    data_board_v2: str
     backend: str
     ai: str
     marketplaces: str
@@ -39,6 +41,7 @@ def resolve_service_urls(
         platform=f"{gw}/platform",
         ips=f"{(preset.service_hosts.ips or gw).rstrip('/')}/ips/v1",
         data_board=f"{gw}/data-board",
+        data_board_v2=f"{gw}/data-board/v2",
         backend=f"{gw}/v1/backend",
         ai=gw,
         marketplaces=f"{gw}/marketplaces/v2",

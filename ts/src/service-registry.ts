@@ -16,6 +16,11 @@ export interface ServiceUrls {
   // ── data-board (boards, items, fields, KnowledgeHub) ───────────────────
   /** data-board — no version prefix; the service mounts at `/api/` internally and the gateway rewrites. */
   dataBoard: string
+  /**
+   * DataIQ v2 — `/data-board/v2`. A separate entry, like `marketplacesV3`: v2 is a
+   * rewrite with its own storage, not an alias of v1. Folders, files and drives stay on v1.
+   */
+  dataBoardV2: string
 
   // ── file-service ───────────────────────────────────────────────────────
   /** file-service — spec-exact `/v1` routes (gateway also exposes `/v1/files` and `/files/v1`). */
@@ -74,6 +79,7 @@ export function resolveServiceUrls(
     platform:          `${gw}/platform`,
     channelService:    `${gw}/channel-service`,
     dataBoard:         `${gw}/data-board`,
+    dataBoardV2:       `${gw}/data-board/v2`,
     fileService:       `${gw}/files/v1`,
     marketplaces:      `${gw}/marketplaces/v2`,
     marketplacesV3:    `${gw}/v3/marketplaces`,
