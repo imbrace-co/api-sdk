@@ -12,6 +12,7 @@ export interface DocumentAIAgent {
   model_id?: string
   provider_id?: string
   instructions?: string
+  /** @deprecated Never returned: the backend keeps no schema on an agent. */
   data_schema?: Record<string, unknown>
   workflow_name?: string
   description?: string
@@ -32,8 +33,9 @@ export interface CreateDocumentAIAgentInput {
   /** Internal workflow name (defaults to "document_extraction"). */
   workflow_name?: string
   /**
-   * JSON schema for fields to extract. Stored as `data_schema` on backend.
-   * @example { invoice_number: { type: "string" }, total: { type: "number" } }
+   * @deprecated Rejected: the backend keeps no schema on an agent and used to drop it
+   * without a word. Define the fields as a DocIQ Document Model and pass its board as
+   * `boardId` to {@link DocumentAIResource.process} (see the class docs).
    */
   schema?: Record<string, unknown>
   description?: string
@@ -46,6 +48,7 @@ export interface UpdateDocumentAIAgentInput {
   model_id?: string
   provider_id?: string
   workflow_name?: string
+  /** @deprecated Rejected, see {@link CreateDocumentAIAgentInput.schema}. */
   schema?: Record<string, unknown>
   description?: string
   [key: string]: unknown
@@ -85,39 +88,47 @@ export interface ProcessDocumentResponse {
 // ── Resource ──────────────────────────────────────────────────────────────────
 
 /**
+ * chat-ai has no schema field on an assistant: `data_schema` was accepted with a 200 and
+ * dropped, so callers lost their fields without knowing. Fail loudly instead.
+ */
+function rejectSchema(method: string, input: Record<string, unknown>): void {
+  if (input.schema === undefined && input.data_schema === undefined) return
+  throw new Error(
+    `documentAi.${method}: an agent cannot hold a schema, the backend drops it. ` +
+    "Define the fields as a DocIQ Document Model (client.documentModels.create, then " +
+    "client.documentModels.provisionBoards) and pass the board as `boardId` to documentAi.process().",
+  )
+}
+
+/**
  * Document AI — high-level wrapper for the iMBRACE Document AI Agent feature.
  *
- * **What is a Document AI Agent?** A specialized AI Agent configured to
- * extract structured JSON from unstructured documents (PDFs, images, scanned
- * forms). Each agent has:
- * - a **schema** defining the fields to extract
- * - **instructions** guiding the LLM (business rules, formats)
- * - a **model** + **provider** for the underlying VLM/LLM
- * - optional **workflow** integration for automation
+ * Extraction runs through `/v3/ai/document/`. The fields it extracts come from
+ * the board passed as `boardId`; an agent only supplies the model and the
+ * instructions. Agents of type `document_ai` were retired from the web app,
+ * and the backend keeps no schema on them, so `schema` on
+ * {@link DocumentAIResource.createAgent} / {@link DocumentAIResource.updateAgent}
+ * throws. The fields belong in a DocIQ Document Model (`client.documentModels`).
  *
- * Under the hood this resource wraps the AI Agent CRUD endpoints with
- * `agent_type: "document_ai"` filtering, plus the document processing endpoint
- * `/v3/ai/document/`.
- *
- * @example Create + use an agent
+ * @example Define the fields, then extract
  * ```ts
- * // Setup once
- * const agent = await client.documentAi.createAgent({
- *   name: "Invoice Extractor",
- *   instructions: "Extract invoice fields. Dates as YYYY-MM-DD.",
- *   model_id: "gpt-4o",
- *   schema: {
- *     invoice_number: { type: "string", description: "Invoice ID" },
- *     total:          { type: "number" },
- *     date:           { type: "string", format: "date" },
- *   },
+ * const model = await client.documentModels.create({
+ *   name: "Invoice",
+ *   attributes: [
+ *     { name: "Invoice number", type: "ShortText" },
+ *     { name: "Total", type: "Number" },
+ *     { name: "Date", type: "Date" },
+ *   ],
+ * })
+ * const [{ board_id }] = await client.documentModels.provisionBoards({
+ *   schemas: [{ schema_id: model.id }],
  * })
  *
- * // Use many times
  * const result = await client.documentAi.process({
- *   agentId: agent._id!,
  *   url: "https://example.com/invoice.pdf",
  *   organizationId: "org_xxx",
+ *   modelName: "gpt-4o",
+ *   boardId: board_id,
  * })
  * ```
  */
@@ -224,12 +235,15 @@ export class DocumentAIResource {
 
   /**
    * Create a Document AI Agent. Wraps `POST /v3/ai/assistant_apps` with
-   * `agent_type: "document_ai"`. Pass `schema` to define the extraction fields.
+   * `agent_type: "document_ai"`.
+   *
+   * @throws {Error} if `schema` is passed: the backend keeps no schema on an agent.
+   *   Use a DocIQ Document Model and `boardId` instead (see the class docs).
    */
   async createAgent(input: CreateDocumentAIAgentInput): Promise<DocumentAIAgent> {
-    const { schema, ...rest } = input
+    rejectSchema("createAgent", input)
     const body: Record<string, unknown> = {
-      ...rest,
+      ...input,
       // Tag the agent as Document AI so it is created with the right type and
       // surfaces in listAgents({ documentAiOnly: true }). Without this the
       // backend defaults agent_type to "agent".
@@ -237,7 +251,6 @@ export class DocumentAIResource {
       provider_id: input.provider_id ?? "system",
       workflow_name: input.workflow_name ?? "document_extraction",
     }
-    if (schema !== undefined) body.data_schema = schema
     return this.http.getFetch()(`${this.base}/assistant_apps`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -256,16 +269,17 @@ export class DocumentAIResource {
    *
    * Pass `mergeMode: 'replace'` to skip the auto-fetch and send `input` as-is
    * (useful if you already have the full body and want to save a round-trip).
+   *
+   * @throws {Error} if `schema` is passed, as in {@link DocumentAIResource.createAgent}.
    */
   async updateAgent(
     agentId: string,
     input: UpdateDocumentAIAgentInput,
     opts?: { mergeMode?: "merge" | "replace" },
   ): Promise<DocumentAIAgent> {
+    rejectSchema("updateAgent", input)
     const mode = opts?.mergeMode ?? "merge"
-    const { schema, ...rest } = input
-    let body: Record<string, unknown> = { ...rest }
-    if (schema !== undefined) body.data_schema = schema
+    let body: Record<string, unknown> = { ...input }
 
     if (mode === "merge") {
       const existing = await this.getAgent(agentId) as Record<string, unknown>

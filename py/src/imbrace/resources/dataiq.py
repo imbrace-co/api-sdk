@@ -203,7 +203,13 @@ class DataIqItems:
     def query(self, board_id: str, body: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Filter with typed rules.
 
-        ``body``: ``{filter?: {match: "and", rules: [{fieldId, op: "gte", value: 100}]}, sort?, skip?, limit?, timeZone?}``.
+        ``body``: ``{filter?: {match: "and", rules: [{fieldId, op, value?}]}, search?, sort?, skip?, limit?, timeZone?}``.
+        Ops: text ``is, is_not, contains, not_contains, starts_with, ends_with``; number ``eq, ne, gt, gte, lt, lte``;
+        date/time ``before, after, on_or_before, on_or_after``; ``between`` (value ``[from, to]``); select
+        ``is_any_of, is_none_of``; multi/relation/people ``contains_any, contains_all, contains_none``; checkbox
+        ``checked, unchecked``; files ``file_type_any_of, file_type_none_of`` (pdf, image, audio, video, text,
+        sheet, document, other); any column ``is_empty, is_not_empty``. A date value may be counted from
+        today: ``"last:7:day"``, ``"next:2:month"``. ``search`` is free text joined to the filter by AND.
         Returns ``{data, total, totalCapped, skip, limit, hasMore}``. The gateway counts every
         POST as a write, so the API key needs write permission.
         """

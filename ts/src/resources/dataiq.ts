@@ -126,7 +126,11 @@ class DataIqItems {
     return this.f("GET", `/boards/${boardId}/items`, { query: { ...params } as Query })
   }
 
-  /** Filter with typed rules, e.g. `{ match: "and", rules: [{ fieldId, op: "gte", value: 100 }] }`. */
+  /**
+   * Filter with typed rules, e.g. `{ match: "and", rules: [{ fieldId, op: "gte", value: 100 }] }`,
+   * `{ fieldId, op: "between", value: [10, 20] }` or `{ fieldId, op: "is", value: "last:7:day" }`;
+   * `search` adds free text.
+   */
   async query(boardId: string, body: QueryDataIqItemsInput = {}): Promise<DataIqQueryPage> {
     return this.f("POST", `/boards/${boardId}/items/query`, { body })
   }

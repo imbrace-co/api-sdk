@@ -9,6 +9,18 @@ if TYPE_CHECKING:
     )
 
 
+def _reject_schema(method: str, schema: Any = None, body: Optional[Dict[str, Any]] = None) -> None:
+    """chat-ai has no schema field on an assistant: ``data_schema`` was accepted with a 200 and
+    dropped, so callers lost their fields without knowing. Fail loudly instead."""
+    if schema is None and not (body and ("schema" in body or "data_schema" in body)):
+        return
+    raise ValueError(
+        f"document_ai.{method}: an agent cannot hold a schema, the backend drops it. "
+        "Define the fields as a DocIQ Document Model (client.document_models.create, then "
+        "client.document_models.provision_boards) and pass the board as boardId to document_ai.process()."
+    )
+
+
 _SUGGEST_SCHEMA_PROMPT = (
     "Analyze this document and propose a JSON schema describing the fields. "
     "Return ONLY a JSON object where each key is a field name and the value "
@@ -20,36 +32,31 @@ _SUGGEST_SCHEMA_PROMPT = (
 class DocumentAIResource:
     """Document AI — high-level wrapper for the iMBRACE Document AI Agent feature (Sync).
 
-    A Document AI Agent is a specialized AI Agent configured to extract
-    structured JSON from unstructured documents. Each agent has:
-
-    - a **schema** (``data_schema`` field) defining the extraction fields
-    - **instructions** guiding the LLM (business rules, formats)
-    - a **model** + **provider** for the VLM/LLM
-    - optional **workflow** integration
-
-    This resource wraps AI Agent CRUD endpoints (filtered by
-    ``agent_type='document_ai'``) plus the processing endpoint ``/v3/ai/document/``.
+    Extraction runs through ``/v3/ai/document/``. The fields it extracts come from the
+    board passed as ``boardId``; an agent only supplies the model and the instructions.
+    Agents of type ``document_ai`` were retired from the web app, and the backend keeps no
+    schema on them, so ``schema`` on ``create_agent`` / ``update_agent`` raises
+    ``ValueError``. The fields belong in a DocIQ Document Model (``client.document_models``).
 
     Example::
 
-        # Setup once
-        agent = client.document_ai.create_agent(
-            name="Invoice Extractor",
-            instructions="Extract invoice fields. Dates as YYYY-MM-DD.",
-            model_id="gpt-4o",
-            schema={
-                "invoice_number": {"type": "string", "description": "Invoice ID"},
-                "total":          {"type": "number"},
-                "date":           {"type": "string", "format": "date"},
-            },
-        )
+        model = client.document_models.create({
+            "name": "Invoice",
+            "attributes": [
+                {"name": "Invoice number", "type": "ShortText"},
+                {"name": "Total", "type": "Number"},
+                {"name": "Date", "type": "Date"},
+            ],
+        })
+        board_id = client.document_models.provision_boards(
+            {"schemas": [{"schema_id": model["id"]}]}
+        )[0]["board_id"]
 
-        # Use many times
         result = client.document_ai.process(
-            agent_id=agent["_id"],
             url="https://example.com/invoice.pdf",
             organization_id="org_xxx",
+            model_name="gpt-4o",
+            boardId=board_id,
         )
     """
 
@@ -125,8 +132,11 @@ class DocumentAIResource:
         """Create a Document AI Agent.
 
         Wraps ``POST /v3/ai/assistant_apps`` with ``agent_type='document_ai'``.
-        Pass ``schema`` to define extraction fields (stored as ``data_schema``).
+
+        :param schema: deprecated, raises ``ValueError``: the backend keeps no schema on an
+            agent. Use a DocIQ Document Model and ``boardId`` instead (see the class docs).
         """
+        _reject_schema("create_agent", schema, extra_fields)
         body: Dict[str, Any] = {
             "name": name,
             "instructions": instructions,
@@ -138,8 +148,6 @@ class DocumentAIResource:
             # backend defaults agent_type to "agent".
             "agent_type": "document_ai",
         }
-        if schema is not None:
-            body["data_schema"] = schema
         if description is not None:
             body["description"] = description
         body.update(extra_fields)
@@ -164,11 +172,9 @@ class DocumentAIResource:
             and merges. ``"replace"`` sends ``body`` as-is (use if you already
             have the full body and want to save a round-trip).
 
-        If you pass ``schema`` in body it is renamed to ``data_schema`` to match backend.
+        Raises ``ValueError`` if ``body`` has ``schema`` (see ``create_agent``).
         """
-        if "schema" in body and "data_schema" not in body:
-            body = dict(body)
-            body["data_schema"] = body.pop("schema")
+        _reject_schema("update_agent", body=body)
 
         if merge_mode == "merge":
             existing = self.get_agent(agent_id)
@@ -428,6 +434,7 @@ class AsyncDocumentAIResource:
         description: Optional[str] = None,
         **extra_fields: Any,
     ) -> Dict[str, Any]:
+        _reject_schema("create_agent", schema, extra_fields)
         body: Dict[str, Any] = {
             "name": name,
             "instructions": instructions,
@@ -439,8 +446,6 @@ class AsyncDocumentAIResource:
             # backend defaults agent_type to "agent".
             "agent_type": "document_ai",
         }
-        if schema is not None:
-            body["data_schema"] = schema
         if description is not None:
             body["description"] = description
         body.update(extra_fields)
@@ -448,9 +453,7 @@ class AsyncDocumentAIResource:
         return res.json()
 
     async def update_agent(self, agent_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
-        if "schema" in body and "data_schema" not in body:
-            body = dict(body)
-            body["data_schema"] = body.pop("schema")
+        _reject_schema("update_agent", body=body)
         res = await self._http.request("PUT", f"{self._base}/assistant_apps/{agent_id}", json=body)
         return res.json()
 

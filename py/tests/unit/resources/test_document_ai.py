@@ -80,15 +80,19 @@ def test_create_agent_posts_with_defaults(httpx_mock: HTTPXMock, client):
     assert body["model_id"] == "gpt-4o"
 
 
-def test_create_agent_renames_schema_to_data_schema(httpx_mock: HTTPXMock, client):
-    httpx_mock.add_response(url=f"{BASE}/assistant_apps", method="POST", json={})
-    client.document_ai.create_agent(
-        name="X", instructions="i", model_id="m",
-        schema={"invoice_number": {"type": "string"}},
-    )
-    body = json.loads(httpx_mock.get_request().content)
-    assert body["data_schema"] == {"invoice_number": {"type": "string"}}
-    assert "schema" not in body
+def test_create_agent_rejects_schema(httpx_mock: HTTPXMock, client):
+    """The backend drops a schema on an agent, so it is refused before any request."""
+    with pytest.raises(ValueError, match="document_models"):
+        client.document_ai.create_agent(
+            name="X", instructions="i", model_id="m",
+            schema={"invoice_number": {"type": "string"}},
+        )
+    with pytest.raises(ValueError, match="cannot hold a schema"):
+        client.document_ai.create_agent(
+            name="X", instructions="i", model_id="m",
+            data_schema={"invoice_number": {"type": "string"}},
+        )
+    assert httpx_mock.get_requests() == []
 
 
 def test_create_agent_respects_custom_provider(httpx_mock: HTTPXMock, client):
@@ -110,14 +114,12 @@ def test_update_agent_puts(httpx_mock: HTTPXMock, client):
     client.document_ai.update_agent("a1", {"name": "renamed"})
 
 
-def test_update_agent_renames_schema(httpx_mock: HTTPXMock, client):
-    httpx_mock.add_response(url=f"{BASE}/assistants/a1", json={"_id": "a1", "name": "old"})
-    httpx_mock.add_response(url=f"{BASE}/assistant_apps/a1", method="PUT", json={})
-    client.document_ai.update_agent("a1", {"schema": {"x": {"type": "string"}}})
-    put_req = [r for r in httpx_mock.get_requests() if r.method == "PUT"][0]
-    body = json.loads(put_req.content)
-    assert body["data_schema"] == {"x": {"type": "string"}}
-    assert "schema" not in body
+def test_update_agent_rejects_schema(httpx_mock: HTTPXMock, client):
+    with pytest.raises(ValueError, match="boardId"):
+        client.document_ai.update_agent("a1", {"schema": {"x": {"type": "string"}}})
+    with pytest.raises(ValueError, match="cannot hold a schema"):
+        client.document_ai.update_agent("a1", {"data_schema": {"x": {"type": "string"}}}, merge_mode="replace")
+    assert httpx_mock.get_requests() == []
 
 
 # ── deleteAgent ───────────────────────────────────────────────────────────────
