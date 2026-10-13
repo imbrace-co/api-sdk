@@ -125,15 +125,17 @@ describe("DocumentAIResource", () => {
       expect(body.agent_type).toBe("document_ai")
     })
 
-    it("renames `schema` → `data_schema`", async () => {
+    it("rejects `schema` before any request (the backend would drop it)", async () => {
       mockFetch({})
-      await makeResource().createAgent({
+      await expect(makeResource().createAgent({
         name: "X", instructions: "i", model_id: "m",
         schema: { invoice_number: { type: "string" } },
-      })
-      const body = getCalledBody()
-      expect(body.data_schema).toEqual({ invoice_number: { type: "string" } })
-      expect(body.schema).toBeUndefined()
+      })).rejects.toThrow(/documentModels/)
+      await expect(makeResource().createAgent({
+        name: "X", instructions: "i", model_id: "m",
+        data_schema: { invoice_number: { type: "string" } },
+      })).rejects.toThrow(/cannot hold a schema/)
+      expect(globalThis.fetch).not.toHaveBeenCalled()
     })
 
     it("respects custom provider_id and workflow_name", async () => {
@@ -163,12 +165,13 @@ describe("DocumentAIResource", () => {
       expect(getCalledInit(1).method).toBe("PUT")
     })
 
-    it("renames `schema` → `data_schema` on update", async () => {
+    it("rejects `schema` on update before any request", async () => {
       mockFetchSequence([{ data: { id: "a1", name: "ex" } }, { data: {} }])
-      await makeResource().updateAgent("a1", { schema: { x: { type: "string" } } })
-      const body = getCalledBody(1)
-      expect(body.data_schema).toEqual({ x: { type: "string" } })
-      expect(body.schema).toBeUndefined()
+      await expect(makeResource().updateAgent("a1", { schema: { x: { type: "string" } } })).rejects.toThrow(/boardId/)
+      await expect(
+        makeResource().updateAgent("a1", { schema: { x: { type: "string" } } }, { mergeMode: "replace" }),
+      ).rejects.toThrow(/cannot hold a schema/)
+      expect(globalThis.fetch).not.toHaveBeenCalled()
     })
   })
 

@@ -190,25 +190,36 @@ export interface DataIqItemPage {
 }
 
 export type FilterOp =
-  // text
+  // text (also origin)
   | "is" | "is_not" | "contains" | "not_contains" | "starts_with" | "ends_with"
-  // number
+  // number, table rows
   | "eq" | "ne" | "gt" | "gte" | "lt" | "lte"
-  // date
+  // date, time
   | "before" | "after" | "on_or_before" | "on_or_after"
+  // number, date, time, table rows: value is [from, to]
+  | "between"
   // select
   | "is_any_of" | "is_none_of"
   // multi select, relation, people
   | "contains_any" | "contains_all" | "contains_none"
   // checkbox
   | "checked" | "unchecked"
+  // files: value is one kind or a list of kinds (see FileKind)
+  | "file_type_any_of" | "file_type_none_of"
   // any column
   | "is_empty" | "is_not_empty"
+
+/** The kinds of file a Files column is filtered by. */
+export type FileKind = "pdf" | "image" | "audio" | "video" | "text" | "sheet" | "document" | "other"
 
 export interface FilterRule {
   fieldId: string
   op: FilterOp
-  value?: unknown
+  /**
+   * A single value, a list (several choices, or the two ends of `between`), or for dates a day
+   * counted from today: `"last:7:day"`, `"next:2:month"` (units: day, week, month, year).
+   */
+  value?: string | number | boolean | Array<string | number>
 }
 
 export interface ItemFilter {
@@ -219,11 +230,14 @@ export interface ItemFilter {
 
 export interface QueryDataIqItemsInput {
   filter?: ItemFilter
+  /** Free text looked for in the record's text-like values, joined to the filter by AND. */
+  search?: string
   /** Comma-separated; `-` sorts descending, e.g. `-created_at,fields.<fieldId>`. */
   sort?: string
   skip?: number
   /** Max 1000. */
   limit?: number
+  /** IANA zone the reader is in: dates counted from today and times are read there. */
   timeZone?: string
 }
 
