@@ -22,6 +22,7 @@ hero:
 ---
 
 import { Card, CardGrid, LinkCard } from "@astrojs/starlight/components";
+import AgentSkill from "../../../components/AgentSkill.astro";
 
 <div class="splash-features">
 
@@ -43,6 +44,26 @@ import { Card, CardGrid, LinkCard } from "@astrojs/starlight/components";
 </CardGrid>
 
 </div>
+
+<AgentSkill
+  titleTop="讓 AI 代理"
+  titleBottom="在 iMBrace 上建置"
+  intro="把一個技能檔案交給 Claude Code、Cursor 或任何程式碼代理，它就能了解 iMBrace 的運作方式。"
+  detail="之後，你的代理會使用你的 API Key 呼叫真實的 SDK，建立資料看板、代理和工作流程。上線前先在測試環境中試用。"
+  promptBefore="閱讀"
+  promptAfter="並為我設定 iMBrace SDK"
+  stepDone="已載入技能並安裝 SDK"
+  stepAsk="建立一個以資料看板為後端的退款申請代理"
+  stepResult="資料看板、代理和工作流程已建立，可以開始測試。"
+  copyLabel="複製提示詞"
+  copiedLabel="已複製！"
+  openLabel="開啟 SKILL.md"
+  features={[
+    { title: "一行即可開始", body: "把一條提示詞貼到程式碼代理中，它會讀取技能並安裝所需內容。" },
+    { title: "技能用來讀，SDK 用來跑", body: "技能檔案教會代理 iMBrace 的基本組成元件，SDK 讓它能在你的帳號上執行操作。" },
+    { title: "上線前先測試", body: "先讓 AI 在測試帳號上建置並檢查設定，再切換給真實使用者。" },
+  ]}
+/>
 
 <div class="splash-install">
 

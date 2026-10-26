@@ -22,6 +22,7 @@ hero:
 ---
 
 import { Card, CardGrid, LinkCard } from "@astrojs/starlight/components";
+import AgentSkill from "../../components/AgentSkill.astro";
 
 <div class="splash-features">
 
@@ -47,6 +48,26 @@ import { Card, CardGrid, LinkCard } from "@astrojs/starlight/components";
 </CardGrid>
 
 </div>
+
+<AgentSkill
+  titleTop="Ask your AI agent"
+  titleBottom="to build on iMBrace"
+  intro="Point Claude Code, Cursor or any coding agent at one skill file and it learns how iMBrace works."
+  detail="From there your agent creates boards, agents and workflows by calling the real SDK with your API key. Try it in a sandbox before going live."
+  promptBefore="Read"
+  promptAfter="and set up the iMBrace SDK for me"
+  stepDone="Skill loaded & SDK installed"
+  stepAsk="Build a refund-request agent backed by a databoard"
+  stepResult="Board, agent and workflow created. Ready to test."
+  copyLabel="Copy prompt"
+  copiedLabel="Copied!"
+  openLabel="Open SKILL.md"
+  features={[
+    { title: "One line to start", body: "Paste one prompt into your coding agent. It reads the skill and installs what it needs." },
+    { title: "A skill to read, an SDK to run", body: "The skill file teaches your agent the iMBrace building blocks. The SDK gives it the calls to act on your account." },
+    { title: "Test before you launch", body: "Let AI build and check your setup against a test account before you switch real users over." },
+  ]}
+/>
 
 <div class="splash-install">
 
