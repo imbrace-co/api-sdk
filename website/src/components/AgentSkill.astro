@@ -1,0 +1,289 @@
+---
+// "Ask your AI agent" section for the home page: a short pitch, a terminal
+// mock-up of the prompt, and buttons to copy the prompt or open SKILL.md.
+// Text is passed in per locale; the skill URL is shared.
+
+const SKILL_URL = 'https://unpkg.com/imbrace-vibe-code-v2/skill/SKILL.md'
+
+interface Feature {
+  title: string
+  body: string
+}
+
+interface Props {
+  titleTop: string
+  titleBottom: string
+  intro: string
+  detail: string
+  promptBefore: string
+  promptAfter: string
+  stepDone: string
+  stepAsk: string
+  stepResult: string
+  copyLabel: string
+  copiedLabel: string
+  openLabel: string
+  features: [Feature, Feature, Feature]
+}
+
+const p = Astro.props
+const prompt = `${p.promptBefore} ${SKILL_URL} ${p.promptAfter}`.trim()
+const icons = [
+  // terminal
+  '<path d="M4 17l6-6-6-6M12 19h8"/>',
+  // book
+  '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14zM20 17v4H6.5A2.5 2.5 0 0 1 4 18.5"/>',
+  // flask
+  '<path d="M9 3h6M10 3v6L4.5 19a1.5 1.5 0 0 0 1.3 2h12.4a1.5 1.5 0 0 0 1.3-2L14 9V3"/>',
+]
+---
+
+<section class="agent-skill not-content">
+  <div class="agent-skill__top">
+    <div class="agent-skill__copy">
+      <h2 class="agent-skill__title">
+        <span>{p.titleTop}</span>
+        <span>{p.titleBottom}</span>
+      </h2>
+      <p>{p.intro}</p>
+      <p>{p.detail}</p>
+      <div class="agent-skill__actions">
+        <button type="button" class="agent-skill__btn agent-skill__btn--primary" data-copy-prompt={prompt} data-copied={p.copiedLabel}>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+          <span>{p.copyLabel}</span>
+        </button>
+        <a class="agent-skill__btn agent-skill__btn--secondary" href={SKILL_URL} target="_blank" rel="noopener">
+          <span>{p.openLabel}</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="agent-skill__terminal" aria-label="Terminal">
+      <div class="agent-skill__bar">
+        <span class="dot dot--r"></span><span class="dot dot--y"></span><span class="dot dot--g"></span>
+        <span class="agent-skill__bar-label">TERMINAL</span>
+      </div>
+      <div class="agent-skill__lines">
+        <div class="line line--ask">
+          <span class="mark">➜</span>
+          <span>{p.promptBefore} <a href={SKILL_URL} target="_blank" rel="noopener">{SKILL_URL}</a> {p.promptAfter}</span>
+        </div>
+        <div class="line line--ok"><span class="mark">✓</span><span>{p.stepDone}</span></div>
+        <div class="line line--ask"><span class="mark">➜</span><span>{p.stepAsk}</span></div>
+        <div class="line line--ok"><span class="mark">✓</span><span>{p.stepResult}</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="agent-skill__features">
+    {p.features.map((f, i) => (
+      <div class="agent-skill__feature">
+        <span class="agent-skill__icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true" set:html={icons[i]} />
+        </span>
+        <div>
+          <h3>{f.title}</h3>
+          <p>{f.body}</p>
+        </div>
+      </div>
+    ))}
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('[data-copy-prompt]').forEach((btn) => {
+    const label = btn.querySelector('span')
+    const original = label?.textContent ?? ''
+    btn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(btn.dataset.copyPrompt ?? '')
+        if (label) label.textContent = btn.dataset.copied ?? original
+        setTimeout(() => { if (label) label.textContent = original }, 2000)
+      } catch {
+        // Clipboard blocked: leave the label as is; the prompt is visible in the terminal.
+      }
+    })
+  })
+</script>
+
+<style>
+  .agent-skill {
+    max-width: 1100px;
+    margin: 4rem auto 0;
+    padding: 3rem 2rem 2.5rem;
+    border-radius: 16px;
+    background: rgba(79, 70, 229, 0.04);
+    border: 1px solid rgba(79, 70, 229, 0.1);
+  }
+  :global(:root[data-theme='dark']) .agent-skill {
+    background: rgba(129, 140, 248, 0.05);
+    border-color: rgba(129, 140, 248, 0.1);
+  }
+
+  .agent-skill__top {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem;
+    align-items: center;
+  }
+
+  .agent-skill .agent-skill__title {
+    display: flex;
+    flex-direction: column;
+    margin: 0 0 1.25rem;
+    font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--sl-color-white);
+    border: none;
+  }
+  .agent-skill__title span:last-child { color: var(--sl-color-accent); }
+
+  .agent-skill .agent-skill__copy p {
+    margin: 0 0 1rem;
+    font-size: 1.05rem;
+    line-height: 1.6;
+    color: var(--sl-color-gray-2);
+  }
+
+  .agent-skill__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+  }
+  .agent-skill__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.2rem;
+    border-radius: 999px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  }
+  .agent-skill__btn:hover { transform: translateY(-1px); }
+  .agent-skill__btn svg {
+    width: 1rem;
+    height: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .agent-skill .agent-skill__btn--primary {
+    background: var(--sl-color-accent);
+    color: var(--sl-color-black);
+  }
+  .agent-skill__btn--primary:hover { background: var(--sl-color-accent-high); }
+  .agent-skill .agent-skill__btn--secondary {
+    color: var(--sl-color-white);
+    border-color: var(--sl-color-gray-5);
+  }
+  .agent-skill__btn--secondary:hover { border-color: var(--sl-color-accent); }
+
+  /* Terminal stays dark in both themes, like a real terminal. */
+  .agent-skill__terminal {
+    min-width: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #1c1c22;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 16px 48px rgba(15, 15, 30, 0.25);
+    font-family: var(--sl-font-mono);
+    font-size: 0.82rem;
+  }
+  .agent-skill__bar {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.6rem 0.9rem;
+    background: #2a2a32;
+  }
+  .dot { width: 0.7rem; height: 0.7rem; border-radius: 50%; }
+  .dot--r { background: #ff5f57; }
+  .dot--y { background: #febc2e; }
+  .dot--g { background: #28c840; }
+  .agent-skill__bar-label {
+    margin-left: 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #8b8b96;
+  }
+  .agent-skill__lines {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.4rem 1.2rem 1.6rem;
+  }
+  .line {
+    display: grid;
+    grid-template-columns: 1.25rem 1fr;
+    gap: 0.5rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+  .line--ask { color: #f4f4f5; font-weight: 600; }
+  .line--ask .mark { color: #a1a1aa; }
+  .line--ok { color: #4ade80; }
+  .line a { color: #818cf8; text-decoration: none; font-weight: 400; }
+  .line a:hover { text-decoration: underline; }
+
+  .agent-skill__features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin-top: 2.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--sl-color-hairline);
+  }
+  .agent-skill__feature {
+    display: grid;
+    grid-template-columns: 2.5rem 1fr;
+    gap: 1rem;
+    align-items: start;
+  }
+  .agent-skill__icon {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 8px;
+    color: var(--sl-color-accent);
+    background: var(--sl-color-accent-low);
+  }
+  .agent-skill__icon svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .agent-skill .agent-skill__feature h3 {
+    margin: 0 0 0.35rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--sl-color-white);
+  }
+  .agent-skill .agent-skill__feature p {
+    margin: 0;
+    font-size: 0.92rem;
+    line-height: 1.55;
+    color: var(--sl-color-gray-3);
+  }
+
+  @media (max-width: 50rem) {
+    .agent-skill { padding: 2rem 1rem; }
+    .agent-skill__top,
+    .agent-skill__features { grid-template-columns: 1fr; }
+  }
+</style>

@@ -118,14 +118,14 @@ p, li {
 }
 
 /* Inline links (excludes buttons, sidebar, pagination) */
-a:not(.sidebar-content a):not(.pagination-link):not(.site-title):not(.sl-link-button):not(.hero .actions a) {
+a:not(.sidebar-content a):not(.pagination-link):not(.site-title):not(.sl-link-button):not(.hero .actions a):not(.agent-skill a) {
   color: var(--sl-color-accent);
   text-decoration: none;
   border-bottom: 1px solid transparent;
   transition: border-color 0.15s ease, opacity 0.15s ease;
 }
 
-a:not(.sidebar-content a):not(.pagination-link):not(.site-title):not(.sl-link-button):not(.hero .actions a):hover {
+a:not(.sidebar-content a):not(.pagination-link):not(.site-title):not(.sl-link-button):not(.hero .actions a):not(.agent-skill a):hover {
   border-bottom-color: var(--sl-color-accent);
   opacity: 0.85;
 }
@@ -623,6 +623,8 @@ html[data-has-hero] .hero .actions {
 
 .splash-features {
   margin-top: 4rem;
+  /* Match the full 1100px width of the "Ask your AI agent" box below. */
+  padding-inline: 0;
 }
 
 .splash-features h2 {

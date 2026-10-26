@@ -22,6 +22,7 @@ hero:
 ---
 
 import { Card, CardGrid, LinkCard } from "@astrojs/starlight/components";
+import AgentSkill from "../../../components/AgentSkill.astro";
 
 <div class="splash-features">
 
@@ -47,6 +48,26 @@ import { Card, CardGrid, LinkCard } from "@astrojs/starlight/components";
 </CardGrid>
 
 </div>
+
+<AgentSkill
+  titleTop="Nhờ AI agent"
+  titleBottom="xây dựng trên iMBrace"
+  intro="Đưa cho Claude Code, Cursor hay bất kỳ coding agent nào một file skill, và nó sẽ hiểu iMBrace hoạt động ra sao."
+  detail="Từ đó agent tự tạo board, agent và workflow bằng cách gọi SDK thật với API key của bạn. Thử trên môi trường test trước khi chạy thật."
+  promptBefore="Đọc"
+  promptAfter="và cài đặt iMBrace SDK cho tôi"
+  stepDone="Đã đọc skill & cài SDK"
+  stepAsk="Tạo agent xử lý yêu cầu hoàn tiền, dùng databoard làm dữ liệu"
+  stepResult="Đã tạo board, agent và workflow. Sẵn sàng để test."
+  copyLabel="Sao chép prompt"
+  copiedLabel="Đã sao chép!"
+  openLabel="Mở SKILL.md"
+  features={[
+    { title: "Một dòng để bắt đầu", body: "Dán một prompt vào coding agent. Nó tự đọc skill và cài những gì cần thiết." },
+    { title: "Skill để đọc, SDK để chạy", body: "File skill dạy agent các khối xây dựng của iMBrace. SDK cho agent các lệnh để thao tác trên tài khoản của bạn." },
+    { title: "Kiểm thử trước khi ra mắt", body: "Để AI dựng và kiểm tra cấu hình trên tài khoản test trước khi đưa người dùng thật vào." },
+  ]}
+/>
 
 <div class="splash-install">
 
