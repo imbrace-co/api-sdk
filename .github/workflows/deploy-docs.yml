@@ -6,6 +6,10 @@ on:
     paths:
       - 'website/**'
       - '.github/workflows/deploy-docs.yml'
+  # Rebuild every 3 days so /skill.md picks up new imbrace-vibe-code-v2
+  # releases from unpkg (see website/src/pages/skill.md.ts).
+  schedule:
+    - cron: '0 2 */3 * *'
   workflow_dispatch:
 
 permissions:
