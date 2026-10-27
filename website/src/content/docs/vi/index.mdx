@@ -3,8 +3,8 @@ title: Imbrace SDK
 description: SDK TypeScript và Python chính thức cho Imbrace Gateway — an toàn kiểu dữ liệu, đầy đủ tính năng, sẵn sàng cho production.
 template: splash
 hero:
-  title: Phát triển nhanh hơn với Imbrace SDK
-  tagline: SDK an toàn kiểu dữ liệu, đầy đủ tính năng cho Imbrace Gateway. Kết nối ứng dụng TypeScript và Python với nền tảng Imbrace trong vài phút.
+  title: 'Xây với AI.<br />Chạy trên iMBrace.'
+  tagline: 'SDK TypeScript và Python, CLI và MCP server cho nền tảng iMBrace. Tự viết code, hoặc đưa cho AI agent một prompt để nó dựng board, agent và workflow cho bạn.'
   image:
     file: ../../../assets/imbrace_logo_small.svg
     alt: Imbrace
@@ -13,12 +13,13 @@ hero:
       link: getting-started/overview/
       icon: right-arrow
       variant: primary
-    - text: Tổng quan SDK
-      link: sdk/overview/
+    - text: Thiết lập với AI agent
+      link: '#agents'
       variant: secondary
-    - text: Quick Start
-      link: sdk/quick-start/
-      variant: minimal
+      icon: '<svg viewBox="0 0 24 24" width="1.1em" height="1.1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17l6-6-6-6M12 19h8"/></svg>'
+      attrs:
+        data-agent-prompt: true
+        data-copied: "Đã sao chép prompt!"
 ---
 
 import { Card, CardGrid, LinkCard } from "@astrojs/starlight/components";

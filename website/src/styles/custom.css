@@ -926,3 +926,8 @@ html[data-has-hero] .hero .actions {
 :root:not([data-version]) [data-version-only]:not([data-version-only='1.0.2']) {
   display: none !important;
 }
+
+/* Hero "Set up with your agent" button: icon before the text, like creem.io. */
+.hero .actions a[data-agent-prompt] svg {
+  order: -1;
+}

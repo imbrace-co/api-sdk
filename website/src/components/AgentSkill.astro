@@ -38,7 +38,7 @@ const icons = [
 ]
 ---
 
-<section class="agent-skill not-content">
+<section id="agents" class="agent-skill not-content">
   <div class="agent-skill__top">
     <div class="agent-skill__copy">
       <h2 class="agent-skill__title">
@@ -92,16 +92,38 @@ const icons = [
 </section>
 
 <script>
-  document.querySelectorAll<HTMLButtonElement>('[data-copy-prompt]').forEach((btn) => {
-    const label = btn.querySelector('span')
-    const original = label?.textContent ?? ''
-    btn.addEventListener('click', async () => {
+  // Swap the label's text for a moment, then put it back.
+  function flash(label: Node | null, text: string | undefined) {
+    if (!label || !text) return
+    const original = label.textContent
+    label.textContent = text
+    setTimeout(() => { label.textContent = original }, 2000)
+  }
+
+  const source = document.querySelector<HTMLButtonElement>('[data-copy-prompt]')
+  const prompt = source?.dataset.copyPrompt ?? ''
+
+  source?.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(prompt)
+      flash(source.querySelector('span'), source.dataset.copied)
+    } catch {
+      // Clipboard blocked: the prompt is still visible in the terminal.
+    }
+  })
+
+  // Hero "Set up with your agent" button: copy the same prompt, like creem.io.
+  // If copying fails, the link falls through to the #agents section.
+  document.querySelectorAll<HTMLAnchorElement>('a[data-agent-prompt]').forEach((link) => {
+    link.addEventListener('click', async (event) => {
+      if (!prompt) return
+      event.preventDefault()
       try {
-        await navigator.clipboard.writeText(btn.dataset.copyPrompt ?? '')
-        if (label) label.textContent = btn.dataset.copied ?? original
-        setTimeout(() => { if (label) label.textContent = original }, 2000)
+        await navigator.clipboard.writeText(prompt)
+        const label = [...link.childNodes].find((n) => n.nodeType === Node.TEXT_NODE && n.textContent?.trim())
+        flash(label ?? null, link.dataset.copied)
       } catch {
-        // Clipboard blocked: leave the label as is; the prompt is visible in the terminal.
+        document.getElementById('agents')?.scrollIntoView({ behavior: 'smooth' })
       }
     })
   })

@@ -3,8 +3,8 @@ title: Imbrace SDK
 description: Imbrace Gateway 的官方 TypeScript 和 Python SDK — 型別安全、開箱即用、生產就緒。
 template: splash
 hero:
-  title: 使用 Imbrace SDK 更快交付
-  tagline: 型別安全、開箱即用的 Imbrace Gateway SDK。幾分鐘內將 TypeScript 和 Python 應用程式連接到 Imbrace 平台。
+  title: '用 AI 建置。<br />在 iMBrace 上交付。'
+  tagline: '適用於 iMBrace 平台的 TypeScript 與 Python SDK、CLI 與 MCP 伺服器。你可以自己寫程式，也可以給 AI 代理一條提示詞，讓它為你建立資料看板、代理和工作流程。'
   image:
     file: ../../../assets/imbrace_logo_small.svg
     alt: Imbrace
@@ -13,12 +13,13 @@ hero:
       link: getting-started/overview/
       icon: right-arrow
       variant: primary
-    - text: SDK 概覽
-      link: sdk/overview/
+    - text: 用 AI 代理設定
+      link: '#agents'
       variant: secondary
-    - text: 快速入門
-      link: sdk/quick-start/
-      variant: minimal
+      icon: '<svg viewBox="0 0 24 24" width="1.1em" height="1.1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17l6-6-6-6M12 19h8"/></svg>'
+      attrs:
+        data-agent-prompt: true
+        data-copied: "已複製提示詞！"
 ---
 
 import { Card, CardGrid, LinkCard } from "@astrojs/starlight/components";
