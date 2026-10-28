@@ -86,7 +86,7 @@ const subAgents = await client.chatAi.listAiAgentSubAgents();
 // 获取单个 AI 代理
 const agent = await client.chatAi.getAiAgent("9f77692f-33d0-436a-8138-2efb268838e6");
 
-// 创建。省略时 SDK 会自动填充 { provider_id: "system", model_id: "Default" }；
+// 创建。省略时 SDK 会自动填充 { provider_id: "default", model_id: "Default" }；
 // "Default" 会路由到该组织配置的默认模型，可跨组织通用。像 "gpt-4o" 这样的
 // 具体名称只有在该组织的 system 提供商确实公开它时才有效 —
 // `client.ai.listModels()` 可以查看有哪些可用模型。传入 `streaming: true`，
@@ -95,7 +95,7 @@ const agent = await client.chatAi.getAiAgent("9f77692f-33d0-436a-8138-2efb268838
 const created = await client.chatAi.createAiAgent({
   name: "Support Bot",
   workflow_name: "support_bot_v1",
-  provider_id: "system",
+  provider_id: "default",
   model_id: "Default",
   streaming: true,
   description: "Handles tier-1 support queries",
@@ -127,7 +127,7 @@ sub_agents = client.chat_ai.list_ai_agent_sub_agents()
 # 获取单个 AI 代理
 agent = client.chat_ai.get_ai_agent("9f77692f-33d0-436a-8138-2efb268838e6")
 
-# 创建。省略时 SDK 会自动填充 {"provider_id": "system", "model_id": "Default"}；
+# 创建。省略时 SDK 会自动填充 {"provider_id": "default", "model_id": "Default"}；
 # "Default" 会路由到该组织配置的默认模型，可跨组织通用。像 "gpt-4o" 这样的
 # 具体名称只有在该组织的 system 提供商确实公开它时才有效 —
 # `client.ai.list_models()` 可以查看有哪些可用模型。传入 `streaming: True`，
@@ -617,7 +617,7 @@ const app = await client.ai.createAiAgentApp({
   workflow_name: "support_workflow_v1",
   assistant_id: "asst_abc",
   model_id: "Default",   // 跨组织通用；"gpt-4o" 只在该组织的 system 提供商公开它时才有效
-  provider_id: "system",
+  provider_id: "default",
 });
 
 // 更新和删除
@@ -642,7 +642,7 @@ app = client.ai.create_ai_agent_app({
     "workflow_name": "support_workflow_v1",
     "assistant_id": "asst_abc",
     "model_id": "Default",   # 跨组织通用；"gpt-4o" 只在该组织的 system 提供商公开它时才有效
-    "provider_id": "system",
+    "provider_id": "default",
 })
 
 # 更新和删除

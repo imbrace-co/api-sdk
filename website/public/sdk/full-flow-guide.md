@@ -66,7 +66,7 @@ This guide walks through the four major workflows in the Imbrace SDK from start 
      workflow_name: "support_bot_v1",
      description: "Handles tier-1 customer support queries",
      instructions: "You are a helpful support agent. Be concise and friendly.",
-     provider_id: "system",   // use the org's default LLM provider
+     provider_id: "default",   // use the org's default LLM provider
      model_id: "Default",     // routes to the org's configured default model
      streaming: true,         // emit text-delta SSE events (required for chat UIs)
    })
@@ -83,7 +83,7 @@ This guide walks through the four major workflows in the Imbrace SDK from start 
        "workflow_name": "support_bot_v1",
        "description": "Handles tier-1 customer support queries",
        "instructions": "You are a helpful support agent. Be concise and friendly.",
-       "provider_id": "system",   # use the org's default LLM provider
+       "provider_id": "default",   # use the org's default LLM provider
        "model_id": "Default",     # routes to the org's configured default model
        "streaming": True,         # emit text-delta SSE events (required for chat UIs)
    })
@@ -92,7 +92,7 @@ This guide walks through the four major workflows in the Imbrace SDK from start 
    print("AI agent created:", ai_agent_id)
    ```
 
-   `provider_id` and `model_id` are optional — the SDK auto-fills `{ provider_id: "system", model_id: "Default" }` when omitted. `"Default"` routes to whatever the org has configured as its system default model and is the org-portable choice. Pass them explicitly to override: `provider_id: "<uuid>"` to pin a custom LLM provider, or `model_id: "gpt-4o"` etc. — but a literal model name only works in orgs whose `system` provider actually exposes it. List your org's models with `client.ai.listModels()` (TypeScript) / `client.ai.list_models()` (Python) before hardcoding.
+   `provider_id` and `model_id` are optional — the SDK auto-fills `{ provider_id: "default", model_id: "Default" }` when omitted. `"Default"` routes to whatever the org has configured as its system default model and is the org-portable choice. Pass them explicitly to override: `provider_id: "<uuid>"` to pin a custom LLM provider, or `model_id: "gpt-4o"` etc. — but a literal model name only works in orgs whose `default` provider actually exposes it. List your org's models with `client.ai.listModels()` (TypeScript) / `client.ai.list_models()` (Python) before hardcoding.
 
 > **Always pass `streaming: true` for chat UIs.** Newly-created agents default to `streaming: false` on the server. With that default, `/v2/chat` returns the full reply as a single `text/plain` response (no `text-delta` events), so `streamChatText` and any other SSE parser yields **zero chunks** and a chat UI shows nothing. Passing `streaming: true` at creation time makes the server emit the Vercel-AI-SDK UI-Message-Stream (`Content-Type: text/event-stream`). You can also flip it later via `updateAiAgent(id, { streaming: true })`.
 

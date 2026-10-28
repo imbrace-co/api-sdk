@@ -86,7 +86,7 @@ const subAgents = await client.chatAi.listAiAgentSubAgents();
 // Lấy một AI agent
 const agent = await client.chatAi.getAiAgent("9f77692f-33d0-436a-8138-2efb268838e6");
 
-// Tạo. SDK tự điền { provider_id: "system", model_id: "Default" }
+// Tạo. SDK tự điền { provider_id: "default", model_id: "Default" }
 // khi bị bỏ trống; "Default" định tuyến tới model mặc định đã cấu hình của tổ chức
 // và dùng được ở mọi tổ chức. Tên cụ thể như "gpt-4o" chỉ hoạt động nếu
 // nhà cung cấp system của tổ chức thực sự có model đó — `client.ai.listModels()` cho biết
@@ -96,7 +96,7 @@ const agent = await client.chatAi.getAiAgent("9f77692f-33d0-436a-8138-2efb268838
 const created = await client.chatAi.createAiAgent({
   name: "Support Bot",
   workflow_name: "support_bot_v1",
-  provider_id: "system",
+  provider_id: "default",
   model_id: "Default",
   streaming: true,
   description: "Handles tier-1 support queries",
@@ -128,7 +128,7 @@ sub_agents = client.chat_ai.list_ai_agent_sub_agents()
 # Lấy một AI agent
 agent = client.chat_ai.get_ai_agent("9f77692f-33d0-436a-8138-2efb268838e6")
 
-# Tạo. SDK tự điền {"provider_id": "system", "model_id": "Default"}
+# Tạo. SDK tự điền {"provider_id": "default", "model_id": "Default"}
 # khi bị bỏ trống; "Default" định tuyến tới model mặc định đã cấu hình của tổ chức và
 # dùng được ở mọi tổ chức. Tên cụ thể như "gpt-4o" chỉ hoạt động nếu nhà cung cấp
 # system của tổ chức thực sự có model đó — `client.ai.list_models()` cho biết model nào
@@ -619,7 +619,7 @@ const app = await client.ai.createAiAgentApp({
   workflow_name: "support_workflow_v1",
   assistant_id: "asst_abc",
   model_id: "Default",   // an toàn cho mọi tổ chức; "gpt-4o" chỉ hoạt động nếu nhà cung cấp system của tổ chức có model đó
-  provider_id: "system",
+  provider_id: "default",
 });
 
 // Cập nhật và xóa
@@ -644,7 +644,7 @@ app = client.ai.create_ai_agent_app({
     "workflow_name": "support_workflow_v1",
     "assistant_id": "asst_abc",
     "model_id": "Default",   # an toàn cho mọi tổ chức; "gpt-4o" chỉ hoạt động nếu nhà cung cấp system của tổ chức có model đó
-    "provider_id": "system",
+    "provider_id": "default",
 })
 
 # Cập nhật và xóa

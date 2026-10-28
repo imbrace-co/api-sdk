@@ -86,7 +86,7 @@ const subAgents = await client.chatAi.listAiAgentSubAgents();
 // 取得單一 AI agent
 const agent = await client.chatAi.getAiAgent("9f77692f-33d0-436a-8138-2efb268838e6");
 
-// 建立。省略時 SDK 會自動填入 { provider_id: "system", model_id: "Default" }；
+// 建立。省略時 SDK 會自動填入 { provider_id: "default", model_id: "Default" }；
 // "Default" 會導向組織設定的預設模型，可跨組織通用。像 "gpt-4o" 這類
 // 字面名稱只有在該組織的 system 提供者確實公開該模型時才有效 —
 // `client.ai.listModels()` 會列出可用的模型。請傳入 `streaming: true`，讓
@@ -95,7 +95,7 @@ const agent = await client.chatAi.getAiAgent("9f77692f-33d0-436a-8138-2efb268838
 const created = await client.chatAi.createAiAgent({
   name: "Support Bot",
   workflow_name: "support_bot_v1",
-  provider_id: "system",
+  provider_id: "default",
   model_id: "Default",
   streaming: true,
   description: "Handles tier-1 support queries",
@@ -127,7 +127,7 @@ sub_agents = client.chat_ai.list_ai_agent_sub_agents()
 # 取得單一 AI agent
 agent = client.chat_ai.get_ai_agent("9f77692f-33d0-436a-8138-2efb268838e6")
 
-# 建立。省略時 SDK 會自動填入 {"provider_id": "system", "model_id": "Default"}；
+# 建立。省略時 SDK 會自動填入 {"provider_id": "default", "model_id": "Default"}；
 # "Default" 會導向組織設定的預設模型，可跨組織通用。像 "gpt-4o" 這類
 # 字面名稱只有在該組織的 system 提供者確實公開該模型時才有效 —
 # `client.ai.list_models()` 會列出可用的模型。請傳入 `streaming: True`，讓
@@ -617,7 +617,7 @@ const app = await client.ai.createAiAgentApp({
   workflow_name: "support_workflow_v1",
   assistant_id: "asst_abc",
   model_id: "Default",   // 跨組織通用；"gpt-4o" 只在該組織的 system 提供者公開該模型時才有效
-  provider_id: "system",
+  provider_id: "default",
 });
 
 // 更新和刪除
@@ -642,7 +642,7 @@ app = client.ai.create_ai_agent_app({
     "workflow_name": "support_workflow_v1",
     "assistant_id": "asst_abc",
     "model_id": "Default",   # 跨組織通用；"gpt-4o" 只在該組織的 system 提供者公開該模型時才有效
-    "provider_id": "system",
+    "provider_id": "default",
 })
 
 # 更新和刪除

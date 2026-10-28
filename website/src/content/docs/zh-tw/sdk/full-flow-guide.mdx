@@ -86,7 +86,7 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
          workflow_name: "support_bot_v1",
          description: "Handles tier-1 customer support queries",
          instructions: "You are a helpful support agent. Be concise and friendly.",
-         provider_id: "system",   // 使用組織的預設 LLM 提供者
+         provider_id: "default",   // 使用組織的預設 LLM 提供者
          model_id: "Default",     // 路由到組織設定的預設模型
          streaming: true,         // 發出 text-delta SSE 事件（見下方 Aside）
        })
@@ -102,7 +102,7 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
            "workflow_name": "support_bot_v1",
            "description": "Handles tier-1 customer support queries",
            "instructions": "You are a helpful support agent. Be concise and friendly.",
-           "provider_id": "system",   # 使用組織的預設 LLM 提供者
+           "provider_id": "default",   # 使用組織的預設 LLM 提供者
            "model_id": "Default",     # 路由到組織設定的預設模型
            "streaming": True,         # 發出 text-delta SSE 事件（見下方 Aside）
        })
@@ -113,7 +113,7 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
      </TabItem>
    </Tabs>
 
-   `provider_id` 和 `model_id` 是可選的 — SDK 在省略時會自動填入 `{ provider_id: "system", model_id: "Default" }`。`"Default"` 路由到組織設定的系統預設模型，是跨組織通用的選擇。顯式傳入即可覆寫：`provider_id: "<uuid>"` 指定自訂 LLM 提供者，或 `model_id: "gpt-4o"` 等 — 但具體模型名稱只在該組織的 `system` 提供者實際公開該模型時才有效。在寫死於程式碼前，使用 `client.ai.listModels()`（TypeScript）/ `client.ai.list_models()`（Python）列出組織的可用模型。
+   `provider_id` 和 `model_id` 是可選的 — SDK 在省略時會自動填入 `{ provider_id: "default", model_id: "Default" }`。`"Default"` 路由到組織設定的系統預設模型，是跨組織通用的選擇。顯式傳入即可覆寫：`provider_id: "<uuid>"` 指定自訂 LLM 提供者，或 `model_id: "gpt-4o"` 等 — 但具體模型名稱只在該組織的 `default` 提供者實際公開該模型時才有效。在寫死於程式碼前，使用 `client.ai.listModels()`（TypeScript）/ `client.ai.list_models()`（Python）列出組織的可用模型。
 
    <Aside type="caution" title="聊天 UI 請一律傳入 streaming: true">
      新建立的代理在伺服器端預設為 **`streaming: false`**。在此預設下，`streamChat` 會以單一 `text/plain` 回應傳回完整回覆 — 沒有任何 `text-delta` 事件 — 因此 `streamChatText` 輔助方法（以及任何其他 SSE 解析器）會產出**零個片段**，聊天 UI 也就什麼都不顯示。在建立時傳入 `streaming: true`，伺服器便會發出 `streamChatText` 設計用來解析的 Vercel-AI-SDK UI-Message-Stream（`Content-Type: text/event-stream`）。您之後也可以透過 `updateAiAgent(id, { streaming: true })` 切換。

@@ -86,7 +86,7 @@ Hướng dẫn này đi qua bốn quy trình làm việc chính trong Imbrace SD
          workflow_name: "support_bot_v1",
          description: "Handles tier-1 customer support queries",
          instructions: "You are a helpful support agent. Be concise and friendly.",
-         provider_id: "system",   // sử dụng nhà cung cấp LLM mặc định của tổ chức
+         provider_id: "default",   // sử dụng nhà cung cấp LLM mặc định của tổ chức
          model_id: "Default",     // định tuyến tới model mặc định đã cấu hình của tổ chức
          streaming: true,         // phát các sự kiện SSE text-delta (xem Aside bên dưới)
        })
@@ -102,7 +102,7 @@ Hướng dẫn này đi qua bốn quy trình làm việc chính trong Imbrace SD
            "workflow_name": "support_bot_v1",
            "description": "Handles tier-1 customer support queries",
            "instructions": "You are a helpful support agent. Be concise and friendly.",
-           "provider_id": "system",   # sử dụng nhà cung cấp LLM mặc định của tổ chức
+           "provider_id": "default",   # sử dụng nhà cung cấp LLM mặc định của tổ chức
            "model_id": "Default",     # định tuyến tới model mặc định đã cấu hình của tổ chức
            "streaming": True,         # phát các sự kiện SSE text-delta (xem Aside bên dưới)
        })
@@ -113,7 +113,7 @@ Hướng dẫn này đi qua bốn quy trình làm việc chính trong Imbrace SD
      </TabItem>
    </Tabs>
 
-   `provider_id` và `model_id` là tùy chọn — SDK tự điền `{ provider_id: "system", model_id: "Default" }` khi bỏ trống. `"Default"` gắn với bất kỳ model nào mà tổ chức cấu hình làm mặc định và là lựa chọn an toàn cho mọi tổ chức. Truyền tường minh để ghi đè: `provider_id: "<uuid>"` để gắn nhà cung cấp LLM tùy chỉnh, hoặc `model_id: "gpt-4o"` v.v. — nhưng tên model cụ thể chỉ hoạt động nếu nhà cung cấp `system` của tổ chức thực sự có model đó. Liệt kê các model của tổ chức bằng `client.ai.listModels()` (TypeScript) / `client.ai.list_models()` (Python) trước khi hardcode.
+   `provider_id` và `model_id` là tùy chọn — SDK tự điền `{ provider_id: "default", model_id: "Default" }` khi bỏ trống. `"Default"` gắn với bất kỳ model nào mà tổ chức cấu hình làm mặc định và là lựa chọn an toàn cho mọi tổ chức. Truyền tường minh để ghi đè: `provider_id: "<uuid>"` để gắn nhà cung cấp LLM tùy chỉnh, hoặc `model_id: "gpt-4o"` v.v. — nhưng tên model cụ thể chỉ hoạt động nếu nhà cung cấp `default` của tổ chức thực sự có model đó. Liệt kê các model của tổ chức bằng `client.ai.listModels()` (TypeScript) / `client.ai.list_models()` (Python) trước khi hardcode.
 
    <Aside type="caution" title="Luôn truyền streaming: true cho giao diện chat">
      Agent mới tạo mặc định là **`streaming: false`** trên server. Với mặc định đó, `streamChat` trả về toàn bộ câu trả lời trong một response `text/plain` duy nhất — không có sự kiện `text-delta` — nên helper `streamChatText` (và bất kỳ parser SSE nào khác) trả về **0 chunk** và giao diện chat không hiển thị gì. Truyền `streaming: true` khi tạo sẽ khiến server phát Vercel-AI-SDK UI-Message-Stream (`Content-Type: text/event-stream`) mà `streamChatText` được thiết kế để phân tích. Bạn cũng có thể bật sau qua `updateAiAgent(id, { streaming: true })`.
