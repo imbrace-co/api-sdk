@@ -799,6 +799,27 @@ asyncio.run(main())
 </TabItem>
 </Tabs>
 
+### Huỷ stream (TypeScript, 1.7.0+)
+
+Truyền một `AbortSignal` làm tham số thứ hai cho `streamChat`, `streamChatText` hoặc `streamSubAgentChat`. Abort sẽ đóng kết nối ở bất kỳ thời điểm nào, kể cả giữa stream: không còn chunk nào tới và lời gọi ném lỗi. Đừng đặt signal trong body của request; nó bị gửi dưới dạng JSON và không có tác dụng.
+
+```typescript
+const controller = new AbortController();
+stopButton.onclick = () => controller.abort();
+
+try {
+  for await (const chunk of client.aiAgent.streamChatText(body, { signal: controller.signal })) {
+    process.stdout.write(chunk);
+  }
+} catch (e) {
+  if (!controller.signal.aborted) throw e;
+}
+```
+
+:::note
+Abort đóng kết nối phía client. Hiện tại máy chủ vẫn chạy nốt lượt agent đã bắt đầu.
+:::
+
 ---
 
 ## Sub-agent Chat v2

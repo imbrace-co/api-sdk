@@ -1,6 +1,11 @@
+from datetime import datetime, timedelta, timezone
+from email.utils import format_datetime
+
 import pytest
 from pytest_httpx import HTTPXMock
-from imbrace.http import HttpTransport
+import imbrace.http as imbrace_http
+from imbrace import AsyncImbraceClient, ImbraceClient
+from imbrace.http import AsyncHttpTransport, HttpTransport, parse_retry_after
 from imbrace.auth.token_manager import TokenManager
 from imbrace.exceptions import AuthError, ApiError
 
@@ -103,3 +108,82 @@ def test_retries_on_429(httpx_mock: HTTPXMock, transport):
     res = transport.request("GET", "https://test.com")
     assert res.json() == {"ok": True}
     assert len(httpx_mock.get_requests()) == 2
+
+
+@pytest.fixture
+def sleeps(monkeypatch):
+    """Record retry waits instead of sleeping."""
+    waits = []
+    monkeypatch.setattr(imbrace_http.time, "sleep", lambda s: waits.append(s))
+
+    async def fake_async_sleep(s):
+        waits.append(s)
+
+    monkeypatch.setattr(imbrace_http.asyncio, "sleep", fake_async_sleep)
+    return waits
+
+
+def test_max_retries_zero_makes_one_attempt(httpx_mock: HTTPXMock, sleeps):
+    httpx_mock.add_response(url="https://test.com", status_code=500, is_reusable=True)
+    transport = HttpTransport(token_manager=TokenManager(), api_key="k", max_retries=0)
+    with pytest.raises(ApiError):
+        transport.request("GET", "https://test.com")
+    assert len(httpx_mock.get_requests()) == 1
+    assert sleeps == []
+
+
+def test_default_backoff_unchanged(httpx_mock: HTTPXMock, transport, sleeps):
+    httpx_mock.add_response(url="https://test.com", status_code=503, is_reusable=True)
+    with pytest.raises(ApiError):
+        transport.request("POST", "https://test.com")
+    assert sleeps == [1, 2, 4]
+
+
+def test_retry_after_seconds_is_obeyed(httpx_mock: HTTPXMock, transport, sleeps):
+    httpx_mock.add_response(url="https://test.com", status_code=429, headers={"Retry-After": "7"})
+    httpx_mock.add_response(url="https://test.com", json={"ok": True})
+    assert transport.request("GET", "https://test.com").json() == {"ok": True}
+    assert sleeps == [7.0]
+
+
+def test_retry_after_http_date_is_obeyed(httpx_mock: HTTPXMock, transport, sleeps):
+    when = format_datetime(datetime.now(timezone.utc) + timedelta(seconds=10), usegmt=True)
+    httpx_mock.add_response(url="https://test.com", status_code=503, headers={"Retry-After": when})
+    httpx_mock.add_response(url="https://test.com", json={})
+    transport.request("GET", "https://test.com")
+    assert len(sleeps) == 1 and 8 <= sleeps[0] <= 10
+
+
+def test_retry_after_over_cap_raises_at_once(httpx_mock: HTTPXMock, transport, sleeps):
+    httpx_mock.add_response(url="https://test.com", status_code=429, headers={"Retry-After": "120"})
+    with pytest.raises(ApiError):
+        transport.request("GET", "https://test.com")
+    assert len(httpx_mock.get_requests()) == 1
+    assert sleeps == []
+
+
+def test_parse_retry_after_ignores_unreadable_values():
+    assert parse_retry_after(None) is None
+    assert parse_retry_after("soon") is None
+    assert parse_retry_after("3") == 3.0
+
+
+@pytest.mark.parametrize("bad", [-1, 1.5, True, "2"])
+def test_invalid_max_retries_rejected(bad):
+    with pytest.raises(ValueError):
+        ImbraceClient(api_key="k", max_retries=bad)
+
+
+async def test_async_max_retries_and_retry_after(httpx_mock: HTTPXMock, sleeps):
+    httpx_mock.add_response(url="https://test.com", status_code=429, headers={"Retry-After": "2"})
+    httpx_mock.add_response(url="https://test.com", status_code=429, headers={"Retry-After": "2"})
+    transport = AsyncHttpTransport(token_manager=TokenManager(), api_key="k", max_retries=1)
+    with pytest.raises(ApiError):
+        await transport.request("GET", "https://test.com")
+    assert len(httpx_mock.get_requests()) == 2
+    assert sleeps == [2.0]
+
+
+def test_client_passes_max_retries_to_transport():
+    assert ImbraceClient(api_key="k", max_retries=0).http.max_retries == 0
+    assert AsyncImbraceClient(api_key="k").http.max_retries == 3

@@ -40,7 +40,7 @@ while (true) {
     if (raw === "[DONE]") break
     try {
       const event = JSON.parse(raw)
-      if (event.type === "text-delta") process.stdout.write(event.textDelta)
+      if (event.type === "text-delta") process.stdout.write(event.delta)
     } catch {}
   }
 }

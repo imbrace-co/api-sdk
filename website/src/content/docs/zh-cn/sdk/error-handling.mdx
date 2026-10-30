@@ -196,30 +196,48 @@ except ImbraceError as e:
 
 ## 自动重试行为
 
-两个 SDK 的 HTTP 传输层都使用指数退避重试瞬时故障。重试次数在语言间略有不同，但条件相同。
+两个 SDK 的 HTTP 传输层都使用指数退避重试瞬时故障。
 
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">
 | 条件 | 动作 |
 | --------------------------- | ---------------------------------------- |
-| HTTP **429**（速率限制） | 最多重试 2 次 |
-| HTTP **5xx**（服务器错误） | 最多重试 2 次 |
-| 网络错误 / 超时 | 最多重试 2 次 |
+| HTTP **429 / 503** | 最多重试 3 次，所有方法 |
+| HTTP **5xx**（其他） | GET、HEAD、OPTIONS、PUT、DELETE 最多重试 3 次 |
+| 网络错误 / 超时 | GET、HEAD、OPTIONS、PUT、DELETE 最多重试 3 次 |
 | HTTP **401 / 403** | 不重试 — 立即抛出 `AuthError` |
 | HTTP **4xx**（其他） | 不重试 — 立即抛出 `ApiError` |
 
-**退避：** 尝试之间间隔 `2^retryCount` 秒（2s → 4s）。最坏情况下总计：3 次尝试。
+POST 和 PATCH 在超时、网络错误或 503 以外的 5xx 时不会重试：服务器可能已经执行了它们。
+
+**退避：** 遇到 429/503 时，如果服务器返回 `Retry-After` 头（秒数或 HTTP 日期），SDK 按其等待，最长 60 秒；更长的 `Retry-After` 会立即抛出 `ApiError`。否则尝试之间间隔 `2^retryCount` 秒（1s → 2s → 4s）。最坏情况下总计：4 次尝试。
+
+**配置（1.7.0+）：** `maxRetries` 设置重试次数（`0` = 只尝试一次）。`fetch` 替换所有请求使用的 `fetch`，例如加入你自己的重试、代理或追踪层。
+
+```typescript
+const client = new ImbraceClient({
+  apiKey: process.env.IMBRACE_API_KEY,
+  maxRetries: 0,      // SDK 只尝试一次；在你自己的层中重试
+  fetch: myFetch,     // 可选
+});
+```
 </TabItem>
 <TabItem label="Python">
 | 条件 | 动作 |
 | --------------------------- | ---------------------------------------- |
-| HTTP **429**（速率限制） | 最多重试 3 次 |
-| HTTP **5xx**（服务器错误） | 最多重试 3 次 |
-| 网络错误 / 超时 | 最多重试 3 次 |
+| HTTP **429 / 503** | 最多重试 3 次，所有方法 |
+| HTTP **5xx**（其他） | GET、HEAD、OPTIONS、PUT、DELETE 最多重试 3 次 |
+| 网络错误 / 超时 | GET、HEAD、OPTIONS、PUT、DELETE 最多重试 3 次 |
 | HTTP **401 / 403** | 不重试 — 立即引发 `AuthError` |
 | HTTP **4xx**（其他） | 不重试 — 立即引发 `ApiError` |
 
-**退避：** 尝试之间间隔 `2^retryCount` 秒（1s → 2s → 4s）。最坏情况下总计：4 次尝试。
+**退避：** 遇到 429/503 时，如果服务器返回 `Retry-After` 头（秒数或 HTTP 日期），SDK 按其等待，最长 60 秒；更长的 `Retry-After` 会立即引发 `ApiError`。否则尝试之间间隔 `2^retryCount` 秒（1s → 2s → 4s）。最坏情况下总计：4 次尝试。
+
+**配置（1.4.0+）：** `max_retries` 设置重试次数（`0` = 只尝试一次）。
+
+```python
+client = ImbraceClient(api_key=os.environ["IMBRACE_API_KEY"], max_retries=0)
+```
 </TabItem>
 </Tabs>
 

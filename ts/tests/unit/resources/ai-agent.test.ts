@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { AiAgentResource } from "../../../src/resources/ai-agent.js"
 import { HttpTransport } from "../../../src/http.js"
 import { TokenManager } from "../../../src/auth/token-manager.js"
-import { ImbraceError } from "../../../src/errors.js"
+import { ImbraceError, NetworkError } from "../../../src/errors.js"
 
 const BASE = "https://app-gatewayv2.imbrace.co/ai-agent"
 
@@ -42,6 +42,47 @@ describe("AiAgentResource", () => {
     await makeResource().deleteChat("c_1")
     expect(calledUrl().pathname).toBe("/ai-agent/chat-client/chats/c_1")
     expect(vi.mocked(globalThis.fetch).mock.calls[0][1]?.method).toBe("DELETE")
+  })
+
+  it("streamChat() and streamSubAgentChat() wire the caller's signal into every request", async () => {
+    mockStream([])
+    const ac = new AbortController()
+    await makeResource().streamChat({ assistant_id: "a_1", messages: [] }, { signal: ac.signal })
+    await makeResource().streamSubAgentChat({ assistant_id: "a_1", session_id: "s", chat_id: "c", messages: [] }, { signal: ac.signal })
+    const signals = vi.mocked(globalThis.fetch).mock.calls.map(([, init]) => init?.signal)
+    // user lookup + /v2/chat + /v2/sub-agent-chat
+    expect(signals).toHaveLength(3)
+    ac.abort()
+    expect(signals.every(s => s?.aborted)).toBe(true)
+    expect(JSON.parse(String(vi.mocked(globalThis.fetch).mock.calls[1][1]?.body))).not.toHaveProperty("signal")
+  })
+
+  it("streamChatText() stops when its signal aborts", async () => {
+    mockStream([JSON.stringify({ type: "text-delta", delta: "a" })])
+    const ac = new AbortController()
+    ac.abort()
+    const chunks = makeResource().streamChatText({ assistant_id: "a_1", user_id: "u", messages: [] }, { signal: ac.signal })
+    await expect(chunks[Symbol.asyncIterator]().next()).rejects.toThrow("Request aborted by user")
+    expect(globalThis.fetch).not.toHaveBeenCalled()
+  })
+
+  it("streamChatText() throws NetworkError when aborted mid-stream", async () => {
+    globalThis.fetch = vi.fn().mockImplementation(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      const body = new ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ type: "text-delta", delta: "a" })}\n`))
+          init?.signal?.addEventListener("abort", () => controller.error(new DOMException("aborted", "AbortError")))
+        },
+      })
+      return new Response(body, { headers: { "Content-Type": "text/event-stream" } })
+    })
+    const ac = new AbortController()
+    const chunks = makeResource().streamChatText({ assistant_id: "a_1", user_id: "u", messages: [] }, { signal: ac.signal })[Symbol.asyncIterator]()
+    expect((await chunks.next()).value).toBe("a")
+    ac.abort()
+    const err = await chunks.next().catch((e: unknown) => e)
+    expect(err).toBeInstanceOf(NetworkError)
+    expect((err as Error).message).toBe("Request aborted by user")
   })
 
   it("streamChatText() yields text deltas", async () => {

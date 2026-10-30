@@ -14,6 +14,25 @@ interface TransportOptions {
   timeout: number;
   tokenManager: TokenManager;
   organizationId?: string;
+  /** Retries after the first attempt. 0 = a single attempt. Default 3. */
+  maxRetries?: number;
+  /** fetch used for every request. Default globalThis.fetch. */
+  fetch?: typeof fetch;
+}
+
+const DEFAULT_MAX_RETRIES = 3;
+// A server asking for a longer wait than this gets its error surfaced instead
+// of the SDK holding the call open.
+const MAX_RETRY_AFTER_MS = 60_000;
+
+/** Parse a Retry-After header (delay-seconds or HTTP-date) into milliseconds. */
+export function parseRetryAfter(value: string | null): number | undefined {
+  if (!value) return undefined;
+  const trimmed = value.trim();
+  if (/^\d+$/.test(trimmed)) return Number(trimmed) * 1000;
+  const date = Date.parse(trimmed);
+  if (Number.isNaN(date)) return undefined;
+  return Math.max(0, date - Date.now());
 }
 
 export class HttpTransport {
@@ -38,14 +57,30 @@ export class HttpTransport {
     return this.opts.tokenManager.getToken()
   }
 
-  private async sleep(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+  /** Wait between retries; rejects as soon as the caller's signal aborts. */
+  private sleep(ms: number, signal?: AbortSignal | null): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (signal?.aborted) {
+        reject(new NetworkError("Request aborted by user"));
+        return;
+      }
+      const onAbort = () => {
+        clearTimeout(timer);
+        reject(new NetworkError("Request aborted by user"));
+      };
+      const timer = setTimeout(() => {
+        signal?.removeEventListener('abort', onAbort);
+        resolve();
+      }, ms);
+      signal?.addEventListener('abort', onAbort, { once: true });
+    });
   }
 
   public getFetch(): typeof fetch {
     return (async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
       let retries = 0;
-      const maxRetries = 3;
+      const maxRetries = this.opts.maxRetries ?? DEFAULT_MAX_RETRIES;
+      const fetchImpl = this.opts.fetch ?? globalThis.fetch;
       // POST/PATCH may already have run on the server when a response is lost or late, so
       // only methods that are safe to repeat are retried on timeouts, network errors and 5xx.
       // 429 and 503 mean the request was refused before it ran, so those are retried for all.
@@ -96,14 +131,19 @@ export class HttpTransport {
         }
 
         try {
-          const res = await globalThis.fetch(input, reqInit);
-          
+          const res = await fetchImpl(input, reqInit);
+
           if (timeoutId) clearTimeout(timeoutId);
-          if (parentSignal) parentSignal.removeEventListener('abort', abortListener);
 
           if (res.ok) {
+            // Reason: the caller's signal stays wired to this request so an abort
+            // after the headers arrive still cancels the body — for SSE that is the
+            // whole stream, not just its start. The listener lives as long as the
+            // caller's signal, so use one signal per request, not one for many.
             return res;
           }
+
+          if (parentSignal) parentSignal.removeEventListener('abort', abortListener);
 
           if (res.status === 401 || res.status === 403) {
             // Surface the server's reason — useful when the cause isn't bad creds
@@ -121,9 +161,12 @@ export class HttpTransport {
           }
 
           if ((res.status === 429 || res.status === 503 || (res.status >= 500 && retrySafe)) && retries < maxRetries) {
-            await this.sleep(1000 * Math.pow(2, retries));
-            retries++;
-            continue;
+            const retryAfter = parseRetryAfter(res.headers.get("retry-after"));
+            if (retryAfter === undefined || retryAfter <= MAX_RETRY_AFTER_MS) {
+              await this.sleep(retryAfter ?? 1000 * Math.pow(2, retries), parentSignal);
+              retries++;
+              continue;
+            }
           }
 
           const text = await res.text().catch(() => "Unknown error");
@@ -133,17 +176,18 @@ export class HttpTransport {
           if (timeoutId) clearTimeout(timeoutId);
           if (parentSignal) parentSignal.removeEventListener('abort', abortListener);
 
-          if (error instanceof AuthError || error instanceof ApiError) {
+          // NetworkError here comes from an aborted retry wait — never retry it.
+          if (error instanceof AuthError || error instanceof ApiError || error instanceof NetworkError) {
             throw error;
           }
-          
+
           if (error instanceof Error && error.name === 'AbortError') {
              if (parentSignal?.aborted) {
                throw new NetworkError("Request aborted by user");
              }
-             
+
              if (retrySafe && retries < maxRetries) {
-               await this.sleep(1000 * Math.pow(2, retries));
+               await this.sleep(1000 * Math.pow(2, retries), parentSignal);
                retries++;
                continue;
              }
@@ -151,7 +195,7 @@ export class HttpTransport {
           }
 
           if (retrySafe && retries < maxRetries) {
-            await this.sleep(1000 * Math.pow(2, retries));
+            await this.sleep(1000 * Math.pow(2, retries), parentSignal);
             retries++;
             continue;
           }
