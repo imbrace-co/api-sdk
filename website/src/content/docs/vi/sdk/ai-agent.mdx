@@ -817,7 +817,7 @@ try {
 ```
 
 :::note
-Abort đóng kết nối phía client. Hiện tại máy chủ vẫn chạy nốt lượt agent đã bắt đầu.
+Từ 1.7.1, abort còn gọi `POST /v2/chat/:id/stop` (hoặc `/v2/sub-agent-chat/:sessionId/stop`), nên máy chủ dừng lượt agent và lưu phần trả lời đã có. Chỉ đóng kết nối thì không dừng được lượt chạy: máy chủ vẫn chạy tiếp để người dùng tải lại trang vẫn nhận được câu trả lời.
 :::
 
 ---

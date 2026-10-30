@@ -16,8 +16,10 @@ function buildQuery(
 
 export interface StreamRequestOptions {
   /**
-   * Aborts the request, including the SSE body after it has started. Also
-   * cancels the user lookup `streamChat` makes when `user_id` is missing.
+   * Aborts the request, including the SSE body after it has started, and asks
+   * the server to stop the agent run (`POST /v2/chat/:id/stop`, or
+   * `/v2/sub-agent-chat/:sessionId/stop`). Also cancels the user lookup
+   * `streamChat` makes when `user_id` is missing.
    * `streamChatText` then throws `NetworkError("Request aborted by user")`;
    * reading a raw `streamChat` body after the abort throws the platform `AbortError`.
    * Use one signal per request.
@@ -30,6 +32,26 @@ export class AiAgentResource {
     private readonly http: HttpTransport,
     private readonly base: string,
   ) {}
+
+  /**
+   * When `signal` aborts, also ask the server to stop the turn. Closing the
+   * connection alone does not stop it: the server keeps the agent running so a
+   * reloaded page still gets the answer.
+   */
+  private stopTurnOnAbort(signal: AbortSignal | undefined, stopUrl: string): void {
+    if (!signal || signal.aborted) return;
+    signal.addEventListener(
+      "abort",
+      () => {
+        this.http
+          .getFetch()(stopUrl, { method: "POST" })
+          .catch(() => {
+            // Best effort: the turn may already be over, or the server may not have the stop route yet.
+          });
+      },
+      { once: true },
+    );
+  }
 
   // --- System ---
 
@@ -109,6 +131,7 @@ export class AiAgentResource {
       ...body,
       user_id: userId,
     };
+    this.stopTurnOnAbort(options?.signal, `${this.base}/v2/chat/${encodeURIComponent(String(payload.id))}/stop`);
     return this.http.getFetch()(`${this.base}/v2/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -195,6 +218,10 @@ export class AiAgentResource {
       organization_id: this.http.getOrganizationId(),
       ...body,
     };
+    this.stopTurnOnAbort(
+      options?.signal,
+      `${this.base}/v2/sub-agent-chat/${encodeURIComponent(body.session_id)}/stop`,
+    );
     return this.http.getFetch()(`${this.base}/v2/sub-agent-chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
