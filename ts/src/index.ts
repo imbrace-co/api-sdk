@@ -20,6 +20,7 @@ export type { CreateSchedulerInput, SchedulerJob } from "./resources/schedule.js
 export type { McpServerTool, UpdateMcpServerInput } from "./resources/workflows.js"
 export type { ToolServerConfig } from "./resources/chat-ai.js"
 export type { CreateContactInput } from "./resources/contacts.js"
+export type { StreamRequestOptions } from "./resources/ai-agent.js"
 export type { MarketplaceApp, AppInstall, InstallTeamDefaultsInput, InstallTeamDefaultsResult } from "./resources/marketplace.js"
 export type { DriveType, DriveProvider, DriveSessionStatus, TeamAccess, TeamAccessChange } from "./resources/boards.js"
 

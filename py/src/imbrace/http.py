@@ -1,6 +1,8 @@
 import time
 import asyncio
 import logging
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from typing import Any, AsyncIterator, Dict, Iterator, List, Optional, Type, TypeVar
 import httpx
 from pydantic import BaseModel
@@ -10,6 +12,42 @@ from .exceptions import AuthError, ApiError, NetworkError
 
 logger = logging.getLogger("imbrace")
 T = TypeVar("T", bound=BaseModel)
+
+
+DEFAULT_MAX_RETRIES = 3
+# A server asking for a longer wait than this gets its error raised instead of
+# the SDK holding the call open.
+MAX_RETRY_AFTER_SECONDS = 60
+
+
+def parse_retry_after(value: Optional[str]) -> Optional[float]:
+    """Parse a Retry-After header (delay-seconds or HTTP-date) into seconds."""
+    if not value:
+        return None
+    value = value.strip()
+    if value.isdigit():
+        return float(value)
+    try:
+        when = parsedate_to_datetime(value)
+    except (TypeError, ValueError):
+        return None
+    if when.tzinfo is None:
+        when = when.replace(tzinfo=timezone.utc)
+    return max(0.0, (when - datetime.now(timezone.utc)).total_seconds())
+
+
+def _retry_wait(res: httpx.Response, retries: int) -> Optional[float]:
+    """Seconds to wait before retrying `res`, or None when Retry-After is too long to honour."""
+    retry_after = parse_retry_after(res.headers.get("retry-after"))
+    if retry_after is None:
+        return 2**retries
+    return retry_after if retry_after <= MAX_RETRY_AFTER_SECONDS else None
+
+
+def _check_max_retries(max_retries: int) -> int:
+    if isinstance(max_retries, bool) or not isinstance(max_retries, int) or max_retries < 0:
+        raise ValueError(f"max_retries must be a non-negative integer, got {max_retries!r}")
+    return max_retries
 
 
 def _is_jwt(token: str) -> bool:
@@ -29,11 +67,13 @@ class HttpTransport:
         timeout: int = 30,
         api_key: Optional[str] = None,
         organization_id: Optional[str] = None,
+        max_retries: int = DEFAULT_MAX_RETRIES,
     ):
         self.token_manager = token_manager
         self.timeout = timeout
         self.api_key = api_key
         self.organization_id = organization_id
+        self.max_retries = _check_max_retries(max_retries)
         self._client = httpx.Client(
             timeout=timeout,
             limits=httpx.Limits(max_keepalive_connections=5, max_connections=10),
@@ -55,7 +95,7 @@ class HttpTransport:
 
     def request(self, method: str, url: str, **kwargs) -> httpx.Response:
         retries = 0
-        max_retries = 3
+        max_retries = self.max_retries
         # POST/PATCH may already have run when a response is lost or late, so only methods that
         # are safe to repeat are retried on network errors, timeouts and 5xx.
         retry_safe = method.upper() in ("GET", "HEAD", "OPTIONS", "PUT", "DELETE")
@@ -91,13 +131,15 @@ class HttpTransport:
                 if (
                     res.status_code in (429, 503) or (res.status_code >= 500 and retry_safe)
                 ) and retries < max_retries:
-                    wait_time = 2**retries
-                    logger.warning(
-                        f"Retry {retries + 1}/{max_retries} after {wait_time}s due to status {res.status_code}"
-                    )
-                    retries += 1
-                    time.sleep(wait_time)
-                    continue
+                    wait_time = _retry_wait(res, retries)
+                    if wait_time is not None:
+                        logger.warning(
+                            f"Retry {retries + 1}/{max_retries} after {wait_time}s "
+                            f"due to status {res.status_code}"
+                        )
+                        retries += 1
+                        time.sleep(wait_time)
+                        continue
 
                 logger.error(f"API Error {res.status_code}: {res.text}")
                 raise ApiError(res.status_code, res.text)
@@ -153,11 +195,13 @@ class AsyncHttpTransport:
         timeout: int = 30,
         api_key: Optional[str] = None,
         organization_id: Optional[str] = None,
+        max_retries: int = DEFAULT_MAX_RETRIES,
     ):
         self.token_manager = token_manager
         self.timeout = timeout
         self.api_key = api_key
         self.organization_id = organization_id
+        self.max_retries = _check_max_retries(max_retries)
         self._client = httpx.AsyncClient(
             timeout=timeout,
             limits=httpx.Limits(max_keepalive_connections=5, max_connections=10),
@@ -179,7 +223,7 @@ class AsyncHttpTransport:
 
     async def request(self, method: str, url: str, **kwargs) -> httpx.Response:
         retries = 0
-        max_retries = 3
+        max_retries = self.max_retries
         # POST/PATCH may already have run when a response is lost or late, so only methods that
         # are safe to repeat are retried on network errors, timeouts and 5xx.
         retry_safe = method.upper() in ("GET", "HEAD", "OPTIONS", "PUT", "DELETE")
@@ -212,10 +256,11 @@ class AsyncHttpTransport:
                 if (
                     res.status_code in (429, 503) or (res.status_code >= 500 and retry_safe)
                 ) and retries < max_retries:
-                    wait_time = 2**retries
-                    retries += 1
-                    await asyncio.sleep(wait_time)
-                    continue
+                    wait_time = _retry_wait(res, retries)
+                    if wait_time is not None:
+                        retries += 1
+                        await asyncio.sleep(wait_time)
+                        continue
                 raise ApiError(res.status_code, res.text)
             except httpx.RequestError as e:
                 if retry_safe and retries < max_retries:

@@ -90,14 +90,14 @@
 ## Core Technical Specs
 - **Naming:** TS uses `camelCase` (e.g. `streamChat`), Py uses `snake_case` (e.g. `stream_chat`).
 - **Backend Routing:** Gateway routes most logic through `/v1/backend` or `/v2/backend`. SDK handles this automatically.
-- **Retries:** Exponential backoff for 429/5xx. TS: 2 retries. Py: 3 retries.
+- **Retries:** Exponential backoff (1s, 2s, 4s), 3 retries in both TS and Py. 429/503 retry for every method; other 5xx, timeouts and network errors retry only for GET/HEAD/OPTIONS/PUT/DELETE. TS 1.7.0+ / Py 1.4.0+: honour `Retry-After` on 429/503 (up to 60s) and take a retry-count option on the client (TS `maxRetries`, Py `max_retries`; 0 = one attempt). TS only: `fetch` option, and `{ signal }` as the 2nd argument of `streamChat`/`streamChatText`/`streamSubAgentChat` to cancel a stream.
 
 ## Implementation "Must-Knows"
 
 ### Critical Schemas
 - **Board Item Create:** `fields: [{ board_field_id: string, value: any }]`. Note: Identifier field is usually required.
 - **Board Item Update:** `data: [{ key: fieldId, value: any }]`.
-- **AI Agent SSE:** Events start with `data: `. Payload: `{"type": "text-delta", "textDelta": "..."}` or `[DONE]`.
+- **AI Agent SSE:** Events start with `data: `. Payload: `{"type": "text-delta", "delta": "..."}` or `[DONE]`.
 
 ### Implementation Pitfalls
 - **Workflow State:** Newly created flows are `DRAFT`. You MUST add a trigger and call `LOCK_AND_PUBLISH` before they can be triggered.

@@ -797,6 +797,27 @@ asyncio.run(main())
 </TabItem>
 </Tabs>
 
+### 取消串流（TypeScript，1.7.0+）
+
+將 `AbortSignal` 作為第二個參數傳給 `streamChat`、`streamChatText` 或 `streamSubAgentChat`。中止會在任何時刻關閉連線，包括串流進行中：不會再收到新的資料區塊，呼叫會拋出錯誤。不要把 signal 放在請求本文中；它會被當作 JSON 傳送，沒有任何效果。
+
+```typescript
+const controller = new AbortController();
+stopButton.onclick = () => controller.abort();
+
+try {
+  for await (const chunk of client.aiAgent.streamChatText(body, { signal: controller.signal })) {
+    process.stdout.write(chunk);
+  }
+} catch (e) {
+  if (!controller.signal.aborted) throw e;
+}
+```
+
+:::note
+中止只會關閉用戶端連線。伺服器目前仍會完成已經開始的 agent 執行。
+:::
+
 ---
 
 ## 子代理 Chat v2

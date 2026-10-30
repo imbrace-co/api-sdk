@@ -1,5 +1,5 @@
 import { HttpTransport } from "../http.js";
-import { ImbraceError } from "../errors.js";
+import { ImbraceError, NetworkError } from "../errors.js";
 import { retired } from "./retired.js";
 import { randomUUID } from "crypto";
 
@@ -12,6 +12,17 @@ function buildQuery(
   }
   const s = qs.toString();
   return s ? `?${s}` : "";
+}
+
+export interface StreamRequestOptions {
+  /**
+   * Aborts the request, including the SSE body after it has started. Also
+   * cancels the user lookup `streamChat` makes when `user_id` is missing.
+   * `streamChatText` then throws `NetworkError("Request aborted by user")`;
+   * reading a raw `streamChat` body after the abort throws the platform `AbortError`.
+   * Use one signal per request.
+   */
+  signal?: AbortSignal;
 }
 
 export class AiAgentResource {
@@ -82,12 +93,12 @@ export class AiAgentResource {
     user_id?: string;
     organization_id?: string;
     [key: string]: unknown;
-  }): Promise<Response> {
+  }, options?: StreamRequestOptions): Promise<Response> {
     let userId = body.user_id;
     if (!userId) {
       const res = await this.http.getFetch()(
         `${this.base}/chat-client/auth/user`,
-        { method: "POST" },
+        { method: "POST", signal: options?.signal },
       );
       const data = await res.json();
       userId = data.id;
@@ -102,6 +113,7 @@ export class AiAgentResource {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
+      signal: options?.signal,
     });
   }
 
@@ -121,8 +133,9 @@ export class AiAgentResource {
    */
   async *streamChatText(
     body: Parameters<AiAgentResource["streamChat"]>[0],
+    options?: StreamRequestOptions,
   ): AsyncIterable<string> {
-    const res = await this.streamChat(body);
+    const res = await this.streamChat(body, options);
     if (!res.ok) {
       const text = await res.text();
       throw new Error(`streamChatText: HTTP ${res.status} — ${text}`);
@@ -132,7 +145,15 @@ export class AiAgentResource {
     const decoder = new TextDecoder();
     let buf = "";
     while (true) {
-      const { value, done } = await reader.read();
+      let read: ReadableStreamReadResult<Uint8Array>;
+      try {
+        read = await reader.read();
+      } catch (e) {
+        // Same error as an abort before the request starts, so callers catch one type.
+        if (options?.signal?.aborted) throw new NetworkError("Request aborted by user");
+        throw e;
+      }
+      const { value, done } = read;
       if (done) break;
       buf += decoder.decode(value, { stream: true });
       const lines = buf.split("\n");
@@ -169,7 +190,7 @@ export class AiAgentResource {
     messages: any[];
     organization_id?: string;
     [key: string]: unknown;
-  }): Promise<Response> {
+  }, options?: StreamRequestOptions): Promise<Response> {
     const payload = {
       organization_id: this.http.getOrganizationId(),
       ...body,
@@ -178,6 +199,7 @@ export class AiAgentResource {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
+      signal: options?.signal,
     });
   }
 

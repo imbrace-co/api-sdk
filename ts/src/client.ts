@@ -7,6 +7,7 @@ import { type Environment, type EnvironmentPreset, ENVIRONMENTS } from "./enviro
 import { resolveServiceUrls, type ServiceUrls } from "./service-registry.js"
 import { TokenManager } from "./auth/token-manager.js"
 import { HttpTransport } from "./http.js"
+import { ImbraceError } from "./errors.js"
 import { GeneratedApi } from "./generated/index.js"
 import { AuthResource } from "./resources/auth.js"
 import { AccountResource } from "./resources/account.js"
@@ -55,6 +56,13 @@ export interface ImbraceClientConfig {
   organizationId?: string
   timeout?: number
   checkHealth?: boolean
+  /**
+   * Retries after the first attempt on 429/503 (and on 5xx, timeouts and
+   * network errors for idempotent methods). `0` = a single attempt. Default 3.
+   */
+  maxRetries?: number
+  /** fetch implementation used for every request. Default `globalThis.fetch`. */
+  fetch?: typeof fetch
 }
 
 /** Extract apiKey from the response of the third-party token endpoint. */
@@ -146,12 +154,18 @@ export class ImbraceClient {
 
     // -- HTTP Transport -------------------------------------------------------
 
+    if (opts?.maxRetries !== undefined && (!Number.isInteger(opts.maxRetries) || opts.maxRetries < 0)) {
+      throw new ImbraceError(`maxRetries must be a non-negative integer, got ${opts.maxRetries}`)
+    }
+
     this.tokenManager = new TokenManager(opts?.accessToken)
     this.http = new HttpTransport({
       apiKey:         resolvedApiKey,
       timeout:        opts?.timeout ?? 30000,
       tokenManager:   this.tokenManager,
       organizationId: opts?.organizationId,
+      maxRetries:     opts?.maxRetries,
+      fetch:          opts?.fetch,
     })
 
     // -- Wire resources with per-service base URLs ----------------------------

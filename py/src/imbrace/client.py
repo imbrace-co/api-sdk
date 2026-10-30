@@ -72,6 +72,8 @@ class ImbraceClient:
         check_health: bool = False,
         # Legacy compat - takes precedence over env if set
         base_url: Optional[str] = None,
+        # Retries after the first attempt; 0 = a single attempt.
+        max_retries: int = 3,
     ):
         resolved_key = api_key
         resolved_env = env or "stable"
@@ -104,6 +106,7 @@ class ImbraceClient:
             timeout=timeout,
             api_key=resolved_key,
             organization_id=organization_id,
+            max_retries=max_retries,
         )
 
         # Auth — platform service (${gw}/platform/v1/login/*, /access/*).

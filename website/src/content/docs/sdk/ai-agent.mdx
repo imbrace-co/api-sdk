@@ -799,6 +799,27 @@ asyncio.run(main())
 </TabItem>
 </Tabs>
 
+### Cancelling a stream (TypeScript, 1.7.0+)
+
+Pass an `AbortSignal` as the second argument to `streamChat`, `streamChatText` or `streamSubAgentChat`. Aborting closes the connection at any point, including mid-stream: no further chunks arrive and the call throws. Do not put the signal in the request body; it is sent as JSON and has no effect.
+
+```typescript
+const controller = new AbortController();
+stopButton.onclick = () => controller.abort();
+
+try {
+  for await (const chunk of client.aiAgent.streamChatText(body, { signal: controller.signal })) {
+    process.stdout.write(chunk);
+  }
+} catch (e) {
+  if (!controller.signal.aborted) throw e;
+}
+```
+
+:::note
+Aborting closes the client connection. The server currently finishes the agent run it has already started.
+:::
+
 ---
 
 ## Sub-agent Chat v2

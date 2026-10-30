@@ -196,30 +196,48 @@ except ImbraceError as e:
 
 ## Hành vi thử lại tự động
 
-Tầng vận chuyển HTTP trong cả hai SDK đều thử lại các lỗi tạm thời với exponential backoff. Số lần thử lại khác nhau đôi chút giữa các ngôn ngữ nhưng các điều kiện thì giống hệt nhau.
+Tầng vận chuyển HTTP trong cả hai SDK đều thử lại các lỗi tạm thời với exponential backoff.
 
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">
-| Điều kiện                      | Hành động                                |
-| ------------------------------ | ---------------------------------------- |
-| HTTP **429** (giới hạn tốc độ) | Thử lại tối đa 2 lần                     |
-| HTTP **5xx** (lỗi máy chủ)     | Thử lại tối đa 2 lần                     |
-| Lỗi mạng / hết thời gian       | Thử lại tối đa 2 lần                     |
-| HTTP **401 / 403**             | Không thử lại — ném `AuthError` ngay lập tức |
-| HTTP **4xx** (khác)            | Không thử lại — ném `ApiError` ngay lập tức |
+| Điều kiện                      | Hành động                                                   |
+| ------------------------------ | ----------------------------------------------------------- |
+| HTTP **429 / 503**             | Thử lại tối đa 3 lần, mọi method                            |
+| HTTP **5xx** (khác)            | Thử lại tối đa 3 lần với GET, HEAD, OPTIONS, PUT, DELETE     |
+| Lỗi mạng / hết thời gian       | Thử lại tối đa 3 lần với GET, HEAD, OPTIONS, PUT, DELETE     |
+| HTTP **401 / 403**             | Không thử lại — ném `AuthError` ngay lập tức                |
+| HTTP **4xx** (khác)            | Không thử lại — ném `ApiError` ngay lập tức                 |
 
-**Backoff:** `2^retryCount` giây giữa các lần thử (2s → 4s). Trường hợp xấu nhất: tổng cộng 3 lần thử.
+POST và PATCH không được thử lại khi hết thời gian, lỗi mạng hoặc 5xx khác 503, vì máy chủ có thể đã thực thi chúng.
+
+**Backoff:** với 429/503, SDK chờ theo header `Retry-After` (số giây hoặc ngày HTTP) nếu máy chủ gửi, tối đa 60 giây; `Retry-After` dài hơn thì ném `ApiError` ngay. Nếu không có header: `2^retryCount` giây giữa các lần thử (1s → 2s → 4s). Trường hợp xấu nhất: tổng cộng 4 lần thử.
+
+**Cấu hình (1.7.0+):** `maxRetries` đặt số lần thử lại (`0` = chỉ một lần gọi). `fetch` thay `fetch` dùng cho mọi request, ví dụ để tự thêm lớp retry, proxy hoặc tracing.
+
+```typescript
+const client = new ImbraceClient({
+  apiKey: process.env.IMBRACE_API_KEY,
+  maxRetries: 0,      // SDK chỉ gọi một lần; tự retry ở lớp của bạn
+  fetch: myFetch,     // tuỳ chọn
+});
+```
 </TabItem>
 <TabItem label="Python">
-| Điều kiện                      | Hành động                                |
-| ------------------------------ | ---------------------------------------- |
-| HTTP **429** (giới hạn tốc độ) | Thử lại tối đa 3 lần                     |
-| HTTP **5xx** (lỗi máy chủ)     | Thử lại tối đa 3 lần                     |
-| Lỗi mạng / hết thời gian       | Thử lại tối đa 3 lần                     |
-| HTTP **401 / 403**             | Không thử lại — đưa ra `AuthError` ngay lập tức |
-| HTTP **4xx** (khác)            | Không thử lại — đưa ra `ApiError` ngay lập tức |
+| Điều kiện                      | Hành động                                                   |
+| ------------------------------ | ----------------------------------------------------------- |
+| HTTP **429 / 503**             | Thử lại tối đa 3 lần, mọi method                            |
+| HTTP **5xx** (khác)            | Thử lại tối đa 3 lần với GET, HEAD, OPTIONS, PUT, DELETE     |
+| Lỗi mạng / hết thời gian       | Thử lại tối đa 3 lần với GET, HEAD, OPTIONS, PUT, DELETE     |
+| HTTP **401 / 403**             | Không thử lại — đưa ra `AuthError` ngay lập tức             |
+| HTTP **4xx** (khác)            | Không thử lại — đưa ra `ApiError` ngay lập tức              |
 
-**Backoff:** `2^retryCount` giây giữa các lần thử (1s → 2s → 4s). Trường hợp xấu nhất: tổng cộng 4 lần thử.
+**Backoff:** với 429/503, SDK chờ theo header `Retry-After` (số giây hoặc ngày HTTP) nếu máy chủ gửi, tối đa 60 giây; `Retry-After` dài hơn thì đưa ra `ApiError` ngay. Nếu không có header: `2^retryCount` giây giữa các lần thử (1s → 2s → 4s). Trường hợp xấu nhất: tổng cộng 4 lần thử.
+
+**Cấu hình (1.4.0+):** `max_retries` đặt số lần thử lại (`0` = chỉ một lần gọi).
+
+```python
+client = ImbraceClient(api_key=os.environ["IMBRACE_API_KEY"], max_retries=0)
+```
 </TabItem>
 </Tabs>
 

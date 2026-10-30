@@ -196,30 +196,48 @@ except ImbraceError as e:
 
 ## Automatic retry behavior
 
-The HTTP transport in both SDKs retries transient failures with exponential backoff. The retry count differs slightly between languages but the conditions are identical.
+The HTTP transport in both SDKs retries transient failures with exponential backoff.
 
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">
-| Condition                   | Action                                   |
-| --------------------------- | ---------------------------------------- |
-| HTTP **429** (rate limit)   | Retry up to 2 times                      |
-| HTTP **5xx** (server error) | Retry up to 2 times                      |
-| Network error / timeout     | Retry up to 2 times                      |
-| HTTP **401 / 403**          | No retry — throw `AuthError` immediately |
-| HTTP **4xx** (other)        | No retry — throw `ApiError` immediately  |
+| Condition                                  | Action                                                        |
+| ------------------------------------------ | ------------------------------------------------------------- |
+| HTTP **429 / 503**                         | Retry up to 3 times, any method                               |
+| HTTP **5xx** (other)                       | Retry up to 3 times for GET, HEAD, OPTIONS, PUT, DELETE        |
+| Network error / timeout                    | Retry up to 3 times for GET, HEAD, OPTIONS, PUT, DELETE        |
+| HTTP **401 / 403**                         | No retry — throw `AuthError` immediately                      |
+| HTTP **4xx** (other)                       | No retry — throw `ApiError` immediately                       |
 
-**Backoff:** `2^retryCount` seconds between attempts (2s → 4s). Total worst-case: 3 attempts.
+POST and PATCH are not retried on timeouts, network errors or 5xx other than 503: the server may already have run them.
+
+**Backoff:** on 429/503 the SDK waits for the `Retry-After` header (seconds or HTTP date) when the server sends one, up to 60 s; a longer `Retry-After` throws `ApiError` at once. Otherwise `2^retryCount` seconds between attempts (1s → 2s → 4s). Total worst-case: 4 attempts.
+
+**Configure (1.7.0+):** `maxRetries` sets the number of retries (`0` = a single attempt). `fetch` replaces the `fetch` used for every request, e.g. to add your own retry, proxy or tracing layer.
+
+```typescript
+const client = new ImbraceClient({
+  apiKey: process.env.IMBRACE_API_KEY,
+  maxRetries: 0,      // the SDK makes one attempt; retry in your own layer
+  fetch: myFetch,     // optional
+});
+```
 </TabItem>
 <TabItem label="Python">
-| Condition                   | Action                                   |
-| --------------------------- | ---------------------------------------- |
-| HTTP **429** (rate limit)   | Retry up to 3 times                      |
-| HTTP **5xx** (server error) | Retry up to 3 times                      |
-| Network error / timeout     | Retry up to 3 times                      |
-| HTTP **401 / 403**          | No retry — raise `AuthError` immediately |
-| HTTP **4xx** (other)        | No retry — raise `ApiError` immediately  |
+| Condition                                  | Action                                                        |
+| ------------------------------------------ | ------------------------------------------------------------- |
+| HTTP **429 / 503**                         | Retry up to 3 times, any method                               |
+| HTTP **5xx** (other)                       | Retry up to 3 times for GET, HEAD, OPTIONS, PUT, DELETE        |
+| Network error / timeout                    | Retry up to 3 times for GET, HEAD, OPTIONS, PUT, DELETE        |
+| HTTP **401 / 403**                         | No retry — raise `AuthError` immediately                      |
+| HTTP **4xx** (other)                       | No retry — raise `ApiError` immediately                       |
 
-**Backoff:** `2^retryCount` seconds between attempts (1s → 2s → 4s). Total worst-case: 4 attempts.
+**Backoff:** on 429/503 the SDK waits for the `Retry-After` header (seconds or HTTP date) when the server sends one, up to 60 s; a longer `Retry-After` raises `ApiError` at once. Otherwise `2^retryCount` seconds between attempts (1s → 2s → 4s). Total worst-case: 4 attempts.
+
+**Configure (1.4.0+):** `max_retries` sets the number of retries (`0` = a single attempt).
+
+```python
+client = ImbraceClient(api_key=os.environ["IMBRACE_API_KEY"], max_retries=0)
+```
 </TabItem>
 </Tabs>
 

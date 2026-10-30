@@ -196,30 +196,48 @@ except ImbraceError as e:
 
 ## 自動重試行為
 
-兩個 SDK 中的 HTTP 傳輸層都會以指數退避重試暫時性失敗。重試次數在語言之間略有不同，但條件完全相同。
+兩個 SDK 中的 HTTP 傳輸層都會以指數退避重試暫時性失敗。
 
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">
 | 條件 | 動作 |
 | --------------------------- | ---------------------------------------- |
-| HTTP **429**（速率限制） | 最多重試 2 次 |
-| HTTP **5xx**（伺服器錯誤） | 最多重試 2 次 |
-| 網路錯誤 / 逾時 | 最多重試 2 次 |
+| HTTP **429 / 503** | 最多重試 3 次，所有方法 |
+| HTTP **5xx**（其他） | GET、HEAD、OPTIONS、PUT、DELETE 最多重試 3 次 |
+| 網路錯誤 / 逾時 | GET、HEAD、OPTIONS、PUT、DELETE 最多重試 3 次 |
 | HTTP **401 / 403** | 不重試 — 立即拋出 `AuthError` |
 | HTTP **4xx**（其他） | 不重試 — 立即拋出 `ApiError` |
 
-**退避：** 嘗試之間間隔 `2^retryCount` 秒（2 秒 → 4 秒）。最壞情況總計：3 次嘗試。
+POST 和 PATCH 在逾時、網路錯誤或 503 以外的 5xx 時不會重試：伺服器可能已經執行了它們。
+
+**退避：** 遇到 429/503 時，若伺服器回傳 `Retry-After` 標頭（秒數或 HTTP 日期），SDK 依其等待，最長 60 秒；更長的 `Retry-After` 會立即拋出 `ApiError`。否則嘗試之間間隔 `2^retryCount` 秒（1 秒 → 2 秒 → 4 秒）。最壞情況總計：4 次嘗試。
+
+**設定（1.7.0+）：** `maxRetries` 設定重試次數（`0` = 只嘗試一次）。`fetch` 取代所有請求使用的 `fetch`，例如加入你自己的重試、代理或追蹤層。
+
+```typescript
+const client = new ImbraceClient({
+  apiKey: process.env.IMBRACE_API_KEY,
+  maxRetries: 0,      // SDK 只嘗試一次；在你自己的層中重試
+  fetch: myFetch,     // 選用
+});
+```
 </TabItem>
 <TabItem label="Python">
 | 條件 | 動作 |
 | --------------------------- | ---------------------------------------- |
-| HTTP **429**（速率限制） | 最多重試 3 次 |
-| HTTP **5xx**（伺服器錯誤） | 最多重試 3 次 |
-| 網路錯誤 / 逾時 | 最多重試 3 次 |
+| HTTP **429 / 503** | 最多重試 3 次，所有方法 |
+| HTTP **5xx**（其他） | GET、HEAD、OPTIONS、PUT、DELETE 最多重試 3 次 |
+| 網路錯誤 / 逾時 | GET、HEAD、OPTIONS、PUT、DELETE 最多重試 3 次 |
 | HTTP **401 / 403** | 不重試 — 立即拋出 `AuthError` |
 | HTTP **4xx**（其他） | 不重試 — 立即拋出 `ApiError` |
 
-**退避：** 嘗試之間間隔 `2^retryCount` 秒（1 秒 → 2 秒 → 4 秒）。最壞情況總計：4 次嘗試。
+**退避：** 遇到 429/503 時，若伺服器回傳 `Retry-After` 標頭（秒數或 HTTP 日期），SDK 依其等待，最長 60 秒；更長的 `Retry-After` 會立即拋出 `ApiError`。否則嘗試之間間隔 `2^retryCount` 秒（1 秒 → 2 秒 → 4 秒）。最壞情況總計：4 次嘗試。
+
+**設定（1.4.0+）：** `max_retries` 設定重試次數（`0` = 只嘗試一次）。
+
+```python
+client = ImbraceClient(api_key=os.environ["IMBRACE_API_KEY"], max_retries=0)
+```
 </TabItem>
 </Tabs>
 

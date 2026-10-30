@@ -75,6 +75,8 @@ class AsyncImbraceClient:
         check_health: bool = False,
         # Legacy compat
         base_url: Optional[str] = None,
+        # Retries after the first attempt; 0 = a single attempt.
+        max_retries: int = 3,
     ):
         resolved_key = api_key
         resolved_env = env or "stable"
@@ -108,6 +110,7 @@ class AsyncImbraceClient:
             timeout=timeout,
             api_key=resolved_key,
             organization_id=organization_id,
+            max_retries=max_retries,
         )
 
         # Auth on platform service (parity with sync client / TS): login/token
