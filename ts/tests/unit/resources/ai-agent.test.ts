@@ -66,6 +66,31 @@ describe("AiAgentResource", () => {
     expect(globalThis.fetch).not.toHaveBeenCalled()
   })
 
+  it("aborting asks the server to stop the turn; finishing normally does not", async () => {
+    mockStream([])
+    const stopCalls = () => vi.mocked(globalThis.fetch).mock.calls
+      .filter(([input, init]) => String(input).endsWith("/stop") && init?.method === "POST")
+      .map(([input]) => new URL(String(input)).pathname)
+
+    await makeResource().streamChat({ id: "c_done", assistant_id: "a_1", user_id: "u", messages: [] }, { signal: new AbortController().signal })
+    expect(stopCalls()).toEqual([])
+
+    const ac = new AbortController()
+    await makeResource().streamChat({ id: "c_1", assistant_id: "a_1", user_id: "u", messages: [] }, { signal: ac.signal })
+    await makeResource().streamSubAgentChat({ assistant_id: "a_1", session_id: "s_1", chat_id: "c_1", messages: [] }, { signal: ac.signal })
+    ac.abort()
+    await new Promise((r) => setTimeout(r, 0))
+    expect(stopCalls()).toEqual(["/ai-agent/v2/chat/c_1/stop", "/ai-agent/v2/sub-agent-chat/s_1/stop"])
+  })
+
+  it("a signal aborted before the call sends no stop request", async () => {
+    mockStream([])
+    const ac = new AbortController()
+    ac.abort()
+    await makeResource().streamChat({ id: "c_1", assistant_id: "a_1", user_id: "u", messages: [] }, { signal: ac.signal }).catch(() => undefined)
+    expect(globalThis.fetch).not.toHaveBeenCalled()
+  })
+
   it("streamChatText() throws NetworkError when aborted mid-stream", async () => {
     globalThis.fetch = vi.fn().mockImplementation(async (_input: RequestInfo | URL, init?: RequestInit) => {
       const body = new ReadableStream<Uint8Array>({

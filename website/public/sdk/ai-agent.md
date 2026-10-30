@@ -705,7 +705,7 @@ try {
 }
 ```
 
-> **Note:** Aborting closes the client connection. The server currently finishes the agent run it has already started.
+> **Note:** Since 1.7.1, aborting also calls `POST /v2/chat/:id/stop` (or `/v2/sub-agent-chat/:sessionId/stop`), so the server stops the agent run and saves the partial answer. Closing the connection on its own does not stop the run: the server keeps it going so a reloaded page still gets the answer.
 
 ---
 
