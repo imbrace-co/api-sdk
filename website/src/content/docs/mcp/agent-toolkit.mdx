@@ -1,0 +1,210 @@
+---
+title: Agent Toolkit
+description: The iMBrace Developer plugin for Claude Code, ChatGPT and Codex — six skills that teach your coding agent to build on iMBrace, plus the hosted MCP server with OAuth sign-in.
+---
+
+import { Aside, Tabs, TabItem } from "@astrojs/starlight/components";
+
+The **iMBrace Agent Toolkit** is the official iMBrace plugin for AI coding agents. Install it once, and your agent knows how to build on iMBrace: the TypeScript/Python SDK, the hosted [MCP server](/mcp/overview/), the CLI, AI agents, workflows, knowledge hubs and CRM boards.
+
+The plugin is called **iMBrace Developer**. It ships in two forms:
+
+- **Claude Code** — the six skills **plus** the hosted iMBrace MCP server, so the agent can also read (and, if you allow it, change) your iMBrace data.
+- **ChatGPT and Codex** — the same six skills, as a skills-only plugin. It contains instructions only; it does not call any service and holds no credentials. Connect the MCP server yourself if you want tools ([Other MCP clients](#other-mcp-clients)).
+
+Source and issues: [github.com/imbrace-co/imbrace-agent-toolkit](https://github.com/imbrace-co/imbrace-agent-toolkit) (MIT).
+
+## What's in the toolkit
+
+| Skill | Use it for |
+|---|---|
+| `imbrace-get-started` | First use: pick an environment, get an API key safely, make one verified call |
+| `imbrace-sdk` | TypeScript `@imbrace/sdk` and Python `imbrace`: client setup, namespaces, errors |
+| `imbrace-mcp` | Connect the hosted MCP server in any client; OAuth sign-in, API key fallback |
+| `imbrace-cli` | Install, sign in and script the `imbrace` CLI; run `imbrace mcp` locally |
+| `imbrace-build-agents-workflows` | AI agent + streaming chat, workflows, knowledge hubs, CRM boards end to end |
+| `imbrace-vibe-code` | Build, deploy and host a full app on iMBrace (follows [`/skill.md`](https://engineer.imbrace.co/skill.md)) |
+
+Skills load on their own when your request matches. Start a new session and ask, for example, *"Help me get started with iMBrace"*.
+
+## Install in Claude Code
+
+Requires Claude Code 2.1.275 or later. From a terminal:
+
+```bash
+claude plugin marketplace add imbrace-co/imbrace-agent-toolkit
+claude plugin install imbrace-developer@imbrace-developer-tools
+```
+
+Or inside a Claude Code session:
+
+```text
+/plugin marketplace add imbrace-co/imbrace-agent-toolkit
+/plugin install imbrace-developer@imbrace-developer-tools
+```
+
+Update with `claude plugin marketplace update imbrace-developer-tools`; remove with `claude plugin uninstall imbrace-developer`.
+
+### Choose the environment
+
+The plugin adds the MCP server as `imbrace`, with **no credential stored in the plugin**. Its one setting, **iMBrace MCP URL**, decides which gateway it talks to:
+
+| Environment | MCP URL |
+|---|---|
+| Production (default) | `https://app-gatewayv2.imbrace.co/mcp` |
+| Sandbox | `https://app-gateway.sandbox.imbrace.co/mcp` |
+| On-premise | `https://<your gateway>/mcp` |
+
+Change it with `/plugin` → **iMBrace Developer**. Adding `?services=` or `?tags=` to the URL narrows the tools that are listed and can be called (see [MCP Server](/mcp/overview/#read-only-by-default)); that is a filter, not access control.
+
+## ChatGPT and Codex
+
+The same skills will be published in the OpenAI plugin directory as **iMBrace Developer**; the listing link is added to the toolkit README on release. This package is skills-only: to give Codex the iMBrace tools as well, add the MCP server to Codex as shown under [Other MCP clients](#other-mcp-clients).
+
+## Connect the MCP server
+
+There are two ways to sign in, one per connection: **OAuth** (sign in in the browser, nothing to copy) and an **API key** (`api_...`).
+
+<Aside type="caution" title="OAuth is rolling out">
+OAuth sign-in for `/mcp` is being enabled environment by environment, and on-premise gateways may not have it. Use it **where OAuth is enabled for your environment; otherwise use an API key** ([below](#api-key-instead)). The skills work either way.
+
+To check a gateway: `GET <gateway>/.well-known/oauth-protected-resource/mcp` returns JSON when OAuth is enabled and 404 when it is not.
+</Aside>
+
+### Sign in with OAuth
+
+Where the gateway has OAuth enabled:
+
+1. In Claude Code, run `/mcp`, select `imbrace` and choose **Authenticate**.
+2. Sign in to iMBrace in the browser that opens.
+3. On the consent screen, pick the **organization** this connection works in.
+4. Choose the **access** to grant: read only, or read + write (and delete, if you need it). You can untick write and delete.
+5. Back in Claude Code the tools appear. Try *"List my iMBrace boards"* — it should call a tool such as `listBoards`.
+
+### What you grant
+
+| Scope | Allows |
+|---|---|
+| `imbrace.read` | Read tools. Always granted. |
+| `imbrace.write` | Create and update tools |
+| `imbrace.delete` | Delete tools (implies write) |
+
+- **The organization is fixed by the grant.** Every call runs in the organization you picked on the consent screen; an organization the client or the model sends is overwritten. To work in another organization, sign in again.
+- Write and delete come **only** from these scopes. With OAuth, `?allowWrite` and `?allowDestructive` on the URL are ignored.
+- Every tool call is replayed through the normal API as you, so your membership, role permissions and licences in that organization still apply.
+
+### Sessions, switching and revoking
+
+- The client stores and refreshes the token itself. An access token lasts **1 hour** and is renewed with a refresh token, so you don't sign in every hour.
+- **Switch organization or access:** `/mcp` → `imbrace` → clear authentication, then **Authenticate** again and make a new choice.
+- **Revoke:** clear authentication in the client to delete the tokens it stored. Access tokens are not checked against a revocation list, so one that was already issued stays valid until it expires (at most 1 hour). Removing a person from the organization or changing their role takes effect immediately, because the gateway checks membership and role on every call.
+
+### API key instead
+
+Use an API key where the gateway does not have OAuth enabled yet, for CI and headless machines, and for clients without OAuth. Generate an org key (`api_...`) in the iMBrace Portal under **GovernCore → Generate External Token** (see [Getting an API Key](/guides/api-key/)), and put it in an environment variable yourself — never paste the key into the chat or commit it.
+
+In Claude Code, add the server with the key, and disable the plugin's `imbrace` server (or the plugin) if you don't want two entries:
+
+```bash
+claude mcp add --transport http imbrace https://app-gatewayv2.imbrace.co/mcp \
+  --header "Authorization: Bearer $IMBRACE_API_KEY"
+```
+
+An API-key connection is **read-only** unless the URL has `?allowWrite=1` (create and update) or `?allowDestructive=1` (also delete). A static `Authorization` header turns off the client's OAuth flow, so use one method per connection.
+
+## Other MCP clients
+
+The examples use production; replace the host with your environment's gateway. The OAuth variants apply only where the gateway has OAuth enabled.
+
+<Tabs>
+<TabItem label="Claude Code (no plugin)">
+
+OAuth:
+
+```bash
+claude mcp add --transport http imbrace https://app-gatewayv2.imbrace.co/mcp
+```
+
+Then `/mcp` → `imbrace` → **Authenticate**. With an API key, use the command in [API key instead](#api-key-instead).
+
+</TabItem>
+<TabItem label="Cursor">
+
+In `.cursor/mcp.json` (or `~/.cursor/mcp.json` for every project). OAuth — Cursor then offers to sign in to the server:
+
+```json
+{
+  "mcpServers": {
+    "imbrace": { "url": "https://app-gatewayv2.imbrace.co/mcp" }
+  }
+}
+```
+
+API key:
+
+```json
+{
+  "mcpServers": {
+    "imbrace": {
+      "url": "https://app-gatewayv2.imbrace.co/mcp",
+      "headers": { "Authorization": "Bearer ${env:IMBRACE_API_KEY}" }
+    }
+  }
+}
+```
+
+</TabItem>
+<TabItem label="Codex CLI">
+
+In `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.imbrace]
+url = "https://app-gatewayv2.imbrace.co/mcp"
+```
+
+OAuth: run `codex mcp login imbrace` (on Codex versions with MCP OAuth support). API key: add `bearer_token_env_var = "IMBRACE_API_KEY"` under `[mcp_servers.imbrace]` instead.
+
+</TabItem>
+<TabItem label="Claude Desktop / claude.ai">
+
+OAuth: **Settings → Connectors** → add a custom connector with the MCP URL, then sign in.
+
+With an API key, bridge through `mcp-remote` in `claude_desktop_config.json`, as shown on [MCP Server](/mcp/overview/).
+
+</TabItem>
+<TabItem label="stdio-only clients">
+
+Bridge the URL with `mcp-remote`, which opens the browser sign-in (OAuth):
+
+```bash
+npx -y mcp-remote https://app-gatewayv2.imbrace.co/mcp
+```
+
+API key:
+
+```bash
+npx -y mcp-remote https://app-gatewayv2.imbrace.co/mcp \
+  --header "Authorization: Bearer $IMBRACE_API_KEY"
+```
+
+No URL at all: the CLI runs a local stdio server from a saved profile — [`imbrace mcp`](/cli/commands/#mcp-server).
+
+</TabItem>
+</Tabs>
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `/mcp` shows `imbrace` as failed: *Dynamic Client Registration rejected (HTTP 404)* … `Cannot POST /register` | OAuth is not enabled on that gateway, so sign-in cannot start | Disable the plugin's `imbrace` server and [connect with an API key](#api-key-instead) |
+| `401` with `invalid_token` | Not signed in, or the sign-in expired | `/mcp` → `imbrace` → clear authentication, then **Authenticate** again |
+| `401` with an API key | The key is wrong, expired, from another environment, or empty | Check the key and the gateway host |
+| `403` | Your role in that organization lacks the permission | Ask an organization admin |
+| Write or delete tools missing, or *tool not enabled* | OAuth: the grant lacks `imbrace.write` / `imbrace.delete`. API key: the URL lacks `?allowWrite=1` / `?allowDestructive=1`. Or a `?services=` / `?tags=` filter excludes the tool | Re-authenticate and grant write (or delete), or fix the URL |
+
+## Support
+
+Report problems and ask questions in the toolkit's [GitHub Issues](https://github.com/imbrace-co/imbrace-agent-toolkit/issues).
+
+The MCP server is operated by iMBrace Limited. Calls run as the iMBrace user and organization you sign in with (or with your API key), under the [iMBrace privacy policy](https://www.imbrace.co/privacy-policy/) and [terms](https://www.imbrace.co/terms-and-conditions/). The skills themselves send nothing anywhere.

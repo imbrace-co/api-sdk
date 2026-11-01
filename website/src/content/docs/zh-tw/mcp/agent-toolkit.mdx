@@ -1,0 +1,210 @@
+---
+title: Agent Toolkit
+description: 適用於 Claude Code、ChatGPT 與 Codex 的 iMBrace Developer 外掛 — 六個教你的程式碼 agent 在 iMBrace 上建置的技能，外加支援 OAuth 登入的託管 MCP 伺服器。
+---
+
+import { Aside, Tabs, TabItem } from "@astrojs/starlight/components";
+
+**iMBrace Agent Toolkit** 是 iMBrace 官方的 AI 程式碼 agent 外掛。安裝一次，你的 agent 就知道如何在 iMBrace 上建置：TypeScript/Python SDK、託管的 [MCP 伺服器](/zh-tw/mcp/overview/)、CLI、AI 代理、工作流程、知識庫與 CRM 資料看板。
+
+外掛名稱為 **iMBrace Developer**，有兩種形式：
+
+- **Claude Code** — 六個技能**加上**託管的 iMBrace MCP 伺服器，agent 還能讀取（如果你允許，也能修改）你的 iMBrace 資料。
+- **ChatGPT 與 Codex** — 同樣的六個技能，以純技能外掛的形式提供。它只包含說明，不呼叫任何服務，也不保存任何憑證。如需工具，請自行連接 MCP 伺服器（[其他 MCP 用戶端](#other-mcp-clients)）。
+
+原始碼與問題回報：[github.com/imbrace-co/imbrace-agent-toolkit](https://github.com/imbrace-co/imbrace-agent-toolkit)（MIT）。
+
+## 工具包內容
+
+| 技能 | 用途 |
+|---|---|
+| `imbrace-get-started` | 首次使用：選擇環境、安全地取得 API key、完成一次經過驗證的呼叫 |
+| `imbrace-sdk` | TypeScript `@imbrace/sdk` 與 Python `imbrace`：用戶端設定、命名空間、錯誤處理 |
+| `imbrace-mcp` | 在任何用戶端連接託管 MCP 伺服器；OAuth 登入，API key 作為備案 |
+| `imbrace-cli` | 安裝、登入並以腳本操作 `imbrace` CLI；在本機執行 `imbrace mcp` |
+| `imbrace-build-agents-workflows` | 端到端建置 AI 代理 + 串流聊天、工作流程、知識庫、CRM 資料看板 |
+| `imbrace-vibe-code` | 在 iMBrace 上建置、部署並託管完整應用程式（遵循 [`/skill.md`](https://engineer.imbrace.co/skill.md)） |
+
+當你的請求與技能相符時，技能會自動載入。開啟一個新工作階段，例如問：*"Help me get started with iMBrace"*。
+
+## 在 Claude Code 中安裝
+
+需要 Claude Code 2.1.275 或更新版本。在終端機中：
+
+```bash
+claude plugin marketplace add imbrace-co/imbrace-agent-toolkit
+claude plugin install imbrace-developer@imbrace-developer-tools
+```
+
+或在 Claude Code 工作階段中：
+
+```text
+/plugin marketplace add imbrace-co/imbrace-agent-toolkit
+/plugin install imbrace-developer@imbrace-developer-tools
+```
+
+更新：`claude plugin marketplace update imbrace-developer-tools`；移除：`claude plugin uninstall imbrace-developer`。
+
+### 選擇環境
+
+外掛把 MCP 伺服器新增為 `imbrace`，**外掛中不保存任何憑證**。它唯一的設定 **iMBrace MCP URL** 決定連接哪個閘道：
+
+| 環境 | MCP URL |
+|---|---|
+| 正式環境（預設） | `https://app-gatewayv2.imbrace.co/mcp` |
+| Sandbox | `https://app-gateway.sandbox.imbrace.co/mcp` |
+| 地端部署 | `https://<你的閘道>/mcp` |
+
+透過 `/plugin` → **iMBrace Developer** 修改。在 URL 上加 `?services=` 或 `?tags=` 可以縮小列出與可呼叫的工具範圍（請參閱 [MCP 伺服器](/zh-tw/mcp/overview/#read-only-by-default)）；這只是篩選，不是存取控制。
+
+## ChatGPT 與 Codex
+
+同樣的技能將以 **iMBrace Developer** 的名稱發布到 OpenAI 外掛目錄；發布時會在工具包 README 中加上目錄連結。這個套件只包含技能：如果也想讓 Codex 使用 iMBrace 工具，請依照[其他 MCP 用戶端](#other-mcp-clients)中的說明把 MCP 伺服器新增到 Codex。
+
+## 連接 MCP 伺服器
+
+有兩種登入方式，每個連線選一種：**OAuth**（在瀏覽器中登入，不需要複製任何東西）與 **API key**（`api_...`）。
+
+<Aside type="caution" title="OAuth 正在逐步上線">
+`/mcp` 的 OAuth 登入正在逐個環境啟用，地端部署的閘道可能沒有。**在你的環境已啟用 OAuth 時使用它；否則請使用 API key**（[見下文](#api-key-instead)）。兩種方式下技能都能正常運作。
+
+檢查閘道：`GET <gateway>/.well-known/oauth-protected-resource/mcp` 在啟用 OAuth 時回傳 JSON，未啟用時回傳 404。
+</Aside>
+
+### 使用 OAuth 登入
+
+在已啟用 OAuth 的閘道上：
+
+1. 在 Claude Code 中執行 `/mcp`，選擇 `imbrace`，然後選擇 **Authenticate**。
+2. 在開啟的瀏覽器中登入 iMBrace。
+3. 在授權同意畫面選擇此連線使用的**組織**。
+4. 選擇要授予的**權限**：唯讀，或讀取 + 寫入（如有需要，還可以加上刪除）。寫入與刪除可以取消勾選。
+5. 回到 Claude Code，工具就會出現。試試 *"List my iMBrace boards"* — 它應該會呼叫 `listBoards` 之類的工具。
+
+### 授予的權限
+
+| Scope | 允許 |
+|---|---|
+| `imbrace.read` | 讀取類工具。一律授予。 |
+| `imbrace.write` | 建立與更新類工具 |
+| `imbrace.delete` | 刪除類工具（包含寫入權限） |
+
+- **組織由授權決定。** 每次呼叫都在你於同意畫面選擇的組織中執行；用戶端或模型送出的組織會被覆寫。要在其他組織中工作，請重新登入。
+- 寫入與刪除權限**只**來自這些 scope。使用 OAuth 時，URL 上的 `?allowWrite` 與 `?allowDestructive` 會被忽略。
+- 每次工具呼叫都會以你的身分透過一般 API 重放，因此你在該組織中的成員身分、角色權限與授權依然有效。
+
+### 工作階段、切換與撤銷
+
+- 用戶端會自行保存並更新 token。存取 token 有效期為 **1 小時**，並透過更新 token 續期，所以不需要每小時登入一次。
+- **切換組織或權限：** `/mcp` → `imbrace` → 清除驗證（clear authentication），然後再次 **Authenticate** 並重新選擇。
+- **撤銷：** 在用戶端中清除驗證即可刪除其保存的 token。存取 token 不會對照撤銷清單檢查，所以已核發的 token 在到期前（最多 1 小時）仍然有效。把某人移出組織或修改其角色會立即生效，因為閘道在每次呼叫時都會檢查成員身分與角色。
+
+### 改用 API key
+
+在閘道尚未啟用 OAuth、用於 CI 與無介面機器、或用戶端不支援 OAuth 時，使用 API key。在 iMBrace Portal 的 **GovernCore → Generate External Token** 產生組織 key（`api_...`）（請參閱[取得 API Key](/zh-tw/guides/api-key/)），並自行把它放進環境變數 — 絕對不要把 key 貼到聊天中或提交到程式碼庫。
+
+在 Claude Code 中用 key 新增伺服器；如果不想出現兩個項目，請停用外掛的 `imbrace` 伺服器（或整個外掛）：
+
+```bash
+claude mcp add --transport http imbrace https://app-gatewayv2.imbrace.co/mcp \
+  --header "Authorization: Bearer $IMBRACE_API_KEY"
+```
+
+API key 連線預設為**唯讀**，除非 URL 帶有 `?allowWrite=1`（建立與更新）或 `?allowDestructive=1`（還包括刪除）。固定的 `Authorization` 標頭會關閉用戶端的 OAuth 流程，所以每個連線只用一種方式。
+
+## 其他 MCP 用戶端
+
+範例使用正式環境；請把主機名稱替換為你所在環境的閘道。OAuth 方式只適用於已啟用 OAuth 的閘道。
+
+<Tabs>
+<TabItem label="Claude Code（不用外掛）">
+
+OAuth：
+
+```bash
+claude mcp add --transport http imbrace https://app-gatewayv2.imbrace.co/mcp
+```
+
+然後 `/mcp` → `imbrace` → **Authenticate**。使用 API key 時，請用[改用 API key](#api-key-instead)中的指令。
+
+</TabItem>
+<TabItem label="Cursor">
+
+寫在 `.cursor/mcp.json`（或 `~/.cursor/mcp.json`，對所有專案生效）。OAuth — Cursor 隨後會提示登入該伺服器：
+
+```json
+{
+  "mcpServers": {
+    "imbrace": { "url": "https://app-gatewayv2.imbrace.co/mcp" }
+  }
+}
+```
+
+API key：
+
+```json
+{
+  "mcpServers": {
+    "imbrace": {
+      "url": "https://app-gatewayv2.imbrace.co/mcp",
+      "headers": { "Authorization": "Bearer ${env:IMBRACE_API_KEY}" }
+    }
+  }
+}
+```
+
+</TabItem>
+<TabItem label="Codex CLI">
+
+寫在 `~/.codex/config.toml`：
+
+```toml
+[mcp_servers.imbrace]
+url = "https://app-gatewayv2.imbrace.co/mcp"
+```
+
+OAuth：執行 `codex mcp login imbrace`（適用於支援 MCP OAuth 的 Codex 版本）。API key：改為在 `[mcp_servers.imbrace]` 下新增 `bearer_token_env_var = "IMBRACE_API_KEY"`。
+
+</TabItem>
+<TabItem label="Claude Desktop / claude.ai">
+
+OAuth：**Settings → Connectors** → 用 MCP URL 新增自訂連接器（custom connector），然後登入。
+
+使用 API key 時，在 `claude_desktop_config.json` 中透過 `mcp-remote` 橋接，請參閱 [MCP 伺服器](/zh-tw/mcp/overview/)。
+
+</TabItem>
+<TabItem label="僅支援 stdio 的用戶端">
+
+用 `mcp-remote` 橋接 URL，它會開啟瀏覽器登入（OAuth）：
+
+```bash
+npx -y mcp-remote https://app-gatewayv2.imbrace.co/mcp
+```
+
+API key：
+
+```bash
+npx -y mcp-remote https://app-gatewayv2.imbrace.co/mcp \
+  --header "Authorization: Bearer $IMBRACE_API_KEY"
+```
+
+完全不用 URL：CLI 可以根據已保存的 profile 執行本機 stdio 伺服器 — [`imbrace mcp`](/zh-tw/cli/commands/#mcp-server)。
+
+</TabItem>
+</Tabs>
+
+## 疑難排解
+
+| 現象 | 原因 | 解決方法 |
+|---|---|---|
+| `/mcp` 顯示 `imbrace` 失敗：*Dynamic Client Registration rejected (HTTP 404)* … `Cannot POST /register` | 該閘道未啟用 OAuth，無法開始登入 | 停用外掛的 `imbrace` 伺服器，[改用 API key 連接](#api-key-instead) |
+| `401` 並帶有 `invalid_token` | 未登入，或登入已過期 | `/mcp` → `imbrace` → 清除驗證，然後再次 **Authenticate** |
+| 使用 API key 時出現 `401` | key 錯誤、已過期、屬於其他環境或為空 | 檢查 key 與閘道主機名稱 |
+| `403` | 你在該組織中的角色缺少相應權限 | 聯絡組織管理員 |
+| 缺少寫入或刪除類工具，或提示 *tool not enabled* | OAuth：授權中沒有 `imbrace.write` / `imbrace.delete`。API key：URL 中沒有 `?allowWrite=1` / `?allowDestructive=1`。或者 `?services=` / `?tags=` 篩選排除了該工具 | 重新驗證並授予寫入（或刪除）權限，或修正 URL |
+
+## 支援
+
+在工具包的 [GitHub Issues](https://github.com/imbrace-co/imbrace-agent-toolkit/issues) 中回報問題與提問。
+
+MCP 伺服器由 iMBrace Limited 營運。呼叫以你登入的 iMBrace 使用者與組織（或你的 API key）身分執行，受 [iMBrace 隱私權政策](https://www.imbrace.co/privacy-policy/)與[條款](https://www.imbrace.co/terms-and-conditions/)約束。技能本身不會向任何地方傳送任何內容。

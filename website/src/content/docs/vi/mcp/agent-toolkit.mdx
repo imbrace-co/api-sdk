@@ -1,0 +1,210 @@
+---
+title: Agent Toolkit
+description: Plugin iMBrace Developer cho Claude Code, ChatGPT và Codex — sáu skill dạy coding agent của bạn xây dựng trên iMBrace, kèm MCP server được host sẵn với đăng nhập OAuth.
+---
+
+import { Aside, Tabs, TabItem } from "@astrojs/starlight/components";
+
+**iMBrace Agent Toolkit** là plugin chính thức của iMBrace cho các AI coding agent. Cài một lần, agent của bạn sẽ biết cách xây dựng trên iMBrace: SDK TypeScript/Python, [MCP server](/mcp/overview/) được host sẵn, CLI, AI agent, workflow, knowledge hub và board CRM.
+
+Plugin có tên **iMBrace Developer**, gồm hai dạng:
+
+- **Claude Code** — sáu skill **cùng với** MCP server iMBrace được host sẵn, nên agent còn có thể đọc (và, nếu bạn cho phép, thay đổi) dữ liệu iMBrace của bạn.
+- **ChatGPT và Codex** — cùng sáu skill đó, dưới dạng plugin chỉ có skill. Nó chỉ chứa hướng dẫn; không gọi dịch vụ nào và không giữ credential nào. Nếu muốn có tool, hãy tự kết nối MCP server ([Các MCP client khác](#other-mcp-clients)).
+
+Mã nguồn và báo lỗi: [github.com/imbrace-co/imbrace-agent-toolkit](https://github.com/imbrace-co/imbrace-agent-toolkit) (MIT).
+
+## Toolkit gồm những gì
+
+| Skill | Dùng để |
+|---|---|
+| `imbrace-get-started` | Lần đầu dùng: chọn môi trường, lấy API key an toàn, thực hiện một lời gọi đã xác minh |
+| `imbrace-sdk` | TypeScript `@imbrace/sdk` và Python `imbrace`: khởi tạo client, namespace, xử lý lỗi |
+| `imbrace-mcp` | Kết nối MCP server được host sẵn trong mọi client; đăng nhập OAuth, API key làm phương án dự phòng |
+| `imbrace-cli` | Cài đặt, đăng nhập và viết script với CLI `imbrace`; chạy `imbrace mcp` trên máy |
+| `imbrace-build-agents-workflows` | AI agent + chat streaming, workflow, knowledge hub, board CRM từ đầu đến cuối |
+| `imbrace-vibe-code` | Xây dựng, deploy và host một ứng dụng hoàn chỉnh trên iMBrace (theo [`/skill.md`](https://engineer.imbrace.co/skill.md)) |
+
+Skill tự được nạp khi yêu cầu của bạn khớp. Mở một phiên mới và hỏi, ví dụ: *"Help me get started with iMBrace"*.
+
+## Cài đặt trong Claude Code
+
+Cần Claude Code 2.1.275 trở lên. Từ terminal:
+
+```bash
+claude plugin marketplace add imbrace-co/imbrace-agent-toolkit
+claude plugin install imbrace-developer@imbrace-developer-tools
+```
+
+Hoặc trong một phiên Claude Code:
+
+```text
+/plugin marketplace add imbrace-co/imbrace-agent-toolkit
+/plugin install imbrace-developer@imbrace-developer-tools
+```
+
+Cập nhật bằng `claude plugin marketplace update imbrace-developer-tools`; gỡ bằng `claude plugin uninstall imbrace-developer`.
+
+### Chọn môi trường
+
+Plugin thêm MCP server với tên `imbrace`, **không lưu credential nào trong plugin**. Thiết lập duy nhất của nó, **iMBrace MCP URL**, quyết định gateway sẽ kết nối:
+
+| Môi trường | MCP URL |
+|---|---|
+| Production (mặc định) | `https://app-gatewayv2.imbrace.co/mcp` |
+| Sandbox | `https://app-gateway.sandbox.imbrace.co/mcp` |
+| On-premise | `https://<gateway của bạn>/mcp` |
+
+Đổi bằng `/plugin` → **iMBrace Developer**. Thêm `?services=` hoặc `?tags=` vào URL sẽ thu hẹp các tool được liệt kê và gọi được (xem [MCP Server](/mcp/overview/#read-only-by-default)); đó là bộ lọc, không phải kiểm soát quyền truy cập.
+
+## ChatGPT và Codex
+
+Cùng các skill này sẽ được phát hành trong thư mục plugin của OpenAI với tên **iMBrace Developer**; link sẽ được thêm vào README của toolkit khi phát hành. Gói này chỉ có skill: để Codex dùng được cả tool iMBrace, hãy thêm MCP server vào Codex như hướng dẫn ở [Các MCP client khác](#other-mcp-clients).
+
+## Kết nối MCP server
+
+Có hai cách đăng nhập, mỗi kết nối dùng một cách: **OAuth** (đăng nhập trên trình duyệt, không phải sao chép gì) và **API key** (`api_...`).
+
+<Aside type="caution" title="OAuth đang được triển khai dần">
+Đăng nhập OAuth cho `/mcp` đang được bật dần theo từng môi trường, và gateway on-premise có thể chưa có. Hãy dùng nó **ở nơi môi trường của bạn đã bật OAuth; nếu không, hãy dùng API key** ([bên dưới](#api-key-instead)). Skill hoạt động với cả hai cách.
+
+Để kiểm tra một gateway: `GET <gateway>/.well-known/oauth-protected-resource/mcp` trả về JSON khi OAuth đã bật và 404 khi chưa bật.
+</Aside>
+
+### Đăng nhập bằng OAuth
+
+Trên gateway đã bật OAuth:
+
+1. Trong Claude Code, chạy `/mcp`, chọn `imbrace` rồi chọn **Authenticate**.
+2. Đăng nhập iMBrace trên trình duyệt vừa mở.
+3. Ở màn hình đồng ý (consent), chọn **tổ chức** mà kết nối này làm việc.
+4. Chọn **quyền** cấp: chỉ đọc, hoặc đọc + ghi (và xóa, nếu cần). Bạn có thể bỏ chọn ghi và xóa.
+5. Quay lại Claude Code, các tool sẽ xuất hiện. Thử *"List my iMBrace boards"* — agent sẽ gọi một tool như `listBoards`.
+
+### Quyền bạn cấp
+
+| Scope | Cho phép |
+|---|---|
+| `imbrace.read` | Tool đọc. Luôn được cấp. |
+| `imbrace.write` | Tool tạo và cập nhật |
+| `imbrace.delete` | Tool xóa (bao gồm quyền ghi) |
+
+- **Tổ chức được cố định bởi lần cấp quyền.** Mọi lời gọi chạy trong tổ chức bạn đã chọn ở màn hình đồng ý; tổ chức do client hoặc model gửi lên sẽ bị ghi đè. Muốn làm việc ở tổ chức khác, hãy đăng nhập lại.
+- Quyền ghi và xóa **chỉ** đến từ các scope này. Với OAuth, `?allowWrite` và `?allowDestructive` trên URL bị bỏ qua.
+- Mỗi lời gọi tool được phát lại qua API thông thường dưới danh nghĩa của bạn, nên tư cách thành viên, quyền theo vai trò và license của bạn trong tổ chức đó vẫn được áp dụng.
+
+### Phiên, chuyển đổi và thu hồi
+
+- Client tự lưu và làm mới token. Access token có hiệu lực **1 giờ** và được gia hạn bằng refresh token, nên bạn không phải đăng nhập lại mỗi giờ.
+- **Đổi tổ chức hoặc quyền:** `/mcp` → `imbrace` → clear authentication, rồi **Authenticate** lại và chọn lại.
+- **Thu hồi:** clear authentication trong client để xóa các token nó đã lưu. Access token không được đối chiếu với danh sách thu hồi, nên token đã cấp vẫn hợp lệ cho đến khi hết hạn (tối đa 1 giờ). Việc xóa một người khỏi tổ chức hoặc đổi vai trò của họ có hiệu lực ngay, vì gateway kiểm tra tư cách thành viên và vai trò ở mỗi lời gọi.
+
+### Dùng API key thay thế
+
+Dùng API key khi gateway chưa bật OAuth, cho CI và máy không có giao diện, và cho client không hỗ trợ OAuth. Tạo key của tổ chức (`api_...`) trong iMBrace Portal tại **GovernCore → Generate External Token** (xem [Lấy API Key](/guides/api-key/)), rồi tự đặt nó vào biến môi trường — đừng bao giờ dán key vào khung chat hay commit nó.
+
+Trong Claude Code, thêm server bằng key, và tắt server `imbrace` của plugin (hoặc tắt plugin) nếu không muốn có hai mục:
+
+```bash
+claude mcp add --transport http imbrace https://app-gatewayv2.imbrace.co/mcp \
+  --header "Authorization: Bearer $IMBRACE_API_KEY"
+```
+
+Kết nối bằng API key là **chỉ đọc** trừ khi URL có `?allowWrite=1` (tạo và cập nhật) hoặc `?allowDestructive=1` (thêm cả xóa). Header `Authorization` cố định sẽ tắt luồng OAuth của client, nên mỗi kết nối chỉ dùng một cách.
+
+## Các MCP client khác
+
+Ví dụ dùng production; thay host bằng gateway của môi trường bạn. Cách OAuth chỉ áp dụng khi gateway đã bật OAuth.
+
+<Tabs>
+<TabItem label="Claude Code (không dùng plugin)">
+
+OAuth:
+
+```bash
+claude mcp add --transport http imbrace https://app-gatewayv2.imbrace.co/mcp
+```
+
+Sau đó `/mcp` → `imbrace` → **Authenticate**. Với API key, dùng lệnh ở [Dùng API key thay thế](#api-key-instead).
+
+</TabItem>
+<TabItem label="Cursor">
+
+Trong `.cursor/mcp.json` (hoặc `~/.cursor/mcp.json` cho mọi project). OAuth — sau đó Cursor sẽ đề nghị đăng nhập vào server:
+
+```json
+{
+  "mcpServers": {
+    "imbrace": { "url": "https://app-gatewayv2.imbrace.co/mcp" }
+  }
+}
+```
+
+API key:
+
+```json
+{
+  "mcpServers": {
+    "imbrace": {
+      "url": "https://app-gatewayv2.imbrace.co/mcp",
+      "headers": { "Authorization": "Bearer ${env:IMBRACE_API_KEY}" }
+    }
+  }
+}
+```
+
+</TabItem>
+<TabItem label="Codex CLI">
+
+Trong `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.imbrace]
+url = "https://app-gatewayv2.imbrace.co/mcp"
+```
+
+OAuth: chạy `codex mcp login imbrace` (với các phiên bản Codex có hỗ trợ MCP OAuth). API key: thay vào đó thêm `bearer_token_env_var = "IMBRACE_API_KEY"` dưới `[mcp_servers.imbrace]`.
+
+</TabItem>
+<TabItem label="Claude Desktop / claude.ai">
+
+OAuth: **Settings → Connectors** → thêm custom connector với MCP URL, rồi đăng nhập.
+
+Với API key, bridge qua `mcp-remote` trong `claude_desktop_config.json`, như trên trang [MCP Server](/mcp/overview/).
+
+</TabItem>
+<TabItem label="Client chỉ hỗ trợ stdio">
+
+Bridge URL bằng `mcp-remote`, công cụ này sẽ mở trình duyệt để đăng nhập (OAuth):
+
+```bash
+npx -y mcp-remote https://app-gatewayv2.imbrace.co/mcp
+```
+
+API key:
+
+```bash
+npx -y mcp-remote https://app-gatewayv2.imbrace.co/mcp \
+  --header "Authorization: Bearer $IMBRACE_API_KEY"
+```
+
+Không dùng URL: CLI chạy một stdio server cục bộ từ profile đã lưu — [`imbrace mcp`](/cli/commands/#mcp-server).
+
+</TabItem>
+</Tabs>
+
+## Xử lý sự cố
+
+| Triệu chứng | Nguyên nhân | Cách xử lý |
+|---|---|---|
+| `/mcp` báo `imbrace` lỗi: *Dynamic Client Registration rejected (HTTP 404)* … `Cannot POST /register` | Gateway đó chưa bật OAuth, nên không thể bắt đầu đăng nhập | Tắt server `imbrace` của plugin và [kết nối bằng API key](#api-key-instead) |
+| `401` kèm `invalid_token` | Chưa đăng nhập, hoặc phiên đăng nhập đã hết hạn | `/mcp` → `imbrace` → clear authentication, rồi **Authenticate** lại |
+| `401` khi dùng API key | Key sai, hết hạn, thuộc môi trường khác, hoặc rỗng | Kiểm tra key và host của gateway |
+| `403` | Vai trò của bạn trong tổ chức đó thiếu quyền | Liên hệ admin của tổ chức |
+| Thiếu tool ghi hoặc xóa, hoặc lỗi *tool not enabled* | OAuth: lần cấp quyền thiếu `imbrace.write` / `imbrace.delete`. API key: URL thiếu `?allowWrite=1` / `?allowDestructive=1`. Hoặc bộ lọc `?services=` / `?tags=` đã loại tool đó | Xác thực lại và cấp quyền ghi (hoặc xóa), hoặc sửa URL |
+
+## Hỗ trợ
+
+Báo lỗi và đặt câu hỏi tại [GitHub Issues](https://github.com/imbrace-co/imbrace-agent-toolkit/issues) của toolkit.
+
+MCP server do iMBrace Limited vận hành. Các lời gọi chạy dưới danh nghĩa người dùng và tổ chức iMBrace bạn đăng nhập (hoặc bằng API key của bạn), theo [chính sách quyền riêng tư](https://www.imbrace.co/privacy-policy/) và [điều khoản](https://www.imbrace.co/terms-and-conditions/) của iMBrace. Bản thân các skill không gửi gì đi đâu cả.
