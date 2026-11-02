@@ -182,6 +182,13 @@ export class AiAgentResource {
       const lines = buf.split("\n");
       buf = lines.pop() ?? "";
       for (const line of lines) {
+        // Reason: a proxy can deliver many events in one read, so the signal must be
+        // checked per event, not only per read — otherwise the loop keeps yielding
+        // already-buffered chunks after the caller aborted.
+        if (options?.signal?.aborted) {
+          await reader.cancel().catch(() => {});
+          throw new NetworkError("Request aborted by user");
+        }
         if (!line.startsWith("data:")) continue;
         const payload = line.slice(5).trim();
         if (!payload || payload === "[DONE]") continue;
