@@ -110,6 +110,26 @@ describe("AiAgentResource", () => {
     expect((err as Error).message).toBe("Request aborted by user")
   })
 
+  it("streamChatText() yields nothing more after abort, even when one read carries many deltas", async () => {
+    // A buffering proxy (as on staging) hands over many events in a single read.
+    const events = ["a", "b", "c", "d"].map(d => `data: ${JSON.stringify({ type: "text-delta", delta: d })}\n`).join("")
+    globalThis.fetch = vi.fn().mockImplementation(async () =>
+      new Response(new ReadableStream<Uint8Array>({
+        start(controller) { controller.enqueue(new TextEncoder().encode(events)) },
+      }), { headers: { "Content-Type": "text/event-stream" } }))
+    const ac = new AbortController()
+    const got: string[] = []
+    let err: unknown
+    try {
+      for await (const chunk of makeResource().streamChatText({ assistant_id: "a_1", user_id: "u", messages: [] }, { signal: ac.signal })) {
+        got.push(chunk)
+        ac.abort()
+      }
+    } catch (e) { err = e }
+    expect(got).toEqual(["a"])
+    expect(err).toBeInstanceOf(NetworkError)
+  })
+
   it("streamChatText() yields text deltas", async () => {
     mockStream(['{"type":"start"}', '{"type":"text-delta","id":"0","delta":"Hel"}', '{"type":"text-delta","id":"0","delta":"lo"}', "[DONE]"])
     let out = ""
