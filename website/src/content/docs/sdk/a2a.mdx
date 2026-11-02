@@ -1,0 +1,193 @@
+---
+title: Agent-to-Agent (A2A)
+description: Reference for client.a2a (this org's agents over the A2A protocol) and A2AClient / AsyncA2AClient (any A2A agent, on this platform or outside it).
+---
+
+import { Tabs, TabItem, Aside } from "@astrojs/starlight/components";
+
+A2A is an open protocol for one agent to delegate work to another: the caller reads the callee's **Agent Card** to learn what it can do, then sends it a task over JSON-RPC and gets the answer back. The SDK speaks protocol version `0.3.0` and supports both directions.
+
+- **`a2a` / `a2a`** — this organization's agents. List them, read their cards, and run one to a final answer.
+- **`A2AClient` / `AsyncA2AClient`** — any agent that speaks A2A: an iMBrace agent in another organization, or a third-party agent entirely.
+
+<Aside type="note" title="A2AClient carries no iMBrace credential">
+The standalone client sends only the key you hand it, so pointing it at an outside host cannot leak your platform token. Use it, not `client.a2a`, for agents you do not own.
+</Aside>
+
+An A2A call is one **blocking** turn: unlike [`aiAgent.streamChat`](/sdk/ai-agent/), it returns only once the agent has finished. A remote agent runs a full tool-using loop, so allow a minute or more.
+
+## Listing your agents
+
+Each entry carries the two URLs a peer needs: `url` (the JSON-RPC endpoint) and `cardUrl`.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const agents = await client.a2a.listAgents()
+// [{ id, name, url, cardUrl }, ...]
+
+const card = await client.a2a.getAgentCard(agents[0].id)
+console.log(card.name, card.skills?.map(s => s.name))
+```
+</TabItem>
+<TabItem label="Python">
+```python
+agents = client.a2a.list_agents()
+card = client.a2a.get_agent_card(agents[0]["id"])
+print(card["name"], [s["name"] for s in card.get("skills", [])])
+```
+</TabItem>
+</Tabs>
+
+## Running an agent
+
+`ask()` returns the answer text. `sendMessage()` / `send_message()` returns the raw A2A Task when you need its status, artifacts or `contextId`.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const answer = await client.a2a.ask(agentId, "Summarise this week's open deals")
+
+const task = await client.a2a.sendMessage(agentId, "And the closed ones?", {
+  contextId: previousTask.contextId,   // continue the same A2A context
+})
+console.log(task.status.state)         // "completed"
+```
+</TabItem>
+<TabItem label="Python">
+```python
+answer = client.a2a.ask(agent_id, "Summarise this week's open deals")
+
+task = client.a2a.send_message(
+    agent_id, "And the closed ones?", context_id=previous_task["contextId"]
+)
+print(task["status"]["state"])
+```
+</TabItem>
+</Tabs>
+
+The same surface is on `AsyncImbraceClient` with `await`.
+
+## Letting another agent call yours
+
+Hand the peer two things: the agent's `url` from `listAgents()`, and an API key scoped to your org.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { token } = await client.apiKeys.create({ expirationDays: 7 })
+```
+</TabItem>
+<TabItem label="Python">
+```python
+token = client.api_keys.create({"expirationDays": 7})["token"]
+```
+</TabItem>
+</Tabs>
+
+The peer sends that key as `x-access-token` or `x-api-key`; your agent's card advertises this under `securitySchemes`. The key carries your organization's permissions and is shown only once — give it the shortest useful expiry.
+
+## Calling an agent outside iMBrace
+
+Give `A2AClient` a URL (the agent base or its card URL) and, if the agent wants one, a key. The key is sent as both `x-api-key` and `Authorization: Bearer`, since agents differ on which they read; `headers` covers anything else its card names.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+import { A2AClient } from "@imbrace/sdk"
+
+const reviewer = new A2AClient({
+  url: "https://reviewer.example.com",
+  apiKey: process.env.REVIEWER_KEY,
+  timeoutMs: 120_000,                  // default
+})
+
+console.log((await reviewer.listSkills()).map(s => s.name))
+const verdict = await reviewer.ask("Review the diff on branch feat/checkout")
+```
+</TabItem>
+<TabItem label="Python">
+```python
+import os
+from imbrace import A2AClient
+
+reviewer = A2AClient("https://reviewer.example.com", api_key=os.environ["REVIEWER_KEY"])
+print([s["name"] for s in reviewer.list_skills()])
+verdict = reviewer.ask("Review the diff on branch feat/checkout")
+```
+</TabItem>
+</Tabs>
+
+Use `AsyncA2AClient` for the async variant. The card is fetched once and cached; pass `getCard(true)` / `get_card(refresh=True)` to re-read it.
+
+### Checking an agent is reachable
+
+`discover()` probes a remote card **from the platform**, so it answers a question a probe from your own machine cannot: whether iMBrace itself can reach that agent. Use it before wiring a remote agent into one of your own.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const probe = await client.a2a.discover("https://reviewer.example.com", process.env.REVIEWER_KEY)
+if (!probe.healthy) throw new Error("iMBrace cannot reach that agent")
+```
+</TabItem>
+<TabItem label="Python">
+```python
+probe = client.a2a.discover("https://reviewer.example.com", os.environ["REVIEWER_KEY"])
+```
+</TabItem>
+</Tabs>
+
+## Reading a result yourself
+
+`ask()` is `sendMessage()` plus `extractA2AText()`, which reads the task's status message, then its artifacts. Call it directly on a task you got elsewhere.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+import { extractA2AText } from "@imbrace/sdk"
+const text = extractA2AText(task)
+```
+</TabItem>
+<TabItem label="Python">
+```python
+from imbrace import extract_a2a_text
+text = extract_a2a_text(task)
+```
+</TabItem>
+</Tabs>
+
+## Limits
+
+- **Text only.** Text parts are sent and read; file and data parts are not handled.
+- **No streaming.** `message/stream` and push notifications are not supported — the cards this platform publishes declare `streaming: false`. For token-by-token output from your own agents, use [`aiAgent.streamChat`](/sdk/ai-agent/).
+- **One method.** `message/send` only. There is no `tasks/get` polling, so an agent that returns a `submitted` task and finishes later cannot be followed up.
+- **Bearer and header API keys only.** An agent whose card requires OAuth2 or OIDC is not supported.
+
+## Errors
+
+A JSON-RPC error from the agent, a non-2xx card fetch, and a malformed card all raise `ImbraceError`. See [Error Handling](/sdk/error-handling/).
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+import { ImbraceError } from "@imbrace/sdk"
+
+try {
+  await reviewer.ask("...")
+} catch (e) {
+  if (e instanceof ImbraceError) console.error(e.message)
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+from imbrace import ImbraceError
+
+try:
+    reviewer.ask("...")
+except ImbraceError as e:
+    print(e)
+```
+</TabItem>
+</Tabs>

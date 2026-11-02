@@ -21,6 +21,11 @@ export type { McpServerTool, UpdateMcpServerInput } from "./resources/workflows.
 export type { ToolServerConfig } from "./resources/chat-ai.js"
 export type { CreateContactInput } from "./resources/contacts.js"
 export type { StreamRequestOptions } from "./resources/ai-agent.js"
+export type {
+  A2AAgentSummary, A2ADiscoverResult, A2AMessage, A2APart, A2AArtifact, A2ASkill, A2ATask,
+  AgentCard, A2AClientOptions, SendMessageOptions,
+} from "./resources/a2a.js"
+export { A2AClient, extractA2AText, agentCardUrl, textMessage } from "./resources/a2a.js"
 export type { MarketplaceApp, AppInstall, InstallTeamDefaultsInput, InstallTeamDefaultsResult } from "./resources/marketplace.js"
 export type { DriveType, DriveProvider, DriveSessionStatus, TeamAccess, TeamAccessChange } from "./resources/boards.js"
 

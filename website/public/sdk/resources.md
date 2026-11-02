@@ -4,6 +4,7 @@ This page covers the CRM and messaging namespaces exposed by the SDK. Initialize
 
 For AI and workflow-related resources, see:
 - [AI Agent](/sdk/ai-agent.md) — AI agents (`chatAi`), AI agent streaming, embeddings, parquet
+- [Agent-to-Agent (A2A)](/sdk/a2a.md) — delegate a task to another agent, on this platform or outside it
 - [Workflows](/sdk/workflows.md) — Workflow flows and channel automation
 - [Data Boards](/sdk/databoard.md) — CRM pipeline boards and items
 

@@ -406,6 +406,7 @@ export default defineConfig({
             { label: 'Full Flow Guide', translations: { vi: 'Hướng Dẫn Toàn Bộ',    'zh-CN': '完整流程指南', 'zh-TW': '完整流程指南' }, link: '/sdk/full-flow-guide/' },
             { label: 'Resources',       translations: { vi: 'Tài Nguyên',            'zh-CN': '资源参考',   'zh-TW': '資源參考'   }, link: '/sdk/resources/' },
             { label: 'AI Agent',        translations: { vi: 'AI Agent',              'zh-CN': 'AI 代理',    'zh-TW': 'AI 代理'    }, link: '/sdk/ai-agent/' },
+            { label: 'Agent-to-Agent',  translations: { vi: 'Agent-to-Agent (A2A)',  'zh-CN': '代理间通信 (A2A)', 'zh-TW': '代理間通訊 (A2A)' }, link: '/sdk/a2a/' },
             { label: 'Workflows',       translations: { vi: 'Workflows',             'zh-CN': '工作流',     'zh-TW': '工作流程'   }, link: '/sdk/workflows/' },
             { label: 'DataBoards',      translations: { vi: 'Data Boards',           'zh-CN': '数据面板',   'zh-TW': '資料看板'   }, link: '/sdk/databoard/' },
             { label: 'Document AI',     translations: { vi: 'Document AI',           'zh-CN': 'Document AI', 'zh-TW': 'Document AI' }, link: '/sdk/document-ai/' },

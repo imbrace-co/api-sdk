@@ -35,6 +35,7 @@ from .resources.predict import AsyncPredictResource
 from .resources.chat_ai import AsyncChatAiResource
 from .resources.file_service import AsyncFileServiceResource
 from .resources.ai_agent import AsyncAiAgentResource
+from .resources.a2a import AsyncA2AResource
 from .resources.document_ai import AsyncDocumentAIResource
 from .resources.templates import AsyncTemplatesResource
 from .resources.license import AsyncLicenseResource
@@ -150,6 +151,7 @@ class AsyncImbraceClient:
         self.chat_ai       = AsyncChatAiResource(self.http, f"{urls.ai}/v3/ai")
         self.file_service  = AsyncFileServiceResource(self.http, urls.file_service)
         self.ai_agent      = AsyncAiAgentResource(self.http, urls.ai_agent)
+        self.a2a           = AsyncA2AResource(self.http, urls.ai_agent)
         self.document_ai         = AsyncDocumentAIResource(
             self.http, f"{urls.ai}/v3/ai",
             boards=self.boards, templates=self.templates,

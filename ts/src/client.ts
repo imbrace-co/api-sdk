@@ -37,6 +37,7 @@ import { FileServiceResource } from "./resources/file-service.js"
 import { MessageSuggestionResource } from "./resources/message-suggestion.js"
 import { PredictResource } from "./resources/predict.js"
 import { AiAgentResource } from "./resources/ai-agent.js"
+import { A2AResource } from "./resources/a2a.js"
 import { DocumentAIResource } from "./resources/document-ai.js"
 import { TemplatesResource } from "./resources/templates.js"
 import { DocumentModelsResource } from "./resources/document-models.js"
@@ -104,6 +105,7 @@ export class ImbraceClient {
   public readonly messageSuggestion: MessageSuggestionResource
   public readonly predict: PredictResource
   public readonly aiAgent: AiAgentResource
+  public readonly a2a: A2AResource
   public readonly documentAi: DocumentAIResource
   public readonly templates: TemplatesResource
   public readonly documentModels: DocumentModelsResource
@@ -219,6 +221,7 @@ export class ImbraceClient {
 
     // ai-agent / message-suggestion / predict
     this.aiAgent           = new AiAgentResource(this.http, urls.aiAgent)
+    this.a2a               = new A2AResource(this.http, urls.aiAgent)
     this.messageSuggestion = new MessageSuggestionResource(this.http, urls.messageSuggestion)
     this.predict           = new PredictResource(this.http, urls.predict)
 
