@@ -1,0 +1,193 @@
+---
+title: Agent-to-Agent (A2A)
+description: Tài liệu tham khảo cho client.a2a (các agent của tổ chức qua giao thức A2A) và A2AClient / AsyncA2AClient (mọi agent A2A, trong hay ngoài nền tảng).
+---
+
+import { Tabs, TabItem, Aside } from "@astrojs/starlight/components";
+
+A2A là giao thức mở để một agent giao việc cho agent khác: bên gọi đọc **Agent Card** của bên được gọi để biết nó làm được gì, rồi gửi một task qua JSON-RPC và nhận câu trả lời. SDK nói giao thức phiên bản `0.3.0` và hỗ trợ cả hai chiều.
+
+- **`a2a` / `a2a`** — các agent của chính tổ chức bạn. Liệt kê, đọc card, và chạy một agent đến câu trả lời cuối cùng.
+- **`A2AClient` / `AsyncA2AClient`** — mọi agent biết nói A2A: một agent iMBrace ở tổ chức khác, hoặc một agent của bên thứ ba hoàn toàn.
+
+<Aside type="note" title="A2AClient không mang theo credential iMBrace">
+Client độc lập chỉ gửi đúng key bạn đưa cho nó, nên trỏ vào host bên ngoài cũng không thể làm lộ token nền tảng của bạn. Với agent bạn không sở hữu, hãy dùng nó thay vì `client.a2a`.
+</Aside>
+
+Một lệnh gọi A2A là một lượt **blocking**: khác với [`aiAgent.streamChat`](/sdk/ai-agent/), nó chỉ trả về khi agent đã làm xong. Agent ở xa chạy trọn một vòng lặp gọi tool, nên hãy chuẩn bị chờ một phút hoặc hơn.
+
+## Liệt kê các agent của bạn
+
+Mỗi mục mang hai URL mà một peer cần: `url` (endpoint JSON-RPC) và `cardUrl`.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const agents = await client.a2a.listAgents()
+// [{ id, name, url, cardUrl }, ...]
+
+const card = await client.a2a.getAgentCard(agents[0].id)
+console.log(card.name, card.skills?.map(s => s.name))
+```
+</TabItem>
+<TabItem label="Python">
+```python
+agents = client.a2a.list_agents()
+card = client.a2a.get_agent_card(agents[0]["id"])
+print(card["name"], [s["name"] for s in card.get("skills", [])])
+```
+</TabItem>
+</Tabs>
+
+## Chạy một agent
+
+`ask()` trả về phần text của câu trả lời. `sendMessage()` / `send_message()` trả về A2A Task thô khi bạn cần `status`, `artifacts` hay `contextId` của nó.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const answer = await client.a2a.ask(agentId, "Summarise this week's open deals")
+
+const task = await client.a2a.sendMessage(agentId, "And the closed ones?", {
+  contextId: previousTask.contextId,   // tiếp tục cùng một A2A context
+})
+console.log(task.status.state)         // "completed"
+```
+</TabItem>
+<TabItem label="Python">
+```python
+answer = client.a2a.ask(agent_id, "Summarise this week's open deals")
+
+task = client.a2a.send_message(
+    agent_id, "And the closed ones?", context_id=previous_task["contextId"]
+)
+print(task["status"]["state"])
+```
+</TabItem>
+</Tabs>
+
+`AsyncImbraceClient` có đúng bộ method này, dùng với `await`.
+
+## Cho agent khác gọi agent của bạn
+
+Đưa cho peer hai thứ: `url` của agent lấy từ `listAgents()`, và một API key thuộc phạm vi tổ chức của bạn.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { token } = await client.apiKeys.create({ expirationDays: 7 })
+```
+</TabItem>
+<TabItem label="Python">
+```python
+token = client.api_keys.create({"expirationDays": 7})["token"]
+```
+</TabItem>
+</Tabs>
+
+Peer gửi key đó ở header `x-access-token` hoặc `x-api-key`; card của agent công bố điều này trong `securitySchemes`. Key mang quyền của tổ chức bạn và chỉ hiện ra một lần — hãy đặt thời hạn ngắn nhất còn dùng được.
+
+## Gọi một agent ngoài iMBrace
+
+Đưa cho `A2AClient` một URL (URL gốc của agent hoặc URL card của nó) và, nếu agent yêu cầu, một key. Key được gửi dưới cả `x-api-key` **và** `Authorization: Bearer`, vì mỗi agent đọc một kiểu khác nhau; `headers` lo phần còn lại nếu card của nó khai một scheme khác.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+import { A2AClient } from "@imbrace/sdk"
+
+const reviewer = new A2AClient({
+  url: "https://reviewer.example.com",
+  apiKey: process.env.REVIEWER_KEY,
+  timeoutMs: 120_000,                  // mặc định
+})
+
+console.log((await reviewer.listSkills()).map(s => s.name))
+const verdict = await reviewer.ask("Review the diff on branch feat/checkout")
+```
+</TabItem>
+<TabItem label="Python">
+```python
+import os
+from imbrace import A2AClient
+
+reviewer = A2AClient("https://reviewer.example.com", api_key=os.environ["REVIEWER_KEY"])
+print([s["name"] for s in reviewer.list_skills()])
+verdict = reviewer.ask("Review the diff on branch feat/checkout")
+```
+</TabItem>
+</Tabs>
+
+Dùng `AsyncA2AClient` cho bản async. Card được lấy một lần rồi cache; truyền `getCard(true)` / `get_card(refresh=True)` để đọc lại.
+
+### Kiểm tra agent có với tới được không
+
+`discover()` dò card của agent ở xa **từ phía nền tảng**, nên nó trả lời được câu hỏi mà một lần dò từ máy bạn không trả lời được: liệu chính iMBrace có với tới agent đó hay không. Hãy dùng nó trước khi gắn một agent ở xa vào agent của bạn.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const probe = await client.a2a.discover("https://reviewer.example.com", process.env.REVIEWER_KEY)
+if (!probe.healthy) throw new Error("iMBrace cannot reach that agent")
+```
+</TabItem>
+<TabItem label="Python">
+```python
+probe = client.a2a.discover("https://reviewer.example.com", os.environ["REVIEWER_KEY"])
+```
+</TabItem>
+</Tabs>
+
+## Tự đọc kết quả
+
+`ask()` chính là `sendMessage()` cộng với `extractA2AText()` — hàm này đọc message trong `status`, rồi tới `artifacts`. Gọi thẳng nó khi bạn có sẵn một task từ nơi khác.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+import { extractA2AText } from "@imbrace/sdk"
+const text = extractA2AText(task)
+```
+</TabItem>
+<TabItem label="Python">
+```python
+from imbrace import extract_a2a_text
+text = extract_a2a_text(task)
+```
+</TabItem>
+</Tabs>
+
+## Giới hạn
+
+- **Chỉ text.** SDK gửi và đọc text part; file part và data part không được xử lý.
+- **Không streaming.** `message/stream` và push notification không được hỗ trợ — card mà nền tảng này công bố khai `streaming: false`. Muốn nhận từng token từ agent của chính bạn, dùng [`aiAgent.streamChat`](/sdk/ai-agent/).
+- **Một method duy nhất.** Chỉ `message/send`. Không có `tasks/get` để poll, nên một agent trả về task `submitted` rồi mới xong sau đó thì không theo dõi tiếp được.
+- **Chỉ bearer và API key ở header.** Agent nào có card yêu cầu OAuth2 hoặc OIDC thì chưa hỗ trợ.
+
+## Lỗi
+
+Lỗi JSON-RPC từ agent, card fetch trả về non-2xx, và card sai định dạng đều ném `ImbraceError`. Xem [Xử lý Lỗi](/sdk/error-handling/).
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+import { ImbraceError } from "@imbrace/sdk"
+
+try {
+  await reviewer.ask("...")
+} catch (e) {
+  if (e instanceof ImbraceError) console.error(e.message)
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+from imbrace import ImbraceError
+
+try:
+    reviewer.ask("...")
+except ImbraceError as e:
+    print(e)
+```
+</TabItem>
+</Tabs>

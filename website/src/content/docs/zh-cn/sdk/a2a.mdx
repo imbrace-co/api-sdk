@@ -1,0 +1,193 @@
+---
+title: 代理间通信 (A2A)
+description: client.a2a（通过 A2A 协议访问本组织的代理）以及 A2AClient / AsyncA2AClient（任意 A2A 代理，无论是否在本平台上）的参考文档。
+---
+
+import { Tabs, TabItem, Aside } from "@astrojs/starlight/components";
+
+A2A 是一个开放协议，让一个代理把工作委托给另一个代理：调用方先读取被调用方的 **Agent Card** 以了解它能做什么，然后通过 JSON-RPC 发送一个任务并取回答案。SDK 支持协议版本 `0.3.0`，两个方向都支持。
+
+- **`a2a` / `a2a`** — 本组织自己的代理。列出它们、读取其 card，并运行其中一个直到得出最终答案。
+- **`A2AClient` / `AsyncA2AClient`** — 任何会说 A2A 的代理：另一个组织里的 iMBrace 代理，或者完全是第三方的代理。
+
+<Aside type="note" title="A2AClient 不携带 iMBrace 凭据">
+独立客户端只发送你交给它的那个 key，因此即使把它指向外部主机也不会泄露你的平台令牌。对于不属于你的代理，请使用它而不是 `client.a2a`。
+</Aside>
+
+一次 A2A 调用是一个**阻塞**回合：与 [`aiAgent.streamChat`](/zh-cn/sdk/ai-agent/) 不同，它只在代理完成后才返回。远端代理会跑完一整轮工具调用循环，因此请预留一分钟以上。
+
+## 列出你的代理
+
+每一项都带有对端所需的两个 URL：`url`（JSON-RPC 端点）和 `cardUrl`。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const agents = await client.a2a.listAgents()
+// [{ id, name, url, cardUrl }, ...]
+
+const card = await client.a2a.getAgentCard(agents[0].id)
+console.log(card.name, card.skills?.map(s => s.name))
+```
+</TabItem>
+<TabItem label="Python">
+```python
+agents = client.a2a.list_agents()
+card = client.a2a.get_agent_card(agents[0]["id"])
+print(card["name"], [s["name"] for s in card.get("skills", [])])
+```
+</TabItem>
+</Tabs>
+
+## 运行一个代理
+
+`ask()` 返回答案文本。当你需要任务的 `status`、`artifacts` 或 `contextId` 时，用 `sendMessage()` / `send_message()` 取回原始的 A2A Task。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const answer = await client.a2a.ask(agentId, "Summarise this week's open deals")
+
+const task = await client.a2a.sendMessage(agentId, "And the closed ones?", {
+  contextId: previousTask.contextId,   // 延续同一个 A2A context
+})
+console.log(task.status.state)         // "completed"
+```
+</TabItem>
+<TabItem label="Python">
+```python
+answer = client.a2a.ask(agent_id, "Summarise this week's open deals")
+
+task = client.a2a.send_message(
+    agent_id, "And the closed ones?", context_id=previous_task["contextId"]
+)
+print(task["status"]["state"])
+```
+</TabItem>
+</Tabs>
+
+`AsyncImbraceClient` 上有同样的接口，配合 `await` 使用。
+
+## 让别的代理调用你的代理
+
+交给对方两样东西：`listAgents()` 返回的代理 `url`，以及一个限定在你组织范围内的 API key。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { token } = await client.apiKeys.create({ expirationDays: 7 })
+```
+</TabItem>
+<TabItem label="Python">
+```python
+token = client.api_keys.create({"expirationDays": 7})["token"]
+```
+</TabItem>
+</Tabs>
+
+对方把该 key 放在 `x-access-token` 或 `x-api-key` 请求头里；你的代理 card 会在 `securitySchemes` 中声明这一点。这个 key 带着你组织的权限，且只显示一次 —— 请给它够用的最短有效期。
+
+## 调用 iMBrace 之外的代理
+
+给 `A2AClient` 一个 URL（代理的基础 URL 或其 card URL），如果该代理需要，再给一个 key。key 会同时以 `x-api-key` **和** `Authorization: Bearer` 发送，因为各家代理读取的请求头不同；若其 card 声明了别的方案，用 `headers` 补上。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+import { A2AClient } from "@imbrace/sdk"
+
+const reviewer = new A2AClient({
+  url: "https://reviewer.example.com",
+  apiKey: process.env.REVIEWER_KEY,
+  timeoutMs: 120_000,                  // 默认值
+})
+
+console.log((await reviewer.listSkills()).map(s => s.name))
+const verdict = await reviewer.ask("Review the diff on branch feat/checkout")
+```
+</TabItem>
+<TabItem label="Python">
+```python
+import os
+from imbrace import A2AClient
+
+reviewer = A2AClient("https://reviewer.example.com", api_key=os.environ["REVIEWER_KEY"])
+print([s["name"] for s in reviewer.list_skills()])
+verdict = reviewer.ask("Review the diff on branch feat/checkout")
+```
+</TabItem>
+</Tabs>
+
+异步版本请用 `AsyncA2AClient`。card 只取一次并缓存；传 `getCard(true)` / `get_card(refresh=True)` 可重新读取。
+
+### 确认代理可达
+
+`discover()` **从平台侧**探测远端 card，因此它能回答一个你在自己机器上探测无法回答的问题：iMBrace 本身能否连到那个代理。在把远端代理接入你自己的代理之前，先用它确认一下。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const probe = await client.a2a.discover("https://reviewer.example.com", process.env.REVIEWER_KEY)
+if (!probe.healthy) throw new Error("iMBrace cannot reach that agent")
+```
+</TabItem>
+<TabItem label="Python">
+```python
+probe = client.a2a.discover("https://reviewer.example.com", os.environ["REVIEWER_KEY"])
+```
+</TabItem>
+</Tabs>
+
+## 自己解析结果
+
+`ask()` 就是 `sendMessage()` 加上 `extractA2AText()`，后者先读任务 `status` 里的 message，再读 `artifacts`。当任务来自别处时，可以直接调用它。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+import { extractA2AText } from "@imbrace/sdk"
+const text = extractA2AText(task)
+```
+</TabItem>
+<TabItem label="Python">
+```python
+from imbrace import extract_a2a_text
+text = extract_a2a_text(task)
+```
+</TabItem>
+</Tabs>
+
+## 限制
+
+- **仅文本。** 只发送和读取 text part；file part 和 data part 不作处理。
+- **不支持流式。** 不支持 `message/stream` 和推送通知 —— 本平台公布的 card 声明 `streaming: false`。若要从你自己的代理逐 token 输出，请用 [`aiAgent.streamChat`](/zh-cn/sdk/ai-agent/)。
+- **只有一个方法。** 仅 `message/send`。没有 `tasks/get` 轮询，因此先返回 `submitted` 任务、稍后才完成的代理无法继续跟踪。
+- **只支持 bearer 和请求头 API key。** card 要求 OAuth2 或 OIDC 的代理暂不支持。
+
+## 错误
+
+代理返回的 JSON-RPC 错误、非 2xx 的 card 请求、以及格式错误的 card，都会抛出 `ImbraceError`。参见[错误处理](/zh-cn/sdk/error-handling/)。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+import { ImbraceError } from "@imbrace/sdk"
+
+try {
+  await reviewer.ask("...")
+} catch (e) {
+  if (e instanceof ImbraceError) console.error(e.message)
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+from imbrace import ImbraceError
+
+try:
+    reviewer.ask("...")
+except ImbraceError as e:
+    print(e)
+```
+</TabItem>
+</Tabs>
