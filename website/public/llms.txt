@@ -39,7 +39,7 @@
 - [Namespace Resource Reference](https://developer.imbrace.co/sdk/resources.md) - Detailed signatures for all 30+ namespaces.
 - [AI Agent Deep Dive](https://developer.imbrace.co/sdk/ai-agent.md) - SSE Streaming, TraceQL, Parquet, and Chat Client Sub-API.
 - [Agent-to-Agent (A2A)](https://developer.imbrace.co/sdk/a2a.md) - Delegate a task to another agent: this org's agents via client.a2a, any outside agent via A2AClient.
-- [Document AI](https://developer.imbrace.co/sdk/document-ai.md) - Extract structured data from PDFs/images via chatAi and documentAi namespaces.
+- [Document AI](https://developer.imbrace.co/sdk/document-ai.md) - Extract structured data from PDFs/images: dociq (upload documents, DocIQ matches a model and writes the board; submissions), documentModels (fields, boards, settings), chatAi and documentAi (direct processing, queued jobs via getJob, webhooks, OCR confidence).
 - [Data Boards](https://developer.imbrace.co/sdk/databoard.md) - CRM pipeline boards, fields, items, and export.
 - [Workflows](https://developer.imbrace.co/sdk/workflows.md) - Workflow flow engine, runs, folders, connections, and MCP.
 - [Error Handling](https://developer.imbrace.co/sdk/error-handling.md) - Full error class hierarchy, retry behavior, and 401/403 handling.

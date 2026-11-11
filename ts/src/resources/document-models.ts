@@ -9,9 +9,14 @@ export interface DocumentModelAttribute {
   [key: string]: unknown
 }
 
+/** The product that owns a Document Model: `"DocumentAI"` is DocIQ, `"Comms"` is CommsIQ. */
+export type DocumentModelType = "DocumentAI" | "Comms"
+
 export interface DocumentModel {
   id: string
   name: string
+  /** Owning product. Models saved before CommsIQ existed are `"DocumentAI"`. */
+  type?: DocumentModelType
   description?: string
   category?: string
   attributes: DocumentModelAttribute[]
@@ -21,21 +26,43 @@ export interface DocumentModel {
 
 export interface CreateDocumentModelInput {
   name: string
+  /**
+   * Owning product, `"DocumentAI"` (DocIQ) when left out. Set on create only:
+   * a model never moves to another product.
+   */
+  type?: DocumentModelType
   description?: string
   /** Category id (see {@link DocumentModelsResource.listCategories}). */
   category?: string
   attributes?: DocumentModelAttribute[]
   accessTeams?: string[]
-  /** Assistant ids that use this model. */
+  /**
+   * @deprecated The backend ignores this key. Link an assistant with
+   * {@link DocumentModelsResource.provisionBoards} (`assistant_id`).
+   */
   agents?: string[]
-  /** Board ids the model writes to. */
+  /**
+   * @deprecated The backend ignores this key: a model gets its board from
+   * {@link DocumentModelsResource.provisionBoards}.
+   */
   databoards?: string[]
   /** Stored on the version this change creates. */
   change_note?: string
   [key: string]: unknown
 }
 
-export type UpdateDocumentModelInput = Partial<CreateDocumentModelInput>
+/**
+ * Model fields to change, plus settings for the model's board. The board
+ * settings do nothing until the board exists (see {@link DocumentModelsResource.provisionBoards}).
+ */
+export type UpdateDocumentModelInput = Partial<CreateDocumentModelInput> & {
+  /** Rename the model's board. */
+  data_board_name?: string
+  /** Move the model's board to this category (a `databoard` category id). */
+  board_category_id?: string
+  /** Team ids that can use the model's board. Empty = all teams. */
+  board_deployment_access?: string[]
+}
 
 export interface DocumentModelList {
   data: DocumentModel[]
@@ -61,10 +88,13 @@ export interface DocumentModelVersionList {
   skip: number
 }
 
+/** `schema` holds DocIQ models, `databoard` holds boards, `comms` holds CommsIQ models. */
+export type DocumentCategoryType = "schema" | "databoard" | "comms"
+
 export interface DocumentCategory {
   id: string
   name: string
-  type: "schema" | "databoard"
+  type: DocumentCategoryType
   parentId?: string | null
   children?: DocumentCategory[]
   [key: string]: unknown
@@ -96,6 +126,13 @@ export interface UpdateDocumentSettingsInput {
   retry_time?: number
   /** Thousands of tokens per extraction call, 1–4096. */
   max_token_limit?: number
+  /** `false` skips the OCR confidence pass on scans and images. */
+  ocr_enabled?: boolean
+  /**
+   * Whole percent, 0–100. A value read with lower confidence is flagged for
+   * review instead of accepted; 0 flags nothing.
+   */
+  confidence_score_threshold?: number
 }
 
 export interface DocumentSettings extends UpdateDocumentSettingsInput {
@@ -131,7 +168,8 @@ export class DocumentModelsResource {
 
   // ── Models ────────────────────────────────────────────────────────────────
 
-  async list(params?: { search?: string; categoryId?: string; limit?: number; skip?: number }): Promise<DocumentModelList> {
+  /** `type` narrows the list to one product; all models when left out. */
+  async list(params?: { search?: string; type?: DocumentModelType; categoryId?: string; limit?: number; skip?: number }): Promise<DocumentModelList> {
     return this.json(`/schemas${query(params)}`, "GET")
   }
 
@@ -188,8 +226,11 @@ export class DocumentModelsResource {
 
   // ── Categories ────────────────────────────────────────────────────────────
 
-  /** The category tree; `type` defaults to all. */
-  async listCategories(params?: { type?: "schema" | "databoard"; search?: string; limit?: number; skip?: number }): Promise<{ data: DocumentCategory[]; count: number }> {
+  /**
+   * The category tree; `type` defaults to all. On a `schema` listing, `count`
+   * picks what each category's `boards_count` counts: `"models"` or `"boards"`.
+   */
+  async listCategories(params?: { type?: DocumentCategoryType; count?: "models" | "boards"; search?: string; limit?: number; skip?: number }): Promise<{ data: DocumentCategory[]; count: number }> {
     return this.json(`/categories${query(params)}`, "GET")
   }
 
@@ -197,7 +238,7 @@ export class DocumentModelsResource {
     return this.json(`/categories/${id}`, "GET").then(r => r.data)
   }
 
-  async createCategory(body: { name: string; type: "schema" | "databoard"; parentId?: string }): Promise<DocumentCategory> {
+  async createCategory(body: { name: string; type: DocumentCategoryType; parentId?: string }): Promise<DocumentCategory> {
     return this.json("/categories", "POST", body).then(r => r.data)
   }
 
@@ -212,7 +253,7 @@ export class DocumentModelsResource {
 
   // ── Settings ──────────────────────────────────────────────────────────────
 
-  /** The org's extraction settings for one product; `type` defaults to DocIQ. */
+  /** The org's extraction settings for one product (`"DocumentAI"` or `"Comms"`); `type` defaults to DocIQ. */
   async getSettings(type?: string): Promise<DocumentSettings> {
     return this.json(`/document-settings${query({ type })}`, "GET").then(r => r.data)
   }

@@ -191,6 +191,69 @@ def test_process_forwards_extra_fields(httpx_mock: HTTPXMock, client):
     assert body["chunkSize"] == 1024
 
 
+def test_process_sends_sync_webhook_and_ocr_options(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{BASE}/document", method="POST", json={"success": True, "data": {}})
+    client.document_ai.process(
+        url="u", organization_id="o", model_name="gpt-4o",
+        sync=True, webhookUrl="https://hooks.example.com/doc", meta={"ref": "r1"},
+        enableOcrConfidence=True, confidenceThreshold=0.6, ocrEngine="easyocr", timeout=120,
+    )
+    body = json.loads(httpx_mock.get_request().content)
+    assert body["sync"] is True
+    assert body["webhookUrl"] == "https://hooks.example.com/doc"
+    assert body["meta"] == {"ref": "r1"}
+    assert body["enableOcrConfidence"] is True
+    assert body["confidenceThreshold"] == 0.6
+    assert body["ocrEngine"] == "easyocr"
+    assert body["timeout"] == 120
+
+
+def test_process_returns_the_queued_job(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(
+        url=f"{BASE}/document", method="POST", status_code=202,
+        json={"success": True, "job_id": "job_1", "status": "pending", "total_pages": 42,
+              "board_id": "b1", "board_item_id": "i1", "result_url": "/api/v1/document/jobs/job_1"},
+    )
+    res = client.document_ai.process(url="u", organization_id="o", model_name="gpt-4o")
+    assert res["job_id"] == "job_1"
+    assert res["status"] == "pending"
+    assert "data" not in res
+
+
+# ── get_job ───────────────────────────────────────────────────────────────────
+
+def test_get_job(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(
+        url=f"{BASE}/document/jobs/job_1", method="GET",
+        json={"success": True, "job_id": "job_1", "status": "done", "board_id": "b1", "board_item_id": "i1"},
+    )
+    job = client.document_ai.get_job("job_1")
+    assert job["status"] == "done"
+    assert job["board_item_id"] == "i1"
+
+
+def test_get_job_encodes_the_id(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(url=f"{BASE}/document/jobs/a%2Fb", method="GET", json={"status": "pending"})
+    assert client.document_ai.get_job("a/b")["status"] == "pending"
+
+
+def test_get_job_expired_raises_404(httpx_mock: HTTPXMock, client):
+    from imbrace.exceptions import ApiError
+    httpx_mock.add_response(url=f"{BASE}/document/jobs/old", method="GET", status_code=404,
+                            json={"detail": {"success": False, "status": "expired"}})
+    with pytest.raises(ApiError):
+        client.document_ai.get_job("old")
+
+
+async def test_async_get_job(httpx_mock: HTTPXMock):
+    from imbrace import AsyncImbraceClient
+    httpx_mock.add_response(url=f"{BASE}/document/jobs/job_1", method="GET",
+                            json={"success": True, "job_id": "job_1", "status": "in_progress"})
+    async with AsyncImbraceClient(api_key="test_key") as c:
+        job = await c.document_ai.get_job("job_1")
+    assert job["status"] == "in_progress"
+
+
 # ── suggestSchema ─────────────────────────────────────────────────────────────
 
 def test_suggest_schema_uses_meta_prompt(httpx_mock: HTTPXMock, client):

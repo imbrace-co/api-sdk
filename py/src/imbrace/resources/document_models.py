@@ -27,6 +27,9 @@ class DocumentModelsResource:
     An attribute is ``{id?, name, type, description?}`` where ``type`` is a board
     field type (e.g. ``ShortText``, ``Number``, ``Date``) or ``RichText``.
 
+    A model belongs to one product, its ``type``: ``"DocumentAI"`` (DocIQ, the default)
+    or ``"Comms"`` (CommsIQ).
+
     @param base - data-board base URL (``{gateway}/data-board``)
     """
 
@@ -44,20 +47,32 @@ class DocumentModelsResource:
 
     # --- Models ---
     def list(self, search: Optional[str] = None, category_id: Optional[str] = None,
-             limit: Optional[int] = None, skip: Optional[int] = None) -> Dict[str, Any]:
-        """``{data, count, limit, skip}``."""
-        return self._req("GET", "/schemas", params={"search": search, "categoryId": category_id,
+             limit: Optional[int] = None, skip: Optional[int] = None,
+             type: Optional[str] = None) -> Dict[str, Any]:
+        """``{data, count, limit, skip}``. ``type`` (``"DocumentAI"`` | ``"Comms"``) narrows
+        the list to one product; all models when omitted."""
+        return self._req("GET", "/schemas", params={"search": search, "type": type, "categoryId": category_id,
                                                      "limit": limit, "skip": skip})
 
     def get(self, model_id: str) -> Dict[str, Any]:
         return _data(self._req("GET", f"/schemas/{model_id}"))
 
     def create(self, body: Dict[str, Any]) -> Dict[str, Any]:
-        """Create a model: ``{name, description?, category?, attributes?, accessTeams?, agents?, databoards?, change_note?}``."""
+        """Create a model: ``{name, type?, description?, category?, attributes?, accessTeams?, change_note?}``.
+
+        ``type`` is ``"DocumentAI"`` (default) or ``"Comms"``, set on create only. ``agents``
+        and ``databoards`` are deprecated: the backend ignores them. Link a board (and an
+        assistant) with :meth:`provision_boards`.
+        """
         return _data(self._req("POST", "/schemas", body))
 
     def update(self, model_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
-        """Each update creates a new version."""
+        """Each update creates a new version.
+
+        Besides the model fields, ``body`` can configure the model's board once it exists:
+        ``data_board_name`` (rename), ``board_category_id`` (a ``databoard`` category id),
+        ``board_deployment_access`` (team ids; empty = all teams).
+        """
         return _data(self._req("PUT", f"/schemas/{model_id}", body))
 
     def delete(self, model_id: str) -> None:
@@ -101,15 +116,21 @@ class DocumentModelsResource:
 
     # --- Categories ---
     def list_categories(self, type: Optional[str] = None, search: Optional[str] = None,
-                        limit: Optional[int] = None, skip: Optional[int] = None) -> Dict[str, Any]:
-        """The category tree (``type``: ``"schema"`` | ``"databoard"``; all when omitted)."""
-        return self._req("GET", "/categories", params={"type": type, "search": search, "limit": limit, "skip": skip})
+                        limit: Optional[int] = None, skip: Optional[int] = None,
+                        count: Optional[str] = None) -> Dict[str, Any]:
+        """The category tree (``type``: ``"schema"`` | ``"databoard"`` | ``"comms"``; all when omitted).
+
+        On a ``schema`` listing, ``count`` (``"models"`` | ``"boards"``) picks what each
+        category's ``boards_count`` counts.
+        """
+        return self._req("GET", "/categories", params={"type": type, "count": count, "search": search,
+                                                        "limit": limit, "skip": skip})
 
     def get_category(self, category_id: str) -> Dict[str, Any]:
         return _data(self._req("GET", f"/categories/{category_id}"))
 
     def create_category(self, body: Dict[str, Any]) -> Dict[str, Any]:
-        """``{name, type: "schema"|"databoard", parentId?}``."""
+        """``{name, type: "schema"|"databoard"|"comms", parentId?}``."""
         return _data(self._req("POST", "/categories", body))
 
     def update_category(self, category_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
@@ -122,11 +143,12 @@ class DocumentModelsResource:
 
     # --- Settings ---
     def get_settings(self, type: Optional[str] = None) -> Dict[str, Any]:
-        """The org's extraction settings for one product (``type``; DocIQ when omitted).
+        """The org's extraction settings for one product (``type``: ``"DocumentAI"`` |
+        ``"Comms"``; DocIQ when omitted).
 
         ``{id, organization_id, type, vlm_provider_id?, vlm_model?, llm_provider_id?, llm_model?,
         source_languages?, handwriting_support?, time_offset?, continue_on_failure?, retry_time?,
-        max_token_limit?}``.
+        max_token_limit?, ocr_enabled?, confidence_score_threshold?}``.
         """
         return _data(self._req("GET", "/document-settings", params={"type": type}))
 
@@ -134,7 +156,10 @@ class DocumentModelsResource:
         """Partial update: keys left out keep their value.
 
         ``source_languages`` empty = detect the language; ``time_offset`` like ``UTC+08:00``;
-        ``retry_time`` 0-10 (0 never retries); ``max_token_limit`` thousands of tokens, 1-4096.
+        ``retry_time`` 0-10 (0 never retries); ``max_token_limit`` thousands of tokens, 1-4096;
+        ``ocr_enabled`` ``False`` skips the OCR confidence pass on scans and images;
+        ``confidence_score_threshold`` whole percent 0-100, a value read with lower confidence
+        is flagged for review (0 flags nothing).
         """
         return _data(self._req("PUT", "/document-settings", body, params={"type": type}))
 
@@ -155,8 +180,10 @@ class AsyncDocumentModelsResource:
         return _body_or_none(await self._http.request(method, f"{self._base}{path}", **kwargs))
 
     async def list(self, search: Optional[str] = None, category_id: Optional[str] = None,
-                   limit: Optional[int] = None, skip: Optional[int] = None) -> Dict[str, Any]:
-        return await self._req("GET", "/schemas", params={"search": search, "categoryId": category_id,
+                   limit: Optional[int] = None, skip: Optional[int] = None,
+                   type: Optional[str] = None) -> Dict[str, Any]:
+        """See :meth:`DocumentModelsResource.list`."""
+        return await self._req("GET", "/schemas", params={"search": search, "type": type, "categoryId": category_id,
                                                            "limit": limit, "skip": skip})
 
     async def get(self, model_id: str) -> Dict[str, Any]:
@@ -196,8 +223,11 @@ class AsyncDocumentModelsResource:
         return _data(await self._req("POST", f"/schemas/{model_id}/versions/{version}/_revert", body))
 
     async def list_categories(self, type: Optional[str] = None, search: Optional[str] = None,
-                              limit: Optional[int] = None, skip: Optional[int] = None) -> Dict[str, Any]:
-        return await self._req("GET", "/categories", params={"type": type, "search": search, "limit": limit, "skip": skip})
+                              limit: Optional[int] = None, skip: Optional[int] = None,
+                              count: Optional[str] = None) -> Dict[str, Any]:
+        """See :meth:`DocumentModelsResource.list_categories`."""
+        return await self._req("GET", "/categories", params={"type": type, "count": count, "search": search,
+                                                              "limit": limit, "skip": skip})
 
     async def get_category(self, category_id: str) -> Dict[str, Any]:
         return _data(await self._req("GET", f"/categories/{category_id}"))

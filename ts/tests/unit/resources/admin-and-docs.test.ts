@@ -40,6 +40,40 @@ describe("new resources", () => {
     ])
   })
 
+  it("documentModels sends the product type, category count and the new settings", async () => {
+    const calls = mockFetch(() => ({ body: { data: {} } }))
+    const c = client()
+    await c.documentModels.list({ type: "Comms", limit: 5 })
+    await c.documentModels.create({ name: "Call topics", type: "Comms" })
+    await c.documentModels.update("s1", { name: "Invoice", data_board_name: "Invoices", board_category_id: "cat1", board_deployment_access: ["t1"] })
+    await c.documentModels.listCategories({ type: "comms", count: "boards" })
+    await c.documentModels.createCategory({ name: "Calls", type: "comms" })
+    await c.documentModels.updateSettings({ ocr_enabled: false, confidence_score_threshold: 80 })
+    expect(calls.map(x => `${x.method} ${x.url}`)).toEqual([
+      `GET ${gw}/data-board/schemas?type=Comms&limit=5`,
+      `POST ${gw}/data-board/schemas`,
+      `PUT ${gw}/data-board/schemas/s1`,
+      `GET ${gw}/data-board/categories?type=comms&count=boards`,
+      `POST ${gw}/data-board/categories`,
+      `PUT ${gw}/data-board/document-settings`,
+    ])
+    expect(calls[1].body).toEqual({ name: "Call topics", type: "Comms" })
+    expect(calls[2].body).toEqual({ name: "Invoice", data_board_name: "Invoices", board_category_id: "cat1", board_deployment_access: ["t1"] })
+    expect(calls[4].body).toEqual({ name: "Calls", type: "comms" })
+    expect(calls[5].body).toEqual({ ocr_enabled: false, confidence_score_threshold: 80 })
+  })
+
+  it("chatAi.processDocument sends sync and OCR options and passes a queued job back", async () => {
+    const calls = mockFetch(() => ({ status: 202, body: { success: true, job_id: "job_1", status: "pending" } }))
+    const res = await client().chatAi.processDocument({
+      modelName: "gpt-4o", url: "u", organizationId: "o",
+      sync: false, webhookUrl: "https://hooks.example.com/doc", enableOcrConfidence: true, ocrEngine: "chandra",
+    })
+    expect(calls[0].url).toBe(`${gw}/v3/ai/document/`)
+    expect(calls[0].body).toMatchObject({ sync: false, webhookUrl: "https://hooks.example.com/doc", enableOcrConfidence: true, ocrEngine: "chandra" })
+    expect(res.job_id).toBe("job_1")
+  })
+
   it("treats the CRM list 404 as an empty list", async () => {
     mockFetch(() => ({ status: 404, body: { message: "CRMBoard not found" } }))
     expect(await client().crmAutomation.list()).toEqual([])

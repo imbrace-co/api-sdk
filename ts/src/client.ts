@@ -41,6 +41,7 @@ import { A2AResource } from "./resources/a2a.js"
 import { DocumentAIResource } from "./resources/document-ai.js"
 import { TemplatesResource } from "./resources/templates.js"
 import { DocumentModelsResource } from "./resources/document-models.js"
+import { DociqResource } from "./resources/dociq.js"
 import { CrmAutomationResource } from "./resources/crm-automation.js"
 import { ApiKeysResource } from "./resources/api-keys.js"
 import { RolesResource } from "./resources/roles.js"
@@ -109,6 +110,8 @@ export class ImbraceClient {
   public readonly documentAi: DocumentAIResource
   public readonly templates: TemplatesResource
   public readonly documentModels: DocumentModelsResource
+  /** DocIQ: upload documents, let the platform match them to a Document Model and write them to its board. */
+  public readonly dociq: DociqResource
   public readonly crmAutomation: CrmAutomationResource
   public readonly apiKeys: ApiKeysResource
   public readonly roles: RolesResource
@@ -222,6 +225,7 @@ export class ImbraceClient {
     // ai-agent / message-suggestion / predict
     this.aiAgent           = new AiAgentResource(this.http, urls.aiAgent)
     this.a2a               = new A2AResource(this.http, urls.aiAgent)
+    this.dociq             = new DociqResource(this.http, urls.aiAgent)
     this.messageSuggestion = new MessageSuggestionResource(this.http, urls.messageSuggestion)
     this.predict           = new PredictResource(this.http, urls.predict)
 

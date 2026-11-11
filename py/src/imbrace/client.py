@@ -40,6 +40,7 @@ from .resources.document_ai import DocumentAIResource
 from .resources.templates import TemplatesResource
 from .resources.license import LicenseResource
 from .resources.document_models import DocumentModelsResource
+from .resources.dociq import DociqResource
 from .resources.crm_automation import CrmAutomationResource
 from .resources.dataiq import DataIqResource
 from .resources.api_keys import ApiKeysResource
@@ -172,6 +173,7 @@ class ImbraceClient:
         self.roles           = RolesResource(self.http, urls.platform)
         self.audit_logs      = AuditLogsResource(self.http, urls.platform)
         self.document_models = DocumentModelsResource(self.http, urls.data_board)
+        self.dociq = DociqResource(self.http, urls.ai_agent)
         self.crm_automation  = CrmAutomationResource(self.http, f"{urls.data_board}/v1")
 
         # DataIQ v2 — separate data from client.boards (v1); both can be used side by side

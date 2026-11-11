@@ -85,11 +85,32 @@ export interface DocumentAIInput {
   maxConcurrent?: number
   maxRetries?: number
   useEnhancedProcessing?: boolean
+  /** `true` extracts inline and returns `data`; `false` queues and returns a `job_id`. Left out, the server decides (a PDF over 20 pages is queued by default). */
+  sync?: boolean
+  /** POSTed the outcome when the extraction finishes, inline or queued. */
+  webhookUrl?: string
+  /** Any JSON value, echoed back as `meta` in the webhook body. */
+  meta?: unknown
+  /** Attach `{ value, box, confidence }` from an OCR engine to each field. */
+  enableOcrConfidence?: boolean
+  /** 0–1. With `enableOcrConfidence`, drops fields read with lower confidence. */
+  confidenceThreshold?: number
+  /** `"paddleocr-vl"`, `"chandra"` or `"easyocr"`; server default when left out. */
+  ocrEngine?: string
+  /** Seconds you are prepared to wait; caps each model call. */
+  timeout?: number
 }
 
+/** Inline: `success` and `data`. Queued (HTTP 202): `job_id` and no `data`; follow it with `client.documentAi.getJob()`. */
 export interface DocumentAIResponse {
   success: boolean
+  /** Missing when the document was queued (`job_id` is set). */
   data: Record<string, unknown> & { filledPdfUrl?: string }
+  job_id?: string
+  status?: "pending" | "in_progress" | "done" | "error"
+  total_pages?: number | null
+  board_id?: string | null
+  board_item_id?: string | null
 }
 
 /**

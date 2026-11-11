@@ -86,6 +86,62 @@ def test_document_models_update_attribute_returns_the_attribute(httpx_mock: HTTP
         "id": "a1", "name": "Total", "type": "Number"}
 
 
+def test_document_models_product_type_category_count_and_new_settings(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(json={"data": {}}, is_reusable=True)
+    dm = client.document_models
+    dm.list(type="Comms", limit=5)
+    dm.create({"name": "Call topics", "type": "Comms"})
+    dm.update("s1", {"name": "Invoice", "data_board_name": "Invoices", "board_category_id": "cat1",
+                     "board_deployment_access": ["t1"]})
+    dm.list_categories(type="comms", count="boards")
+    dm.update_settings({"ocr_enabled": False, "confidence_score_threshold": 80})
+    reqs = httpx_mock.get_requests()
+    assert [f"{r.method} {r.url}" for r in reqs] == [
+        f"GET {DB}/schemas?type=Comms&limit=5",
+        f"POST {DB}/schemas",
+        f"PUT {DB}/schemas/s1",
+        f"GET {DB}/categories?type=comms&count=boards",
+        f"PUT {DB}/document-settings",
+    ]
+    assert _body(reqs[1]) == {"name": "Call topics", "type": "Comms"}
+    assert _body(reqs[2])["board_deployment_access"] == ["t1"]
+    assert _body(reqs[4]) == {"ocr_enabled": False, "confidence_score_threshold": 80}
+
+
+async def test_async_document_models_list_and_categories_take_the_new_filters(httpx_mock: HTTPXMock):
+    httpx_mock.add_response(json={"data": []}, is_reusable=True)
+    async with AsyncImbraceClient(api_key="test_key") as c:
+        await c.document_models.list(type="DocumentAI")
+        await c.document_models.list_categories(type="schema", count="models")
+    assert [str(r.url) for r in httpx_mock.get_requests()] == [
+        f"{DB}/schemas?type=DocumentAI",
+        f"{DB}/categories?type=schema&count=models",
+    ]
+
+
+def test_chat_ai_process_document_sends_sync_and_ocr_options(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(method="POST", url=f"{AI}/document/", status_code=202,
+                            json={"success": True, "job_id": "job_1", "status": "pending"})
+    res = client.chat_ai.process_document(
+        "gpt-4o", "u", "o", sync=False, webhook_url="https://hooks.example.com/doc",
+        meta={"ref": "r1"}, enable_ocr_confidence=True, confidence_threshold=0.5,
+        ocr_engine="chandra", timeout=60,
+    )
+    body = _body(httpx_mock.get_request())
+    assert body == {"modelName": "gpt-4o", "url": "u", "organizationId": "o", "sync": False,
+                    "webhookUrl": "https://hooks.example.com/doc", "meta": {"ref": "r1"},
+                    "enableOcrConfidence": True, "confidenceThreshold": 0.5,
+                    "ocrEngine": "chandra", "timeout": 60}
+    assert res["job_id"] == "job_1"
+
+
+async def test_async_chat_ai_process_document_sends_sync(httpx_mock: HTTPXMock):
+    httpx_mock.add_response(method="POST", url=f"{AI}/document/", json={"success": True, "data": {}})
+    async with AsyncImbraceClient(api_key="test_key") as c:
+        await c.chat_ai.process_document("gpt-4o", "u", "o", sync=True)
+    assert _body(httpx_mock.get_request())["sync"] is True
+
+
 def test_document_models_delete_tolerates_204(httpx_mock: HTTPXMock, client):
     httpx_mock.add_response(method="DELETE", url=f"{DB}/schemas/s1", status_code=204)
     assert client.document_models.delete("s1") is None

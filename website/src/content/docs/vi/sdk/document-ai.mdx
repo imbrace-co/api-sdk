@@ -1,17 +1,141 @@
 ---
 title: Document AI
-description: "Trích xuất dữ liệu có cấu trúc từ PDF và hình ảnh bằng vision models. Hai namespace: client.chatAi để xử lý trực tiếp, client.documentAi cho workflow dựa trên agent."
+description: "Trích xuất dữ liệu có cấu trúc từ PDF và hình ảnh bằng vision models. client.dociq để upload tài liệu cho DocIQ, client.documentModels cho các trường cần trích xuất, client.chatAi và client.documentAi để xử lý trực tiếp và job hàng đợi."
 ---
 
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 Document AI sử dụng vision models (ví dụ: GPT-4o) để trích xuất dữ liệu có cấu trúc từ PDF và hình ảnh — hóa đơn, biểu mẫu, biên lai, hợp đồng, hoặc bất kỳ tài liệu nào có văn bản nhìn thấy được.
 
-SDK cung cấp hai namespace:
+SDK cung cấp bốn namespace:
+- **`client.dociq`** — upload tài liệu lên DocIQ: DocIQ chọn Document Model phù hợp cho từng tài liệu, trích xuất và ghi một bản ghi lên board của model đó
 - **`client.chatAi` / `client.chat_ai`** — xử lý tài liệu trực tiếp và liệt kê model
-- **`client.documentAi` / `client.document_ai`** — xử lý tài liệu dựa trên agent với quản lý schema, CRUD agent và điều phối đầu cuối
+- **`client.documentModels` / `client.document_models`** — Document Model của DocIQ: các trường cần trích xuất, board nhận kết quả, danh mục và cài đặt trích xuất
+- **`client.documentAi` / `client.document_ai`** — xử lý tài liệu dựa trên agent, job hàng đợi, CRUD agent và điều phối đầu cuối
 
 Khởi tạo client trước (xem [Cài đặt](/sdk/installation/) hoặc [Quick Start](/sdk/quick-start/)).
+
+---
+
+## `client.dociq` — Upload và trích xuất (DocIQ)
+
+Đây là cách thường dùng để đưa tài liệu vào DocIQ. Upload file rồi gửi nó đi: DocIQ chọn Document Model phù hợp, trích xuất các trường và ghi một bản ghi lên board của model đó. Hãy thiết lập model trước bằng [`client.documentModels`](#clientdocumentmodels--document-models-dociq).
+
+### Upload và gửi tài liệu
+
+Upload bằng `client.boards.uploadBoardFile()`, rồi truyền `url` nhận được vào `ingest()`. Mỗi lần gọi nhận từ 1 đến 5 file và trả về ngay một submission cho mỗi file; việc đọc tài liệu chạy ở chế độ nền.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const form = new FormData();
+form.append("file", new Blob([pdfBytes], { type: "application/pdf" }), "invoice.pdf");
+const { url } = await client.boards.uploadBoardFile(form);
+
+const { submissions } = await client.dociq.ingest({
+  files: [{ url, mime_type: "application/pdf", name: "invoice.pdf" }],
+});
+const submissionId = submissions[0].id;
+```
+</TabItem>
+<TabItem label="Python">
+```python
+with open("invoice.pdf", "rb") as f:
+    url = client.boards.upload_board_file({"file": ("invoice.pdf", f, "application/pdf")})["url"]
+
+res = client.dociq.ingest([{"url": url, "mime_type": "application/pdf", "name": "invoice.pdf"}])
+submission_id = res["submissions"][0]["id"]
+```
+</TabItem>
+</Tabs>
+
+| Tùy chọn | Kiểu | Ý nghĩa |
+|---|---|---|
+| `files` | `{ url, mime_type, name? }[]` | 1 đến 5 file. `url` là giá trị upload trả về, hoặc một URL tuyệt đối |
+| `assistant_id` | string | Đọc bằng các model của DocIQ assistant này thay vì model mặc định |
+| `source` | `{ channel?, conversation_id? }` | Nguồn của file khi không phải upload (ví dụ một kênh nhắn tin). Được lưu nguyên như bạn gửi |
+
+Việc ghi lên board chạy dưới danh nghĩa người gọi, nên request phải mang theo một người dùng: lệnh gọi không có người dùng sẽ bị từ chối với lỗi 400. Tổ chức cần có tính năng Document Model.
+
+### Theo dõi một submission
+
+Một submission có hai trạng thái. `status` là việc đọc tài liệu: `pending`, `running`, rồi `succeeded`, `failed` hoặc `canceled`. `outcome` là việc ghi lên board: `saved`, `no_schema` (không có model phù hợp), `model_created`, `failed`, hoặc `pending` khi chưa chạy.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+let sub = await client.dociq.getSubmission(submissionId);
+while (sub.status === "pending" || sub.status === "running" || (sub.status === "succeeded" && sub.outcome === "pending")) {
+  await new Promise(r => setTimeout(r, 5000));
+  sub = await client.dociq.getSubmission(submissionId);
+}
+
+if (sub.outcome === "saved") {
+  console.log(sub.documentModelName, sub.boardId, sub.boardItemId);
+  console.log(sub.extractedData);  // bản ghi
+  console.log(sub.extractedMeta);  // từng trường: độ tin cậy, trạng thái, vị trí đọc được
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+import time
+
+sub = client.dociq.get_submission(submission_id)
+while sub["status"] in ("pending", "running") or (sub["status"] == "succeeded" and sub["outcome"] == "pending"):
+    time.sleep(5)
+    sub = client.dociq.get_submission(submission_id)
+
+if sub["outcome"] == "saved":
+    print(sub["documentModelName"], sub["boardId"], sub["boardItemId"])
+    print(sub["extractedData"])  # bản ghi
+    print(sub["extractedMeta"])  # từng trường: độ tin cậy, trạng thái, vị trí đọc được
+```
+</TabItem>
+</Tabs>
+
+Một file chứa nhiều tài liệu (ví dụ ba hóa đơn trong một PDF) sẽ được tách ra: `documents` liệt kê từng tài liệu kèm model và board riêng, còn `boardItemId` là bản ghi đầu tiên. Submission bị lỗi có `error` và `processLog`. `getSubmissionByFile()` tìm submission mới nhất theo File ID hiển thị trong bảng kết quả (ví dụ `INV-2026-001`).
+
+### Liệt kê submission
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { submissions, total } = await client.dociq.listSubmissions({
+  status: "failed",
+  from: "2026-11-01T00:00:00Z",
+  limit: 50,
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+page = client.dociq.list_submissions(status="failed", from_="2026-11-01T00:00:00Z", limit=50)
+```
+</TabItem>
+</Tabs>
+
+Bộ lọc: `limit` (1–100, mặc định 10), `skip`, `status`, `flow` (`page` cho file upload, `chat` cho file gửi qua chat với agent), `search`, `documentModelIds`, `conversationId`, `emailId`, `sourceItemId`, `from`, `to` (`from_` trong Python), `runId`. `deleteSubmission()` xóa một submission khỏi danh sách.
+
+### Khi không có model phù hợp
+
+Khi `outcome: "no_schema"`, trường `proposedModel` của submission chứa các trường DocIQ đề xuất. Tạo Document Model từ các trường đó:
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { schema } = await client.dociq.createModelFromSubmission(submissionId, {
+  name: "Purchase order",
+  category: "cat_xxx", // id danh mục, không bắt buộc
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+res = client.dociq.create_model_from_submission(submission_id, "Purchase order", category="cat_xxx")
+```
+</TabItem>
+</Tabs>
 
 ---
 
@@ -74,6 +198,15 @@ result = client.chat_ai.process_document(
 | Tối đa đồng thời | `maxConcurrent` | `max_concurrent` | `number` / `int` | Không |
 | Số lần thử lại tối đa | `maxRetries` | `max_retries` | `number` / `int` | Không |
 | Xử lý nâng cao | `useEnhancedProcessing` | `use_enhanced_processing` | `boolean` / `bool` | Không |
+| Xử lý ngay hoặc đưa vào hàng đợi | `sync` | `sync` | `boolean` / `bool` | Không |
+| URL webhook | `webhookUrl` | `webhook_url` | `string` / `str` | Không |
+| Ngữ cảnh webhook | `meta` | `meta` | JSON bất kỳ | Không |
+| Độ tin cậy OCR | `enableOcrConfidence` | `enable_ocr_confidence` | `boolean` / `bool` | Không |
+| Ngưỡng tin cậy (0–1) | `confidenceThreshold` | `confidence_threshold` | `number` / `float` | Không |
+| Engine OCR | `ocrEngine` | `ocr_engine` | `string` / `str` | Không |
+| Timeout (giây) | `timeout` | `timeout` | `number` / `int` | Không |
+
+Tài liệu dài có thể được đưa vào hàng đợi thay vì xử lý ngay: xem [Trích xuất qua hàng đợi](#queued-extraction-and-webhooks). Bảy tùy chọn cuối được giải thích ở đó và ở mục [Độ tin cậy OCR](#ocr-confidence).
 
 #### Ví dụ điền form PDF
 
@@ -111,9 +244,297 @@ if result["success"] and result["data"].get("filledPdfUrl"):
 
 ---
 
+## `client.documentModels` — Document Models (DocIQ)
+
+Một Document Model liệt kê các trường cần trích xuất từ một loại tài liệu. Mỗi model có một board, và mỗi tài liệu được đọc bằng model đó trở thành một bản ghi trên board này. [`client.dociq`](#clientdociq--upload-and-extract-dociq) tự chọn model cho từng tài liệu; còn với `documentAi.process()` thì bạn truyền board vào `boardId`.
+
+Mỗi model thuộc về một sản phẩm, chính là `type` của nó: `"DocumentAI"` (DocIQ, mặc định) hoặc `"Comms"` (CommsIQ). `type` được đặt khi tạo model và không bao giờ thay đổi.
+
+### Tạo model và board của nó
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const model = await client.documentModels.create({
+  name: "Invoice",
+  attributes: [
+    { name: "Invoice number", type: "ShortText" },
+    { name: "Total", type: "Number" },
+    { name: "Date", type: "Date" },
+  ],
+});
+
+// Tạo model không tự tạo board: cần provision board.
+const [{ board_id }] = await client.documentModels.provisionBoards({
+  schemas: [{ schema_id: model.id, data_board_name: "Invoices" }],
+});
+
+const result = await client.documentAi.process({
+  url: "https://example.com/invoice.pdf",
+  organizationId: "org_xxx",
+  modelName: "gpt-4o",
+  boardId: board_id,
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+model = client.document_models.create({
+    "name": "Invoice",
+    "attributes": [
+        {"name": "Invoice number", "type": "ShortText"},
+        {"name": "Total", "type": "Number"},
+        {"name": "Date", "type": "Date"},
+    ],
+})
+
+# Tạo model không tự tạo board: cần provision board.
+board_id = client.document_models.provision_boards(
+    {"schemas": [{"schema_id": model["id"], "data_board_name": "Invoices"}]}
+)[0]["board_id"]
+
+result = client.document_ai.process(
+    url="https://example.com/invoice.pdf",
+    organization_id="org_xxx",
+    model_name="gpt-4o",
+    boardId=board_id,
+)
+```
+</TabItem>
+</Tabs>
+
+Hai key `agents` và `databoards` khi tạo model đã bị deprecated: backend bỏ qua chúng. Hãy dùng `provisionBoards` (thêm `assistant_id` nếu muốn liên kết luôn một assistant).
+
+### Liệt kê model
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const all = await client.documentModels.list();                    // mọi sản phẩm
+const docIq = await client.documentModels.list({ type: "DocumentAI", search: "invoice" });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+all_models = client.document_models.list()                         # mọi sản phẩm
+doc_iq = client.document_models.list(type="DocumentAI", search="invoice")
+```
+</TabItem>
+</Tabs>
+
+### Cập nhật model và board của nó
+
+Mỗi lần cập nhật sẽ lưu một phiên bản mới (`listVersions`, `getVersion`, `revert`). Cùng lệnh đó có thể đổi tên board của model, chuyển board sang danh mục khác và chọn team nào được dùng board. Các cài đặt board này chưa có tác dụng cho đến khi board được provision.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+await client.documentModels.update(model.id, {
+  description: "Supplier invoices",
+  change_note: "Describe the model",
+  data_board_name: "Supplier invoices",
+  board_category_id: "cat_xxx",          // một danh mục `databoard`
+  board_deployment_access: ["team_xxx"], // rỗng = mọi team
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+client.document_models.update(model["id"], {
+    "description": "Supplier invoices",
+    "change_note": "Describe the model",
+    "data_board_name": "Supplier invoices",
+    "board_category_id": "cat_xxx",          # một danh mục `databoard`
+    "board_deployment_access": ["team_xxx"], # rỗng = mọi team
+})
+```
+</TabItem>
+</Tabs>
+
+### Danh mục
+
+Danh mục có `type`: `"schema"` (model DocIQ), `"databoard"` (board) hoặc `"comms"` (model CommsIQ). Với danh sách `schema`, `count` chọn thứ mà `boards_count` của mỗi danh mục đếm: `"models"` hoặc `"boards"`.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const tree = await client.documentModels.listCategories({ type: "schema", count: "models" });
+const cat = await client.documentModels.createCategory({ name: "Finance", type: "schema" });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+tree = client.document_models.list_categories(type="schema", count="models")
+cat = client.document_models.create_category({"name": "Finance", "type": "schema"})
+```
+</TabItem>
+</Tabs>
+
+### Cài đặt trích xuất
+
+Mỗi tổ chức có một bộ cài đặt cho mỗi sản phẩm (`type`, mặc định là DocIQ). Lệnh cập nhật chỉ thay đổi những key bạn gửi.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const settings = await client.documentModels.getSettings();
+
+await client.documentModels.updateSettings({
+  ocr_enabled: true,                // false bỏ qua bước kiểm tra độ tin cậy OCR với bản scan và hình ảnh
+  confidence_score_threshold: 80,   // phần trăm nguyên; giá trị đọc dưới ngưỡng bị đánh dấu để xem lại
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+settings = client.document_models.get_settings()
+
+client.document_models.update_settings({
+    "ocr_enabled": True,               # false bỏ qua bước kiểm tra độ tin cậy OCR với bản scan và hình ảnh
+    "confidence_score_threshold": 80,  # phần trăm nguyên; giá trị đọc dưới ngưỡng bị đánh dấu để xem lại
+})
+```
+</TabItem>
+</Tabs>
+
+| Cài đặt | Kiểu | Ý nghĩa |
+|---|---|---|
+| `vlm_provider_id`, `vlm_model` | string | Vision model đọc các trang |
+| `llm_provider_id`, `llm_model` | string | Language model điền các trường |
+| `source_languages` | string[] | Rỗng = tự nhận diện ngôn ngữ |
+| `handwriting_support` | boolean | Đọc chữ viết tay |
+| `ocr_enabled` | boolean | `false` bỏ qua bước kiểm tra độ tin cậy OCR với bản scan và hình ảnh |
+| `confidence_score_threshold` | số nguyên 0–100 | Giá trị đọc với độ tin cậy thấp hơn sẽ bị đánh dấu để xem lại; 0 không đánh dấu gì |
+| `time_offset` | string | ví dụ `UTC+08:00` |
+| `continue_on_failure` | boolean | Tiếp tục khi một trang bị lỗi |
+| `retry_time` | số nguyên 0–10 | 0 là không thử lại |
+| `max_token_limit` | số nguyên 1–4096 | Số nghìn token cho mỗi lần gọi trích xuất |
+
+:::note
+`ocr_enabled`, `confidence_score_threshold` và bộ lọc `count` của danh mục là tính năng mới. Trên môi trường chưa có các tính năng này, backend sẽ bỏ qua chúng mà không báo lỗi.
+:::
+
+---
+
+## Trích xuất qua hàng đợi và webhook
+
+`client.documentAi.process()` và `client.chatAi.processDocument()` gọi cùng một endpoint. Server có thể đưa tài liệu vào hàng đợi thay vì trích xuất ngay; mặc định, PDF dài hơn 20 trang sẽ vào hàng đợi. Khi đó lệnh gọi trả về ngay (HTTP 202) với `job_id` và không có `data`.
+
+- Truyền `sync: true` để luôn trích xuất ngay và nhận `data`.
+- Truyền `sync: false` để luôn đưa vào hàng đợi.
+- Theo dõi job bằng `getJob()`. Các trường đã trích xuất không nằm trong job: khi `status` là `done`, chúng nằm trên dòng board mà job trỏ tới, trong trường `RawResult`.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const res = await client.documentAi.process({
+  url: "https://example.com/contract.pdf",
+  organizationId: "org_xxx",
+  modelName: "gpt-4o",
+  boardId: board_id,
+});
+
+if (res.job_id) {
+  let job = await client.documentAi.getJob(res.job_id);
+  while (job.status === "pending" || job.status === "in_progress") {
+    await new Promise(r => setTimeout(r, 5000));
+    job = await client.documentAi.getJob(res.job_id);
+  }
+  if (job.status === "done" && job.board_id && job.board_item_id) {
+    const row = await client.boards.getItem(job.board_id, job.board_item_id);
+  }
+} else {
+  console.log(res.data);
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+import time
+
+res = client.document_ai.process(
+    url="https://example.com/contract.pdf",
+    organization_id="org_xxx",
+    model_name="gpt-4o",
+    boardId=board_id,
+)
+
+if res.get("job_id"):
+    job = client.document_ai.get_job(res["job_id"])
+    while job["status"] in ("pending", "in_progress"):
+        time.sleep(5)
+        job = client.document_ai.get_job(res["job_id"])
+    if job["status"] == "done":
+        row = client.boards.get_item(job["board_id"], job["board_item_id"])
+else:
+    print(res["data"])
+```
+</TabItem>
+</Tabs>
+
+`status` của job là `pending`, `in_progress`, `done` hoặc `error`. Bản ghi job mặc định hết hạn sau một ngày, khi đó `getJob()` báo lỗi 404; dòng trên board vẫn còn.
+
+Thay vì hỏi liên tục, hãy truyền `webhookUrl`. Server sẽ POST kết quả tới URL này khi trích xuất xong, dù thành công hay lỗi, xử lý ngay hay qua hàng đợi, kèm theo `meta` bạn đã gửi:
+
+```json
+{
+  "event": "document_ai.completed",
+  "status": "completed",
+  "job_id": "…",
+  "board_id": "…",
+  "board_item_id": "…",
+  "data": { },
+  "meta": { "ref": "r1" },
+  "error": null
+}
+```
+
+`job_id` là `null` khi tài liệu được xử lý ngay. `status` là `"completed"` hoặc `"error"`.
+
+---
+
+## Độ tin cậy OCR
+
+Với `enableOcrConfidence`, một engine OCR đọc tài liệu song song với vision model, và mỗi trường trích xuất được gắn thêm `{ value, box, confidence }`. `confidenceThreshold` (0–1) loại bỏ các trường có độ tin cậy thấp hơn. `ocrEngine` chọn engine: `"paddleocr-vl"` (chỉ văn bản), `"chandra"` (bố cục kèm khung) hoặc `"easyocr"` (khối văn bản kèm khung); bỏ trống thì server dùng engine mặc định.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const result = await client.documentAi.process({
+  url: "https://example.com/scan.png",
+  organizationId: "org_xxx",
+  modelName: "gpt-4o",
+  boardId: board_id,
+  sync: true,
+  enableOcrConfidence: true,
+  confidenceThreshold: 0.6,
+  ocrEngine: "easyocr",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.document_ai.process(
+    url="https://example.com/scan.png",
+    organization_id="org_xxx",
+    model_name="gpt-4o",
+    boardId=board_id,
+    sync=True,
+    enableOcrConfidence=True,
+    confidenceThreshold=0.6,
+    ocrEngine="easyocr",
+)
+```
+</TabItem>
+</Tabs>
+
+`client.document_ai.process()` chuyển nguyên các keyword argument thêm vào cho server, nên chúng giữ tên camelCase. `client.chat_ai.process_document()` nhận chúng ở dạng snake_case (`enable_ocr_confidence=True`).
+
+---
+
 ## `client.documentAi` — CRUD Agent
 
-Document AI Agents lưu trữ schema trích xuất, hướng dẫn và cấu hình model để sử dụng lặp lại.
+Document AI Agent lưu hướng dẫn và model để dùng lại. Các trường cần trích xuất không nằm trên agent: chúng là một [Document Model](#clientdocumentmodels--document-models-dociq), được truyền qua `boardId`.
 
 ### Liệt kê agent
 
@@ -168,11 +589,6 @@ const agent = await client.documentAi.createAgent({
   name: "Invoice Extractor",
   instructions: "Extract invoice fields. Dates as YYYY-MM-DD.",
   model_id: "gpt-4o",
-  schema: {
-    invoice_number: { type: "string", description: "Invoice ID" },
-    total:          { type: "number" },
-    date:           { type: "string", format: "date" },
-  },
 });
 ```
 </TabItem>
@@ -182,15 +598,12 @@ agent = client.document_ai.create_agent(
     name="Invoice Extractor",
     instructions="Extract invoice fields. Dates as YYYY-MM-DD.",
     model_id="gpt-4o",
-    schema={
-        "invoice_number": {"type": "string", "description": "Invoice ID"},
-        "total":          {"type": "number"},
-        "date":           {"type": "string", "format": "date"},
-    },
 )
 ```
 </TabItem>
 </Tabs>
+
+Truyền `schema` sẽ báo lỗi: backend không lưu schema trên agent. Hãy định nghĩa các trường bằng một [Document Model](#clientdocumentmodels--document-models-dociq).
 
 ### Cập nhật agent
 
@@ -402,6 +815,11 @@ async with AsyncImbraceClient() as client:
         url="https://example.com/receipt.pdf",
         organization_id="org_xxx",
     )
+    if result2.get("job_id"):
+        job = await client.document_ai.get_job(result2["job_id"])
+
+    # Document Model (document_models)
+    models = await client.document_models.list(type="DocumentAI")
 ```
 </TabItem>
 </Tabs>
@@ -410,5 +828,6 @@ async with AsyncImbraceClient() as client:
 
 ## Xem thêm
 
+- [Document Models](/learn/build-it-well/document-models/) — chọn những gì DocIQ trích xuất
 - [Hướng dẫn toàn diện §3 — Knowledge Hubs](/sdk/full-flow-guide/#3-manage-knowledge-hubs-and-attach-to-an-ai-agent) — tải tệp lên cho RAG
 - [AI Agent — Embeddings & Knowledge Base](/sdk/ai-agent/#embeddings--knowledge-base) — quản lý tệp embedding để truy xuất

@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, cast
+from urllib.parse import quote
 from ..http import HttpTransport, AsyncHttpTransport
 
 if TYPE_CHECKING:
@@ -200,7 +201,26 @@ class DocumentAIResource:
         instructions: Optional[str] = None,
         **extra: Any,
     ) -> Dict[str, Any]:
-        """Process a document. Pass ``agent_id`` (looked up) or ``model_name`` directly."""
+        """Process a document. Pass ``agent_id`` (looked up) or ``model_name`` directly.
+
+        Other keyword arguments go into the request body as they are (camelCase), e.g.
+        ``boardId``, ``language``, and:
+
+        - ``sync``: ``True`` extracts inline and returns ``data``; ``False`` queues the
+          document and returns a ``job_id``. Left out, the server decides: by default a
+          PDF over 20 pages is queued.
+        - ``webhookUrl``: POSTed the outcome when the extraction finishes, success or
+          error, inline or queued. ``meta``: any JSON value, echoed back in that POST.
+        - ``enableOcrConfidence``: run an OCR engine next to the vision model and attach
+          ``{value, box, confidence}`` to each field. ``confidenceThreshold`` (0-1) drops
+          fields read with lower confidence. ``ocrEngine``: ``"paddleocr-vl"``,
+          ``"chandra"`` or ``"easyocr"``.
+        - ``timeout``: seconds you are prepared to wait; caps each model call.
+
+        Inline, the result is ``{success, data}``. Queued (HTTP 202), it is
+        ``{success, job_id, status, total_pages, board_id, board_item_id, result_url}``
+        with no ``data``: follow it with :meth:`get_job`.
+        """
         if agent_id and (not model_name or not instructions):
             agent = self.get_agent(agent_id)
             model_name   = model_name   or agent.get("model_id")
@@ -224,6 +244,20 @@ class DocumentAIResource:
                 body[k] = v
 
         return self._http.request("POST", f"{self._base}/document", json=body).json()
+
+    def get_job(self, job_id: str) -> Dict[str, Any]:
+        """The state of a queued extraction (a ``job_id`` from :meth:`process`).
+
+        ``{success, job_id, status, total_pages, board_id, board_item_id, board_item_url,
+        error, created_at, completed_at}``; ``status`` is ``pending``, ``in_progress``,
+        ``done`` or ``error``.
+
+        The extracted fields are not in the job: once ``status`` is ``done``, read them
+        from the board row it names (field ``RawResult``), e.g. with
+        ``client.boards.get_item(board_id, board_item_id)``. The job record expires after a
+        day by default and then raises ``ApiError`` 404; the board row stays.
+        """
+        return self._http.request("GET", f"{self._base}/document/jobs/{quote(job_id, safe='')}").json()
 
     # ── Schema auto-learn (provisional) ──────────────────────────────────────
 
@@ -491,6 +525,11 @@ class AsyncDocumentAIResource:
                 body[k] = v
 
         res = await self._http.request("POST", f"{self._base}/document", json=body)
+        return res.json()
+
+    async def get_job(self, job_id: str) -> Dict[str, Any]:
+        """See :meth:`DocumentAIResource.get_job`."""
+        res = await self._http.request("GET", f"{self._base}/document/jobs/{quote(job_id, safe='')}")
         return res.json()
 
     async def suggest_schema(
