@@ -46,6 +46,7 @@ import { CrmAutomationResource } from "./resources/crm-automation.js"
 import { ApiKeysResource } from "./resources/api-keys.js"
 import { RolesResource } from "./resources/roles.js"
 import { AuditLogsResource } from "./resources/audit-logs.js"
+import { AuditArchivesResource } from "./resources/audit-archives.js"
 import { DataIqResource } from "./resources/dataiq.js"
 
 export interface ImbraceClientConfig {
@@ -117,6 +118,8 @@ export class ImbraceClient {
   public readonly apiKeys: ApiKeysResource
   public readonly roles: RolesResource
   public readonly auditLogs: AuditLogsResource
+  /** Audit log months past the live window, kept as files, and how long they are kept. */
+  public readonly auditArchives: AuditArchivesResource
   /** DataIQ v2 — separate from `boards` (v1); both can be used side by side. */
   public readonly dataiq: DataIqResource
 
@@ -184,6 +187,7 @@ export class ImbraceClient {
     this.apiKeys       = new ApiKeysResource(this.http, urls.platform)
     this.roles         = new RolesResource(this.http, urls.platform)
     this.auditLogs     = new AuditLogsResource(this.http, urls.platform)
+    this.auditArchives = new AuditArchivesResource(this.http, urls.platform)
     this.settings      = new SettingsResource(this.http, urls.channelService, urls.platform)
 
     // channel-service: channel, contacts, conversations, messages, campaign, outbound

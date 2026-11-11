@@ -410,6 +410,7 @@ export default defineConfig({
             { label: 'Workflows',       translations: { vi: 'Workflows',             'zh-CN': '工作流',     'zh-TW': '工作流程'   }, link: '/sdk/workflows/' },
             { label: 'DataBoards',      translations: { vi: 'Data Boards',           'zh-CN': '数据面板',   'zh-TW': '資料看板'   }, link: '/sdk/databoard/' },
             { label: 'Document AI',     translations: { vi: 'Document AI',           'zh-CN': 'Document AI', 'zh-TW': 'Document AI' }, link: '/sdk/document-ai/' },
+            { label: 'Audit Trail',     translations: { vi: 'Nhật Ký Kiểm Toán',     'zh-CN': '审计日志',   'zh-TW': '稽核日誌'   }, link: '/sdk/audit-trail/' },
             { label: 'Error Handling',  translations: { vi: 'Xử Lý Lỗi',            'zh-CN': '错误处理',   'zh-TW': '錯誤處理'   }, link: '/sdk/error-handling/' },
             { label: 'Integrations',    translations: { vi: 'Tích Hợp',             'zh-CN': '集成',       'zh-TW': '整合'       }, link: '/sdk/integrations/' },
             { label: 'Local Testing',   translations: { vi: 'Kiểm Thử Cục Bộ',      'zh-CN': '本地测试',   'zh-TW': '本地測試'   }, link: '/sdk/local-testing/' },

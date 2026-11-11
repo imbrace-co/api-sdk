@@ -1,0 +1,238 @@
+---
+title: 审计日志
+description: 使用 client.auditLogs 和 client.auditArchives 读取、筛选和导出组织的审计日志，撤销某项变更，并管理已归档的月份和保留期限。
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+组织中的每一项变更都会被记录：谁、在什么时间、对什么做了什么。包括登录（含被拒绝的登录）、数据表和记录的编辑、文档模型变更、用户和角色变更、API key、SSO 设置、工作流等。
+
+SDK 暴露两个命名空间：
+- **`client.auditLogs` / `client.audit_logs`** — 在线日志：读取、筛选、统计、全部导出、撤销变更
+- **`client.auditArchives` / `client.audit_archives`** — 以文件形式保存的较早月份：下载、恢复、设置保留期限
+
+组织需要开通 Audit Trail 功能。请先初始化客户端（参见[安装](/zh-cn/sdk/installation/)或[快速入门](/zh-cn/sdk/quick-start/)）。
+
+---
+
+## 读取日志
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const page = await client.auditLogs.list({
+  resource: ["user", "role"],      // 一个或多个值
+  action: ["create", "update", "delete"],
+  from: "2026-11-01",
+  limit: 50,
+});
+
+for (const e of page.data) {
+  console.log(e.createdAt, e.actor.email, e.action, e.resource, e.resourceName);
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+page = client.audit_logs.list({
+    "resource": ["user", "role"],    # 一个或多个值
+    "action": ["create", "update", "delete"],
+    "from": "2026-11-01",
+    "limit": 50,
+})
+
+for e in page["data"]:
+    print(e["createdAt"], e["actor"].get("email"), e["action"], e["resource"], e.get("resourceName"))
+```
+</TabItem>
+</Tabs>
+
+每条记录包含 `id`、`action`、`resource`、`resourceId`、`resourceName`、`actor`（`userId`、`name`、`email`）、`summary`、`changes`（变更前后）、`metadata`、`revertable` 和 `createdAt`。`client.auditLogs.get(id)` 读取单条记录。
+
+### 筛选条件
+
+| 筛选条件 | 含义 |
+|---|---|
+| `userId`、`resource`、`resourceId`、`action`、`boardId` | 一个或多个值 |
+| `categoryId` | 该分类下的所有数据表（指定 `boardId` 时忽略） |
+| `runId` | 某次工作流或代理运行所做的操作 |
+| `caseId` | 某个 AI case 所做的操作 |
+| `from`、`to` | ISO 日期 |
+| `q` | 文本搜索 |
+| `imports` | `only`（仅）或 `exclude`（排除）导入产生的记录 |
+| `includeArchive` | 同时读取已归档的月份（较慢；归档记录无法撤销） |
+| `limit`、`page`、`cursor` | 分页：`limit` 最大 100（默认 25）；`cursor` 为上一页的 `pagination.nextCursor` |
+
+`action` 取值为 `create`、`update`、`delete`、`upload`、`login`、`login_failed`（被拒绝的登录；`metadata.reason` 说明原因）、`revert`、`export`、`download`、`connect`。
+
+常见的 `resource` 取值：
+
+| 类别 | 取值 |
+|---|---|
+| 数据表与知识中心 | `board`、`board_item`、`file`、`folder`、`integration` |
+| DocIQ 与数据表配置 | `doc_schema`、`doc_category`、`doc_settings`、`dociq_extraction`、`segmentation`、`scheduler`、`automation` |
+| 人员与访问权限 | `user`、`team`、`team_user`、`role`、`api_key`、`sso_config`、`oidc_role_mapping`、`business_unit`、`organization`、`session` |
+| AI、应用与工作流 | `assistant`、`llm_provider`、`flow`、`tool_server`、`use_case`、`app_install` |
+| 渠道 | `channel`、`contact`、`campaign`、`message_template` |
+| 审计日志本身 | `audit_retention` |
+
+## 全部导出
+
+`iterate()` 逐页遍历所有匹配的记录，最新的在前。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+import { createWriteStream } from "node:fs";
+
+const out = createWriteStream("audit-2026-10.jsonl");
+for await (const e of client.auditLogs.iterate({ from: "2026-10-01", to: "2026-10-31T23:59:59Z" })) {
+  out.write(JSON.stringify(e) + "\n");
+}
+out.end();
+```
+</TabItem>
+<TabItem label="Python">
+```python
+import json
+
+with open("audit-2026-10.jsonl", "w", encoding="utf-8") as out:
+    for e in client.audit_logs.iterate({"from": "2026-10-01", "to": "2026-10-31T23:59:59Z"}):
+        out.write(json.dumps(e, ensure_ascii=False) + "\n")
+```
+</TabItem>
+</Tabs>
+
+## 统计
+
+`summary()` 接受相同的筛选条件，返回 `total`、`imports`、`byAction`、`byResource` 和 `byUser`。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const s = await client.auditLogs.summary({ from: "2026-11-01", action: "login_failed" });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+s = client.audit_logs.summary({"from": "2026-11-01", "action": "login_failed"})
+```
+</TabItem>
+</Tabs>
+
+## 撤销变更
+
+`revertable: true` 的记录可以撤销。撤销本身也会记录为一条 `revert` 记录。需要 `audit_trail:write` 权限。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { revertEntry } = await client.auditLogs.revert(entryId);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+res = client.audit_logs.revert(entry_id)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## 已归档的月份
+
+在线日志保留最近几个月（`hotMonths`，例如 3 个月）。更早的月份会被转存为文件，每月一个，并附带 SHA-256 哈希；每个哈希还记录了上个月的哈希，使各月份形成一条链。
+
+### 列出与下载
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+import { createHash } from "node:crypto";
+import { gunzipSync } from "node:zlib";
+
+const { hotFrom, archives } = await client.auditArchives.list();
+const month = archives.find(a => a.status === "archived")!;
+
+const file = await client.auditArchives.download(month.month);   // { data, filename, sha256, filtered }
+const ok = createHash("sha256").update(Buffer.from(file.data)).digest("hex") === file.sha256;
+const entries = gunzipSync(Buffer.from(file.data)).toString("utf8").trim().split("\n").map(l => JSON.parse(l));
+```
+</TabItem>
+<TabItem label="Python">
+```python
+import gzip, hashlib, json
+
+listing = client.audit_archives.list()
+month = next(a for a in listing["archives"] if a["status"] == "archived")
+
+file = client.audit_archives.download(month["month"])   # {data, filename, sha256, filtered}
+ok = hashlib.sha256(file["data"]).hexdigest() == file["sha256"]
+entries = [json.loads(l) for l in gzip.decompress(file["data"]).decode().splitlines()]
+```
+</TabItem>
+</Tabs>
+
+文件为 gzip 压缩的 JSON Lines，每行一条记录。传入 `resource`（例如 `["user", "role"]`）可只下载这些类型的记录；此时 `filtered` 为 true，`sha256` 为实际发送内容的哈希。
+
+归档的 `status` 为 `archived`、`restoring`、`restored`（已回到在线日志，直到 `restoreExpiresAt`）、`failed` 或 `purged`（保留期结束后已删除）。
+
+### 恢复某个月份
+
+`restore()` 把已归档的月份复制回在线日志，使 `auditLogs.list()` 可以再次读取。该操作在后台进行：月份先显示 `restoring`，然后变为 `restored`。`list().restore` 给出限制（默认和最长天数、每次恢复的最多月份数）。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { months, expiresAt } = await client.auditArchives.restore({ from: "2026-05", to: "2026-06" });
+await client.auditArchives.extend("2026-05", 7);   // 再保留 7 天
+await client.auditArchives.release("2026-05");     // 到期前送回归档
+```
+</TabItem>
+<TabItem label="Python">
+```python
+res = client.audit_archives.restore("2026-05", "2026-06")
+client.audit_archives.extend("2026-05", 7)    # 再保留 7 天
+client.audit_archives.release("2026-05")      # 到期前送回归档
+```
+</TabItem>
+</Tabs>
+
+### 保留期限
+
+日志保留的总月数（在线和已归档）。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const retention = await client.auditArchives.getPolicy();   // { totalMonths, hotMonths, minTotalMonths, maxTotalMonths, pending, canEdit, … }
+const { outcome } = await client.auditArchives.setPolicy({ totalMonths: 24 });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+retention = client.audit_archives.get_policy()   # {totalMonths, hotMonths, minTotalMonths, maxTotalMonths, pending, canEdit, ...}
+change = client.audit_archives.set_policy(24)
+```
+</TabItem>
+</Tabs>
+
+延长保留期会立即生效（`outcome: "increased"`）。缩短保留期会在宽限期后生效（`outcome: "scheduled"`，参见 `retention.pending`），在此之前可用 `cancelPendingPolicy()` 取消。法律保留（legal hold，会停止所有删除）只能由 iMBrace 设置或解除。
+
+### 权限
+
+| 操作 | 谁可以执行 |
+|---|---|
+| 读取日志、列出归档、查看保留期限 | 有权查看审计日志的成员 |
+| 撤销变更 | 拥有 `audit_trail:write` 权限 |
+| 下载、恢复、延长、送回 | 管理员 |
+| 修改保留期限 | 组织所有者或管理员 |
+
+被拒绝时会返回带 `code` 的错误，例如 `live_month`（409：该月仍在在线日志中）、`not_archived`（404）、`purged`（410）、`not_restored`（409）。
+
+---
+
+## 参见
+
+- [资源参考](/zh-cn/sdk/resources/) — 其他命名空间
+- [错误处理](/zh-cn/sdk/error-handling/) — 捕获 API 错误

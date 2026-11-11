@@ -46,6 +46,7 @@ from .resources.dataiq import AsyncDataIqResource
 from .resources.api_keys import AsyncApiKeysResource
 from .resources.roles import AsyncRolesResource
 from .resources.audit_logs import AsyncAuditLogsResource
+from .resources.audit_archives import AsyncAuditArchivesResource
 
 
 class AsyncImbraceClient:
@@ -163,6 +164,7 @@ class AsyncImbraceClient:
         self.api_keys        = AsyncApiKeysResource(self.http, urls.platform)
         self.roles           = AsyncRolesResource(self.http, urls.platform)
         self.audit_logs      = AsyncAuditLogsResource(self.http, urls.platform)
+        self.audit_archives  = AsyncAuditArchivesResource(self.http, urls.platform)
         self.document_models = AsyncDocumentModelsResource(self.http, urls.data_board)
         self.dociq = AsyncDociqResource(self.http, urls.ai_agent)
         self.crm_automation  = AsyncCrmAutomationResource(self.http, f"{urls.data_board}/v1")

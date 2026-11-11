@@ -1,0 +1,221 @@
+# Audit Trail
+
+Every change in the organization is recorded: who did what, to what, and when. Sign-ins (including refused ones), edits to boards and records, Document Model changes, user and role changes, API keys, SSO settings, workflows and more.
+
+The SDK exposes two namespaces:
+- **`client.auditLogs` / `client.audit_logs`** — the live log: read, filter, count, export everything, undo a change
+- **`client.auditArchives` / `client.audit_archives`** — older months kept as files: download them, bring them back, set how long the log is kept
+
+The organization needs the Audit Trail feature. Initialize the client first (see [Installation](/sdk/installation.md) or [Quick Start](/sdk/quick-start.md)).
+
+---
+
+## Read the log
+
+**TypeScript**
+
+```typescript
+const page = await client.auditLogs.list({
+  resource: ["user", "role"],      // one value or several
+  action: ["create", "update", "delete"],
+  from: "2026-11-01",
+  limit: 50,
+});
+
+for (const e of page.data) {
+  console.log(e.createdAt, e.actor.email, e.action, e.resource, e.resourceName);
+}
+```
+
+**Python**
+
+```python
+page = client.audit_logs.list({
+    "resource": ["user", "role"],    # one value or several
+    "action": ["create", "update", "delete"],
+    "from": "2026-11-01",
+    "limit": 50,
+})
+
+for e in page["data"]:
+    print(e["createdAt"], e["actor"].get("email"), e["action"], e["resource"], e.get("resourceName"))
+```
+
+Each entry has `id`, `action`, `resource`, `resourceId`, `resourceName`, `actor` (`userId`, `name`, `email`), `summary`, `changes` (before and after), `metadata`, `revertable` and `createdAt`. `client.auditLogs.get(id)` reads one entry.
+
+### Filters
+
+| Filter | Meaning |
+|---|---|
+| `userId`, `resource`, `resourceId`, `action`, `boardId` | One value or several |
+| `categoryId` | Every board in this category (ignored when `boardId` is given) |
+| `runId` | What one workflow or agent run did |
+| `caseId` | What one AI case did |
+| `from`, `to` | ISO dates |
+| `q` | Text search |
+| `imports` | `only` or `exclude` the entries an import made |
+| `includeArchive` | Also read archived months (slower; archived entries cannot be undone) |
+| `limit`, `page`, `cursor` | Paging: `limit` up to 100 (default 25); `cursor` is `pagination.nextCursor` of the previous page |
+
+`action` is one of `create`, `update`, `delete`, `upload`, `login`, `login_failed` (a refused sign-in; `metadata.reason` says why), `revert`, `export`, `download`, `connect`.
+
+Common `resource` values:
+
+| Area | Values |
+|---|---|
+| Data boards and Knowledge Hub | `board`, `board_item`, `file`, `folder`, `integration` |
+| DocIQ and board configuration | `doc_schema`, `doc_category`, `doc_settings`, `dociq_extraction`, `segmentation`, `scheduler`, `automation` |
+| People and access | `user`, `team`, `team_user`, `role`, `api_key`, `sso_config`, `oidc_role_mapping`, `business_unit`, `organization`, `session` |
+| AI, apps and workflows | `assistant`, `llm_provider`, `flow`, `tool_server`, `use_case`, `app_install` |
+| Channels | `channel`, `contact`, `campaign`, `message_template` |
+| The audit log itself | `audit_retention` |
+
+## Export everything
+
+`iterate()` walks every matching entry, page by page, newest first.
+
+**TypeScript**
+
+```typescript
+
+const out = createWriteStream("audit-2026-10.jsonl");
+for await (const e of client.auditLogs.iterate({ from: "2026-10-01", to: "2026-10-31T23:59:59Z" })) {
+  out.write(JSON.stringify(e) + "\n");
+}
+out.end();
+```
+
+**Python**
+
+```python
+
+with open("audit-2026-10.jsonl", "w", encoding="utf-8") as out:
+    for e in client.audit_logs.iterate({"from": "2026-10-01", "to": "2026-10-31T23:59:59Z"}):
+        out.write(json.dumps(e, ensure_ascii=False) + "\n")
+```
+
+## Count
+
+`summary()` takes the same filters and returns `total`, `imports`, `byAction`, `byResource` and `byUser`.
+
+**TypeScript**
+
+```typescript
+const s = await client.auditLogs.summary({ from: "2026-11-01", action: "login_failed" });
+```
+
+**Python**
+
+```python
+s = client.audit_logs.summary({"from": "2026-11-01", "action": "login_failed"})
+```
+
+## Undo a change
+
+An entry with `revertable: true` can be undone. The undo is itself recorded as a `revert` entry. It needs the `audit_trail:write` permission.
+
+**TypeScript**
+
+```typescript
+const { revertEntry } = await client.auditLogs.revert(entryId);
+```
+
+**Python**
+
+```python
+res = client.audit_logs.revert(entry_id)
+```
+
+---
+
+## Archived months
+
+The live log keeps the most recent months (`hotMonths`, for example 3). Older months are moved to files, one per month, each with a SHA-256 hash that also names the previous month's hash, so the months form a chain.
+
+### List and download
+
+**TypeScript**
+
+```typescript
+
+const { hotFrom, archives } = await client.auditArchives.list();
+const month = archives.find(a => a.status === "archived")!;
+
+const file = await client.auditArchives.download(month.month);   // { data, filename, sha256, filtered }
+const ok = createHash("sha256").update(Buffer.from(file.data)).digest("hex") === file.sha256;
+const entries = gunzipSync(Buffer.from(file.data)).toString("utf8").trim().split("\n").map(l => JSON.parse(l));
+```
+
+**Python**
+
+```python
+
+listing = client.audit_archives.list()
+month = next(a for a in listing["archives"] if a["status"] == "archived")
+
+file = client.audit_archives.download(month["month"])   # {data, filename, sha256, filtered}
+ok = hashlib.sha256(file["data"]).hexdigest() == file["sha256"]
+entries = [json.loads(l) for l in gzip.decompress(file["data"]).decode().splitlines()]
+```
+
+A file is gzip-compressed JSON Lines, one entry per line. Pass `resource` (e.g. `["user", "role"]`) to download only those entry types; `filtered` is then true and `sha256` is the hash of what was sent.
+
+An archive's `status` is `archived`, `restoring`, `restored` (back in the live log until `restoreExpiresAt`), `failed` or `purged` (deleted at the end of the retention).
+
+### Bring a month back
+
+`restore()` copies archived months back into the live log, so `auditLogs.list()` reads them again. It runs in the background: the months show `restoring`, then `restored`. `list().restore` gives the limits (default and maximum days, maximum months per restore).
+
+**TypeScript**
+
+```typescript
+const { months, expiresAt } = await client.auditArchives.restore({ from: "2026-05", to: "2026-06" });
+await client.auditArchives.extend("2026-05", 7);   // keep it 7 days longer
+await client.auditArchives.release("2026-05");     // send it back before it expires
+```
+
+**Python**
+
+```python
+res = client.audit_archives.restore("2026-05", "2026-06")
+client.audit_archives.extend("2026-05", 7)    # keep it 7 days longer
+client.audit_archives.release("2026-05")      # send it back before it expires
+```
+
+### Retention
+
+How long the log is kept, in total months (live and archived).
+
+**TypeScript**
+
+```typescript
+const retention = await client.auditArchives.getPolicy();   // { totalMonths, hotMonths, minTotalMonths, maxTotalMonths, pending, canEdit, … }
+const { outcome } = await client.auditArchives.setPolicy({ totalMonths: 24 });
+```
+
+**Python**
+
+```python
+retention = client.audit_archives.get_policy()   # {totalMonths, hotMonths, minTotalMonths, maxTotalMonths, pending, canEdit, ...}
+change = client.audit_archives.set_policy(24)
+```
+
+A longer retention applies at once (`outcome: "increased"`). A shorter one is scheduled after a grace period (`outcome: "scheduled"`, see `retention.pending`) and can be called off with `cancelPendingPolicy()`. A legal hold, which stops all deletion, is placed or lifted by iMBrace only.
+
+### Who can do what
+
+| Action | Who |
+|---|---|
+| Read the log, list archives, read the retention | Members with access to the audit log |
+| Undo a change | `audit_trail:write` permission |
+| Download, restore, extend, release | Admins |
+| Change the retention | The organization's owner or an admin |
+
+Refusals come back as errors with a `code`, for example `live_month` (409: that month is still live), `not_archived` (404), `purged` (410), `not_restored` (409).
+
+---
+
+## See also
+
+- [Resource Reference](/sdk/resources.md) — other namespaces
+- [Error Handling](/sdk/error-handling.md) — catching API errors
