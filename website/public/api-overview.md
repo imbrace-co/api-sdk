@@ -14,7 +14,7 @@ Public REST API for client-facing apps (web, mobile, integrations).
 |---|---|
 | **Auth** | OTP-based (`x-access-token`) or API key (`x-api-key`) |
 | **Path prefixes** | `/v1/backend/`, `/v2/backend/` |
-| **Base URL** | `https://app-gatewayv2.imbrace.co` (stable) |
+| **Base URL** | `https://app-gatewayv2.imbrace.co` (cloud) |
 | **Use for** | Everything exposed to the Imbrace SDK (contacts, boards, AI agent, channels, etc.) |
 
 ### Server Gateway
@@ -52,11 +52,11 @@ Developer portal for building, testing, and publishing custom apps (Journeys) to
 
 | Name | Base URL | Notes |
 |---|---|---|
-| `stable` (default) | `https://app-gatewayv2.imbrace.co` | Production |
+| `cloud` (default) | `https://app-gatewayv2.imbrace.co` | Production. Older names: `stable`, `prodv2` |
 | `develop` | `https://app-gateway.dev.imbrace.co` | Development |
 | `sandbox` | `https://app-gateway.sandbox.imbrace.co` | Sandbox / testing |
 
-Set `IMBRACE_BASE_URL` to override. Defaults to `stable` when unset.
+Set `IMBRACE_BASE_URL` to override. Defaults to `cloud` when unset.
 
 ---
 

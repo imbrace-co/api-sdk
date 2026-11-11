@@ -58,7 +58,7 @@ Imbrace 是您的後端。您的終端使用者登入 Imbrace（透過 OTP 或�
     const client = new ImbraceClient({
       apiKey:         process.env.IMBRACE_API_KEY,
       organizationId: process.env.IMBRACE_ORGANIZATION_ID,
-      env:            "stable",
+      env:            "cloud",
     });
     ```
   </TabItem>
@@ -70,7 +70,7 @@ Imbrace 是您的後端。您的終端使用者登入 Imbrace（透過 OTP 或�
     client = ImbraceClient(
         api_key=os.environ["IMBRACE_API_KEY"],
         organization_id=os.environ.get("IMBRACE_ORGANIZATION_ID"),
-        env="stable",
+        env="cloud",
     )
     ```
   </TabItem>
@@ -89,7 +89,7 @@ Imbrace 是您的後端。您的終端使用者登入 Imbrace（透過 OTP 或�
 
     const client = new ImbraceClient({
       accessToken: process.env.IMBRACE_ACCESS_TOKEN,
-      env:         "stable",
+      env:         "cloud",
     });
     ```
   </TabItem>
@@ -100,7 +100,7 @@ Imbrace 是您的後端。您的終端使用者登入 Imbrace（透過 OTP 或�
 
     client = ImbraceClient(
         access_token=os.environ["IMBRACE_ACCESS_TOKEN"],
-        env="stable",
+        env="cloud",
     )
     ```
   </TabItem>
@@ -125,7 +125,7 @@ Imbrace 是您的後端。您的終端使用者登入 Imbrace（透過 OTP 或�
     import { ImbraceClient } from "@imbrace/sdk"
 
     const client = new ImbraceClient({
-      env: "stable",
+      env: "cloud",
     })
 
     // 步驟 1：將 OTP 傳送至使用者的電子郵件
@@ -196,7 +196,7 @@ Imbrace 是您的後端。您的終端使用者登入 Imbrace（透過 OTP 或�
     ```typescript
     import { ImbraceClient } from "@imbrace/sdk"
 
-    const client = new ImbraceClient({ env: "stable" })
+    const client = new ImbraceClient({ env: "cloud" })
 
     // 步驟 1：登入。回傳 { token: "login_acc_...", organizations: [...] }。
     const { organizations } = await client.login("user@example.com", "password")

@@ -98,7 +98,7 @@ print("SDK loaded:", ImbraceClient)
 | --------- | ---------------------------------------- | -------------------- |
 | `develop` | `https://app-gateway.dev.imbrace.co`     | 內部開發 |
 | `sandbox` | `https://app-gateway.sandbox.imbrace.co` | 整合測試 |
-| `stable`  | `https://app-gatewayv2.imbrace.co`       | 生產環境（預設） |
+| `cloud`   | `https://app-gatewayv2.imbrace.co`       | 生產環境（預設）。舊名稱：`stable`, `prodv2` |
 
 透過建構函式選項 `env` 切換環境，或直接使用 `baseUrl` 覆蓋 URL：
 
@@ -157,19 +157,19 @@ import { ImbraceClient } from "@imbrace/sdk";
 const client = new ImbraceClient({
   apiKey:         process.env.IMBRACE_API_KEY,
   organizationId: process.env.IMBRACE_ORGANIZATION_ID,
-  env:            "stable",
+  env:            "cloud",
 });
 
 // 用戶端 — 存取權杖（例如來自先前的登入，或您自己儲存的 token）
 const client = new ImbraceClient({
   accessToken: process.env.IMBRACE_ACCESS_TOKEN,
-  env:         "stable",
+  env:         "cloud",
 });
 
 // 密碼登入（POST /v1/login/sign_in）— 終端使用者應用最常見的方式。
 // 在一次呼叫中傳回 { token: "login_acc_...", organizations: [...] }；
 // 用 selectOrganization() 選擇其中一個，SDK 會自動切換為該組織的 acc_ token。
-const anon = new ImbraceClient({ env: "stable" });
+const anon = new ImbraceClient({ env: "cloud" });
 const { organizations } = await anon.login("user@example.com", "password");
 await anon.selectOrganization(organizations[0].id);
 
@@ -190,7 +190,7 @@ from imbrace import ImbraceClient
 client = ImbraceClient(
     api_key=os.environ["IMBRACE_API_KEY"],
     organization_id=os.environ.get("IMBRACE_ORGANIZATION_ID"),
-    env="stable",
+    env="cloud",
 )
 
 # 用戶端 — 存取權杖
@@ -202,7 +202,7 @@ client = ImbraceClient(
 # 密碼登入（POST /platform/v1/login/authenticate）— 終端使用者應用最常見的方式。
 # login() 回傳使用者所屬的組織；選擇其一後用 select_organization()
 # 將短期 login_acc_ token 換成綁定組織的 acc_ token。
-anon = ImbraceClient(env="stable")
+anon = ImbraceClient(env="cloud")
 res = anon.login("user@example.com", "password")
 anon.select_organization(res["organizations"][0]["organization_id"])
 

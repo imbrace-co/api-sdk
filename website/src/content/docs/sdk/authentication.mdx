@@ -58,7 +58,7 @@ For step-by-step credential setup (env vars, dotenv, secrets), see [Setup Guide]
     const client = new ImbraceClient({
       apiKey:         process.env.IMBRACE_API_KEY,
       organizationId: process.env.IMBRACE_ORGANIZATION_ID,
-      env:            "stable",
+      env:            "cloud",
     });
     ```
   </TabItem>
@@ -70,7 +70,7 @@ For step-by-step credential setup (env vars, dotenv, secrets), see [Setup Guide]
     client = ImbraceClient(
         api_key=os.environ["IMBRACE_API_KEY"],
         organization_id=os.environ.get("IMBRACE_ORGANIZATION_ID"),
-        env="stable",
+        env="cloud",
     )
     ```
   </TabItem>
@@ -89,7 +89,7 @@ If you already have an `acc_...` token, pass it directly:
 
     const client = new ImbraceClient({
       accessToken: process.env.IMBRACE_ACCESS_TOKEN,
-      env:         "stable",
+      env:         "cloud",
     });
     ```
   </TabItem>
@@ -100,7 +100,7 @@ If you already have an `acc_...` token, pass it directly:
 
     client = ImbraceClient(
         access_token=os.environ["IMBRACE_ACCESS_TOKEN"],
-        env="stable",
+        env="cloud",
     )
     ```
   </TabItem>
@@ -125,7 +125,7 @@ If the user belongs to exactly one org you can skip the picker and pass that org
     import { ImbraceClient } from "@imbrace/sdk"
 
     const client = new ImbraceClient({
-      env: "stable",
+      env: "cloud",
     })
 
     // Step 1: Send OTP to the user's email
@@ -197,7 +197,7 @@ If the user belongs to exactly one org you can skip the picker and pass that org
     ```typescript
     import { ImbraceClient } from "@imbrace/sdk"
 
-    const client = new ImbraceClient({ env: "stable" })
+    const client = new ImbraceClient({ env: "cloud" })
 
     // Step 1: Sign in. Returns { token: "login_acc_...", organizations: [...] }.
     const { organizations } = await client.login("user@example.com", "password")

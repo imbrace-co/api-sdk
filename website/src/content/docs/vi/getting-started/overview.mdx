@@ -49,7 +49,7 @@ import { ImbraceClient } from "@imbrace/sdk"
 
 const client = new ImbraceClient({
   accessToken: process.env.IMBRACE_ACCESS_TOKEN,
-  env: "stable",
+  env: "cloud",
 })
 
 const stream = await client.aiAgent.streamChat({

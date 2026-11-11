@@ -83,7 +83,7 @@ API 金鑰（`api_...`）讓您的後端可以在沒有使用者工作階段的�
     const client = new ImbraceClient({
       apiKey: process.env.IMBRACE_API_KEY!,
       organizationId: process.env.IMBRACE_ORGANIZATION_ID,
-      env: "stable",
+      env: "cloud",
     });
     ```
 
@@ -96,7 +96,7 @@ API 金鑰（`api_...`）讓您的後端可以在沒有使用者工作階段的�
     client = ImbraceClient(
         api_key=os.environ["IMBRACE_API_KEY"],
         organization_id=os.environ.get("IMBRACE_ORGANIZATION_ID"),
-        env="stable",
+        env="cloud",
     )
     ```
 

@@ -45,7 +45,7 @@ import VersionOnly from "../../../../components/VersionOnly.astro";
     // 建構於 Imbrace — Imbrace 就是您的後端，終端使用者透過 OTP 登入
     const client = new ImbraceClient({
       accessToken: process.env.IMBRACE_ACCESS_TOKEN,
-      env: "stable",
+      env: "cloud",
     })
     ```
 
@@ -59,7 +59,7 @@ import VersionOnly from "../../../../components/VersionOnly.astro";
     # 建構於 Imbrace — Imbrace 就是您的後端，終端使用者透過 OTP 登入
     with ImbraceClient(
         access_token=os.environ["IMBRACE_ACCESS_TOKEN"],
-        env="stable",
+        env="cloud",
     ) as client:
         me = client.platform.get_me()
     ```
@@ -81,7 +81,7 @@ import VersionOnly from "../../../../components/VersionOnly.astro";
     const client = new ImbraceClient({
       apiKey:         process.env.IMBRACE_API_KEY,
       organizationId: process.env.IMBRACE_ORGANIZATION_ID,
-      env:            "stable",
+      env:            "cloud",
     })
     ```
 
@@ -96,7 +96,7 @@ import VersionOnly from "../../../../components/VersionOnly.astro";
     with ImbraceClient(
         api_key=os.environ["IMBRACE_API_KEY"],
         organization_id=os.environ.get("IMBRACE_ORGANIZATION_ID"),
-        env="stable",
+        env="cloud",
     ) as client:
         me = client.platform.get_me()
     ```

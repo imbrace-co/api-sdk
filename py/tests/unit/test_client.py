@@ -4,9 +4,16 @@ from imbrace import ImbraceClient
 from imbrace.environments import ENVIRONMENTS
 
 
-def test_default_env_is_stable():
+def test_default_env_is_cloud():
     client = ImbraceClient(api_key="test_key")
-    assert client.auth._base == f"{ENVIRONMENTS['stable'].gateway}/platform"
+    assert client.auth._base == f"{ENVIRONMENTS['cloud'].gateway}/platform"
+
+
+def test_stable_and_prodv2_are_names_for_cloud():
+    for name in ("stable", "prodv2"):
+        assert ENVIRONMENTS[name].gateway == ENVIRONMENTS["cloud"].gateway
+        client = ImbraceClient(env=name, api_key="test_key")
+        assert client.auth._base == "https://app-gatewayv2.imbrace.co/platform"
 
 
 def test_env_develop():

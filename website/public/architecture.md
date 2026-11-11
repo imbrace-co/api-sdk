@@ -29,7 +29,7 @@ ts/src/
 ├── client.ts            ImbraceClient — wires all resources together
 ├── http.ts              HttpTransport — fetch-based, retry + backoff
 ├── errors.ts            ImbraceError, AuthError, ApiError, NetworkError
-├── environments.ts      Base URL constants (dev / sandbox / stable)
+├── environments.ts      Base URL constants (develop / sandbox / cloud)
 ├── service-registry.ts  Maps resource names to instances
 ├── auth/
 │   └── token-manager.ts ThreadSafe token store
@@ -201,6 +201,6 @@ scripts/
 |---|---|
 | develop | `https://app-gateway.dev.imbrace.co` |
 | sandbox | `https://app-gateway.sandbox.imbrace.co` |
-| stable (production) | `https://app-gatewayv2.imbrace.co` |
+| cloud (production; older names stable, prodv2) | `https://app-gatewayv2.imbrace.co` |
 
-Set via `IMBRACE_BASE_URL` env var. Defaults to `stable` when unset.
+Set via `IMBRACE_BASE_URL` env var. Defaults to `cloud` when unset.

@@ -98,7 +98,7 @@ print("SDK loaded:", ImbraceClient)
 | --------- | --------------------------------------- | --------------------- |
 | `develop` | `https://app-gateway.dev.imbrace.co`    | Phát triển nội bộ     |
 | `sandbox` | `https://app-gateway.sandbox.imbrace.co`| Kiểm thử tích hợp     |
-| `stable`  | `https://app-gatewayv2.imbrace.co`      | Production (mặc định) |
+| `cloud`   | `https://app-gatewayv2.imbrace.co`      | Production (mặc định). Tên cũ: `stable`, `prodv2` |
 
 Chuyển đổi môi trường qua tùy chọn constructor `env`, hoặc ghi đè URL trực tiếp bằng `baseUrl`:
 
@@ -157,19 +157,19 @@ import { ImbraceClient } from "@imbrace/sdk";
 const client = new ImbraceClient({
   apiKey:         process.env.IMBRACE_API_KEY,
   organizationId: process.env.IMBRACE_ORGANIZATION_ID,
-  env:            "stable",
+  env:            "cloud",
 });
 
 // Phía client — Access Token (ví dụ: từ lần đăng nhập trước, hoặc token bạn tự lưu)
 const client = new ImbraceClient({
   accessToken: process.env.IMBRACE_ACCESS_TOKEN,
-  env:         "stable",
+  env:         "cloud",
 });
 
 // Đăng nhập bằng mật khẩu (POST /v1/login/sign_in) — phổ biến nhất cho ứng dụng end-user.
 // Trả về { token: "login_acc_...", organizations: [...] } trong một lần gọi; chọn một
 // bằng selectOrganization() và SDK sẽ đổi sang acc_ token gắn với tổ chức đó.
-const anon = new ImbraceClient({ env: "stable" });
+const anon = new ImbraceClient({ env: "cloud" });
 const { organizations } = await anon.login("user@example.com", "password");
 await anon.selectOrganization(organizations[0].id);
 
@@ -190,7 +190,7 @@ from imbrace import ImbraceClient
 client = ImbraceClient(
     api_key=os.environ["IMBRACE_API_KEY"],
     organization_id=os.environ.get("IMBRACE_ORGANIZATION_ID"),
-    env="stable",
+    env="cloud",
 )
 
 # Phía client — Access Token
@@ -202,7 +202,7 @@ client = ImbraceClient(
 # Đăng nhập bằng mật khẩu (POST /platform/v1/login/authenticate) — phổ biến nhất cho ứng dụng end-user.
 # login() trả về danh sách tổ chức; chọn 1 rồi select_organization() đổi token
 # login_acc_ ngắn hạn lấy token acc_ gắn theo tổ chức.
-anon = ImbraceClient(env="stable")
+anon = ImbraceClient(env="cloud")
 res = anon.login("user@example.com", "password")
 anon.select_organization(res["organizations"][0]["organization_id"])
 

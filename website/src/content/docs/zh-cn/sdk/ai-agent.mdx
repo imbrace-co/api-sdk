@@ -23,7 +23,7 @@ import { ImbraceClient } from "@imbrace/sdk"
 
 const client = new ImbraceClient({
   accessToken: process.env.IMBRACE_ACCESS_TOKEN,
-  env: "stable",
+  env: "cloud",
 })
 ```
 </TabItem>
@@ -32,7 +32,7 @@ const client = new ImbraceClient({
 import os
 from imbrace import ImbraceClient
 
-client = ImbraceClient(access_token=os.environ["IMBRACE_ACCESS_TOKEN"], env="stable")
+client = ImbraceClient(access_token=os.environ["IMBRACE_ACCESS_TOKEN"], env="cloud")
 ```
 </TabItem>
 </Tabs>
@@ -47,7 +47,7 @@ import { ImbraceClient } from "@imbrace/sdk"
 const client = new ImbraceClient({
   apiKey: process.env.IMBRACE_API_KEY,
   organizationId: process.env.IMBRACE_ORGANIZATION_ID,
-  env: "stable",
+  env: "cloud",
 })
 ```
 </TabItem>
@@ -56,7 +56,7 @@ const client = new ImbraceClient({
 import os
 from imbrace import ImbraceClient
 
-client = ImbraceClient(api_key=os.environ["IMBRACE_API_KEY"], organization_id=os.environ.get("IMBRACE_ORGANIZATION_ID"), env="stable")
+client = ImbraceClient(api_key=os.environ["IMBRACE_API_KEY"], organization_id=os.environ.get("IMBRACE_ORGANIZATION_ID"), env="cloud")
 ```
 </TabItem>
 </Tabs>

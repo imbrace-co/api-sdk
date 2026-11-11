@@ -25,6 +25,23 @@ describe("ImbraceClient", () => {
     expect(client.sessions).toBeDefined()
   })
 
+  it("defaults to cloud, and stable / prodv2 are names for it", async () => {
+    const urls: string[] = []
+    const original = globalThis.fetch
+    globalThis.fetch = vi.fn().mockImplementation(async (input: RequestInfo | URL) => {
+      urls.push(String(input))
+      return new Response(JSON.stringify({ data: [] }), { status: 200 })
+    })
+    try {
+      for (const env of [undefined, "cloud", "stable", "prodv2"] as const) {
+        await new ImbraceClient({ env, apiKey: "key" }).documentModels.list()
+      }
+    } finally {
+      globalThis.fetch = original
+    }
+    expect(new Set(urls)).toEqual(new Set(["https://app-gatewayv2.imbrace.co/data-board/schemas"]))
+  })
+
   it("strips trailing slash from gateway", () => {
     // No error means construction succeeded; trailing slash is stripped internally
     expect(() => new ImbraceClient({ baseUrl: "https://staging.imbrace.co/", apiKey: "key" })).not.toThrow()

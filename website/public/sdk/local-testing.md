@@ -15,7 +15,7 @@ The same set of gateway base URLs applies to both SDKs. Set this once in your te
 | ----------- | ------------------------------------------ |
 | develop     | `https://app-gateway.dev.imbrace.co`       |
 | sandbox     | `https://app-gateway.sandbox.imbrace.co`   |
-| stable      | `https://app-gatewayv2.imbrace.co`         |
+| cloud       | `https://app-gatewayv2.imbrace.co`         |
 
 ## Credentials
 

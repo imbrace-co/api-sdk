@@ -6,7 +6,7 @@ async def main():
     async with AsyncImbraceClient(
         access_token=os.environ["IMBRACE_ACCESS_TOKEN"],
         organization_id=os.environ.get("IMBRACE_ORG_ID"),
-        env="stable",
+        env="cloud",
     ) as client:
         # Fire parallel requests
         channels, conversations = await asyncio.gather(

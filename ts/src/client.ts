@@ -49,6 +49,7 @@ import { DataIqResource } from "./resources/dataiq.js"
 
 export interface ImbraceClientConfig {
 
+  /** `cloud` (default), `sandbox` or `develop`. `stable` and `prodv2` are older names for `cloud`. */
   env?: Environment
   baseUrl?: string
   services?: Partial<ServiceUrls>
@@ -135,7 +136,7 @@ export class ImbraceClient {
     const mergedServices = opts?.services ?? {}
 
     // -- Resolve environment & service URLs ----------------------------------
-    const envName = opts?.env ?? 'stable'
+    const envName = opts?.env ?? 'cloud'
     const gatewayOverride = opts?.baseUrl
 
     const basePreset: Environment | EnvironmentPreset = gatewayOverride

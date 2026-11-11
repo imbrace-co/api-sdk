@@ -163,7 +163,7 @@ node scripts/generate-llms-md.mjs
 | Variable | Description |
 |---|---|
 | `IMBRACE_API_KEY` | API key (`api_xxx`) for server-to-server calls |
-| `IMBRACE_BASE_URL` | Gateway URL (defaults to stable if unset) |
+| `IMBRACE_BASE_URL` | Gateway URL (defaults to cloud if unset) |
 | `IMBRACE_ORG_ID` | Organization ID sent as `x-organization-id` |
 
 Both SDKs read these automatically from the environment (or from `.env` in the project root).
