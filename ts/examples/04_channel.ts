@@ -3,7 +3,7 @@ import { ImbraceClient } from "../src/index.js"
 const client = new ImbraceClient({
   accessToken: process.env.IMBRACE_ACCESS_TOKEN!,
   organizationId: process.env.IMBRACE_ORG_ID,
-  env: "stable",
+  env: "cloud",
 })
 
 // List channels

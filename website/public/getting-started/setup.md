@@ -108,7 +108,7 @@ See [Get an API Key](/guides/api-key) for full instructions.
 | --------- | ---------------------------------------- | -------------------- |
 | `develop` | `https://app-gateway.dev.imbrace.co`     | Internal development |
 | `sandbox` | `https://app-gateway.sandbox.imbrace.co` | Integration testing  |
-| `stable`  | `https://app-gatewayv2.imbrace.co`       | Production (default) |
+| `cloud`   | `https://app-gatewayv2.imbrace.co`       | Production (default). Older names: `stable`, `prodv2` |
 
 Switch environments via the `env` constructor option, or override the URL directly with `baseUrl`:
 
@@ -137,7 +137,7 @@ import { ImbraceClient } from "@imbrace/sdk";
 const client = new ImbraceClient({
   apiKey:         process.env.IMBRACE_API_KEY,
   organizationId: process.env.IMBRACE_ORGANIZATION_ID,
-  baseUrl:        "https://app-gatewayv2.imbrace.co", // or use env: "stable"
+  baseUrl:        "https://app-gatewayv2.imbrace.co", // or use env: "cloud"
 });
 
 // Client-side — Access Token (e.g. after a previous login, or a token you store yourself)
@@ -169,7 +169,7 @@ from imbrace import ImbraceClient
 client = ImbraceClient(
     api_key=os.environ["IMBRACE_API_KEY"],
     organization_id=os.environ.get("IMBRACE_ORGANIZATION_ID"),
-    env="stable",
+    env="cloud",
 )
 
 # Client-side — Access Token
@@ -181,7 +181,7 @@ client = ImbraceClient(
 # Password login (POST /platform/v1/login/authenticate) — most common for end-user apps.
 # login() returns the user's organizations; pick one and select_organization()
 # swaps the short-lived login_acc_ token for an org-scoped acc_ token.
-anon = ImbraceClient(env="stable")
+anon = ImbraceClient(env="cloud")
 res = anon.login("user@example.com", "password")
 anon.select_organization(res["organizations"][0]["organization_id"])
 

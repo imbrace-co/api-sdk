@@ -58,7 +58,7 @@ Ngữ cảnh tổ chức được **mã hóa bên trong chính thông tin xác t
     const client = new ImbraceClient({
       apiKey:         process.env.IMBRACE_API_KEY,
       organizationId: process.env.IMBRACE_ORGANIZATION_ID,
-      env:            "stable",
+      env:            "cloud",
     });
     ```
   </TabItem>
@@ -70,7 +70,7 @@ Ngữ cảnh tổ chức được **mã hóa bên trong chính thông tin xác t
     client = ImbraceClient(
         api_key=os.environ["IMBRACE_API_KEY"],
         organization_id=os.environ.get("IMBRACE_ORGANIZATION_ID"),
-        env="stable",
+        env="cloud",
     )
     ```
   </TabItem>
@@ -89,7 +89,7 @@ Nếu bạn đã có token `acc_...`, hãy truyền trực tiếp:
 
     const client = new ImbraceClient({
       accessToken: process.env.IMBRACE_ACCESS_TOKEN,
-      env:         "stable",
+      env:         "cloud",
     });
     ```
   </TabItem>
@@ -100,7 +100,7 @@ Nếu bạn đã có token `acc_...`, hãy truyền trực tiếp:
 
     client = ImbraceClient(
         access_token=os.environ["IMBRACE_ACCESS_TOKEN"],
-        env="stable",
+        env="cloud",
     )
     ```
   </TabItem>
@@ -125,7 +125,7 @@ Nếu người dùng chỉ thuộc đúng một tổ chức, bạn có thể b�
     import { ImbraceClient } from "@imbrace/sdk"
 
     const client = new ImbraceClient({
-      env: "stable",
+      env: "cloud",
     })
 
     // Bước 1: Gửi OTP đến email của người dùng
@@ -196,7 +196,7 @@ Nếu người dùng chỉ thuộc đúng một tổ chức, bạn có thể b�
     ```typescript
     import { ImbraceClient } from "@imbrace/sdk"
 
-    const client = new ImbraceClient({ env: "stable" })
+    const client = new ImbraceClient({ env: "cloud" })
 
     // Bước 1: Đăng nhập. Trả về { token: "login_acc_...", organizations: [...] }.
     const { organizations } = await client.login("user@example.com", "password")

@@ -12,7 +12,7 @@ import { ImbraceClient } from "../src/index.js"
 const client = new ImbraceClient({
   accessToken: process.env.IMBRACE_ACCESS_TOKEN!,
   organizationId: process.env.IMBRACE_ORG_ID,
-  env: "stable",
+  env: "cloud",
 })
 
 // 1. List Document AI agents (filter by `documentAiOnly: true` to skip generic AI agents)

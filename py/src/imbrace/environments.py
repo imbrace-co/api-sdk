@@ -2,7 +2,10 @@ from __future__ import annotations
 from typing import Literal, Optional
 from dataclasses import dataclass, field
 
-Environment = Literal["develop", "sandbox", "stable"]
+# The iMBrace environments a client can target: "cloud" (the production cloud, the default),
+# "sandbox" and "develop". "stable" and "prodv2" are older names for "cloud": same gateway,
+# kept so existing code keeps working. Use "cloud" in new code.
+Environment = Literal["cloud", "sandbox", "develop", "stable", "prodv2"]
 
 
 @dataclass
@@ -17,17 +20,17 @@ class EnvironmentPreset:
     service_hosts: ServiceHosts = field(default_factory=ServiceHosts)
 
 
+_CLOUD_GATEWAY = "https://app-gatewayv2.imbrace.co"
+
 ENVIRONMENTS: dict[str, EnvironmentPreset] = {
-    "develop": EnvironmentPreset(
-        gateway="https://app-gateway.dev.imbrace.co",
-    ),
+    "cloud": EnvironmentPreset(gateway=_CLOUD_GATEWAY),
     "sandbox": EnvironmentPreset(
         gateway="https://app-gateway.sandbox.imbrace.co",
     ),
-    "stable": EnvironmentPreset(
-        gateway="https://app-gatewayv2.imbrace.co",
+    "develop": EnvironmentPreset(
+        gateway="https://app-gateway.dev.imbrace.co",
     ),
-    "prodv2": EnvironmentPreset(
-        gateway="https://app-gatewayv2.imbrace.co",
-    ),
+    # Older names for "cloud".
+    "stable": EnvironmentPreset(gateway=_CLOUD_GATEWAY),
+    "prodv2": EnvironmentPreset(gateway=_CLOUD_GATEWAY),
 }

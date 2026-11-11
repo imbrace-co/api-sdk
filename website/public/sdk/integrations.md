@@ -275,7 +275,7 @@ def contact_list(request):
 ```python
 # settings.py
 IMBRACE_API_KEY = env("IMBRACE_API_KEY")
-IMBRACE_ENV = env("IMBRACE_ENV", default="stable")
+IMBRACE_ENV = env("IMBRACE_ENV", default="cloud")
 
 # utils/imbrace.py
 from django.conf import settings

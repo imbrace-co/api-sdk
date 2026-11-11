@@ -11,7 +11,7 @@ from imbrace import ImbraceClient
 
 client = ImbraceClient(
     access_token=os.environ["IMBRACE_ACCESS_TOKEN"],
-    env="stable",
+    env="cloud",
 )
 
 # 1. List Document AI agents (filter by `document_ai_only=True` to skip generic AI agents)

@@ -4,7 +4,7 @@ async function main() {
   // 1. Initialize the Client (OpenAI-style)
   const client = createImbraceClient({
     apiKey: "YOUR_API_KEY", // Or accessToken for client-side
-    env: "develop",         // 'develop', 'sandbox', or 'stable'
+    env: "develop",         // 'cloud', 'sandbox' or 'develop'
   });
 
   try {

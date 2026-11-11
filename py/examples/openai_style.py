@@ -5,7 +5,7 @@ def main():
     # 1. Initialize the Client (OpenAI-style)
     client = ImbraceClient(
         api_key="sk-imbrace-xxx", # Get it from the IMBrace Dashboard
-        env="develop"             # develop / sandbox / stable
+        env="develop"             # cloud / sandbox / develop
     )
 
     try:

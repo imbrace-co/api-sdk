@@ -3,7 +3,7 @@ from imbrace import ImbraceClient
 
 client = ImbraceClient(
     api_key=os.environ["IMBRACE_API_KEY"],
-    env="stable",
+    env="cloud",
 )
 
 channels = client.channel.list()

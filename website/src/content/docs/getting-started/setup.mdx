@@ -98,7 +98,7 @@ print("SDK loaded:", ImbraceClient)
 | --------- | ---------------------------------------- | -------------------- |
 | `develop` | `https://app-gateway.dev.imbrace.co`     | Internal development |
 | `sandbox` | `https://app-gateway.sandbox.imbrace.co` | Integration testing  |
-| `stable`  | `https://app-gatewayv2.imbrace.co`       | Production (default) |
+| `cloud`   | `https://app-gatewayv2.imbrace.co`       | Production (default). Older names: `stable`, `prodv2` |
 
 Switch environments via the `env` constructor option, or override the URL directly with `baseUrl`:
 
@@ -157,19 +157,19 @@ import { ImbraceClient } from "@imbrace/sdk";
 const client = new ImbraceClient({
   apiKey:         process.env.IMBRACE_API_KEY,
   organizationId: process.env.IMBRACE_ORGANIZATION_ID,
-  env:            "stable",
+  env:            "cloud",
 });
 
 // Client-side — Access Token (e.g. after a previous login, or a token you store yourself)
 const client = new ImbraceClient({
   accessToken: process.env.IMBRACE_ACCESS_TOKEN,
-  env:         "stable",
+  env:         "cloud",
 });
 
 // Password login (POST /v1/login/sign_in) — most common for end-user apps.
 // Returns { token: "login_acc_...", organizations: [...] } in one call; pick one
 // with selectOrganization() and the SDK swaps for an org-scoped acc_ token.
-const anon = new ImbraceClient({ env: "stable" });
+const anon = new ImbraceClient({ env: "cloud" });
 const { organizations } = await anon.login("user@example.com", "password");
 await anon.selectOrganization(organizations[0].id);
 
@@ -190,7 +190,7 @@ from imbrace import ImbraceClient
 client = ImbraceClient(
     api_key=os.environ["IMBRACE_API_KEY"],
     organization_id=os.environ.get("IMBRACE_ORGANIZATION_ID"),
-    env="stable",
+    env="cloud",
 )
 
 # Client-side — Access Token
@@ -202,7 +202,7 @@ client = ImbraceClient(
 # Password login (POST /platform/v1/login/authenticate) — most common for end-user apps.
 # login() returns the user's organizations; pick one and select_organization()
 # swaps the short-lived login_acc_ token for an org-scoped acc_ token.
-anon = ImbraceClient(env="stable")
+anon = ImbraceClient(env="cloud")
 res = anon.login("user@example.com", "password")
 anon.select_organization(res["organizations"][0]["organization_id"])
 

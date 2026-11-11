@@ -81,13 +81,13 @@ class AsyncImbraceClient:
         max_retries: int = 3,
     ):
         resolved_key = api_key
-        resolved_env = env or "stable"
+        resolved_env = env or "cloud"
         resolved_gateway = base_url or gateway
         merged_services = services or {}
 
         # Resolve preset
         if resolved_gateway:
-            env_name = resolved_env if isinstance(resolved_env, str) else "stable"
+            env_name = resolved_env if isinstance(resolved_env, str) else "cloud"
             preset = EnvironmentPreset(
                 gateway=resolved_gateway.rstrip("/"),
                 service_hosts=ENVIRONMENTS[env_name].service_hosts if env_name in ENVIRONMENTS else ServiceHosts(),

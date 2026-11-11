@@ -1,7 +1,7 @@
 import { ImbraceClient } from "../src/index.js"
 
 // Step 1: sign in with email + password to get an access token
-const bootstrap = new ImbraceClient({ env: "stable" })
+const bootstrap = new ImbraceClient({ env: "cloud" })
 const result = await bootstrap.auth.signIn({
   email: process.env.IMBRACE_EMAIL!,
   password: process.env.IMBRACE_PASSWORD!,
@@ -13,7 +13,7 @@ const orgId = process.env.IMBRACE_ORG_ID!
 const client = new ImbraceClient({
   accessToken,
   organizationId: orgId,
-  env: "stable",
+  env: "cloud",
 })
 
 const me = await client.platform.getMe()
