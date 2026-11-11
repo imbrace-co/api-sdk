@@ -10,6 +10,12 @@ export * from "./types/index.js"
 
 // Resource input/output types added in 1.5.2
 export type * from "./resources/document-models.js"
+export type * from "./resources/dociq.js"
+export type {
+  ProcessDocumentInput, ProcessDocumentResponse, DocumentJob, DocumentJobStatus,
+  DocumentAIAgent, CreateDocumentAIAgentInput, UpdateDocumentAIAgentInput,
+  CreateFullDocumentAIInput, CreateFullDocumentAIResult,
+} from "./resources/document-ai.js"
 export type * from "./resources/crm-automation.js"
 export type * from "./resources/api-keys.js"
 export type * from "./resources/roles.js"

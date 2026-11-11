@@ -76,12 +76,65 @@ export interface ProcessDocumentInput {
   maxConcurrent?: number
   maxRetries?: number
   useEnhancedProcessing?: boolean
+  /**
+   * `true` extracts inline and returns the fields in `data`. `false` queues the
+   * document and returns a `job_id` (see {@link DocumentAIResource.getJob}).
+   * Left out, the server decides: by default a PDF over 20 pages is queued.
+   */
+  sync?: boolean
+  /**
+   * POSTed the outcome when the extraction finishes, success or error, whether
+   * it ran inline or queued. Body: `{ event, status, job_id, board_id, board_item_id, data, meta, error, … }`.
+   */
+  webhookUrl?: string
+  /** Any JSON value, echoed back untouched as `meta` in the webhook body. */
+  meta?: unknown
+  /** Run an OCR engine next to the vision model and attach `{ value, box, confidence }` to each field. */
+  enableOcrConfidence?: boolean
+  /** 0–1. With `enableOcrConfidence`, drops fields read with lower confidence. Default 0. */
+  confidenceThreshold?: number
+  /** OCR engine for `enableOcrConfidence`: `"paddleocr-vl"`, `"chandra"` or `"easyocr"`. Server default when left out. */
+  ocrEngine?: string
+  /** Seconds you are prepared to wait; caps each model call. */
+  timeout?: number
   [key: string]: unknown
 }
 
+/** A queued extraction's state. `done` and `error` are final. */
+export type DocumentJobStatus = "pending" | "in_progress" | "done" | "error"
+
+/**
+ * What `process()` returns. Inline (HTTP 200): `success` and `data`. Queued
+ * (HTTP 202): `success`, `job_id`, `status` and where the result will be
+ * written, and no `data`.
+ */
 export interface ProcessDocumentResponse {
   success: boolean
+  /** The extracted fields. Missing when the document was queued (`job_id` is set). */
   data: Record<string, unknown> & { filledPdfUrl?: string }
+  /** Set when the document was queued. Follow it with {@link DocumentAIResource.getJob}. */
+  job_id?: string
+  status?: DocumentJobStatus
+  total_pages?: number | null
+  /** The board row the queued result is written to (its `RawResult` field). */
+  board_id?: string | null
+  board_item_id?: string | null
+  [key: string]: unknown
+}
+
+/** A queued extraction, from {@link DocumentAIResource.getJob}. */
+export interface DocumentJob {
+  success: boolean
+  job_id: string
+  status: DocumentJobStatus
+  total_pages?: number | null
+  /** The result is written to this board row, in its `RawResult` field. */
+  board_id?: string | null
+  board_item_id?: string | null
+  board_item_url?: string | null
+  error?: unknown
+  created_at?: string
+  completed_at?: string | null
   [key: string]: unknown
 }
 
@@ -314,6 +367,11 @@ export class DocumentAIResource {
    * If `agentId` is given, the agent's `model_id` and `instructions` are loaded
    * unless `modelName`/`instructions` are also passed (which take precedence).
    *
+   * The server may queue the document instead of extracting it inline (a long
+   * PDF, by default). The response then has `job_id` and no `data`: follow it
+   * with {@link DocumentAIResource.getJob}, or pass `sync: true` to always get
+   * `data` back, or `webhookUrl` to be told when it finishes.
+   *
    * Routes to `POST /v3/ai/document/`.
    */
   async process(input: ProcessDocumentInput): Promise<ProcessDocumentResponse> {
@@ -348,6 +406,22 @@ export class DocumentAIResource {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
+    }).then(r => r.json())
+  }
+
+  /**
+   * The state of a queued extraction (a `job_id` from {@link DocumentAIResource.process}).
+   *
+   * The extracted fields are not in the job: once `status` is `done`, read them
+   * from the board row it names (`board_id`, `board_item_id`, field `RawResult`),
+   * for example with `client.boards.getItem()`. The job record expires after a
+   * day by default and then returns 404; the board row stays.
+   *
+   * Routes to `GET /v3/ai/document/jobs/{jobId}`.
+   */
+  async getJob(jobId: string): Promise<DocumentJob> {
+    return this.http.getFetch()(`${this.base}/document/jobs/${encodeURIComponent(jobId)}`, {
+      method: "GET",
     }).then(r => r.json())
   }
 

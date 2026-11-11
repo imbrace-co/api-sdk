@@ -9,6 +9,20 @@ from ..http import HttpTransport, AsyncHttpTransport
 # and reject ``x-api-key`` / ``x-access-token`` auth.
 
 
+def _document_job_options(
+    sync: Optional[bool], webhook_url: Optional[str], meta: Any,
+    enable_ocr_confidence: Optional[bool], confidence_threshold: Optional[float],
+    ocr_engine: Optional[str], timeout: Optional[int],
+) -> Dict[str, Any]:
+    """The Document AI queueing, webhook and OCR options, under their wire names."""
+    opts = {
+        "sync": sync, "webhookUrl": webhook_url, "meta": meta,
+        "enableOcrConfidence": enable_ocr_confidence, "confidenceThreshold": confidence_threshold,
+        "ocrEngine": ocr_engine, "timeout": timeout,
+    }
+    return {k: v for k, v in opts.items() if v is not None}
+
+
 def _sub_agent_ids(items: Any) -> Optional[List[str]]:
     """``sub_agents`` comes back as ids or ``{assistant_id, name}`` objects."""
     if not isinstance(items, list):
@@ -102,8 +116,25 @@ class ChatAiResource:
         max_concurrent: Optional[int] = None,
         max_retries: Optional[int] = None,
         use_enhanced_processing: Optional[bool] = None,
+        sync: Optional[bool] = None,
+        webhook_url: Optional[str] = None,
+        meta: Any = None,
+        enable_ocr_confidence: Optional[bool] = None,
+        confidence_threshold: Optional[float] = None,
+        ocr_engine: Optional[str] = None,
+        timeout: Optional[int] = None,
     ) -> Dict[str, Any]:
-        """Process a document with a vision model and extract structured data."""
+        """Process a document with a vision model and extract structured data.
+
+        ``sync=True`` extracts inline and returns ``data``; ``sync=False`` queues the
+        document and returns a ``job_id``. Left out, the server decides (a PDF over 20
+        pages is queued by default). Follow a ``job_id`` with ``client.document_ai.get_job()``.
+        ``webhook_url`` is POSTed the outcome either way, with ``meta`` echoed back.
+        ``enable_ocr_confidence`` attaches ``{value, box, confidence}`` from an OCR engine
+        (``ocr_engine``: ``"paddleocr-vl"``, ``"chandra"`` or ``"easyocr"``) to each field;
+        ``confidence_threshold`` (0-1) drops fields read with lower confidence.
+        ``timeout`` is the seconds you are prepared to wait.
+        """
         body: Dict[str, Any] = {"modelName": model_name, "url": url, "organizationId": organization_id}
         if board_id is not None: body["boardId"] = board_id
         if language is not None: body["language"] = language
@@ -117,6 +148,8 @@ class ChatAiResource:
         if max_concurrent is not None: body["maxConcurrent"] = max_concurrent
         if max_retries is not None: body["maxRetries"] = max_retries
         if use_enhanced_processing is not None: body["useEnhancedProcessing"] = use_enhanced_processing
+        body.update(_document_job_options(sync, webhook_url, meta, enable_ocr_confidence,
+                                          confidence_threshold, ocr_engine, timeout))
         return self._http.request("POST", f"{self._base}/document/", json=body).json()
 
     def list_document_models(self) -> List[Dict[str, Any]]:
@@ -247,6 +280,13 @@ class AsyncChatAiResource:
         max_concurrent: Optional[int] = None,
         max_retries: Optional[int] = None,
         use_enhanced_processing: Optional[bool] = None,
+        sync: Optional[bool] = None,
+        webhook_url: Optional[str] = None,
+        meta: Any = None,
+        enable_ocr_confidence: Optional[bool] = None,
+        confidence_threshold: Optional[float] = None,
+        ocr_engine: Optional[str] = None,
+        timeout: Optional[int] = None,
     ) -> Dict[str, Any]:
         body: Dict[str, Any] = {"modelName": model_name, "url": url, "organizationId": organization_id}
         if board_id is not None: body["boardId"] = board_id
@@ -261,6 +301,8 @@ class AsyncChatAiResource:
         if max_concurrent is not None: body["maxConcurrent"] = max_concurrent
         if max_retries is not None: body["maxRetries"] = max_retries
         if use_enhanced_processing is not None: body["useEnhancedProcessing"] = use_enhanced_processing
+        body.update(_document_job_options(sync, webhook_url, meta, enable_ocr_confidence,
+                                          confidence_threshold, ocr_engine, timeout))
         res = await self._http.request("POST", f"{self._base}/document/", json=body)
         return res.json()
 

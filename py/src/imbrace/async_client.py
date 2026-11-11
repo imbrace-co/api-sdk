@@ -40,6 +40,7 @@ from .resources.document_ai import AsyncDocumentAIResource
 from .resources.templates import AsyncTemplatesResource
 from .resources.license import AsyncLicenseResource
 from .resources.document_models import AsyncDocumentModelsResource
+from .resources.dociq import AsyncDociqResource
 from .resources.crm_automation import AsyncCrmAutomationResource
 from .resources.dataiq import AsyncDataIqResource
 from .resources.api_keys import AsyncApiKeysResource
@@ -163,6 +164,7 @@ class AsyncImbraceClient:
         self.roles           = AsyncRolesResource(self.http, urls.platform)
         self.audit_logs      = AsyncAuditLogsResource(self.http, urls.platform)
         self.document_models = AsyncDocumentModelsResource(self.http, urls.data_board)
+        self.dociq = AsyncDociqResource(self.http, urls.ai_agent)
         self.crm_automation  = AsyncCrmAutomationResource(self.http, f"{urls.data_board}/v1")
 
         # DataIQ v2 — separate data from client.boards (v1); both can be used side by side

@@ -1,17 +1,141 @@
 ---
 title: Document AI
-description: 使用视觉模型从 PDF 和图像中提取结构化数据。两个命名空间：client.chatAi 用于直接处理，client.documentAi 用于基于代理的工作流。
+description: 使用视觉模型从 PDF 和图像中提取结构化数据。client.dociq 用于把文档上传给 DocIQ，client.documentModels 定义要提取的字段，client.chatAi 和 client.documentAi 用于直接处理和排队任务。
 ---
 
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 Document AI 使用视觉模型（如 GPT-4o）从 PDF 和图片中提取结构化数据 — 发票、表单、收据、合同或任何带有可见文本的文档。
 
-SDK 暴露两个命名空间：
+SDK 暴露四个命名空间：
+- **`client.dociq`** — 把文档上传给 DocIQ：DocIQ 为每份文档匹配文档模型，完成提取，并在该模型的数据表上写入一条记录
 - **`client.chatAi` / `client.chat_ai`** — 直接文档处理和模型列表
-- **`client.documentAi` / `client.document_ai`** — 基于代理的文档处理，支持 schema 管理、代理增删改查和端到端编排
+- **`client.documentModels` / `client.document_models`** — DocIQ 的文档模型：要提取哪些字段、结果写入哪个数据表、分类和提取设置
+- **`client.documentAi` / `client.document_ai`** — 基于代理的文档处理、排队任务、代理增删改查和端到端编排
 
 首先初始化客户端（参见[安装](/zh-cn/sdk/installation/)或[快速入门](/zh-cn/sdk/quick-start/)）。
+
+---
+
+## `client.dociq` — 上传与提取（DocIQ）
+
+这是把文档交给 DocIQ 的常用方式。上传文件并提交：DocIQ 会选择合适的文档模型，提取字段，并在该模型的数据表上写入一条记录。请先用 [`client.documentModels`](#clientdocumentmodels--document-models-dociq) 设置好模型。
+
+### 上传并提交
+
+用 `client.boards.uploadBoardFile()` 上传，再把返回的 `url` 传给 `ingest()`。每次调用接受 1 到 5 个文件，并立即为每个文件返回一个 submission；读取过程在后台进行。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const form = new FormData();
+form.append("file", new Blob([pdfBytes], { type: "application/pdf" }), "invoice.pdf");
+const { url } = await client.boards.uploadBoardFile(form);
+
+const { submissions } = await client.dociq.ingest({
+  files: [{ url, mime_type: "application/pdf", name: "invoice.pdf" }],
+});
+const submissionId = submissions[0].id;
+```
+</TabItem>
+<TabItem label="Python">
+```python
+with open("invoice.pdf", "rb") as f:
+    url = client.boards.upload_board_file({"file": ("invoice.pdf", f, "application/pdf")})["url"]
+
+res = client.dociq.ingest([{"url": url, "mime_type": "application/pdf", "name": "invoice.pdf"}])
+submission_id = res["submissions"][0]["id"]
+```
+</TabItem>
+</Tabs>
+
+| 选项 | 类型 | 含义 |
+|---|---|---|
+| `files` | `{ url, mime_type, name? }[]` | 1 到 5 个文件。`url` 为上传返回的值，或一个绝对 URL |
+| `assistant_id` | string | 使用该 DocIQ 助手的模型读取，而不是默认模型 |
+| `source` | `{ channel?, conversation_id? }` | 文件并非上传而来时的来源（例如某个消息渠道），按原样保存 |
+
+写入数据表时以调用者的身份执行，因此请求必须带有用户：不带用户的调用会被拒绝并返回 400。组织需要开通文档模型功能。
+
+### 跟踪 submission
+
+submission 有两种状态。`status` 表示读取进度：`pending`、`running`，然后是 `succeeded`、`failed` 或 `canceled`。`outcome` 表示写入数据表的结果：`saved`、`no_schema`（没有匹配的模型）、`model_created`、`failed`，尚未执行时为 `pending`。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+let sub = await client.dociq.getSubmission(submissionId);
+while (sub.status === "pending" || sub.status === "running" || (sub.status === "succeeded" && sub.outcome === "pending")) {
+  await new Promise(r => setTimeout(r, 5000));
+  sub = await client.dociq.getSubmission(submissionId);
+}
+
+if (sub.outcome === "saved") {
+  console.log(sub.documentModelName, sub.boardId, sub.boardItemId);
+  console.log(sub.extractedData);  // 提取出的记录
+  console.log(sub.extractedMeta);  // 每个字段：置信度、状态、读取位置
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+import time
+
+sub = client.dociq.get_submission(submission_id)
+while sub["status"] in ("pending", "running") or (sub["status"] == "succeeded" and sub["outcome"] == "pending"):
+    time.sleep(5)
+    sub = client.dociq.get_submission(submission_id)
+
+if sub["outcome"] == "saved":
+    print(sub["documentModelName"], sub["boardId"], sub["boardItemId"])
+    print(sub["extractedData"])  # 提取出的记录
+    print(sub["extractedMeta"])  # 每个字段：置信度、状态、读取位置
+```
+</TabItem>
+</Tabs>
+
+一个文件中包含多份文档时（例如一个 PDF 里有三张发票）会被拆分：`documents` 列出每份文档及其对应的模型和数据表，`boardItemId` 为第一条记录。失败的 submission 带有 `error` 和 `processLog`。`getSubmissionByFile()` 按结果表中显示的 File ID（例如 `INV-2026-001`）查找最新的 submission。
+
+### 列出 submission
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { submissions, total } = await client.dociq.listSubmissions({
+  status: "failed",
+  from: "2026-11-01T00:00:00Z",
+  limit: 50,
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+page = client.dociq.list_submissions(status="failed", from_="2026-11-01T00:00:00Z", limit=50)
+```
+</TabItem>
+</Tabs>
+
+筛选条件：`limit`（1–100，默认 10）、`skip`、`status`、`flow`（`page` 表示上传，`chat` 表示在代理对话中传入的文件）、`search`、`documentModelIds`、`conversationId`、`emailId`、`sourceItemId`、`from`、`to`（Python 中为 `from_`）、`runId`。`deleteSubmission()` 会从列表中删除一条 submission。
+
+### 没有匹配的模型时
+
+当 `outcome: "no_schema"` 时，submission 的 `proposedModel` 中包含 DocIQ 建议的字段。可以用它们创建文档模型：
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { schema } = await client.dociq.createModelFromSubmission(submissionId, {
+  name: "Purchase order",
+  category: "cat_xxx", // 可选，分类 id
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+res = client.dociq.create_model_from_submission(submission_id, "Purchase order", category="cat_xxx")
+```
+</TabItem>
+</Tabs>
 
 ---
 
@@ -74,6 +198,15 @@ result = client.chat_ai.process_document(
 | 最大并发 | `maxConcurrent` | `max_concurrent` | `number` / `int` | 否 |
 | 最大重试 | `maxRetries` | `max_retries` | `number` / `int` | 否 |
 | 增强处理 | `useEnhancedProcessing` | `use_enhanced_processing` | `boolean` / `bool` | 否 |
+| 立即处理或排队 | `sync` | `sync` | `boolean` / `bool` | 否 |
+| Webhook URL | `webhookUrl` | `webhook_url` | `string` / `str` | 否 |
+| Webhook 上下文 | `meta` | `meta` | 任意 JSON | 否 |
+| OCR 置信度 | `enableOcrConfidence` | `enable_ocr_confidence` | `boolean` / `bool` | 否 |
+| 置信度阈值（0–1） | `confidenceThreshold` | `confidence_threshold` | `number` / `float` | 否 |
+| OCR 引擎 | `ocrEngine` | `ocr_engine` | `string` / `str` | 否 |
+| 超时（秒） | `timeout` | `timeout` | `number` / `int` | 否 |
+
+较长的文档可能会被排队，而不是立即处理：参见[排队提取](#queued-extraction-and-webhooks)。最后七个选项在该节和 [OCR 置信度](#ocr-confidence) 中说明。
 
 #### PDF 表单填写示例
 
@@ -111,9 +244,297 @@ if result["success"] and result["data"].get("filledPdfUrl"):
 
 ---
 
+## `client.documentModels` — 文档模型（DocIQ）
+
+文档模型列出要从某一类文档中提取的字段。每个模型对应一个数据表，用它读取的每份文档都会成为该数据表上的一条记录。[`client.dociq`](#clientdociq--upload-and-extract-dociq) 会为每份文档自动选择模型；使用 `documentAi.process()` 时，则需要将数据表作为 `boardId` 传入。
+
+每个模型属于一个产品，即它的 `type`：`"DocumentAI"`（DocIQ，默认）或 `"Comms"`（CommsIQ）。`type` 在创建模型时设定，之后不会改变。
+
+### 创建模型及其数据表
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const model = await client.documentModels.create({
+  name: "Invoice",
+  attributes: [
+    { name: "Invoice number", type: "ShortText" },
+    { name: "Total", type: "Number" },
+    { name: "Date", type: "Date" },
+  ],
+});
+
+// 创建模型不会创建数据表：需要单独开通。
+const [{ board_id }] = await client.documentModels.provisionBoards({
+  schemas: [{ schema_id: model.id, data_board_name: "Invoices" }],
+});
+
+const result = await client.documentAi.process({
+  url: "https://example.com/invoice.pdf",
+  organizationId: "org_xxx",
+  modelName: "gpt-4o",
+  boardId: board_id,
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+model = client.document_models.create({
+    "name": "Invoice",
+    "attributes": [
+        {"name": "Invoice number", "type": "ShortText"},
+        {"name": "Total", "type": "Number"},
+        {"name": "Date", "type": "Date"},
+    ],
+})
+
+# 创建模型不会创建数据表：需要单独开通。
+board_id = client.document_models.provision_boards(
+    {"schemas": [{"schema_id": model["id"], "data_board_name": "Invoices"}]}
+)[0]["board_id"]
+
+result = client.document_ai.process(
+    url="https://example.com/invoice.pdf",
+    organization_id="org_xxx",
+    model_name="gpt-4o",
+    boardId=board_id,
+)
+```
+</TabItem>
+</Tabs>
+
+创建时的 `agents` 和 `databoards` 已弃用：后端会忽略它们。请使用 `provisionBoards`（传入 `assistant_id` 可同时关联助手）。
+
+### 列出模型
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const all = await client.documentModels.list();                    // 所有产品
+const docIq = await client.documentModels.list({ type: "DocumentAI", search: "invoice" });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+all_models = client.document_models.list()                         # 所有产品
+doc_iq = client.document_models.list(type="DocumentAI", search="invoice")
+```
+</TabItem>
+</Tabs>
+
+### 更新模型及其数据表
+
+每次更新都会保存一个新版本（`listVersions`、`getVersion`、`revert`）。同一次调用还可以重命名模型的数据表、将其移到其他分类，并选择哪些团队可以使用它。在数据表开通之前，这些数据表设置不会生效。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+await client.documentModels.update(model.id, {
+  description: "Supplier invoices",
+  change_note: "Describe the model",
+  data_board_name: "Supplier invoices",
+  board_category_id: "cat_xxx",          // `databoard` 类型的分类
+  board_deployment_access: ["team_xxx"], // 空 = 所有团队
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+client.document_models.update(model["id"], {
+    "description": "Supplier invoices",
+    "change_note": "Describe the model",
+    "data_board_name": "Supplier invoices",
+    "board_category_id": "cat_xxx",          # `databoard` 类型的分类
+    "board_deployment_access": ["team_xxx"], # 空 = 所有团队
+})
+```
+</TabItem>
+</Tabs>
+
+### 分类
+
+分类有 `type`：`"schema"`（DocIQ 模型）、`"databoard"`（数据表）或 `"comms"`（CommsIQ 模型）。在 `schema` 列表上，`count` 决定每个分类的 `boards_count` 统计的是 `"models"` 还是 `"boards"`。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const tree = await client.documentModels.listCategories({ type: "schema", count: "models" });
+const cat = await client.documentModels.createCategory({ name: "Finance", type: "schema" });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+tree = client.document_models.list_categories(type="schema", count="models")
+cat = client.document_models.create_category({"name": "Finance", "type": "schema"})
+```
+</TabItem>
+</Tabs>
+
+### 提取设置
+
+每个组织在每个产品下有一套设置（`type`，省略时为 DocIQ）。更新只会修改你发送的键。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const settings = await client.documentModels.getSettings();
+
+await client.documentModels.updateSettings({
+  ocr_enabled: true,                // false 会跳过扫描件和图片的 OCR 置信度检查
+  confidence_score_threshold: 80,   // 整数百分比；低于该值的结果会被标记为待复核
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+settings = client.document_models.get_settings()
+
+client.document_models.update_settings({
+    "ocr_enabled": True,               # false 会跳过扫描件和图片的 OCR 置信度检查
+    "confidence_score_threshold": 80,  # 整数百分比；低于该值的结果会被标记为待复核
+})
+```
+</TabItem>
+</Tabs>
+
+| 设置 | 类型 | 含义 |
+|---|---|---|
+| `vlm_provider_id`, `vlm_model` | string | 读取页面的视觉模型 |
+| `llm_provider_id`, `llm_model` | string | 填写字段的语言模型 |
+| `source_languages` | string[] | 为空 = 自动识别语言 |
+| `handwriting_support` | boolean | 识别手写内容 |
+| `ocr_enabled` | boolean | `false` 跳过扫描件和图片的 OCR 置信度检查 |
+| `confidence_score_threshold` | 整数 0–100 | 置信度低于该值的结果会被标记为待复核；0 表示不标记 |
+| `time_offset` | string | 例如 `UTC+08:00` |
+| `continue_on_failure` | boolean | 某页失败时继续处理 |
+| `retry_time` | 整数 0–10 | 0 表示不重试 |
+| `max_token_limit` | 整数 1–4096 | 每次提取调用的 token 数（以千计） |
+
+:::note
+`ocr_enabled`、`confidence_score_threshold` 和分类的 `count` 筛选是新功能。在尚未支持它们的环境中，后端会直接忽略，不会报错。
+:::
+
+---
+
+## 排队提取与 webhook
+
+`client.documentAi.process()` 和 `client.chatAi.processDocument()` 调用同一个端点。服务器可能会把文档放入队列，而不是立即提取；默认情况下，超过 20 页的 PDF 会被排队。此时调用会立即返回（HTTP 202），带有 `job_id`，但没有 `data`。
+
+- 传入 `sync: true`，始终立即提取并返回 `data`。
+- 传入 `sync: false`，始终排队。
+- 用 `getJob()` 跟踪排队的任务。提取出的字段不在任务里：当 `status` 为 `done` 时，它们位于任务所指的数据表行的 `RawResult` 字段中。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const res = await client.documentAi.process({
+  url: "https://example.com/contract.pdf",
+  organizationId: "org_xxx",
+  modelName: "gpt-4o",
+  boardId: board_id,
+});
+
+if (res.job_id) {
+  let job = await client.documentAi.getJob(res.job_id);
+  while (job.status === "pending" || job.status === "in_progress") {
+    await new Promise(r => setTimeout(r, 5000));
+    job = await client.documentAi.getJob(res.job_id);
+  }
+  if (job.status === "done" && job.board_id && job.board_item_id) {
+    const row = await client.boards.getItem(job.board_id, job.board_item_id);
+  }
+} else {
+  console.log(res.data);
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+import time
+
+res = client.document_ai.process(
+    url="https://example.com/contract.pdf",
+    organization_id="org_xxx",
+    model_name="gpt-4o",
+    boardId=board_id,
+)
+
+if res.get("job_id"):
+    job = client.document_ai.get_job(res["job_id"])
+    while job["status"] in ("pending", "in_progress"):
+        time.sleep(5)
+        job = client.document_ai.get_job(res["job_id"])
+    if job["status"] == "done":
+        row = client.boards.get_item(job["board_id"], job["board_item_id"])
+else:
+    print(res["data"])
+```
+</TabItem>
+</Tabs>
+
+任务的 `status` 为 `pending`、`in_progress`、`done` 或 `error`。任务记录默认一天后过期，之后 `getJob()` 会返回 404 错误；数据表行仍会保留。
+
+除了轮询，也可以传入 `webhookUrl`。提取完成时，无论成功还是失败、立即处理还是排队，服务器都会向它 POST 结果，并原样带回你发送的 `meta`：
+
+```json
+{
+  "event": "document_ai.completed",
+  "status": "completed",
+  "job_id": "…",
+  "board_id": "…",
+  "board_item_id": "…",
+  "data": { },
+  "meta": { "ref": "r1" },
+  "error": null
+}
+```
+
+文档被立即处理时，`job_id` 为 `null`。`status` 为 `"completed"` 或 `"error"`。
+
+---
+
+## OCR 置信度
+
+启用 `enableOcrConfidence` 后，OCR 引擎会与视觉模型一起读取文档，每个提取字段都会附带 `{ value, box, confidence }`。`confidenceThreshold`（0–1）会丢弃置信度更低的字段。`ocrEngine` 选择引擎：`"paddleocr-vl"`（仅文本）、`"chandra"`（带框的版面）或 `"easyocr"`（带框的文本块）；省略时使用服务器默认引擎。
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const result = await client.documentAi.process({
+  url: "https://example.com/scan.png",
+  organizationId: "org_xxx",
+  modelName: "gpt-4o",
+  boardId: board_id,
+  sync: true,
+  enableOcrConfidence: true,
+  confidenceThreshold: 0.6,
+  ocrEngine: "easyocr",
+});
+```
+</TabItem>
+<TabItem label="Python">
+```python
+result = client.document_ai.process(
+    url="https://example.com/scan.png",
+    organization_id="org_xxx",
+    model_name="gpt-4o",
+    boardId=board_id,
+    sync=True,
+    enableOcrConfidence=True,
+    confidenceThreshold=0.6,
+    ocrEngine="easyocr",
+)
+```
+</TabItem>
+</Tabs>
+
+`client.document_ai.process()` 会把额外的关键字参数原样发送给服务器，因此它们保持 camelCase 名称。`client.chat_ai.process_document()` 则使用 snake_case（`enable_ocr_confidence=True`）。
+
+---
+
 ## `client.documentAi` — 代理增删改查
 
-Document AI 代理存储提取 schema、指令和模型配置，供重复使用。
+Document AI 代理存储指令和模型配置，供重复使用。要提取的字段不放在代理上，而是定义为[文档模型](#clientdocumentmodels--document-models-dociq)，通过 `boardId` 传入。
 
 ### 列出代理
 
@@ -168,11 +589,6 @@ const agent = await client.documentAi.createAgent({
   name: "Invoice Extractor",
   instructions: "Extract invoice fields. Dates as YYYY-MM-DD.",
   model_id: "gpt-4o",
-  schema: {
-    invoice_number: { type: "string", description: "Invoice ID" },
-    total:          { type: "number" },
-    date:           { type: "string", format: "date" },
-  },
 });
 ```
 </TabItem>
@@ -182,15 +598,12 @@ agent = client.document_ai.create_agent(
     name="Invoice Extractor",
     instructions="Extract invoice fields. Dates as YYYY-MM-DD.",
     model_id="gpt-4o",
-    schema={
-        "invoice_number": {"type": "string", "description": "Invoice ID"},
-        "total":          {"type": "number"},
-        "date":           {"type": "string", "format": "date"},
-    },
 )
 ```
 </TabItem>
 </Tabs>
+
+传入 `schema` 会抛出错误：后端不会在代理上保存 schema。请改用[文档模型](#clientdocumentmodels--document-models-dociq)定义字段。
 
 ### 更新代理
 
@@ -402,6 +815,11 @@ async with AsyncImbraceClient() as client:
         url="https://example.com/receipt.pdf",
         organization_id="org_xxx",
     )
+    if result2.get("job_id"):
+        job = await client.document_ai.get_job(result2["job_id"])
+
+    # 文档模型 (document_models)
+    models = await client.document_models.list(type="DocumentAI")
 ```
 </TabItem>
 </Tabs>
@@ -410,5 +828,6 @@ async with AsyncImbraceClient() as client:
 
 ## 参见
 
+- [文档模型](/zh-cn/learn/build-it-well/document-models/) — 选择 DocIQ 要提取的内容
 - [完整流程指南 §3 — 知识中心](/zh-cn/sdk/full-flow-guide/#3-manage-knowledge-hubs-and-attach-to-an-ai-agent) — 上传用于 RAG 的文件
 - [AI 代理 — 嵌入与知识库](/zh-cn/sdk/ai-agent/#embeddings--knowledge-base) — 管理用于检索的嵌入文件

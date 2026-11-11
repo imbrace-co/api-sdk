@@ -249,6 +249,55 @@ describe("DocumentAIResource", () => {
       expect(body.maxRetries).toBe(3)
       expect(body.chunkSize).toBe(1024)
     })
+
+    it("sends sync, webhook and OCR options as typed fields", async () => {
+      mockFetch({ success: true, data: {} })
+      await makeResource().process({
+        url: "u", organizationId: "o", modelName: "gpt-4o",
+        sync: true, webhookUrl: "https://hooks.example.com/doc", meta: { ref: "r1" },
+        enableOcrConfidence: true, confidenceThreshold: 0.6, ocrEngine: "easyocr", timeout: 120,
+      })
+      expect(getCalledBody()).toMatchObject({
+        sync: true, webhookUrl: "https://hooks.example.com/doc", meta: { ref: "r1" },
+        enableOcrConfidence: true, confidenceThreshold: 0.6, ocrEngine: "easyocr", timeout: 120,
+      })
+    })
+
+    it("returns the queued job (HTTP 202) without data", async () => {
+      mockFetch({
+        success: true, job_id: "job_1", status: "pending", total_pages: 42,
+        board_id: "b1", board_item_id: "i1", result_url: "/api/v1/document/jobs/job_1",
+      }, 202)
+      const res = await makeResource().process({ url: "u", organizationId: "o", modelName: "gpt-4o" })
+      expect(res.job_id).toBe("job_1")
+      expect(res.status).toBe("pending")
+      expect(res.board_item_id).toBe("i1")
+      expect(res.data).toBeUndefined()
+    })
+  })
+
+  // ── getJob ─────────────────────────────────────────────────────────────────
+
+  describe("getJob()", () => {
+    it("GETs /document/jobs/{id}", async () => {
+      mockFetch({ success: true, job_id: "job_1", status: "done", board_id: "b1", board_item_id: "i1" })
+      const job = await makeResource().getJob("job_1")
+      expect(getCalledUrl()).toBe(`${BASE}/document/jobs/job_1`)
+      expect(getCalledInit().method).toBe("GET")
+      expect(job.status).toBe("done")
+      expect(job.board_item_id).toBe("i1")
+    })
+
+    it("encodes the job id", async () => {
+      mockFetch({ success: true, job_id: "a/b", status: "pending" })
+      await makeResource().getJob("a/b")
+      expect(getCalledUrl()).toBe(`${BASE}/document/jobs/a%2Fb`)
+    })
+
+    it("throws on 404 once the job record has expired", async () => {
+      mockFetch({ detail: { success: false, status: "expired" } }, 404)
+      await expect(makeResource().getJob("old")).rejects.toThrow("404")
+    })
   })
 
   // ── suggestSchema ──────────────────────────────────────────────────────────
