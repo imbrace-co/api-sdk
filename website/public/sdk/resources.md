@@ -6,6 +6,7 @@ For AI and workflow-related resources, see:
 - [AI Agent](/sdk/ai-agent.md) — AI agents (`chatAi`), AI agent streaming, embeddings, parquet
 - [Agent-to-Agent (A2A)](/sdk/a2a.md) — delegate a task to another agent, on this platform or outside it
 - [Document AI](/sdk/document-ai.md) — upload documents to DocIQ (`dociq`), Document Models, direct extraction
+- [Audit Trail](/sdk/audit-trail.md) — read, filter and export the audit log, undo a change, archived months and retention
 - [Workflows](/sdk/workflows.md) — Workflow flows and channel automation
 - [Data Boards](/sdk/databoard.md) — CRM pipeline boards and items
 

@@ -46,6 +46,7 @@ from .resources.dataiq import DataIqResource
 from .resources.api_keys import ApiKeysResource
 from .resources.roles import RolesResource
 from .resources.audit_logs import AuditLogsResource
+from .resources.audit_archives import AuditArchivesResource
 
 
 class ImbraceClient:
@@ -172,6 +173,7 @@ class ImbraceClient:
         self.api_keys        = ApiKeysResource(self.http, urls.platform)
         self.roles           = RolesResource(self.http, urls.platform)
         self.audit_logs      = AuditLogsResource(self.http, urls.platform)
+        self.audit_archives  = AuditArchivesResource(self.http, urls.platform)
         self.document_models = DocumentModelsResource(self.http, urls.data_board)
         self.dociq = DociqResource(self.http, urls.ai_agent)
         self.crm_automation  = CrmAutomationResource(self.http, f"{urls.data_board}/v1")

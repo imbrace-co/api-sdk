@@ -1,0 +1,238 @@
+---
+title: Nhật Ký Kiểm Toán
+description: "Đọc, lọc và xuất nhật ký kiểm toán của tổ chức, hoàn tác một thay đổi, quản lý các tháng đã lưu trữ và thời gian lưu giữ với client.auditLogs và client.auditArchives."
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+Mọi thay đổi trong tổ chức đều được ghi lại: ai đã làm gì, với cái gì, vào lúc nào. Bao gồm đăng nhập (kể cả lần bị từ chối), chỉnh sửa board và bản ghi, thay đổi Document Model, người dùng và vai trò, API key, cài đặt SSO, workflow và nhiều thứ khác.
+
+SDK cung cấp hai namespace:
+- **`client.auditLogs` / `client.audit_logs`** — nhật ký đang hoạt động: đọc, lọc, đếm, xuất toàn bộ, hoàn tác một thay đổi
+- **`client.auditArchives` / `client.audit_archives`** — các tháng cũ được lưu thành file: tải về, đưa trở lại, đặt thời gian lưu giữ
+
+Tổ chức cần có tính năng Audit Trail. Khởi tạo client trước (xem [Cài đặt](/sdk/installation/) hoặc [Quick Start](/sdk/quick-start/)).
+
+---
+
+## Đọc nhật ký
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const page = await client.auditLogs.list({
+  resource: ["user", "role"],      // một hoặc nhiều giá trị
+  action: ["create", "update", "delete"],
+  from: "2026-11-01",
+  limit: 50,
+});
+
+for (const e of page.data) {
+  console.log(e.createdAt, e.actor.email, e.action, e.resource, e.resourceName);
+}
+```
+</TabItem>
+<TabItem label="Python">
+```python
+page = client.audit_logs.list({
+    "resource": ["user", "role"],    # một hoặc nhiều giá trị
+    "action": ["create", "update", "delete"],
+    "from": "2026-11-01",
+    "limit": 50,
+})
+
+for e in page["data"]:
+    print(e["createdAt"], e["actor"].get("email"), e["action"], e["resource"], e.get("resourceName"))
+```
+</TabItem>
+</Tabs>
+
+Mỗi mục có `id`, `action`, `resource`, `resourceId`, `resourceName`, `actor` (`userId`, `name`, `email`), `summary`, `changes` (trước và sau), `metadata`, `revertable` và `createdAt`. `client.auditLogs.get(id)` đọc một mục.
+
+### Bộ lọc
+
+| Bộ lọc | Ý nghĩa |
+|---|---|
+| `userId`, `resource`, `resourceId`, `action`, `boardId` | Một hoặc nhiều giá trị |
+| `categoryId` | Mọi board trong danh mục này (bị bỏ qua khi có `boardId`) |
+| `runId` | Những gì một lần chạy workflow hoặc agent đã làm |
+| `caseId` | Những gì một case AI đã làm |
+| `from`, `to` | Ngày theo ISO |
+| `q` | Tìm theo văn bản |
+| `imports` | `only` (chỉ) hoặc `exclude` (loại trừ) các mục do import tạo ra |
+| `includeArchive` | Đọc cả các tháng đã lưu trữ (chậm hơn; mục đã lưu trữ không hoàn tác được) |
+| `limit`, `page`, `cursor` | Phân trang: `limit` tối đa 100 (mặc định 25); `cursor` là `pagination.nextCursor` của trang trước |
+
+`action` là một trong `create`, `update`, `delete`, `upload`, `login`, `login_failed` (đăng nhập bị từ chối; `metadata.reason` cho biết lý do), `revert`, `export`, `download`, `connect`.
+
+Các giá trị `resource` thường gặp:
+
+| Nhóm | Giá trị |
+|---|---|
+| Data board và Knowledge Hub | `board`, `board_item`, `file`, `folder`, `integration` |
+| DocIQ và cấu hình board | `doc_schema`, `doc_category`, `doc_settings`, `dociq_extraction`, `segmentation`, `scheduler`, `automation` |
+| Người dùng và quyền truy cập | `user`, `team`, `team_user`, `role`, `api_key`, `sso_config`, `oidc_role_mapping`, `business_unit`, `organization`, `session` |
+| AI, ứng dụng và workflow | `assistant`, `llm_provider`, `flow`, `tool_server`, `use_case`, `app_install` |
+| Kênh | `channel`, `contact`, `campaign`, `message_template` |
+| Chính nhật ký kiểm toán | `audit_retention` |
+
+## Xuất toàn bộ
+
+`iterate()` duyệt qua mọi mục khớp điều kiện, từng trang một, mới nhất trước.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+import { createWriteStream } from "node:fs";
+
+const out = createWriteStream("audit-2026-10.jsonl");
+for await (const e of client.auditLogs.iterate({ from: "2026-10-01", to: "2026-10-31T23:59:59Z" })) {
+  out.write(JSON.stringify(e) + "\n");
+}
+out.end();
+```
+</TabItem>
+<TabItem label="Python">
+```python
+import json
+
+with open("audit-2026-10.jsonl", "w", encoding="utf-8") as out:
+    for e in client.audit_logs.iterate({"from": "2026-10-01", "to": "2026-10-31T23:59:59Z"}):
+        out.write(json.dumps(e, ensure_ascii=False) + "\n")
+```
+</TabItem>
+</Tabs>
+
+## Đếm
+
+`summary()` nhận cùng bộ lọc và trả về `total`, `imports`, `byAction`, `byResource` và `byUser`.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const s = await client.auditLogs.summary({ from: "2026-11-01", action: "login_failed" });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+s = client.audit_logs.summary({"from": "2026-11-01", "action": "login_failed"})
+```
+</TabItem>
+</Tabs>
+
+## Hoàn tác một thay đổi
+
+Mục có `revertable: true` có thể hoàn tác. Việc hoàn tác cũng được ghi lại thành một mục `revert`. Cần quyền `audit_trail:write`.
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { revertEntry } = await client.auditLogs.revert(entryId);
+```
+</TabItem>
+<TabItem label="Python">
+```python
+res = client.audit_logs.revert(entry_id)
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Các tháng đã lưu trữ
+
+Nhật ký đang hoạt động giữ những tháng gần nhất (`hotMonths`, ví dụ 3). Các tháng cũ hơn được chuyển thành file, mỗi tháng một file, kèm mã băm SHA-256 có ghi cả mã băm của tháng trước, nên các tháng nối thành một chuỗi.
+
+### Liệt kê và tải về
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+import { createHash } from "node:crypto";
+import { gunzipSync } from "node:zlib";
+
+const { hotFrom, archives } = await client.auditArchives.list();
+const month = archives.find(a => a.status === "archived")!;
+
+const file = await client.auditArchives.download(month.month);   // { data, filename, sha256, filtered }
+const ok = createHash("sha256").update(Buffer.from(file.data)).digest("hex") === file.sha256;
+const entries = gunzipSync(Buffer.from(file.data)).toString("utf8").trim().split("\n").map(l => JSON.parse(l));
+```
+</TabItem>
+<TabItem label="Python">
+```python
+import gzip, hashlib, json
+
+listing = client.audit_archives.list()
+month = next(a for a in listing["archives"] if a["status"] == "archived")
+
+file = client.audit_archives.download(month["month"])   # {data, filename, sha256, filtered}
+ok = hashlib.sha256(file["data"]).hexdigest() == file["sha256"]
+entries = [json.loads(l) for l in gzip.decompress(file["data"]).decode().splitlines()]
+```
+</TabItem>
+</Tabs>
+
+File là JSON Lines nén gzip, mỗi dòng một mục. Truyền `resource` (ví dụ `["user", "role"]`) để chỉ tải những loại mục đó; khi đó `filtered` là true và `sha256` là mã băm của phần được gửi về.
+
+`status` của một bản lưu trữ là `archived`, `restoring`, `restored` (đã trở lại nhật ký đang hoạt động cho đến `restoreExpiresAt`), `failed` hoặc `purged` (đã xóa khi hết thời gian lưu giữ).
+
+### Đưa một tháng trở lại
+
+`restore()` chép các tháng đã lưu trữ trở lại nhật ký đang hoạt động, để `auditLogs.list()` đọc được chúng. Việc này chạy ở chế độ nền: các tháng hiển thị `restoring`, rồi `restored`. `list().restore` cho biết giới hạn (số ngày mặc định và tối đa, số tháng tối đa mỗi lần khôi phục).
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const { months, expiresAt } = await client.auditArchives.restore({ from: "2026-05", to: "2026-06" });
+await client.auditArchives.extend("2026-05", 7);   // giữ thêm 7 ngày
+await client.auditArchives.release("2026-05");     // trả về kho lưu trữ trước khi hết hạn
+```
+</TabItem>
+<TabItem label="Python">
+```python
+res = client.audit_archives.restore("2026-05", "2026-06")
+client.audit_archives.extend("2026-05", 7)    # giữ thêm 7 ngày
+client.audit_archives.release("2026-05")      # trả về kho lưu trữ trước khi hết hạn
+```
+</TabItem>
+</Tabs>
+
+### Thời gian lưu giữ
+
+Thời gian giữ nhật ký, tính bằng tổng số tháng (đang hoạt động và đã lưu trữ).
+
+<Tabs syncKey="lang">
+<TabItem label="TypeScript">
+```typescript
+const retention = await client.auditArchives.getPolicy();   // { totalMonths, hotMonths, minTotalMonths, maxTotalMonths, pending, canEdit, … }
+const { outcome } = await client.auditArchives.setPolicy({ totalMonths: 24 });
+```
+</TabItem>
+<TabItem label="Python">
+```python
+retention = client.audit_archives.get_policy()   # {totalMonths, hotMonths, minTotalMonths, maxTotalMonths, pending, canEdit, ...}
+change = client.audit_archives.set_policy(24)
+```
+</TabItem>
+</Tabs>
+
+Thời gian dài hơn được áp dụng ngay (`outcome: "increased"`). Thời gian ngắn hơn được lên lịch sau một khoảng thời gian chờ (`outcome: "scheduled"`, xem `retention.pending`) và có thể hủy bằng `cancelPendingPolicy()`. Legal hold (chặn mọi việc xóa) chỉ do iMBrace đặt hoặc gỡ.
+
+### Ai được làm gì
+
+| Thao tác | Ai |
+|---|---|
+| Đọc nhật ký, liệt kê bản lưu trữ, xem thời gian lưu giữ | Thành viên có quyền xem nhật ký kiểm toán |
+| Hoàn tác một thay đổi | Quyền `audit_trail:write` |
+| Tải về, khôi phục, gia hạn, trả về | Admin |
+| Thay đổi thời gian lưu giữ | Owner của tổ chức hoặc admin |
+
+Các trường hợp bị từ chối trả về lỗi kèm `code`, ví dụ `live_month` (409: tháng đó vẫn đang hoạt động), `not_archived` (404), `purged` (410), `not_restored` (409).
+
+---
+
+## Xem thêm
+
+- [Tài nguyên](/sdk/resources/) — các namespace khác
+- [Xử lý lỗi](/sdk/error-handling/) — bắt lỗi API
