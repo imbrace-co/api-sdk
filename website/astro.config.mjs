@@ -383,6 +383,11 @@ export default defineConfig({
               translations: { vi: 'Tổng Quan', 'zh-CN': '概览', 'zh-TW': '概覽' },
               link: '/mcp/overview/',
             },
+            {
+              label: 'Agent Toolkit',
+              translations: { vi: 'Agent Toolkit', 'zh-CN': 'Agent Toolkit', 'zh-TW': 'Agent Toolkit' },
+              link: '/mcp/agent-toolkit/',
+            },
           ],
         },
         {
