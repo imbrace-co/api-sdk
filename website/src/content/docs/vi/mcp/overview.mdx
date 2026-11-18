@@ -136,7 +136,9 @@ Ví dụ — chỉ data board, có quyền ghi:
 https://app-gateway.sandbox.imbrace.co/mcp?services=dataBoard&allowWrite=1
 ```
 
-Service: `dataBoard`, `channel`, `platform`, `marketplace`, `workflow`. Agent gọi tool chưa được bật sẽ nhận lỗi rõ ràng — không có gì thất bại âm thầm.
+Service: `dataBoard`, `channel`, `platform`, `marketplace`, `workflow`, `aiAgent`. Agent gọi tool chưa được bật sẽ nhận lỗi rõ ràng — không có gì thất bại âm thầm.
+
+Kết quả luôn đủ ngắn để agent đọc được: `listFlows` và `listPieces` trả bản tóm tắt từng mục (`getFlow` / `getPiece` có định nghĩa đầy đủ), còn danh sách quá dài cho một lần trả về sẽ chỉ gồm các mục đầu kèm `_truncated: { returned, total }` — thu hẹp bằng bộ lọc hoặc phân trang của tool.
 
 ### Cách hoạt động
 
