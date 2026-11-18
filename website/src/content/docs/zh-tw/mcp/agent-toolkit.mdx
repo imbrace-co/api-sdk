@@ -201,6 +201,7 @@ npx -y mcp-remote https://app-gatewayv2.imbrace.co/mcp \
 | `401` 並帶有 `invalid_token` | 未登入，或登入已過期 | `/mcp` → `imbrace` → 清除驗證，然後再次 **Authenticate** |
 | 使用 API key 時出現 `401` | key 錯誤、已過期、屬於其他環境或為空 | 檢查 key 與閘道主機名稱 |
 | `403` | 你在該組織中的角色缺少相應權限 | 聯絡組織管理員 |
+| `402` `plan_feature_unavailable`（*MCP access is not included in your plan*） | 該組織的方案不包含 MCP 存取權限 | 請 iMBrace 管理員為該方案開啟 MCP 存取，或重新 **Authenticate** 並選擇方案包含 MCP 的組織 |
 | 缺少寫入或刪除類工具，或提示 *tool not enabled* | OAuth：授權中沒有 `imbrace.write` / `imbrace.delete`。API key：URL 中沒有 `?allowWrite=1` / `?allowDestructive=1`。或者 `?services=` / `?tags=` 篩選排除了該工具 | 重新驗證並授予寫入（或刪除）權限，或修正 URL |
 
 ## 支援

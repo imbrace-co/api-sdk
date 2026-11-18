@@ -201,6 +201,7 @@ Không dùng URL: CLI chạy một stdio server cục bộ từ profile đã lư
 | `401` kèm `invalid_token` | Chưa đăng nhập, hoặc phiên đăng nhập đã hết hạn | `/mcp` → `imbrace` → clear authentication, rồi **Authenticate** lại |
 | `401` khi dùng API key | Key sai, hết hạn, thuộc môi trường khác, hoặc rỗng | Kiểm tra key và host của gateway |
 | `403` | Vai trò của bạn trong tổ chức đó thiếu quyền | Liên hệ admin của tổ chức |
+| `402` `plan_feature_unavailable` (*MCP access is not included in your plan*) | Gói của tổ chức không bao gồm quyền dùng MCP | Nhờ admin iMBrace bật MCP access cho gói đó, hoặc Authenticate lại và chọn tổ chức có gói hỗ trợ MCP |
 | Thiếu tool ghi hoặc xóa, hoặc lỗi *tool not enabled* | OAuth: lần cấp quyền thiếu `imbrace.write` / `imbrace.delete`. API key: URL thiếu `?allowWrite=1` / `?allowDestructive=1`. Hoặc bộ lọc `?services=` / `?tags=` đã loại tool đó | Xác thực lại và cấp quyền ghi (hoặc xóa), hoặc sửa URL |
 
 ## Hỗ trợ

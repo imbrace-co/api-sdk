@@ -201,6 +201,7 @@ No URL at all: the CLI runs a local stdio server from a saved profile — [`imbr
 | `401` with `invalid_token` | Not signed in, or the sign-in expired | `/mcp` → `imbrace` → clear authentication, then **Authenticate** again |
 | `401` with an API key | The key is wrong, expired, from another environment, or empty | Check the key and the gateway host |
 | `403` | Your role in that organization lacks the permission | Ask an organization admin |
+| `402` `plan_feature_unavailable` (*MCP access is not included in your plan*) | The organization's plan does not include MCP access | Ask an iMBrace admin to enable MCP access for the plan, or re-authenticate and pick an organization whose plan includes it |
 | Write or delete tools missing, or *tool not enabled* | OAuth: the grant lacks `imbrace.write` / `imbrace.delete`. API key: the URL lacks `?allowWrite=1` / `?allowDestructive=1`. Or a `?services=` / `?tags=` filter excludes the tool | Re-authenticate and grant write (or delete), or fix the URL |
 
 ## Support
