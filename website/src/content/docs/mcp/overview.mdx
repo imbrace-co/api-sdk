@@ -136,7 +136,9 @@ Example — data boards only, with write access:
 https://app-gateway.sandbox.imbrace.co/mcp?services=dataBoard&allowWrite=1
 ```
 
-Services: `dataBoard`, `channel`, `platform`, `marketplace`, `workflow`. If the agent calls a tool that isn't enabled, it gets a clear error back — nothing fails silently.
+Services: `dataBoard`, `channel`, `platform`, `marketplace`, `workflow`, `aiAgent`. If the agent calls a tool that isn't enabled, it gets a clear error back — nothing fails silently.
+
+Answers are kept short enough for the agent: `listFlows` and `listPieces` return a summary of each item (`getFlow` / `getPiece` give the full definition), and a list too long for one answer comes back as its first items with `_truncated: { returned, total }` — narrow it with the tool's filters or paging.
 
 ### How it works
 

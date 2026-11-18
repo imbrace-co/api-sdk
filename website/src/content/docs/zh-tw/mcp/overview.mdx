@@ -136,7 +136,9 @@ npx -y mcp-remote "https://app-gateway.sandbox.imbrace.co/mcp" \
 https://app-gateway.sandbox.imbrace.co/mcp?services=dataBoard&allowWrite=1
 ```
 
-服務：`dataBoard`、`channel`、`platform`、`marketplace`、`workflow`。Agent 呼叫未啟用的工具會收到明確錯誤 — 不會靜默失敗。
+服務：`dataBoard`、`channel`、`platform`、`marketplace`、`workflow`、`aiAgent`。Agent 呼叫未啟用的工具會收到明確錯誤 — 不會靜默失敗。
+
+回傳結果會保持在 Agent 可讀的長度：`listFlows` 與 `listPieces` 回傳每一項的摘要（完整定義見 `getFlow` / `getPiece`）；一次回傳不下的長清單只包含前面的項目，並附上 `_truncated: { returned, total }` — 請用工具的篩選或分頁參數縮小範圍。
 
 ### 運作原理
 
