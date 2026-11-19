@@ -49,21 +49,21 @@ claude plugin install imbrace-developer@imbrace-developer-tools
 
 ### 选择环境
 
-插件把 MCP 服务器添加为 `imbrace`，**插件中不保存任何凭据**。它唯一的设置 **iMBrace MCP URL** 决定连接哪个网关：
+插件把 MCP 服务器添加为 `imbrace`，**插件中不保存任何凭据**。它连接到生产环境；各环境的 MCP URL 如下：
 
 | 环境 | MCP URL |
 |---|---|
-| 生产环境（默认） | `https://app-gatewayv2.imbrace.co/mcp` |
+| 生产环境（插件的服务器） | `https://app-gatewayv2.imbrace.co/mcp` |
 | Sandbox | `https://app-gateway.sandbox.imbrace.co/mcp` |
 | 本地部署 | `https://<你的网关>/mcp` |
 
-通过 `/plugin` → **iMBrace Developer** 修改，然后重新登录（`/mcp` → `imbrace` → **Authenticate**）。每个环境都有各自的账号、组织和 API key：请在要连接的环境中登录或生成 key。在 URL 上加 `?services=` 或 `?tags=` 可以缩小列出和可调用的工具范围（参见 [MCP 服务器](/zh-cn/mcp/overview/#read-only-by-default)）；这只是过滤，不是访问控制。
+要使用其他环境，请自行添加服务器（[见下文](#multiple-environments)）。每个环境都有各自的账号、组织和 API key：请在要连接的环境中登录或生成 key。在 URL 上加 `?services=` 或 `?tags=` 可以缩小列出和可调用的工具范围（参见 [MCP 服务器](/zh-cn/mcp/overview/#read-only-by-default)）；这只是过滤，不是访问控制。
 
 <a id="multiple-environments"></a>
 
 ### 同时使用多个环境
 
-让插件的服务器保持在一个环境，其他每个环境用各自的名称另外添加。每个服务器分别登录：
+插件的 `imbrace` 服务器始终指向生产环境。其他每个环境用各自的名称另外添加，每个服务器分别登录（如果只想使用其他环境，可在 `/mcp` 中停用插件的服务器）：
 
 ```bash
 claude mcp add --transport http imbrace-sandbox https://app-gateway.sandbox.imbrace.co/mcp

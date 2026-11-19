@@ -49,21 +49,21 @@ Update with `claude plugin marketplace update imbrace-developer-tools`; remove w
 
 ### Choose the environment
 
-The plugin adds the MCP server as `imbrace`, with **no credential stored in the plugin**. Its one setting, **iMBrace MCP URL**, decides which gateway it talks to:
+The plugin adds the MCP server as `imbrace`, with **no credential stored in the plugin**. It connects to production; the MCP URLs of every environment are:
 
 | Environment | MCP URL |
 |---|---|
-| Production (default) | `https://app-gatewayv2.imbrace.co/mcp` |
+| Production (the plugin's server) | `https://app-gatewayv2.imbrace.co/mcp` |
 | Sandbox | `https://app-gateway.sandbox.imbrace.co/mcp` |
 | On-premise | `https://<your gateway>/mcp` |
 
-Change it with `/plugin` → **iMBrace Developer**, then sign in again (`/mcp` → `imbrace` → **Authenticate**). Each environment has its own accounts, organizations and API keys: sign in, or generate the key, in the environment you connect to. Adding `?services=` or `?tags=` to the URL narrows the tools that are listed and can be called (see [MCP Server](/mcp/overview/#read-only-by-default)); that is a filter, not access control.
+For another environment, add a server of your own ([below](#multiple-environments)). Each environment has its own accounts, organizations and API keys: sign in, or generate the key, in the environment you connect to. Adding `?services=` or `?tags=` to the URL narrows the tools that are listed and can be called (see [MCP Server](/mcp/overview/#read-only-by-default)); that is a filter, not access control.
 
 <a id="multiple-environments"></a>
 
 ### Use several environments
 
-Keep the plugin's server on one environment and add each other environment under its own name. Each one signs in separately:
+The plugin's `imbrace` server always points to production. Add each other environment under its own name; each one signs in separately (disable the plugin's server with `/mcp` if you only want the other environment):
 
 ```bash
 claude mcp add --transport http imbrace-sandbox https://app-gateway.sandbox.imbrace.co/mcp
