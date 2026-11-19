@@ -49,21 +49,21 @@ Cập nhật bằng `claude plugin marketplace update imbrace-developer-tools`; 
 
 ### Chọn môi trường
 
-Plugin thêm MCP server với tên `imbrace`, **không lưu credential nào trong plugin**. Thiết lập duy nhất của nó, **iMBrace MCP URL**, quyết định gateway sẽ kết nối:
+Plugin thêm MCP server với tên `imbrace`, **không lưu credential nào trong plugin**. Server này kết nối tới production; MCP URL của từng môi trường:
 
 | Môi trường | MCP URL |
 |---|---|
-| Production (mặc định) | `https://app-gatewayv2.imbrace.co/mcp` |
+| Production (server của plugin) | `https://app-gatewayv2.imbrace.co/mcp` |
 | Sandbox | `https://app-gateway.sandbox.imbrace.co/mcp` |
 | On-premise | `https://<gateway của bạn>/mcp` |
 
-Đổi bằng `/plugin` → **iMBrace Developer**, rồi đăng nhập lại (`/mcp` → `imbrace` → **Authenticate**). Mỗi môi trường có tài khoản, tổ chức và API key riêng: hãy đăng nhập, hoặc tạo key, trong đúng môi trường bạn kết nối. Thêm `?services=` hoặc `?tags=` vào URL sẽ thu hẹp các tool được liệt kê và gọi được (xem [MCP Server](/mcp/overview/#read-only-by-default)); đó là bộ lọc, không phải kiểm soát quyền truy cập.
+Với môi trường khác, hãy tự thêm một server ([bên dưới](#multiple-environments)). Mỗi môi trường có tài khoản, tổ chức và API key riêng: hãy đăng nhập, hoặc tạo key, trong đúng môi trường bạn kết nối. Thêm `?services=` hoặc `?tags=` vào URL sẽ thu hẹp các tool được liệt kê và gọi được (xem [MCP Server](/mcp/overview/#read-only-by-default)); đó là bộ lọc, không phải kiểm soát quyền truy cập.
 
 <a id="multiple-environments"></a>
 
 ### Dùng nhiều môi trường
 
-Giữ server của plugin cho một môi trường, và thêm mỗi môi trường khác dưới một tên riêng. Mỗi server đăng nhập riêng:
+Server `imbrace` của plugin luôn trỏ tới production. Thêm mỗi môi trường khác dưới một tên riêng; mỗi server đăng nhập riêng (tắt server của plugin bằng `/mcp` nếu bạn chỉ muốn dùng môi trường kia):
 
 ```bash
 claude mcp add --transport http imbrace-sandbox https://app-gateway.sandbox.imbrace.co/mcp

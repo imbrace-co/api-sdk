@@ -49,21 +49,21 @@ claude plugin install imbrace-developer@imbrace-developer-tools
 
 ### 選擇環境
 
-外掛把 MCP 伺服器新增為 `imbrace`，**外掛中不保存任何憑證**。它唯一的設定 **iMBrace MCP URL** 決定連接哪個閘道：
+外掛把 MCP 伺服器新增為 `imbrace`，**外掛中不保存任何憑證**。它連接到正式環境；各環境的 MCP URL 如下：
 
 | 環境 | MCP URL |
 |---|---|
-| 正式環境（預設） | `https://app-gatewayv2.imbrace.co/mcp` |
+| 正式環境（外掛的伺服器） | `https://app-gatewayv2.imbrace.co/mcp` |
 | Sandbox | `https://app-gateway.sandbox.imbrace.co/mcp` |
 | 地端部署 | `https://<你的閘道>/mcp` |
 
-透過 `/plugin` → **iMBrace Developer** 修改，然後重新登入（`/mcp` → `imbrace` → **Authenticate**）。每個環境都有各自的帳號、組織與 API key：請在要連線的環境中登入或產生 key。在 URL 上加 `?services=` 或 `?tags=` 可以縮小列出與可呼叫的工具範圍（請參閱 [MCP 伺服器](/zh-tw/mcp/overview/#read-only-by-default)）；這只是篩選，不是存取控制。
+若要使用其他環境，請自行新增伺服器（[見下文](#multiple-environments)）。每個環境都有各自的帳號、組織與 API key：請在要連線的環境中登入或產生 key。在 URL 上加 `?services=` 或 `?tags=` 可以縮小列出與可呼叫的工具範圍（請參閱 [MCP 伺服器](/zh-tw/mcp/overview/#read-only-by-default)）；這只是篩選，不是存取控制。
 
 <a id="multiple-environments"></a>
 
 ### 同時使用多個環境
 
-讓外掛的伺服器維持在一個環境，其他每個環境以各自的名稱另外新增。每個伺服器分別登入：
+外掛的 `imbrace` 伺服器一律指向正式環境。其他每個環境以各自的名稱另外新增，每個伺服器分別登入（若只想使用其他環境，可在 `/mcp` 中停用外掛的伺服器）：
 
 ```bash
 claude mcp add --transport http imbrace-sandbox https://app-gateway.sandbox.imbrace.co/mcp
