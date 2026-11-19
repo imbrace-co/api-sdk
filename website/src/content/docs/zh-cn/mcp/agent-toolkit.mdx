@@ -45,18 +45,32 @@ claude plugin install imbrace-developer@imbrace-developer-tools
 
 更新：`claude plugin marketplace update imbrace-developer-tools`；卸载：`claude plugin uninstall imbrace-developer`。
 
+<a id="environments"></a>
+
 ### 选择环境
 
 插件把 MCP 服务器添加为 `imbrace`，**插件中不保存任何凭据**。它唯一的设置 **iMBrace MCP URL** 决定连接哪个网关：
 
 | 环境 | MCP URL |
 |---|---|
-| Dev（目前的默认值：首个支持 OAuth 登录的环境） | `https://app-gateway.dev.imbrace.co/mcp` |
-| 生产环境（支持 OAuth 后将成为默认值） | `https://app-gatewayv2.imbrace.co/mcp` |
+| 生产环境（默认） | `https://app-gatewayv2.imbrace.co/mcp` |
 | Sandbox | `https://app-gateway.sandbox.imbrace.co/mcp` |
 | 本地部署 | `https://<你的网关>/mcp` |
 
-通过 `/plugin` → **iMBrace Developer** 修改。在 URL 上加 `?services=` 或 `?tags=` 可以缩小列出和可调用的工具范围（参见 [MCP 服务器](/zh-cn/mcp/overview/#read-only-by-default)）；这只是过滤，不是访问控制。
+通过 `/plugin` → **iMBrace Developer** 修改，然后重新登录（`/mcp` → `imbrace` → **Authenticate**）。每个环境都有各自的账号、组织和 API key：请在要连接的环境中登录或生成 key。在 URL 上加 `?services=` 或 `?tags=` 可以缩小列出和可调用的工具范围（参见 [MCP 服务器](/zh-cn/mcp/overview/#read-only-by-default)）；这只是过滤，不是访问控制。
+
+<a id="multiple-environments"></a>
+
+### 同时使用多个环境
+
+让插件的服务器保持在一个环境，其他每个环境用各自的名称另外添加。每个服务器分别登录：
+
+```bash
+claude mcp add --transport http imbrace-sandbox https://app-gateway.sandbox.imbrace.co/mcp
+claude mcp add --transport http imbrace-onprem https://<your gateway>/mcp
+```
+
+然后 `/mcp` → 选择每个服务器 → **Authenticate**。对于未启用 OAuth 的网关，改为在命令中加上 `--header "Authorization: Bearer $IMBRACE_SANDBOX_API_KEY"`，每个环境使用一个 key 变量。工具按服务器分别列出（例如 `mcp__imbrace-sandbox__listBoards`），提问时请说明你指的是哪个环境。
 
 ## ChatGPT 和 Codex
 
@@ -66,8 +80,8 @@ claude plugin install imbrace-developer@imbrace-developer-tools
 
 有两种登录方式，每个连接选一种：**OAuth**（在浏览器中登录，无需复制任何东西）和 **API key**（`api_...`）。
 
-<Aside type="caution" title="OAuth 正在逐步上线">
-`/mcp` 的 OAuth 登录正在逐个环境启用，本地部署的网关可能没有。**在你的环境已启用 OAuth 时使用它；否则请使用 API key**（[见下文](#api-key-instead)）。两种方式下技能都能正常工作。
+<Aside type="note" title="哪些环境支持 OAuth">
+生产环境已支持 OAuth 登录。Sandbox 和本地部署的网关可能尚未支持；此时请使用 **API key**（[见下文](#api-key-instead)）。两种方式下技能都能正常工作。
 
 检查网关：`GET <gateway>/.well-known/oauth-protected-resource/mcp` 在启用 OAuth 时返回 JSON，未启用时返回 404。
 </Aside>
@@ -169,9 +183,9 @@ OAuth：运行 `codex mcp login imbrace`（适用于支持 MCP OAuth 的 Codex �
 </TabItem>
 <TabItem label="Claude Desktop / claude.ai">
 
-OAuth：**Settings → Connectors** → 用 MCP URL 添加自定义连接器（custom connector），然后登录。
+OAuth：将 iMBrace 添加为**自定义连接器**（custom connector），参见 [Web、桌面和移动端的 Claude](#custom-connector)。
 
-使用 API key 时，在 `claude_desktop_config.json` 中通过 `mcp-remote` 桥接，参见 [MCP 服务器](/zh-cn/mcp/overview/)。
+使用 API key 时（仅 Claude Desktop），在 `claude_desktop_config.json` 中通过 `mcp-remote` 桥接，参见 [MCP 服务器](/zh-cn/mcp/overview/)。
 
 </TabItem>
 <TabItem label="仅支持 stdio 的客户端">
@@ -194,6 +208,21 @@ npx -y mcp-remote https://app-gatewayv2.imbrace.co/mcp \
 </TabItem>
 </Tabs>
 
+<a id="custom-connector"></a>
+
+## Web、桌面和移动端的 Claude（自定义连接器）
+
+不使用 Claude Code 时，可以把 iMBrace 作为**自定义连接器**（custom connector）连接到 Claude——包括 claude.ai、Claude Desktop 和移动应用。这需要网关已启用 OAuth：自定义连接器无法发送 API key。
+
+1. 打开 **Settings → Connectors**，选择 **Add custom connector**。如果是 Team 或 Enterprise 套餐，需要由 Owner 先在组织的连接器设置中添加，成员再在自己的设置中连接。
+2. 按环境命名，例如 `iMBrace` 或 `iMBrace (sandbox)`，并粘贴[选择环境](#environments)中的 MCP URL。高级设置中的 OAuth client ID 和 secret 留空：Claude 会自行向 iMBrace 注册。
+3. 选择 **Connect**，登录 iMBrace，并在授权（consent）页面选择组织和访问权限（读取、写入、删除）。
+4. 在对话中通过工具菜单启用该连接器，然后提问，例如 *"List my iMBrace boards"*。
+
+- **每个环境和组织各用一个连接器。** 要切换组织或权限，请断开连接器后重新连接。
+- **网关必须能从互联网访问。** Claude 从 Anthropic 的云端连接，而不是从你的电脑连接。位于 VPN 或防火墙后的本地部署网关只能通过 Claude Code，或在能访问该网关的机器上运行的其他客户端使用。
+- 在 claude.ai 上添加的连接器也可以在 Claude Desktop 和移动应用中使用。
+
 ## 故障排查
 
 | 现象 | 原因 | 解决方法 |
@@ -204,6 +233,7 @@ npx -y mcp-remote https://app-gatewayv2.imbrace.co/mcp \
 | `403` | 你在该组织中的角色缺少相应权限 | 联系组织管理员 |
 | `402` `plan_feature_unavailable`（*MCP access is not included in your plan*） | 该组织的套餐不包含 MCP 访问权限 | 请 iMBrace 管理员为该套餐开启 MCP 访问，或重新 **Authenticate** 并选择套餐包含 MCP 的组织 |
 | 缺少写入或删除类工具，或提示 *tool not enabled* | OAuth：授权中没有 `imbrace.write` / `imbrace.delete`。API key：URL 中没有 `?allowWrite=1` / `?allowDestructive=1`。或者 `?services=` / `?tags=` 过滤排除了该工具 | 重新认证并授予写（或删除）权限，或修正 URL |
+| 自定义连接器无法连接 | 网关未启用 OAuth，或无法从互联网访问 | 检查 `<gateway>/.well-known/oauth-protected-resource/mcp`。改用已启用 OAuth 的网关，或在 Claude Code 中使用 API key |
 
 ## 支持
 

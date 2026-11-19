@@ -45,18 +45,32 @@ Or inside a Claude Code session:
 
 Update with `claude plugin marketplace update imbrace-developer-tools`; remove with `claude plugin uninstall imbrace-developer`.
 
+<a id="environments"></a>
+
 ### Choose the environment
 
 The plugin adds the MCP server as `imbrace`, with **no credential stored in the plugin**. Its one setting, **iMBrace MCP URL**, decides which gateway it talks to:
 
 | Environment | MCP URL |
 |---|---|
-| Dev (default for now: the first environment with OAuth sign-in) | `https://app-gateway.dev.imbrace.co/mcp` |
-| Production (becomes the default once it has OAuth) | `https://app-gatewayv2.imbrace.co/mcp` |
+| Production (default) | `https://app-gatewayv2.imbrace.co/mcp` |
 | Sandbox | `https://app-gateway.sandbox.imbrace.co/mcp` |
 | On-premise | `https://<your gateway>/mcp` |
 
-Change it with `/plugin` → **iMBrace Developer**. Adding `?services=` or `?tags=` to the URL narrows the tools that are listed and can be called (see [MCP Server](/mcp/overview/#read-only-by-default)); that is a filter, not access control.
+Change it with `/plugin` → **iMBrace Developer**, then sign in again (`/mcp` → `imbrace` → **Authenticate**). Each environment has its own accounts, organizations and API keys: sign in, or generate the key, in the environment you connect to. Adding `?services=` or `?tags=` to the URL narrows the tools that are listed and can be called (see [MCP Server](/mcp/overview/#read-only-by-default)); that is a filter, not access control.
+
+<a id="multiple-environments"></a>
+
+### Use several environments
+
+Keep the plugin's server on one environment and add each other environment under its own name. Each one signs in separately:
+
+```bash
+claude mcp add --transport http imbrace-sandbox https://app-gateway.sandbox.imbrace.co/mcp
+claude mcp add --transport http imbrace-onprem https://<your gateway>/mcp
+```
+
+Then `/mcp` → each server → **Authenticate**. On a gateway without OAuth, add `--header "Authorization: Bearer $IMBRACE_SANDBOX_API_KEY"` to the command instead, with one key variable per environment. Tools are listed per server (for example `mcp__imbrace-sandbox__listBoards`), so say which environment you mean when you ask.
 
 ## ChatGPT and Codex
 
@@ -66,8 +80,8 @@ The same skills will be published in the OpenAI plugin directory as **iMBrace De
 
 There are two ways to sign in, one per connection: **OAuth** (sign in in the browser, nothing to copy) and an **API key** (`api_...`).
 
-<Aside type="caution" title="OAuth is rolling out">
-OAuth sign-in for `/mcp` is being enabled environment by environment, and on-premise gateways may not have it. Use it **where OAuth is enabled for your environment; otherwise use an API key** ([below](#api-key-instead)). The skills work either way.
+<Aside type="note" title="Where OAuth is available">
+Production has OAuth sign-in. Sandbox and on-premise gateways may not have it yet; there, use an **API key** ([below](#api-key-instead)). The skills work either way.
 
 To check a gateway: `GET <gateway>/.well-known/oauth-protected-resource/mcp` returns JSON when OAuth is enabled and 404 when it is not.
 </Aside>
@@ -169,9 +183,9 @@ OAuth: run `codex mcp login imbrace` (on Codex versions with MCP OAuth support).
 </TabItem>
 <TabItem label="Claude Desktop / claude.ai">
 
-OAuth: **Settings → Connectors** → add a custom connector with the MCP URL, then sign in.
+OAuth: add iMBrace as a **custom connector** — see [Claude on the web, desktop and mobile](#custom-connector).
 
-With an API key, bridge through `mcp-remote` in `claude_desktop_config.json`, as shown on [MCP Server](/mcp/overview/).
+With an API key (Claude Desktop only), bridge through `mcp-remote` in `claude_desktop_config.json`, as shown on [MCP Server](/mcp/overview/).
 
 </TabItem>
 <TabItem label="stdio-only clients">
@@ -194,6 +208,21 @@ No URL at all: the CLI runs a local stdio server from a saved profile — [`imbr
 </TabItem>
 </Tabs>
 
+<a id="custom-connector"></a>
+
+## Claude on the web, desktop and mobile (custom connector)
+
+Without Claude Code, connect iMBrace to Claude — claude.ai, Claude Desktop and the mobile apps — as a **custom connector**. This needs a gateway with OAuth enabled: a custom connector cannot send an API key.
+
+1. Open **Settings → Connectors** and choose **Add custom connector**. On a Team or Enterprise plan, an Owner adds it first in the organization's connector settings; members then connect it from their own settings.
+2. Name it after the environment, for example `iMBrace` or `iMBrace (sandbox)`, and paste the MCP URL from [Choose the environment](#environments). Leave the advanced OAuth client ID and secret empty: Claude registers itself with iMBrace.
+3. Choose **Connect**, sign in to iMBrace, and on the consent screen pick the organization and the access (read, write, delete).
+4. In a chat, turn the connector on from the tools menu, then ask, for example, *"List my iMBrace boards"*.
+
+- **One connector per environment and organization.** To switch organization or access, disconnect the connector and connect it again.
+- **The gateway must be reachable from the internet.** Claude connects from Anthropic's cloud, not from your computer. An on-premise gateway behind a VPN or firewall works only from Claude Code, or from another client running on a machine that can reach it.
+- A connector added on claude.ai is also available in Claude Desktop and the mobile apps.
+
 ## Troubleshooting
 
 | Symptom | Cause | Fix |
@@ -204,6 +233,7 @@ No URL at all: the CLI runs a local stdio server from a saved profile — [`imbr
 | `403` | Your role in that organization lacks the permission | Ask an organization admin |
 | `402` `plan_feature_unavailable` (*MCP access is not included in your plan*) | The organization's plan does not include MCP access | Ask an iMBrace admin to enable MCP access for the plan, or re-authenticate and pick an organization whose plan includes it |
 | Write or delete tools missing, or *tool not enabled* | OAuth: the grant lacks `imbrace.write` / `imbrace.delete`. API key: the URL lacks `?allowWrite=1` / `?allowDestructive=1`. Or a `?services=` / `?tags=` filter excludes the tool | Re-authenticate and grant write (or delete), or fix the URL |
+| A custom connector cannot connect | The gateway has no OAuth, or is not reachable from the internet | Check `<gateway>/.well-known/oauth-protected-resource/mcp`. Use a gateway with OAuth, or Claude Code with an API key |
 
 ## Support
 

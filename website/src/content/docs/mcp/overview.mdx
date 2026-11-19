@@ -8,7 +8,7 @@ import { Aside, Tabs, TabItem } from "@astrojs/starlight/components";
 Connect your AI tool — Claude Code, Cursor, Codex, Claude Desktop, … — to Imbrace, and it can work with your Imbrace data directly: list CRM boards, read conversations, check workflow runs, and more.
 
 <Aside type="tip">
-Using Claude Code, ChatGPT or Codex? The [Agent Toolkit](/mcp/agent-toolkit/) plugin teaches your agent the iMBrace SDK, CLI and MCP server, and in Claude Code adds this server for you — with OAuth sign-in where your environment has it enabled.
+Using Claude Code, ChatGPT or Codex? The [Agent Toolkit](/mcp/agent-toolkit/) plugin teaches your agent the iMBrace SDK, CLI and MCP server, and in Claude Code adds this server for you — with OAuth sign-in where your environment has it enabled. On claude.ai, Claude Desktop or the mobile apps, a gateway with OAuth (production) can be added as a [custom connector](/mcp/agent-toolkit/#custom-connector), with no API key.
 </Aside>
 
 You only need two things:
@@ -71,6 +71,8 @@ args = ["-y", "mcp-remote", "https://app-gateway.sandbox.imbrace.co/mcp", "--hea
 
 </TabItem>
 <TabItem label="Claude Desktop">
+
+On a gateway with OAuth (production) you need no key and no config file: add a [custom connector](/mcp/agent-toolkit/#custom-connector) instead. With an API key:
 
 Claude Desktop launches local servers, so bridge the URL with `mcp-remote`. In **Settings → Developer → Edit Config**, add to `claude_desktop_config.json`:
 
