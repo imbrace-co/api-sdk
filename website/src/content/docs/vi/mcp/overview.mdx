@@ -8,7 +8,7 @@ import { Aside, Tabs, TabItem } from "@astrojs/starlight/components";
 Kết nối công cụ AI của bạn — Claude Code, Cursor, Codex, Claude Desktop, … — với Imbrace, và nó có thể làm việc trực tiếp với dữ liệu Imbrace của bạn: liệt kê board CRM, đọc hội thoại, xem lượt chạy workflow, v.v.
 
 <Aside type="tip">
-Đang dùng Claude Code, ChatGPT hay Codex? Plugin [Agent Toolkit](/mcp/agent-toolkit/) dạy agent của bạn về SDK, CLI và MCP server của iMBrace, và trong Claude Code sẽ tự thêm server này — với đăng nhập OAuth ở nơi môi trường của bạn đã bật.
+Đang dùng Claude Code, ChatGPT hay Codex? Plugin [Agent Toolkit](/mcp/agent-toolkit/) dạy agent của bạn về SDK, CLI và MCP server của iMBrace, và trong Claude Code sẽ tự thêm server này — với đăng nhập OAuth ở nơi môi trường của bạn đã bật. Trên claude.ai, Claude Desktop hoặc ứng dụng mobile, gateway có OAuth (production) có thể được thêm dưới dạng [custom connector](/vi/mcp/agent-toolkit/#custom-connector), không cần API key.
 </Aside>
 
 Bạn chỉ cần hai thứ:
@@ -71,6 +71,8 @@ args = ["-y", "mcp-remote", "https://app-gateway.sandbox.imbrace.co/mcp", "--hea
 
 </TabItem>
 <TabItem label="Claude Desktop">
+
+Với gateway có OAuth (production), không cần key hay file cấu hình: hãy thêm [custom connector](/vi/mcp/agent-toolkit/#custom-connector). Với API key:
 
 Claude Desktop chỉ khởi chạy server local, nên bắc cầu URL qua `mcp-remote`. Vào **Settings → Developer → Edit Config**, thêm vào `claude_desktop_config.json`:
 

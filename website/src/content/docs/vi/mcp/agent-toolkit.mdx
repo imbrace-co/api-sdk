@@ -45,18 +45,32 @@ Hoặc trong một phiên Claude Code:
 
 Cập nhật bằng `claude plugin marketplace update imbrace-developer-tools`; gỡ bằng `claude plugin uninstall imbrace-developer`.
 
+<a id="environments"></a>
+
 ### Chọn môi trường
 
 Plugin thêm MCP server với tên `imbrace`, **không lưu credential nào trong plugin**. Thiết lập duy nhất của nó, **iMBrace MCP URL**, quyết định gateway sẽ kết nối:
 
 | Môi trường | MCP URL |
 |---|---|
-| Dev (tạm thời là mặc định: môi trường đầu tiên có đăng nhập OAuth) | `https://app-gateway.dev.imbrace.co/mcp` |
-| Production (sẽ thành mặc định khi có OAuth) | `https://app-gatewayv2.imbrace.co/mcp` |
+| Production (mặc định) | `https://app-gatewayv2.imbrace.co/mcp` |
 | Sandbox | `https://app-gateway.sandbox.imbrace.co/mcp` |
 | On-premise | `https://<gateway của bạn>/mcp` |
 
-Đổi bằng `/plugin` → **iMBrace Developer**. Thêm `?services=` hoặc `?tags=` vào URL sẽ thu hẹp các tool được liệt kê và gọi được (xem [MCP Server](/mcp/overview/#read-only-by-default)); đó là bộ lọc, không phải kiểm soát quyền truy cập.
+Đổi bằng `/plugin` → **iMBrace Developer**, rồi đăng nhập lại (`/mcp` → `imbrace` → **Authenticate**). Mỗi môi trường có tài khoản, tổ chức và API key riêng: hãy đăng nhập, hoặc tạo key, trong đúng môi trường bạn kết nối. Thêm `?services=` hoặc `?tags=` vào URL sẽ thu hẹp các tool được liệt kê và gọi được (xem [MCP Server](/mcp/overview/#read-only-by-default)); đó là bộ lọc, không phải kiểm soát quyền truy cập.
+
+<a id="multiple-environments"></a>
+
+### Dùng nhiều môi trường
+
+Giữ server của plugin cho một môi trường, và thêm mỗi môi trường khác dưới một tên riêng. Mỗi server đăng nhập riêng:
+
+```bash
+claude mcp add --transport http imbrace-sandbox https://app-gateway.sandbox.imbrace.co/mcp
+claude mcp add --transport http imbrace-onprem https://<your gateway>/mcp
+```
+
+Sau đó `/mcp` → từng server → **Authenticate**. Với gateway chưa có OAuth, hãy thêm `--header "Authorization: Bearer $IMBRACE_SANDBOX_API_KEY"` vào lệnh, mỗi môi trường một biến key. Tool được liệt kê theo từng server (ví dụ `mcp__imbrace-sandbox__listBoards`), nên khi hỏi hãy nói rõ bạn muốn môi trường nào.
 
 ## ChatGPT và Codex
 
@@ -66,8 +80,8 @@ Cùng các skill này sẽ được phát hành trong thư mục plugin của Op
 
 Có hai cách đăng nhập, mỗi kết nối dùng một cách: **OAuth** (đăng nhập trên trình duyệt, không phải sao chép gì) và **API key** (`api_...`).
 
-<Aside type="caution" title="OAuth đang được triển khai dần">
-Đăng nhập OAuth cho `/mcp` đang được bật dần theo từng môi trường, và gateway on-premise có thể chưa có. Hãy dùng nó **ở nơi môi trường của bạn đã bật OAuth; nếu không, hãy dùng API key** ([bên dưới](#api-key-instead)). Skill hoạt động với cả hai cách.
+<Aside type="note" title="OAuth có ở đâu">
+Production đã có đăng nhập OAuth. Gateway sandbox và on-premise có thể chưa có; khi đó hãy dùng **API key** ([bên dưới](#api-key-instead)). Skill hoạt động với cả hai cách.
 
 Để kiểm tra một gateway: `GET <gateway>/.well-known/oauth-protected-resource/mcp` trả về JSON khi OAuth đã bật và 404 khi chưa bật.
 </Aside>
@@ -169,9 +183,9 @@ OAuth: chạy `codex mcp login imbrace` (với các phiên bản Codex có hỗ 
 </TabItem>
 <TabItem label="Claude Desktop / claude.ai">
 
-OAuth: **Settings → Connectors** → thêm custom connector với MCP URL, rồi đăng nhập.
+OAuth: thêm iMBrace dưới dạng **custom connector** — xem [Claude trên web, desktop và mobile](#custom-connector).
 
-Với API key, bridge qua `mcp-remote` trong `claude_desktop_config.json`, như trên trang [MCP Server](/mcp/overview/).
+Với API key (chỉ Claude Desktop), bridge qua `mcp-remote` trong `claude_desktop_config.json`, như trên trang [MCP Server](/mcp/overview/).
 
 </TabItem>
 <TabItem label="Client chỉ hỗ trợ stdio">
@@ -194,6 +208,21 @@ Không dùng URL: CLI chạy một stdio server cục bộ từ profile đã lư
 </TabItem>
 </Tabs>
 
+<a id="custom-connector"></a>
+
+## Claude trên web, desktop và mobile (custom connector)
+
+Không dùng Claude Code? Hãy kết nối iMBrace với Claude — claude.ai, Claude Desktop và ứng dụng mobile — dưới dạng **custom connector**. Cách này cần gateway đã bật OAuth: custom connector không gửi được API key.
+
+1. Mở **Settings → Connectors** và chọn **Add custom connector**. Với gói Team hoặc Enterprise, Owner cần thêm connector trước trong phần cài đặt connector của tổ chức; sau đó thành viên kết nối từ cài đặt của mình.
+2. Đặt tên theo môi trường, ví dụ `iMBrace` hoặc `iMBrace (sandbox)`, rồi dán MCP URL từ [Chọn môi trường](#environments). Để trống OAuth client ID và secret trong phần nâng cao: Claude tự đăng ký với iMBrace.
+3. Chọn **Connect**, đăng nhập iMBrace, và ở màn hình đồng ý (consent) chọn tổ chức và quyền truy cập (đọc, ghi, xóa).
+4. Trong một cuộc trò chuyện, bật connector từ menu công cụ, rồi hỏi, ví dụ *"List my iMBrace boards"*.
+
+- **Mỗi môi trường và tổ chức một connector.** Muốn đổi tổ chức hoặc quyền, hãy ngắt kết nối connector rồi kết nối lại.
+- **Gateway phải truy cập được từ internet.** Claude kết nối từ cloud của Anthropic, không phải từ máy của bạn. Gateway on-premise nằm sau VPN hoặc firewall chỉ dùng được từ Claude Code, hoặc từ một client khác chạy trên máy truy cập được gateway đó.
+- Connector thêm trên claude.ai cũng có trong Claude Desktop và ứng dụng mobile.
+
 ## Xử lý sự cố
 
 | Triệu chứng | Nguyên nhân | Cách xử lý |
@@ -204,6 +233,7 @@ Không dùng URL: CLI chạy một stdio server cục bộ từ profile đã lư
 | `403` | Vai trò của bạn trong tổ chức đó thiếu quyền | Liên hệ admin của tổ chức |
 | `402` `plan_feature_unavailable` (*MCP access is not included in your plan*) | Gói của tổ chức không bao gồm quyền dùng MCP | Nhờ admin iMBrace bật MCP access cho gói đó, hoặc Authenticate lại và chọn tổ chức có gói hỗ trợ MCP |
 | Thiếu tool ghi hoặc xóa, hoặc lỗi *tool not enabled* | OAuth: lần cấp quyền thiếu `imbrace.write` / `imbrace.delete`. API key: URL thiếu `?allowWrite=1` / `?allowDestructive=1`. Hoặc bộ lọc `?services=` / `?tags=` đã loại tool đó | Xác thực lại và cấp quyền ghi (hoặc xóa), hoặc sửa URL |
+| Custom connector không kết nối được | Gateway chưa có OAuth, hoặc không truy cập được từ internet | Kiểm tra `<gateway>/.well-known/oauth-protected-resource/mcp`. Dùng gateway có OAuth, hoặc Claude Code với API key |
 
 ## Hỗ trợ
 
