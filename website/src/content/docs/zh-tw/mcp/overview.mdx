@@ -121,6 +121,19 @@ npx -y mcp-remote "https://app-gateway.sandbox.imbrace.co/mcp" \
 
 問你的 agent，例如*「列出我的 Imbrace 看板」*或*「看看最新的對話」*。它應該會選用 `listBoards`、`listConversations`、`listFlows` 等工具。
 
+<a id="vibe-code"></a>
+
+### 在 iMBrace 上打造應用程式（vibe code）
+
+連線之後，你的 agent 已經知道 vibe code 指南在哪裡：伺服器會把它指向 [`/skill.md`](https://engineer.imbrace.co/skill.md)。直接說出你想要的，例如*「幫我的 SPA 店做一個預約頁面，並在 iMBrace 上執行」*，agent 就會取得指南並照著做。不需要複製提示詞。
+
+如果想明確地開始，使用伺服器的 **`vibe-code`** 提示（選填參數：`idea`，應用程式要做什麼）：
+
+- **Claude Code：** 輸入 `/` 並選擇 `vibe-code`。它顯示為 `/mcp__<伺服器名稱>__vibe-code`，例如 `/mcp__imbrace__vibe-code`。
+- **其他支援提示的 MCP 用戶端** 會在該伺服器的提示清單中列出它。
+
+使用 [Agent Toolkit](/zh-tw/mcp/agent-toolkit/) 外掛時，其 `imbrace-vibe-code` 技能也能做到同樣的事。Vibe code 需要安裝 CLI 並在終端機中部署，所以請使用程式設計 agent（Claude Code、Cursor、Codex）；在 claude.ai 上 agent 可以閱讀指南，但無法執行這些步驟。
+
 ### 預設唯讀
 
 預設情況下 agent **只能看、不能改** — 只提供讀取工具。要開放更多權限，在所設定的 URL 上加查詢參數：

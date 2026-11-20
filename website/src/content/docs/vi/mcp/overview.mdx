@@ -121,6 +121,19 @@ npx -y mcp-remote "https://app-gateway.sandbox.imbrace.co/mcp" \
 
 Hỏi agent của bạn, ví dụ *"Liệt kê các board Imbrace của tôi"* hoặc *"Xem các hội thoại mới nhất"*. Nó sẽ tự chọn các tool như `listBoards`, `listConversations`, `listFlows`.
 
+<a id="vibe-code"></a>
+
+### Xây app trên iMBrace (vibe code)
+
+Sau khi kết nối, agent đã biết hướng dẫn vibe code nằm ở đâu: server chỉ cho nó [`/skill.md`](https://engineer.imbrace.co/skill.md). Chỉ cần nói điều bạn muốn, ví dụ *"Làm trang đặt lịch cho tiệm spa của tôi và chạy nó trên iMBrace"*, agent sẽ tự tải hướng dẫn và làm theo. Không cần copy prompt.
+
+Muốn bắt đầu một cách tường minh, dùng prompt **`vibe-code`** của server (tham số tuỳ chọn: `idea`, app cần làm gì):
+
+- **Claude Code:** gõ `/` rồi chọn `vibe-code`. Lệnh hiện dạng `/mcp__<tên server>__vibe-code`, ví dụ `/mcp__imbrace__vibe-code`.
+- **Các MCP client khác** có hỗ trợ prompt sẽ liệt kê nó trong danh sách prompt của server.
+
+Với plugin [Agent Toolkit](/vi/mcp/agent-toolkit/), skill `imbrace-vibe-code` làm điều tương tự. Vibe code cài một CLI và deploy từ terminal, nên hãy dùng coding agent (Claude Code, Cursor, Codex); trên claude.ai agent đọc được hướng dẫn nhưng không chạy được các bước.
+
 ### Mặc định chỉ đọc
 
 Mặc định agent chỉ được **xem chứ không được sửa** — chỉ các tool đọc được mở. Muốn thêm quyền, thêm query parameter vào URL đã cấu hình:
