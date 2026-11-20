@@ -59,6 +59,8 @@ import AgentSkill from "../../../components/AgentSkill.astro";
   copyLabel="复制提示词"
   copiedLabel="已复制！"
   openLabel="打开 SKILL.md"
+  hint="已经连接了 iMBrace MCP 服务器或 Agent Toolkit？无需复制：直接告诉代理你想构建什么，或运行 vibe-code 提示。"
+  hintLink={{ label: "了解用法", href: "/zh-cn/mcp/overview/#vibe-code" }}
   features={[
     { title: "一行即可开始", body: "把一条提示词粘贴到编程代理中，它会读取技能并安装所需内容。" },
     { title: "技能用来读，SDK 用来跑", body: "技能文件教会代理 iMBrace 的构建模块，SDK 让它能在你的账号上执行操作。" },

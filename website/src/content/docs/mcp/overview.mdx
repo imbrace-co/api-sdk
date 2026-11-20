@@ -121,6 +121,19 @@ npx -y mcp-remote "https://app-gateway.sandbox.imbrace.co/mcp" \
 
 Ask your agent something like *"List my Imbrace boards"* or *"Show my latest conversations"*. It should reach for tools like `listBoards`, `listConversations`, `listFlows`.
 
+<a id="vibe-code"></a>
+
+### Build an app on iMBrace (vibe code)
+
+Once connected, your agent already knows where the vibe-code guide is: the server points it at [`/skill.md`](https://engineer.imbrace.co/skill.md). Just say what you want, for example *"Build a booking page for my spa and host it on iMBrace"*, and the agent fetches the guide and follows it. No prompt to copy.
+
+To start it explicitly, use the server's **`vibe-code`** prompt (optional argument: `idea`, what the app should do):
+
+- **Claude Code:** type `/` and pick `vibe-code`. It is listed as `/mcp__<server name>__vibe-code`, e.g. `/mcp__imbrace__vibe-code`.
+- **Other MCP clients** that support prompts list it among the server's prompts.
+
+With the [Agent Toolkit](/mcp/agent-toolkit/) plugin, its `imbrace-vibe-code` skill does the same. Vibe code installs a CLI and deploys from a terminal, so use a coding agent (Claude Code, Cursor, Codex); on claude.ai the agent can read the guide but cannot run the steps.
+
 ### Read-only by default
 
 Out of the box the agent can **look but not touch** — only read tools are exposed. You opt in to more by adding query parameters to the URL you configured:

@@ -23,6 +23,9 @@ interface Props {
   copyLabel: string
   copiedLabel: string
   openLabel: string
+  /** Optional line under the buttons, e.g. for people already connected over MCP or the plugin. */
+  hint?: string
+  hintLink?: { label: string; href: string }
   features: [Feature, Feature, Feature]
 }
 
@@ -57,6 +60,11 @@ const icons = [
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>
         </a>
       </div>
+      {p.hint && (
+        <p class="agent-skill__hint">
+          {p.hint}{p.hintLink && <> <a href={p.hintLink.href}>{p.hintLink.label}</a></>}
+        </p>
+      )}
     </div>
 
     <div class="agent-skill__terminal" aria-label="Terminal">
@@ -175,6 +183,11 @@ const icons = [
     flex-wrap: wrap;
     gap: 0.75rem;
     margin-top: 1.5rem;
+  }
+  .agent-skill .agent-skill__copy p.agent-skill__hint {
+    margin: 1rem 0 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
   }
   .agent-skill__btn {
     display: inline-flex;
