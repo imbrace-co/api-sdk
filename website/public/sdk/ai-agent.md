@@ -64,35 +64,48 @@ const subAgents = await client.chatAi.listAiAgentSubAgents();
 // Get a single AI agent
 const agent = await client.chatAi.getAiAgent("9f77692f-33d0-436a-8138-2efb268838e6");
 
-// Create. The SDK auto-fills { provider_id: "default", model_id: "Default" }
-// when omitted; "Default" routes to the org's configured default model and
+// Create — with client.agent.createUseCase, so the agent also gets its
+// dashboard card (see the note above). The SDK auto-fills
+// { provider_id: "default", model_id: "Default" } when omitted; "Default" routes to the org's configured default model and
 // is org-portable. A literal name like "gpt-4o" only works if the org's
 // system provider actually exposes it — `client.ai.listModels()` shows what's
 // available. Pass `streaming: true` so /v2/chat emits text-delta SSE events
 // that `streamChatText` (below) can parse; without it the server returns the
 // full reply as one text/plain response and SSE parsers yield nothing.
-const created = await client.chatAi.createAiAgent({
-  name: "Support Bot",
-  workflow_name: "support_bot_v1",
-  provider_id: "default",
-  model_id: "Default",
-  streaming: true,
-  description: "Handles tier-1 support queries",
+const created = await client.agent.createUseCase({
+  usecase: {
+    title: "Support Bot",
+    short_description: "Handles tier-1 support queries",
+    agent_type: "agent",
+    demo_url: "",
+  },
+  assistant: {
+    name: "Support Bot",
+    workflow_name: "support_bot_v1",
+    description: "Handles tier-1 support queries",
+    provider_id: "default",
+    model_id: "Default",
+    agent_type: "agent",
+    streaming: true,
+  },
 });
+// The service answers { data: useCase }
+const useCase = (created.data ?? created) as { _id: string; assistant_id: string };
+const agentId = useCase.assistant_id; // the AI agent's UUID
 
-// Update — all fields are optional (Partial)
-const updated = await client.chatAi.updateAiAgent(created.id, {
+// Update — pass only the fields that change
+const updated = await client.chatAi.updateAiAgent(agentId, {
   name: "Support Bot v2",
-  workflow_name: "support_bot_v1",
 });
 
 // Update only the system instructions
 await client.chatAi.updateAiAgentInstructions(
-  created.id,
+  agentId,
   "You are a helpful support agent.",
 );
 
-await client.chatAi.deleteAiAgent(created.id);
+// Delete the card together with the agent
+await client.agent.deleteUseCase(useCase._id);
 ```
 
 **Python**
@@ -107,35 +120,47 @@ sub_agents = client.chat_ai.list_ai_agent_sub_agents()
 # Get a single AI agent
 agent = client.chat_ai.get_ai_agent("9f77692f-33d0-436a-8138-2efb268838e6")
 
-# Create. The SDK auto-fills {"provider_id": "default", "model_id": "Default"}
-# when omitted; "Default" routes to the org's configured default model and is
+# Create — with client.agent.create_use_case, so the agent also gets its
+# dashboard card (see the note above). The SDK auto-fills
+# {"provider_id": "default", "model_id": "Default"} when omitted; "Default" routes to the org's configured default model and is
 # org-portable. A literal name like "gpt-4o" only works if the org's system
 # provider actually exposes it — `client.ai.list_models()` shows what's
 # available. Pass `streaming: True` so /v2/chat emits text-delta SSE events
 # that `stream_chat_text` (below) can parse; without it the server returns
 # the full reply as one text/plain response and SSE parsers yield nothing.
-created = client.chat_ai.create_ai_agent({
-    "name":          "Support Bot",
-    "workflow_name": "support_bot_v1",
-    "provider_id":   "system",
-    "model_id":      "Default",
-    "streaming":     True,
-    "description":   "Handles tier-1 support queries",
-})
+use_case = client.agent.create_use_case({
+    "usecase": {
+        "title":             "Support Bot",
+        "short_description": "Handles tier-1 support queries",
+        "agent_type":        "agent",
+        "demo_url":          "",
+    },
+    "assistant": {
+        "name":          "Support Bot",
+        "workflow_name": "support_bot_v1",
+        "description":   "Handles tier-1 support queries",
+        "provider_id":   "default",
+        "model_id":      "Default",
+        "agent_type":    "agent",
+        "streaming":     True,
+    },
+})["data"]
+agent_id = use_case["assistant_id"]  # the AI agent's UUID
 
 # Update
-updated = client.chat_ai.update_ai_agent(created["id"], {
+updated = client.chat_ai.update_ai_agent(agent_id, {
     "name":          "Support Bot v2",
     "workflow_name": "support_bot_v1",
 })
 
 # Update only the system instructions
 client.chat_ai.update_ai_agent_instructions(
-    created["id"],
+    agent_id,
     "You are a helpful support agent.",
 )
 
-client.chat_ai.delete_ai_agent(created["id"])
+# Delete the card together with the agent
+client.agent.delete_use_case(use_case["_id"])
 ```
 
 ### Completions (via `client.ai`)
@@ -514,7 +539,7 @@ client.ai.patch_instructions("asst_abc", {
 
 ### AI Agent Apps (via `client.ai`)
 
-AI Agent Apps link an AI agent to a workflow or app configuration.
+AI Agent Apps link an AI agent to a workflow or app configuration. Like `chatAi.createAiAgent`, `createAiAgentApp` creates only the agent, with no dashboard card; to create an agent people can see in AgentIQ, use `client.agent.createUseCase` (see AI Agent CRUD above).
 
 **TypeScript**
 

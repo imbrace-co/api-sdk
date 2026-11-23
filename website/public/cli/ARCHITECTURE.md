@@ -50,11 +50,14 @@ Every CLI command (except `login`) extends `BaseCommand`, which calls `ensureLog
 
 File: `cli/src/commands/ai-agent/create.ts`
 
-`client.chatAi.createAiAgent(body)` atomically creates:
+`client.agent.createUseCase({ usecase, assistant })` (`POST /use-cases/v2/custom`) atomically creates:
 
 1. **AI Assistant** — model, instructions, prompt configuration
-2. **Web channel** — for the chat widget (`demo_url: "https://chat-widgetv2.imbrace.co"`)
-3. **Use-case template** — the card shown in the UI
+2. **Web channel** — for the chat widget (`demo_url` is the profile environment's chat widget host)
+3. **Use case** — the card shown in the dashboard's AgentIQ page
+
+`client.chatAi.createAiAgent` creates only the AI Assistant, which never shows in the dashboard, so the CLI does not
+use it to create agents.
 
 The `workflow_name` is auto-generated as `<slug>_v<timestamp>` to ensure backend uniqueness (snake_case required):
 ```typescript

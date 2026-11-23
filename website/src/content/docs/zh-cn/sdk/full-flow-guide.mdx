@@ -76,42 +76,68 @@ import AuthOnly from "../../../../components/AuthOnly.astro";
 
 2. **创建 AI 代理**
 
-   `workflow_name` 在你的组织内必须是唯一的。
+   使用 `client.agent.createUseCase` 创建代理——控制台和 `imbrace ai-agent create` 调用的也是它。它会同时创建代理、
+   代理的网页聊天渠道，以及控制台 **AgentIQ** 页面中的代理卡片。`usecase.title` 在你的组织内必须唯一，
+   `assistant.workflow_name` 也是。
 
    <Tabs syncKey="lang">
      <TabItem label="TypeScript">
        ```typescript
-       const agent = await client.chatAi.createAiAgent({
-         name: "Support Bot",
-         workflow_name: "support_bot_v1",
-         description: "Handles tier-1 customer support queries",
-         instructions: "You are a helpful support agent. Be concise and friendly.",
-         provider_id: "default",   // 使用组织的默认 LLM 提供商
-         model_id: "Default",     // 路由到组织配置的默认模型
-         streaming: true,         // 发出 text-delta SSE 事件（见下方提示框）
+       const created = await client.agent.createUseCase({
+         usecase: {
+           title: "Support Bot",
+           short_description: "Handles tier-1 customer support queries",
+           agent_type: "agent",
+           demo_url: "",
+         },
+         assistant: {
+           name: "Support Bot",
+           workflow_name: "support_bot_v1",
+           description: "Handles tier-1 customer support queries",
+           instructions: "You are a helpful support agent. Be concise and friendly.",
+           provider_id: "default",   // 使用组织的默认 LLM 提供商
+           model_id: "Default",     // 路由到组织配置的默认模型
+           agent_type: "agent",
+           streaming: true,         // 发出 text-delta SSE 事件（见下方提示框）
+         },
        })
 
-       const aiAgentId = agent.id  // UUID — 用于所有后续调用
-       console.log("AI agent created:", aiAgentId)
+       // 服务返回 { data: useCase }
+       const useCase = (created.data ?? created) as { _id: string; assistant_id: string }
+       const aiAgentId = useCase.assistant_id  // UUID — 用于所有后续调用
+       console.log("AI agent created:", aiAgentId, "use case:", useCase._id)
        ```
      </TabItem>
      <TabItem label="Python">
        ```python
-       agent = client.chat_ai.create_ai_agent({
-           "name": "Support Bot",
-           "workflow_name": "support_bot_v1",
-           "description": "Handles tier-1 customer support queries",
-           "instructions": "You are a helpful support agent. Be concise and friendly.",
-           "provider_id": "default",   # 使用组织的默认 LLM 提供商
-           "model_id": "Default",     # 路由到组织配置的默认模型
-           "streaming": True,         # 发出 text-delta SSE 事件（见下方提示框）
-       })
+       use_case = client.agent.create_use_case({
+           "usecase": {
+               "title": "Support Bot",
+               "short_description": "Handles tier-1 customer support queries",
+               "agent_type": "agent",
+               "demo_url": "",
+           },
+           "assistant": {
+               "name": "Support Bot",
+               "workflow_name": "support_bot_v1",
+               "description": "Handles tier-1 customer support queries",
+               "instructions": "You are a helpful support agent. Be concise and friendly.",
+               "provider_id": "default",   # 使用组织的默认 LLM 提供商
+               "model_id": "Default",     # 路由到组织配置的默认模型
+               "agent_type": "agent",
+               "streaming": True,         # 发出 text-delta SSE 事件（见下方提示框）
+           },
+       })["data"]
 
-       ai_agent_id = agent["id"]
-       print("AI agent created:", ai_agent_id)
+       ai_agent_id = use_case["assistant_id"]
+       print("AI agent created:", ai_agent_id, "use case:", use_case["_id"])
        ```
      </TabItem>
    </Tabs>
+
+   <Aside type="caution" title="chatAi.createAiAgent 创建的代理不会出现在控制台中">
+     `client.chatAi.createAiAgent`（Python 为 `client.chat_ai.create_ai_agent`）只创建代理本身。它可以通过 API 对话，但没有卡片，因此永远不会出现在 **AgentIQ** 中，也无法在控制台中打开或编辑。仅用于只在你自己的代码中使用的代理。
+   </Aside>
 
    `provider_id` 和 `model_id` 是可选项 — 省略时 SDK 自动填充 `{ provider_id: "default", model_id: "Default" }`。`"Default"` 路由到组织配置的系统默认模型，是跨组织通用的选择。需要覆盖时显式传入：`provider_id: "<uuid>"` 用于指定自定义 LLM 提供商，或 `model_id: "gpt-4o"` 等 — 但具体模型名称只在该组织的 `default` 提供商实际公开它时才有效。在硬编码前，使用 `client.ai.listModels()`（TypeScript）/ `client.ai.list_models()`（Python）列出组织的可用模型。
 

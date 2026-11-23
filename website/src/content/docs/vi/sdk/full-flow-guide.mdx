@@ -76,42 +76,68 @@ Hướng dẫn này đi qua bốn quy trình làm việc chính trong Imbrace SD
 
 2. **Tạo AI agent**
 
-   `workflow_name` phải là duy nhất trong tổ chức của bạn.
+   Tạo agent bằng `client.agent.createUseCase`, cũng là lời gọi mà dashboard và `imbrace ai-agent create` dùng.
+   Lời gọi này tạo cùng lúc agent, kênh web chat của nó và thẻ của nó trong trang **AgentIQ** của dashboard.
+   `usecase.title` phải là duy nhất trong tổ chức của bạn, `assistant.workflow_name` cũng vậy.
 
    <Tabs syncKey="lang">
      <TabItem label="TypeScript">
        ```typescript
-       const agent = await client.chatAi.createAiAgent({
-         name: "Support Bot",
-         workflow_name: "support_bot_v1",
-         description: "Handles tier-1 customer support queries",
-         instructions: "You are a helpful support agent. Be concise and friendly.",
-         provider_id: "default",   // sử dụng nhà cung cấp LLM mặc định của tổ chức
-         model_id: "Default",     // định tuyến tới model mặc định đã cấu hình của tổ chức
-         streaming: true,         // phát các sự kiện SSE text-delta (xem Aside bên dưới)
+       const created = await client.agent.createUseCase({
+         usecase: {
+           title: "Support Bot",
+           short_description: "Handles tier-1 customer support queries",
+           agent_type: "agent",
+           demo_url: "",
+         },
+         assistant: {
+           name: "Support Bot",
+           workflow_name: "support_bot_v1",
+           description: "Handles tier-1 customer support queries",
+           instructions: "You are a helpful support agent. Be concise and friendly.",
+           provider_id: "default",   // sử dụng nhà cung cấp LLM mặc định của tổ chức
+           model_id: "Default",     // định tuyến tới model mặc định đã cấu hình của tổ chức
+           agent_type: "agent",
+           streaming: true,         // phát các sự kiện SSE text-delta (xem Aside bên dưới)
+         },
        })
 
-       const aiAgentId = agent.id  // UUID — sử dụng cho tất cả các lời gọi tiếp theo
-       console.log("AI agent created:", aiAgentId)
+       // Service trả về { data: useCase }
+       const useCase = (created.data ?? created) as { _id: string; assistant_id: string }
+       const aiAgentId = useCase.assistant_id  // UUID — sử dụng cho tất cả các lời gọi tiếp theo
+       console.log("AI agent created:", aiAgentId, "use case:", useCase._id)
        ```
      </TabItem>
      <TabItem label="Python">
        ```python
-       agent = client.chat_ai.create_ai_agent({
-           "name": "Support Bot",
-           "workflow_name": "support_bot_v1",
-           "description": "Handles tier-1 customer support queries",
-           "instructions": "You are a helpful support agent. Be concise and friendly.",
-           "provider_id": "default",   # sử dụng nhà cung cấp LLM mặc định của tổ chức
-           "model_id": "Default",     # định tuyến tới model mặc định đã cấu hình của tổ chức
-           "streaming": True,         # phát các sự kiện SSE text-delta (xem Aside bên dưới)
-       })
+       use_case = client.agent.create_use_case({
+           "usecase": {
+               "title": "Support Bot",
+               "short_description": "Handles tier-1 customer support queries",
+               "agent_type": "agent",
+               "demo_url": "",
+           },
+           "assistant": {
+               "name": "Support Bot",
+               "workflow_name": "support_bot_v1",
+               "description": "Handles tier-1 customer support queries",
+               "instructions": "You are a helpful support agent. Be concise and friendly.",
+               "provider_id": "default",   # sử dụng nhà cung cấp LLM mặc định của tổ chức
+               "model_id": "Default",     # định tuyến tới model mặc định đã cấu hình của tổ chức
+               "agent_type": "agent",
+               "streaming": True,         # phát các sự kiện SSE text-delta (xem Aside bên dưới)
+           },
+       })["data"]
 
-       ai_agent_id = agent["id"]
-       print("AI agent created:", ai_agent_id)
+       ai_agent_id = use_case["assistant_id"]
+       print("AI agent created:", ai_agent_id, "use case:", use_case["_id"])
        ```
      </TabItem>
    </Tabs>
+
+   <Aside type="caution" title="chatAi.createAiAgent không hiện trên dashboard">
+     `client.chatAi.createAiAgent` (Python `client.chat_ai.create_ai_agent`) chỉ tạo agent. Agent vẫn chat được qua API nhưng không có thẻ, nên không bao giờ hiện trong **AgentIQ** và không ai mở hay sửa được nó trên dashboard. Chỉ dùng cho agent nằm sau code của riêng bạn.
+   </Aside>
 
    `provider_id` và `model_id` là tùy chọn — SDK tự điền `{ provider_id: "default", model_id: "Default" }` khi bỏ trống. `"Default"` gắn với bất kỳ model nào mà tổ chức cấu hình làm mặc định và là lựa chọn an toàn cho mọi tổ chức. Truyền tường minh để ghi đè: `provider_id: "<uuid>"` để gắn nhà cung cấp LLM tùy chỉnh, hoặc `model_id: "gpt-4o"` v.v. — nhưng tên model cụ thể chỉ hoạt động nếu nhà cung cấp `default` của tổ chức thực sự có model đó. Liệt kê các model của tổ chức bằng `client.ai.listModels()` (TypeScript) / `client.ai.list_models()` (Python) trước khi hardcode.
 

@@ -72,6 +72,10 @@ client = ImbraceClient(api_key=os.environ["IMBRACE_API_KEY"], organization_id=os
 
 ### AI 代理 CRUD
 
+<Aside type="caution" title="使用 client.agent.createUseCase 建立代理">
+只有帶卡片（use case）的代理才會出現在儀表板的 **AgentIQ** 頁面中。`client.agent.createUseCase`（Python 為 `client.agent.create_use_case`）會同時建立代理、網頁聊天頻道和卡片——與儀表板和 `imbrace ai-agent create` 呼叫的相同。`client.chatAi.createAiAgent` 只建立代理：它可以透過 API 對話，但無法在儀表板中看到、開啟或編輯。如下所示，用代理的 id（use case 上的 `assistant_id`）來更新代理並與之對話。
+</Aside>
+
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">
 ```typescript
@@ -86,34 +90,47 @@ const subAgents = await client.chatAi.listAiAgentSubAgents();
 // 取得單一 AI agent
 const agent = await client.chatAi.getAiAgent("9f77692f-33d0-436a-8138-2efb268838e6");
 
-// 建立。省略時 SDK 會自動填入 { provider_id: "default", model_id: "Default" }；
+// 建立——使用 client.agent.createUseCase，讓代理同時擁有儀表板卡片（見上方提示）。
+// 省略時 SDK 會自動填入 { provider_id: "default", model_id: "Default" }；
 // "Default" 會導向組織設定的預設模型，可跨組織通用。像 "gpt-4o" 這類
 // 字面名稱只有在該組織的 system 提供者確實公開該模型時才有效 —
 // `client.ai.listModels()` 會列出可用的模型。請傳入 `streaming: true`，讓
 // /v2/chat 發出 `streamChatText`（見下文）可解析的 text-delta SSE 事件；
 // 若未設定，伺服器會以單一 text/plain 回應傳回完整回覆，SSE 解析器將什麼也拿不到。
-const created = await client.chatAi.createAiAgent({
-  name: "Support Bot",
-  workflow_name: "support_bot_v1",
-  provider_id: "default",
-  model_id: "Default",
-  streaming: true,
-  description: "Handles tier-1 support queries",
+const created = await client.agent.createUseCase({
+  usecase: {
+    title: "Support Bot",
+    short_description: "Handles tier-1 support queries",
+    agent_type: "agent",
+    demo_url: "",
+  },
+  assistant: {
+    name: "Support Bot",
+    workflow_name: "support_bot_v1",
+    description: "Handles tier-1 support queries",
+    provider_id: "default",
+    model_id: "Default",
+    agent_type: "agent",
+    streaming: true,
+  },
 });
+// 服務回傳 { data: useCase }
+const useCase = (created.data ?? created) as { _id: string; assistant_id: string };
+const agentId = useCase.assistant_id; // AI 代理的 UUID
 
-// 更新 — 所有欄位都是選填的（Partial）
-const updated = await client.chatAi.updateAiAgent(created.id, {
+// 更新——只傳入需要修改的欄位
+const updated = await client.chatAi.updateAiAgent(agentId, {
   name: "Support Bot v2",
-  workflow_name: "support_bot_v1",
 });
 
 // 僅更新系統指示
 await client.chatAi.updateAiAgentInstructions(
-  created.id,
+  agentId,
   "You are a helpful support agent.",
 );
 
-await client.chatAi.deleteAiAgent(created.id);
+// 同時刪除卡片和代理
+await client.agent.deleteUseCase(useCase._id);
 ```
 </TabItem>
 <TabItem label="Python">
@@ -127,34 +144,46 @@ sub_agents = client.chat_ai.list_ai_agent_sub_agents()
 # 取得單一 AI agent
 agent = client.chat_ai.get_ai_agent("9f77692f-33d0-436a-8138-2efb268838e6")
 
-# 建立。省略時 SDK 會自動填入 {"provider_id": "default", "model_id": "Default"}；
+# 建立——使用 client.agent.create_use_case，讓代理同時擁有儀表板卡片（見上方提示）。
+# 省略時 SDK 會自動填入 {"provider_id": "default", "model_id": "Default"}；
 # "Default" 會導向組織設定的預設模型，可跨組織通用。像 "gpt-4o" 這類
 # 字面名稱只有在該組織的 system 提供者確實公開該模型時才有效 —
 # `client.ai.list_models()` 會列出可用的模型。請傳入 `streaming: True`，讓
 # /v2/chat 發出 `stream_chat_text`（見下文）可解析的 text-delta SSE 事件；
 # 若未設定，伺服器會以單一 text/plain 回應傳回完整回覆，SSE 解析器將什麼也拿不到。
-created = client.chat_ai.create_ai_agent({
-    "name":          "Support Bot",
-    "workflow_name": "support_bot_v1",
-    "provider_id":   "system",
-    "model_id":      "Default",
-    "streaming":     True,
-    "description":   "Handles tier-1 support queries",
-})
+use_case = client.agent.create_use_case({
+    "usecase": {
+        "title":             "Support Bot",
+        "short_description": "Handles tier-1 support queries",
+        "agent_type":        "agent",
+        "demo_url":          "",
+    },
+    "assistant": {
+        "name":          "Support Bot",
+        "workflow_name": "support_bot_v1",
+        "description":   "Handles tier-1 support queries",
+        "provider_id":   "default",
+        "model_id":      "Default",
+        "agent_type":    "agent",
+        "streaming":     True,
+    },
+})["data"]
+agent_id = use_case["assistant_id"]  # AI 代理的 UUID
 
 # 更新
-updated = client.chat_ai.update_ai_agent(created["id"], {
+updated = client.chat_ai.update_ai_agent(agent_id, {
     "name":          "Support Bot v2",
     "workflow_name": "support_bot_v1",
 })
 
 # 僅更新系統指示
 client.chat_ai.update_ai_agent_instructions(
-    created["id"],
+    agent_id,
     "You are a helpful support agent.",
 )
 
-client.chat_ai.delete_ai_agent(created["id"])
+# 同時刪除卡片和代理
+client.agent.delete_use_case(use_case["_id"])
 ```
 </TabItem>
 </Tabs>
@@ -606,7 +635,7 @@ client.ai.patch_instructions("asst_abc", {
 
 ### AI 代理應用程式（透過 `client.ai`）
 
-AI Agent 應用程式將 AI agent 連結到工作流程或應用程式設定。
+AI Agent 應用程式將 AI agent 連結到工作流程或應用程式設定。與 `chatAi.createAiAgent` 一樣，`createAiAgentApp` 只建立代理本身，沒有儀表板卡片；要建立能在 AgentIQ 中看到的代理，請使用 `client.agent.createUseCase`（見上方「AI 代理 CRUD」）。
 
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">
