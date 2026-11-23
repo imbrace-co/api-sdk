@@ -56,41 +56,68 @@ This guide walks through the four major workflows in the Imbrace SDK from start 
 
 2. **Create an AI agent**
 
-   `workflow_name` must be unique within your organization.
+   Create it with `client.agent.createUseCase`, the same call the dashboard and `imbrace ai-agent create` make. It
+   creates the agent, its web-chat channel and its card in the dashboard's **AgentIQ** page together. `usecase.title`
+   must be unique within your organization, and so must `assistant.workflow_name`.
 
    **TypeScript**
 
    ```typescript
-   const agent = await client.chatAi.createAiAgent({
-     name: "Support Bot",
-     workflow_name: "support_bot_v1",
-     description: "Handles tier-1 customer support queries",
-     instructions: "You are a helpful support agent. Be concise and friendly.",
-     provider_id: "default",   // use the org's default LLM provider
-     model_id: "Default",     // routes to the org's configured default model
-     streaming: true,         // emit text-delta SSE events (required for chat UIs)
+   const created = await client.agent.createUseCase({
+     usecase: {
+       title: "Support Bot",
+       short_description: "Handles tier-1 customer support queries",
+       agent_type: "agent",
+       demo_url: "",
+     },
+     assistant: {
+       name: "Support Bot",
+       workflow_name: "support_bot_v1",
+       description: "Handles tier-1 customer support queries",
+       instructions: "You are a helpful support agent. Be concise and friendly.",
+       provider_id: "default",   // use the org's default LLM provider
+       model_id: "Default",     // routes to the org's configured default model
+       agent_type: "agent",
+       streaming: true,         // emit text-delta SSE events (required for chat UIs)
+     },
    })
 
-   const aiAgentId = agent.id  // UUID — use this for all subsequent calls
-   console.log("AI agent created:", aiAgentId)
+   // The service answers { data: useCase }
+   const useCase = (created.data ?? created) as { _id: string; assistant_id: string }
+   const aiAgentId = useCase.assistant_id  // UUID — use this for all subsequent calls
+   console.log("AI agent created:", aiAgentId, "use case:", useCase._id)
    ```
 
    **Python**
 
    ```python
-   agent = client.chat_ai.create_ai_agent({
-       "name": "Support Bot",
-       "workflow_name": "support_bot_v1",
-       "description": "Handles tier-1 customer support queries",
-       "instructions": "You are a helpful support agent. Be concise and friendly.",
-       "provider_id": "default",   # use the org's default LLM provider
-       "model_id": "Default",     # routes to the org's configured default model
-       "streaming": True,         # emit text-delta SSE events (required for chat UIs)
-   })
+   use_case = client.agent.create_use_case({
+       "usecase": {
+           "title": "Support Bot",
+           "short_description": "Handles tier-1 customer support queries",
+           "agent_type": "agent",
+           "demo_url": "",
+       },
+       "assistant": {
+           "name": "Support Bot",
+           "workflow_name": "support_bot_v1",
+           "description": "Handles tier-1 customer support queries",
+           "instructions": "You are a helpful support agent. Be concise and friendly.",
+           "provider_id": "default",   # use the org's default LLM provider
+           "model_id": "Default",     # routes to the org's configured default model
+           "agent_type": "agent",
+           "streaming": True,         # emit text-delta SSE events (required for chat UIs)
+       },
+   })["data"]
 
-   ai_agent_id = agent["id"]
-   print("AI agent created:", ai_agent_id)
+   ai_agent_id = use_case["assistant_id"]
+   print("AI agent created:", ai_agent_id, "use case:", use_case["_id"])
    ```
+
+   > **`chatAi.createAiAgent` does not show in the dashboard.** `client.chatAi.createAiAgent` (Python
+   > `client.chat_ai.create_ai_agent`) creates only the agent. It chats over the API, but it has no card, so it never
+   > appears in **AgentIQ** and nobody can open or edit it in the dashboard. Use it only for agents that live behind
+   > your own code.
 
    `provider_id` and `model_id` are optional — the SDK auto-fills `{ provider_id: "default", model_id: "Default" }` when omitted. `"Default"` routes to whatever the org has configured as its system default model and is the org-portable choice. Pass them explicitly to override: `provider_id: "<uuid>"` to pin a custom LLM provider, or `model_id: "gpt-4o"` etc. — but a literal model name only works in orgs whose `default` provider actually exposes it. List your org's models with `client.ai.listModels()` (TypeScript) / `client.ai.list_models()` (Python) before hardcoding.
 

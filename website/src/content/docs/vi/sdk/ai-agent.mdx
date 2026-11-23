@@ -72,6 +72,10 @@ Quản lý AI agents (CRUD), chạy completions tương thích OpenAI, và xử 
 
 ### CRUD AI Agent
 
+<Aside type="caution" title="Tạo agent bằng client.agent.createUseCase">
+Agent chỉ hiện trong trang **AgentIQ** của dashboard khi có thẻ (use case). `client.agent.createUseCase` (Python `client.agent.create_use_case`) tạo cùng lúc agent, kênh web chat và thẻ — đúng lời gọi mà dashboard và `imbrace ai-agent create` dùng. `client.chatAi.createAiAgent` chỉ tạo agent: chat được qua API nhưng không ai thấy, mở hay sửa được nó trên dashboard. Cập nhật và chat với agent bằng id của nó (`assistant_id` trên use case) như bên dưới.
+</Aside>
+
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">
 ```typescript
@@ -86,35 +90,48 @@ const subAgents = await client.chatAi.listAiAgentSubAgents();
 // Lấy một AI agent
 const agent = await client.chatAi.getAiAgent("9f77692f-33d0-436a-8138-2efb268838e6");
 
-// Tạo. SDK tự điền { provider_id: "default", model_id: "Default" }
+// Tạo — bằng client.agent.createUseCase để agent có cả thẻ trên dashboard (xem lưu ý ở trên).
+// SDK tự điền { provider_id: "default", model_id: "Default" }
 // khi bị bỏ trống; "Default" định tuyến tới model mặc định đã cấu hình của tổ chức
 // và dùng được ở mọi tổ chức. Tên cụ thể như "gpt-4o" chỉ hoạt động nếu
 // nhà cung cấp system của tổ chức thực sự có model đó — `client.ai.listModels()` cho biết
 // model nào có sẵn. Truyền `streaming: true` để /v2/chat phát các sự kiện SSE text-delta
 // mà `streamChatText` (bên dưới) có thể phân tích; nếu không, server trả về
 // toàn bộ câu trả lời trong một response text/plain và các parser SSE không nhận được gì.
-const created = await client.chatAi.createAiAgent({
-  name: "Support Bot",
-  workflow_name: "support_bot_v1",
-  provider_id: "default",
-  model_id: "Default",
-  streaming: true,
-  description: "Handles tier-1 support queries",
+const created = await client.agent.createUseCase({
+  usecase: {
+    title: "Support Bot",
+    short_description: "Handles tier-1 support queries",
+    agent_type: "agent",
+    demo_url: "",
+  },
+  assistant: {
+    name: "Support Bot",
+    workflow_name: "support_bot_v1",
+    description: "Handles tier-1 support queries",
+    provider_id: "default",
+    model_id: "Default",
+    agent_type: "agent",
+    streaming: true,
+  },
 });
+// Service trả về { data: useCase }
+const useCase = (created.data ?? created) as { _id: string; assistant_id: string };
+const agentId = useCase.assistant_id; // UUID của AI agent
 
-// Cập nhật — tất cả các trường đều tùy chọn (Partial)
-const updated = await client.chatAi.updateAiAgent(created.id, {
+// Cập nhật — chỉ truyền các trường cần đổi
+const updated = await client.chatAi.updateAiAgent(agentId, {
   name: "Support Bot v2",
-  workflow_name: "support_bot_v1",
 });
 
 // Chỉ cập nhật system instructions
 await client.chatAi.updateAiAgentInstructions(
-  created.id,
+  agentId,
   "You are a helpful support agent.",
 );
 
-await client.chatAi.deleteAiAgent(created.id);
+// Xoá thẻ cùng với agent
+await client.agent.deleteUseCase(useCase._id);
 ```
 </TabItem>
 <TabItem label="Python">
@@ -128,35 +145,47 @@ sub_agents = client.chat_ai.list_ai_agent_sub_agents()
 # Lấy một AI agent
 agent = client.chat_ai.get_ai_agent("9f77692f-33d0-436a-8138-2efb268838e6")
 
-# Tạo. SDK tự điền {"provider_id": "default", "model_id": "Default"}
+# Tạo — bằng client.agent.create_use_case để agent có cả thẻ trên dashboard (xem lưu ý ở trên).
+# SDK tự điền {"provider_id": "default", "model_id": "Default"}
 # khi bị bỏ trống; "Default" định tuyến tới model mặc định đã cấu hình của tổ chức và
 # dùng được ở mọi tổ chức. Tên cụ thể như "gpt-4o" chỉ hoạt động nếu nhà cung cấp
 # system của tổ chức thực sự có model đó — `client.ai.list_models()` cho biết model nào
 # có sẵn. Truyền `streaming: True` để /v2/chat phát các sự kiện SSE text-delta
 # mà `stream_chat_text` (bên dưới) có thể phân tích; nếu không, server trả về
 # toàn bộ câu trả lời trong một response text/plain và các parser SSE không nhận được gì.
-created = client.chat_ai.create_ai_agent({
-    "name":          "Support Bot",
-    "workflow_name": "support_bot_v1",
-    "provider_id":   "system",
-    "model_id":      "Default",
-    "streaming":     True,
-    "description":   "Handles tier-1 support queries",
-})
+use_case = client.agent.create_use_case({
+    "usecase": {
+        "title":             "Support Bot",
+        "short_description": "Handles tier-1 support queries",
+        "agent_type":        "agent",
+        "demo_url":          "",
+    },
+    "assistant": {
+        "name":          "Support Bot",
+        "workflow_name": "support_bot_v1",
+        "description":   "Handles tier-1 support queries",
+        "provider_id":   "default",
+        "model_id":      "Default",
+        "agent_type":    "agent",
+        "streaming":     True,
+    },
+})["data"]
+agent_id = use_case["assistant_id"]  # UUID của AI agent
 
 # Cập nhật
-updated = client.chat_ai.update_ai_agent(created["id"], {
+updated = client.chat_ai.update_ai_agent(agent_id, {
     "name":          "Support Bot v2",
     "workflow_name": "support_bot_v1",
 })
 
 # Chỉ cập nhật system instructions
 client.chat_ai.update_ai_agent_instructions(
-    created["id"],
+    agent_id,
     "You are a helpful support agent.",
 )
 
-client.chat_ai.delete_ai_agent(created["id"])
+# Xoá thẻ cùng với agent
+client.agent.delete_use_case(use_case["_id"])
 ```
 </TabItem>
 </Tabs>
@@ -608,7 +637,7 @@ client.ai.patch_instructions("asst_abc", {
 
 ### AI Agent Apps (qua `client.ai`)
 
-AI Agent Apps liên kết AI agent với cấu hình workflow hoặc ứng dụng.
+AI Agent Apps liên kết AI agent với cấu hình workflow hoặc ứng dụng. Giống `chatAi.createAiAgent`, `createAiAgentApp` chỉ tạo agent, không có thẻ trên dashboard; muốn tạo agent hiện trong AgentIQ thì dùng `client.agent.createUseCase` ([CRUD AI Agent](#ai-agent-crud)).
 
 <Tabs syncKey="lang">
 <TabItem label="TypeScript">

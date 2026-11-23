@@ -27,11 +27,11 @@ For the full SDK reference see the [SDK documentation](/sdk/overview.md).
 
 | CLI Command | SDK Method |
 |---|---|
-| `ai-agent list` | `client.chatAi.listAiAgents()` |
-| `ai-agent get <id>` | `client.chatAi.getAiAgent(id)` |
-| `ai-agent create` | `client.chatAi.createAiAgent(body)` |
-| `ai-agent update <id>` | `client.chatAi.updateAiAgent(id, body)` |
-| `ai-agent delete <id>` | `client.chatAi.deleteAiAgent(id)` |
+| `ai-agent list` | `client.agent.listUseCases()` |
+| `ai-agent get <id>` | `client.agent.getUseCase(id)` (`<id>` is the use case id) |
+| `ai-agent create` | `client.agent.createUseCase({ usecase, assistant })` |
+| `ai-agent update <id>` | `client.agent.getUseCase(id)`, then `client.chatAi.updateAiAgent(assistant_id, body)` |
+| `ai-agent delete <id>` | `client.agent.deleteUseCase(id)` |
 | `ai-agent list-providers` | `client.ai.listProviders()` |
 | `ai-agent list-models --provider-id <id>` | `client.ai.listProviders()` (filtered by provider) |
 | `ai-agent list-folders` | `client.boards.searchFolders(query)` |
