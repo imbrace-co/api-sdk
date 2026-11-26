@@ -30,8 +30,7 @@ export interface SignInResponse {
 
 /**
  * An org the authenticated user is actually a MEMBER of, as returned by
- * `/v1/login/authenticate`. Unlike the global `/v1/organizations` list, every
- * entry here is exchangeable via `selectOrganization` — same membership scope
+ * `/v1/login/authenticate`. Every entry here is exchangeable via `selectOrganization` — same membership scope
  * the token-exchange enforces.
  */
 export interface OrganizationMembership {
@@ -223,8 +222,7 @@ export class AuthResource {
    * AND the user's MEMBER organizations in one call. Prefer this over
    * `signIn` + `organizations.list()` for the login → org-picker flow: the
    * returned `organizations` are membership-scoped, so every one is
-   * exchangeable. (The standalone `/v1/organizations` list is global and
-   * includes orgs the user can't enter — see `organizations.listForLogin`.)
+   * exchangeable.
    */
   async authenticate(body: AuthenticateInput): Promise<AuthenticateResponse> {
     const res = await this.http.getFetch()(`${this.v1}/login/authenticate`, {

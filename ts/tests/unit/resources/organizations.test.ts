@@ -91,7 +91,7 @@ describe("OrganizationsResource", () => {
     expect(headers.get("x-api-key")).toBe("test_key");
   });
 
-  it("list() with login_acc_ token hits the paged /v1/organizations endpoint", async () => {
+  it("list() with login_acc_ token hits the paged /v2/organizations endpoint", async () => {
     mockFetch({
       object_name: "list",
       data: [{ id: "org_1" }],
@@ -103,14 +103,14 @@ describe("OrganizationsResource", () => {
       skip: 0,
     });
     const url = new URL(vi.mocked(globalThis.fetch).mock.calls[0][0] as URL);
-    expect(url.pathname).toBe("/v1/organizations");
+    expect(url.pathname).toBe("/v2/organizations");
     expect(url.searchParams.get("limit")).toBe("10");
     expect(url.searchParams.get("skip")).toBe("0");
     expect(res.data.length).toBe(1);
     expect(res.total).toBe(1);
   });
 
-  it("listForLogin() always hits paged /v1/organizations regardless of token", async () => {
+  it("listForLogin() always hits paged /v2/organizations regardless of token", async () => {
     mockFetch({
       object_name: "list",
       data: [{ id: "org_1" }, { id: "org_2" }],
@@ -119,7 +119,7 @@ describe("OrganizationsResource", () => {
     });
     const res = await makeResource().listForLogin({ limit: 5, skip: 2 });
     const url = new URL(vi.mocked(globalThis.fetch).mock.calls[0][0] as URL);
-    expect(url.pathname).toBe("/v1/organizations");
+    expect(url.pathname).toBe("/v2/organizations");
     expect(url.searchParams.get("limit")).toBe("5");
     expect(url.searchParams.get("skip")).toBe("2");
     expect(res.data.length).toBe(2);

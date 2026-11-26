@@ -21,7 +21,7 @@ class OrganizationsResource:
         return f"{self._base}/v2"
 
     def list(self, limit: int = 10, skip: int = 0) -> Dict[str, Any]:
-        # Two endpoints, two middleware: paged `/v1/organizations` accepts the
+        # Two endpoints, two middleware: paged `/v2/organizations` accepts the
         # `login_acc_` token (post-login/OTP picker); `/v2/organizations/_all`
         # requires an org-scoped `acc_`. Route by token prefix.
         token = self._http.token_manager.get_token()
@@ -30,12 +30,13 @@ class OrganizationsResource:
         return self.list_all()
 
     def list_for_login(self, limit: int = 10, skip: int = 0) -> Dict[str, Any]:
-        """Paged `/v1/organizations` — the post-login picker endpoint.
+        """Paged `/v2/organizations`: the organizations the signed-in person belongs to.
 
-        Accepts a `login_acc_` token. The `/v2/organizations` route rejects it
-        with 401 on the prod-v2 gateway, so the login phase must use `/v1`.
+        Accepts a `login_acc_` token (the post-login picker). It used to call
+        `/v1/organizations`, which listed every organization on the platform to any
+        token; that list is now staff-only and the gateway refuses it.
         """
-        return self._http.request("GET", f"{self._v1}/organizations",
+        return self._http.request("GET", f"{self._v2}/organizations",
                                   params={"limit": limit, "skip": skip}).json()
 
     def create(self, body: Dict[str, Any]) -> Dict[str, Any]:
@@ -61,7 +62,7 @@ class AsyncOrganizationsResource:
         return f"{self._base}/v2"
 
     async def list(self, limit: int = 10, skip: int = 0) -> Dict[str, Any]:
-        # Two endpoints, two middleware: paged `/v1/organizations` accepts the
+        # Two endpoints, two middleware: paged `/v2/organizations` accepts the
         # `login_acc_` token (post-login/OTP picker); `/v2/organizations/_all`
         # requires an org-scoped `acc_`. Route by token prefix.
         token = self._http.token_manager.get_token()
@@ -70,12 +71,13 @@ class AsyncOrganizationsResource:
         return await self.list_all()
 
     async def list_for_login(self, limit: int = 10, skip: int = 0) -> Dict[str, Any]:
-        """Paged `/v1/organizations` — the post-login picker endpoint.
+        """Paged `/v2/organizations`: the organizations the signed-in person belongs to.
 
-        Accepts a `login_acc_` token. The `/v2/organizations` route rejects it
-        with 401 on the prod-v2 gateway, so the login phase must use `/v1`.
+        Accepts a `login_acc_` token (the post-login picker). It used to call
+        `/v1/organizations`, which listed every organization on the platform to any
+        token; that list is now staff-only and the gateway refuses it.
         """
-        res = await self._http.request("GET", f"{self._v1}/organizations",
+        res = await self._http.request("GET", f"{self._v2}/organizations",
                                        params={"limit": limit, "skip": skip})
         return res.json()
 
