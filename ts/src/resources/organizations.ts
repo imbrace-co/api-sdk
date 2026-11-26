@@ -26,7 +26,7 @@ export class OrganizationsResource {
     skip?: number;
     is_active?: boolean;
   }): Promise<PagedResponse<Organization>> {
-    // Two endpoints, two middleware: paged `/v1/organizations` accepts the
+    // Two endpoints, two middleware: paged `/v2/organizations` accepts the
     // `login_acc_` token (post-login/OTP picker phase), while
     // `/v2/organizations/_all` requires an org-scoped `acc_` token
     // (post-exchange). Route by token prefix so both phases of the login flow
@@ -47,24 +47,20 @@ export class OrganizationsResource {
   }
 
   /**
-   * Paged `/v1/organizations` — accepts a `login_acc_` token (the `v2` route
-   * rejects it with 401 on the prod-v2 gateway). Response shape:
-   * `{ data, count, total, has_more }` where `count` is the grand total and
-   * `total` is the size of the returned page.
+   * Paged `/v2/organizations`: the organizations the signed-in person belongs to,
+   * the same list the dashboard's org picker shows. Accepts a `login_acc_` token.
+   * Response shape: `{ data, count, total, has_more }` where `count` is the grand
+   * total and `total` is the size of the returned page.
    *
-   * ⚠️ This is a GLOBAL org list, NOT scoped to the user's memberships — it
-   * returns every org in the system (`count` can be in the hundreds), most of
-   * which the user can't enter (`selectOrganization` will fail with "User not
-   * found in this organization"). For the login → org-picker flow, use
-   * `client.login()` / `loginWithOtp()` (or `auth.authenticate()`) instead:
-   * their `organizations` are membership-scoped and all exchangeable.
+   * It used to call `/v1/organizations`, which listed EVERY organization on the
+   * platform to any token. That list is now staff-only and the gateway refuses it.
    */
   async listForLogin(params?: {
     limit?: number;
     skip?: number;
     is_active?: boolean;
   }): Promise<PagedResponse<Organization>> {
-    const url = new URL(`${this.v1}/organizations`);
+    const url = new URL(`${this.v2}/organizations`);
     const limit = params?.limit ?? 10;
     const skip = params?.skip ?? 0;
     url.searchParams.set("limit", String(limit));
